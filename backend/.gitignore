@@ -1,0 +1,7 @@
+.env
+bin/
+tmp/
+*.log
+*.pid
+*.db
+.DS_Store

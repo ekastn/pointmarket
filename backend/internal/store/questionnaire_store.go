@@ -30,8 +30,8 @@ func (s *QuestionnaireStore) GetQuestionnaireByID(id int) (*models.Questionnaire
 	return &q, nil
 }
 
-// GetQuestionnaireQuestions retrieves all questions for a given questionnaire ID
-func (s *QuestionnaireStore) GetQuestionnaireQuestions(questionnaireID int) ([]models.QuestionnaireQuestion, error) {
+// GetQuestionsByQuestionnaireID retrieves all questions for a given questionnaire ID
+func (s *QuestionnaireStore) GetQuestionsByQuestionnaireID(questionnaireID int) ([]models.QuestionnaireQuestion, error) {
 	var questions []models.QuestionnaireQuestion
 	err := s.db.Select(&questions, "SELECT id, questionnaire_id, question_number, question_text, subscale, reverse_scored, created_at FROM questionnaire_questions WHERE questionnaire_id = ? ORDER BY question_number", questionnaireID)
 	if err != nil {
@@ -40,8 +40,8 @@ func (s *QuestionnaireStore) GetQuestionnaireQuestions(questionnaireID int) ([]m
 	return questions, nil
 }
 
-// SaveQuestionnaireResult saves a student's questionnaire result
-func (s *QuestionnaireStore) SaveQuestionnaireResult(result *models.QuestionnaireResult) error {
+// CreateQuestionnaireResult saves a student's questionnaire result
+func (s *QuestionnaireStore) CreateQuestionnaireResult(result *models.QuestionnaireResult) error {
 	query := `INSERT INTO questionnaire_results (student_id, questionnaire_id, answers, total_score, subscale_scores, completed_at, week_number, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err := s.db.Exec(query,
 		result.StudentID,

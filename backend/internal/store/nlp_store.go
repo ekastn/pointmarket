@@ -17,6 +17,65 @@ func NewNLPStore(db *sqlx.DB) *NLPStore {
 	return &NLPStore{db: db}
 }
 
+// CreateNLPAnalysis saves an NLP analysis result
+func (s *NLPStore) CreateNLPAnalysis(result *models.NLPAnalysisResult) error {
+	query := `
+		INSERT INTO nlp_analysis_results (
+			student_id, assignment_id, quiz_id, original_text, clean_text, word_count, sentence_count,
+			total_score, grammar_score, keyword_score, structure_score, readability_score, sentiment_score, complexity_score,
+			feedback, personalized_feedback, context_type, analysis_version
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
+	_, err := s.db.Exec(query,
+		result.StudentID,
+		result.AssignmentID,
+		result.QuizID,
+		result.OriginalText,
+		result.CleanText,
+		result.WordCount,
+		result.SentenceCount,
+		result.TotalScore,
+		result.GrammarScore,
+		result.KeywordScore,
+		result.StructureScore,
+		result.ReadabilityScore,
+		result.SentimentScore,
+		result.ComplexityScore,
+		result.Feedback,
+		result.PersonalizedFeedback,
+		result.ContextType,
+		result.AnalysisVersion,
+	)
+	return err
+}
+
+// GetNLPStats retrieves overall NLP statistics for a student
+func (s *NLPStore) GetNLPStats(studentID int) (*models.NLPProgress, error) {
+	var stats models.NLPProgress
+	query := `
+		SELECT
+			student_id,
+			SUM(total_analyses) as total_analyses,
+			AVG(average_score) as average_score,
+			MAX(best_score) as best_score,
+			AVG(grammar_improvement) as grammar_improvement,
+			AVG(keyword_improvement) as keyword_improvement,
+			AVG(structure_improvement) as structure_improvement
+		FROM nlp_progress
+		WHERE student_id = ?
+		GROUP BY student_id
+	`
+	err := s.db.Get(&stats, query, studentID)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &stats, nil
+}
+
+
 // GetNLPKeywords retrieves NLP keywords for a given context
 func (s *NLPStore) GetNLPKeywords(context string) ([]models.NLPKeyword, error) {
 	var keywords []models.NLPKeyword

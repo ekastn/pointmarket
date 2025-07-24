@@ -1,7 +1,7 @@
 package services
 
 import (
-	"errors"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
 )
@@ -16,33 +16,63 @@ func NewAssignmentService(assignmentStore *store.AssignmentStore) *AssignmentSer
 	return &AssignmentService{assignmentStore: assignmentStore}
 }
 
+// GetAllAssignments retrieves all assignments
+func (s *AssignmentService) GetAllAssignments() ([]models.Assignment, error) {
+	return s.assignmentStore.GetAllAssignments()
+}
+
 // CreateAssignment creates a new assignment
-func (s *AssignmentService) CreateAssignment(assignment *models.Assignment) error {
-	if assignment.Title == "" || assignment.Subject == "" || assignment.TeacherID == 0 {
-		return errors.New("title, subject, and teacher ID are required")
+func (s *AssignmentService) CreateAssignment(req dtos.CreateAssignmentRequest, teacherID uint) (models.Assignment, error) {
+	assignment := models.Assignment{
+		Title:       req.Title,
+		Description: &req.Description,
+		DueDate:     &req.DueDate,
+		Subject:     req.Subject,
+		Points:      req.Points,
+		TeacherID:   int(teacherID),
+		Status:      "Published", // Default status
 	}
-	return s.assignmentStore.CreateAssignment(assignment)
+	err := s.assignmentStore.CreateAssignment(&assignment)
+	return assignment, err
 }
 
 // GetAssignmentByID retrieves an assignment by its ID
-func (s *AssignmentService) GetAssignmentByID(id int) (*models.Assignment, error) {
-	return s.assignmentStore.GetAssignmentByID(id)
+func (s *AssignmentService) GetAssignmentByID(id uint) (models.Assignment, error) {
+	assignment, err := s.assignmentStore.GetAssignmentByID(int(id))
+	if err != nil {
+		return models.Assignment{}, err
+	}
+	return *assignment, err
 }
 
 // UpdateAssignment updates an existing assignment
-func (s *AssignmentService) UpdateAssignment(assignment *models.Assignment) error {
-	if assignment.ID == 0 {
-		return errors.New("assignment ID is required for update")
+func (s *AssignmentService) UpdateAssignment(id uint, req dtos.UpdateAssignmentRequest) (models.Assignment, error) {
+	assignment, err := s.GetAssignmentByID(id)
+	if err != nil {
+		return models.Assignment{}, err
 	}
-	return s.assignmentStore.UpdateAssignment(assignment)
+
+	if req.Title != "" {
+		assignment.Title = req.Title
+	}
+	if req.Description != "" {
+		assignment.Description = &req.Description
+	}
+	if !req.DueDate.IsZero() {
+		assignment.DueDate = &req.DueDate
+	}
+	if req.Subject != "" {
+		assignment.Subject = req.Subject
+	}
+	if req.Points != 0 {
+		assignment.Points = req.Points
+	}
+
+	err = s.assignmentStore.UpdateAssignment(&assignment)
+	return assignment, err
 }
 
 // DeleteAssignment deletes an assignment by its ID
-func (s *AssignmentService) DeleteAssignment(id int) error {
-	return s.assignmentStore.DeleteAssignment(id)
-}
-
-// ListAssignments retrieves all assignments, optionally filtered by teacher ID
-func (s *AssignmentService) ListAssignments(teacherID *int) ([]models.Assignment, error) {
-	return s.assignmentStore.ListAssignments(teacherID)
+func (s *AssignmentService) DeleteAssignment(id uint) error {
+	return s.assignmentStore.DeleteAssignment(int(id))
 }

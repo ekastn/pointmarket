@@ -17,6 +17,16 @@ func NewQuizStore(db *sqlx.DB) *QuizStore {
 	return &QuizStore{db: db}
 }
 
+// GetAllQuizzes retrieves all quizzes
+func (s *QuizStore) GetAllQuizzes() ([]models.Quiz, error) {
+	var quizzes []models.Quiz
+	err := s.db.Select(&quizzes, "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quiz")
+	if err != nil {
+		return nil, err
+	}
+	return quizzes, nil
+}
+
 // CreateQuiz inserts a new quiz into the database
 func (s *QuizStore) CreateQuiz(quiz *models.Quiz) error {
 	query := `INSERT INTO quiz (title, description, subject, teacher_id, points, duration, status) VALUES (?, ?, ?, ?, ?, ?, ?)`

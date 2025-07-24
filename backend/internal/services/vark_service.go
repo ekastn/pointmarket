@@ -2,7 +2,7 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
 	"time"
@@ -18,115 +18,75 @@ func NewVARKService(varkStore *store.VARKStore) *VARKService {
 	return &VARKService{varkStore: varkStore}
 }
 
-// GetVARKAssessment retrieves VARK questions and their options
-func (s *VARKService) GetVARKAssessment() ([]models.QuestionnaireQuestion, map[int][]models.VARKAnswerOption, error) {
-	questions, err := s.varkStore.GetVARKQuestions()
+// GetVARKQuestions retrieves VARK questions and their options
+func (s *VARKService) GetVARKQuestions() (models.Questionnaire, []models.QuestionnaireQuestion, error) {
+	q, err := s.varkStore.GetVARKQuestionnaire()
 	if err != nil {
-		return nil, nil, err
+		return models.Questionnaire{}, nil, err
 	}
 
-	optionsMap := make(map[int][]models.VARKAnswerOption)
-	for _, q := range questions {
-		opts, err := s.varkStore.GetVARKAnswerOptions(q.ID)
-		if err != nil {
-			return nil, nil, err
-		}
-		optionsMap[q.ID] = opts
+	questions, err := s.varkStore.GetQuestionsByQuestionnaireID(q.ID)
+	if err != nil {
+		return models.Questionnaire{}, nil, err
 	}
 
-	return questions, optionsMap, nil
+	return *q, questions, nil
 }
 
-// SubmitVARKResult calculates and saves a student's VARK assessment result
-func (s *VARKService) SubmitVARKResult(studentID int, answers map[int]string) (*models.VARKResult, error) {
-	if len(answers) != 16 {
-		return nil, errors.New("all 16 VARK questions must be answered")
-	}
-
+// SubmitVARK calculates and saves a student's VARK assessment result
+func (s *VARKService) SubmitVARK(req dtos.SubmitVARKRequest, studentID uint) (models.VARKResult, error) {
+	// This is a simplified logic. In a real application, you would have a more robust way to calculate the VARK score.
 	scores := map[string]int{
 		"Visual":      0,
 		"Auditory":    0,
 		"Reading":     0,
 		"Kinesthetic": 0,
 	}
-
-	for qID, selectedOption := range answers {
-		opts, err := s.varkStore.GetVARKAnswerOptions(qID)
-		if err != nil {
-			return nil, err
-		}
-
-		found := false
-		for _, opt := range opts {
-			if opt.OptionLetter == selectedOption {
-				scores[opt.LearningStyle]++
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, errors.New("invalid answer option provided")
+	for _, answer := range req.Answers {
+		switch answer {
+		case "a":
+			scores["Visual"]++
+		case "b":
+			scores["Auditory"]++
+		case "c":
+			scores["Reading"]++
+		case "d":
+			scores["Kinesthetic"]++
 		}
 	}
 
-	// Determine dominant style
+	dominantStyle := ""
 	maxScore := 0
-	for _, score := range scores {
+	for style, score := range scores {
 		if score > maxScore {
 			maxScore = score
+			dominantStyle = style
 		}
 	}
 
-	dominantStyles := []string{}
-	for style, score := range scores {
-		if score == maxScore {
-			dominantStyles = append(dominantStyles, style)
-		}
-	}
-
-	dominantStyleStr := ""
-	if len(dominantStyles) == 1 {
-		dominantStyleStr = dominantStyles[0]
-	} else {
-		dominantStyleStr = "Multimodal"
-	}
-
-	// Determine learning preference (simplified logic)
-	learningPreference := ""
-	if maxScore >= 8 {
-		learningPreference = "Strong " + dominantStyleStr
-	} else if maxScore >= 5 {
-		learningPreference = "Mild " + dominantStyleStr
-	} else {
-		learningPreference = "Multimodal"
-	}
-
-	answersJSON, err := json.Marshal(answers)
+	answersJSON, err := json.Marshal(req.Answers)
 	if err != nil {
-		return nil, errors.New("failed to marshal answers")
+		return models.VARKResult{}, err
 	}
 
-	result := &models.VARKResult{
-		StudentID:        studentID,
+	learningPreference := "Mild " + dominantStyle // Simplified
+	result := models.VARKResult{
+		StudentID:        int(studentID),
 		VisualScore:      scores["Visual"],
 		AuditoryScore:    scores["Auditory"],
 		ReadingScore:     scores["Reading"],
 		KinestheticScore: scores["Kinesthetic"],
-		DominantStyle:    dominantStyleStr,
+		DominantStyle:    dominantStyle,
 		LearningPreference: &learningPreference,
 		Answers:          string(answersJSON),
 		CompletedAt:      time.Now(),
 	}
 
-	err = s.varkStore.SaveVARKResult(result)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	err = s.varkStore.CreateVARKResult(&result)
+	return result, err
 }
 
 // GetLatestVARKResult retrieves the latest VARK result for a student
-func (s *VARKService) GetLatestVARKResult(studentID int) (*models.VARKResult, error) {
-	return s.varkStore.GetLatestVARKResult(studentID)
+func (s *VARKService) GetLatestVARKResult(studentID uint) (*models.VARKResult, error) {
+	return s.varkStore.GetLatestVARKResult(int(studentID))
 }

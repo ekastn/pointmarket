@@ -17,6 +17,16 @@ func NewAssignmentStore(db *sqlx.DB) *AssignmentStore {
 	return &AssignmentStore{db: db}
 }
 
+// GetAllAssignments retrieves all assignments
+func (s *AssignmentStore) GetAllAssignments() ([]models.Assignment, error) {
+	var assignments []models.Assignment
+	err := s.db.Select(&assignments, "SELECT id, title, description, subject, teacher_id, points, due_date, status, created_at, updated_at FROM assignments")
+	if err != nil {
+		return nil, err
+	}
+	return assignments, nil
+}
+
 // CreateAssignment inserts a new assignment into the database
 func (s *AssignmentStore) CreateAssignment(assignment *models.Assignment) error {
 	query := `INSERT INTO assignments (title, description, subject, teacher_id, points, due_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)`

@@ -21,27 +21,46 @@ func NewAuthService(userStore *store.UserStore, cfg *config.Config) *AuthService
 	return &AuthService{userStore: userStore, cfg: cfg}
 }
 
+// Register creates a new user
+func (s *AuthService) Register(req dtos.RegisterRequest) (models.User, error) {
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	user := models.User{
+		Username: req.Username,
+		Password: hashedPassword,
+		Name:     req.Name,
+		Email:    req.Email,
+		Role:     req.Role,
+	}
+
+	err = s.userStore.CreateUser(&user)
+	return user, err
+}
+
 // Login authenticates a user and returns a JWT token
-func (s *AuthService) Login(req *dtos.LoginRequest) (string, error) {
+func (s *AuthService) Login(req dtos.LoginRequest) (models.User, string, error) {
 	user, err := s.userStore.GetUserByUsernameAndRole(req.Username, req.Role)
 	if err != nil {
-		return "", err
+		return models.User{}, "", err
 	}
 	if user == nil {
-		return "", errors.New("invalid credentials")
+		return models.User{}, "", errors.New("invalid credentials")
 	}
 
 	err = utils.CheckPassword(req.Password, user.Password)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return models.User{}, "", errors.New("invalid credentials")
 	}
 
 	token, err := auth.GenerateJWT(user.Username, user.Role, s.cfg)
 	if err != nil {
-		return "", err
+		return models.User{}, "", err
 	}
 
-	return token, nil
+	return *user, token, nil
 }
 
 // GetUserProfile retrieves a user's profile by username

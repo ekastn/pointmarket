@@ -37,7 +37,7 @@ func AuthMiddleware(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		// Get user ID from username and set in context
-		var userID int
+		var userID uint
 		err = db.Get(&userID, "SELECT id FROM users WHERE username = ?", claims.Username)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, "Failed to get user ID from token")
@@ -47,7 +47,7 @@ func AuthMiddleware(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 
 		c.Set("username", claims.Username)
 		c.Set("role", claims.Role)
-		c.Set("user_id", userID)
+		c.Set("userID", userID)
 		c.Next()
 	}
 }

@@ -26,14 +26,21 @@ func main() {
 
 	// Initialize services
 	authService := services.NewAuthService(userStore, cfg)
+	userService := services.NewUserService(userStore)
 	assignmentService := services.NewAssignmentService(assignmentStore)
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore)
 	varkService := services.NewVARKService(varkStore)
-	nlpService := services.NewNLPService(nlpStore, varkStore, questionnaireStore)
+	nlpService := services.NewNLPService(nlpStore)
 
-	// Initialize API handlers
-	apiHandler := handler.NewHandler(authService, assignmentService, quizService, questionnaireService, varkService, nlpService)
+	// Initialize handlers
+	authHandler := handler.NewAuthHandler(*authService)
+	userHandler := handler.NewUserHandler(*userService)
+	assignmentHandler := handler.NewAssignmentHandler(*assignmentService)
+	quizHandler := handler.NewQuizHandler(*quizService)
+	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
+	varkHandler := handler.NewVARKHandler(*varkService)
+	nlpHandler := handler.NewNLPHandler(*nlpService)
 
 	r := gin.Default()
 
@@ -44,44 +51,64 @@ func main() {
 		})
 	})
 
+	// API v1 group
+	v1 := r.Group("/api/v1")
+
 	// Authentication routes
-	authRoutes := r.Group("/auth")
+	authRoutes := v1.Group("/auth")
 	{
-		authRoutes.POST("/login", apiHandler.Login)
+		authRoutes.POST("/register", authHandler.Register)
+		authRoutes.POST("/login", authHandler.Login)
 	}
 
 	// Authenticated routes
-	authRequired := r.Group("/")
+	authRequired := v1.Group("/")
 	authRequired.Use(middleware.AuthMiddleware(cfg, db))
 	{
-		authRequired.GET("/profile", apiHandler.GetUserProfile)
+		// User routes
+		authRequired.GET("/profile", userHandler.GetUserProfile)
 
 		// Assignment routes
-		authRequired.POST("/assignments", apiHandler.CreateAssignment)
-		authRequired.GET("/assignments/:id", apiHandler.GetAssignment)
-		authRequired.PUT("/assignments/:id", apiHandler.UpdateAssignment)
-		authRequired.DELETE("/assignments/:id", apiHandler.DeleteAssignment)
-		authRequired.GET("/assignments", apiHandler.ListAssignments)
+		assignmentRoutes := authRequired.Group("/assignments")
+		{
+			assignmentRoutes.GET("", assignmentHandler.GetAllAssignments)
+			assignmentRoutes.POST("", assignmentHandler.CreateAssignment)
+			assignmentRoutes.GET("/:id", assignmentHandler.GetAssignmentByID)
+			assignmentRoutes.PUT("/:id", assignmentHandler.UpdateAssignment)
+			assignmentRoutes.DELETE("/:id", assignmentHandler.DeleteAssignment)
+		}
 
 		// Quiz routes
-		authRequired.POST("/quizzes", apiHandler.CreateQuiz)
-		authRequired.GET("/quizzes/:id", apiHandler.GetQuiz)
-		authRequired.PUT("/quizzes/:id", apiHandler.UpdateQuiz)
-		authRequired.DELETE("/quizzes/:id", apiHandler.DeleteQuiz)
-		authRequired.GET("/quizzes", apiHandler.ListQuizzes)
+		quizRoutes := authRequired.Group("/quizzes")
+		{
+			quizRoutes.GET("", quizHandler.GetAllQuizzes)
+			quizRoutes.POST("", quizHandler.CreateQuiz)
+			quizRoutes.GET("/:id", quizHandler.GetQuizByID)
+			quizRoutes.PUT("/:id", quizHandler.UpdateQuiz)
+			quizRoutes.DELETE("/:id", quizHandler.DeleteQuiz)
+		}
 
 		// Questionnaire routes
-		authRequired.GET("/questionnaires/:id", apiHandler.GetQuestionnaire)
-		authRequired.POST("/questionnaires/submit", apiHandler.SubmitQuestionnaire)
+		questionnaireRoutes := authRequired.Group("/questionnaires")
+		{
+			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
+			questionnaireRoutes.POST("/submit", questionnaireHandler.SubmitQuestionnaire)
+		}
 
 		// VARK routes
-		authRequired.GET("/vark", apiHandler.GetVARKAssessment)
-		authRequired.POST("/vark/submit", apiHandler.SubmitVARK)
-		authRequired.GET("/vark/latest", apiHandler.GetLatestVARKResult)
+		varkRoutes := authRequired.Group("/vark")
+		{
+			varkRoutes.GET("", varkHandler.GetVARKQuestions)
+			varkRoutes.POST("/submit", varkHandler.SubmitVARK)
+			varkRoutes.GET("/latest", varkHandler.GetLatestVARKResult)
+		}
 
 		// NLP routes
-		authRequired.POST("/nlp/analyze", apiHandler.AnalyzeText)
-		authRequired.GET("/nlp/stats", apiHandler.GetNLPStats)
+		nlpRoutes := authRequired.Group("/nlp")
+		{
+			nlpRoutes.POST("/analyze", nlpHandler.AnalyzeText)
+			nlpRoutes.GET("/stats", nlpHandler.GetNLPStats)
+		}
 	}
 
 	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)

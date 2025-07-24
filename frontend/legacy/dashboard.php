@@ -1,0 +1,655 @@
+<?php
+require_once 'includes/config.php';
+requireLogin();
+
+$user = getCurrentUser();
+$database = new Database();
+$pdo = $database->getConnection();
+
+// Get student statistics if user is student
+$studentStats = null;
+$questionnaireScores = null;
+if ($user['role'] === 'siswa') {
+    $studentStats = getStudentStats($user['id'], $pdo);
+    $questionnaireScores = getAllQuestionnaireScores($user['id'], $pdo);
+}
+
+// Get counts for each role
+$counts = [];
+try {
+    if ($user['role'] === 'admin') {
+        $stmt = $pdo->query("SELECT COUNT(*) as total_users FROM users");
+        $counts['users'] = $stmt->fetch()['total_users'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as total_assignments FROM assignments");
+        $counts['assignments'] = $stmt->fetch()['total_assignments'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as total_materials FROM materials");
+        $counts['materials'] = $stmt->fetch()['total_materials'];
+    } elseif ($user['role'] === 'guru') {
+        $stmt = $pdo->prepare("SELECT COUNT(*) as my_assignments FROM assignments WHERE teacher_id = ?");
+        $stmt->execute([$user['id']]);
+        $counts['my_assignments'] = $stmt->fetch()['my_assignments'];
+        
+        $stmt = $pdo->prepare("SELECT COUNT(*) as my_materials FROM materials WHERE teacher_id = ?");
+        $stmt->execute([$user['id']]);
+        $counts['my_materials'] = $stmt->fetch()['my_materials'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as total_students FROM users WHERE role = 'siswa'");
+        $counts['students'] = $stmt->fetch()['total_students'];
+    }
+} catch (Exception $e) {
+    error_log("Error getting counts: " . $e->getMessage());
+}
+?>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - POINTMARKET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+        /* Fix sidebar overlapping issue */
+        .main-wrapper {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+        }
+        
+        .sidebar-wrapper {
+            width: 250px;
+            min-width: 250px;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            flex: 1;
+            overflow-x: auto;
+            padding: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar-wrapper {
+                width: 100%;
+                min-width: 100%;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+        }
+        
+        /* Demo alert styling */
+        .demo-alert {
+            border-left: 4px solid #0dcaf0;
+            background-color: #e7f3ff;
+            border-color: #0dcaf0;
+        }
+        
+        .demo-alert .alert-heading {
+            color: #0c63e4;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- Navigation -->
+        <?php include 'includes/navbar.php'; ?>
+        
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <div class="sidebar-wrapper">
+                <?php include 'includes/sidebar.php'; ?>
+            </div>
+            
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="container-fluid px-4">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dasbor
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-download me-1"></i>
+                                    Ekspor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                <!-- Messages -->
+                <?php
+                $messages = getMessages();
+                if (!empty($messages['success'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <?php echo htmlspecialchars($messages['success']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Welcome Card -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h4 class="card-title mb-2">
+                                            Selamat datang, <?php echo htmlspecialchars($user['name']); ?>!
+                                        </h4>
+                                        <p class="card-text mb-0">
+                                            Peran: <?php echo ucfirst($user['role']); ?> | 
+                                            Login terakhir: <?php echo date('d/m/Y H:i'); ?>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <i class="fas fa-user-circle fa-4x opacity-75"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($user['role'] === 'siswa'): ?>
+                <!-- AI Features Proof of Concept Notice for Students -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-info alert-dismissible fade show demo-alert" role="alert">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-robot fa-2x me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Demo Sistem AI POINTMARKET
+                                    </h6>
+                                    <p class="mb-2">
+                                        <strong>Sistem ini adalah demonstrasi konsep (Proof of Concept)</strong> untuk menunjukkan cara kerja platform pembelajaran berbasis AI. 
+                                        Saat ini menggunakan data simulasi untuk keperluan demo.
+                                    </p>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Fitur AI yang akan diimplementasi:</strong>
+                                            <ul class="small mb-0 mt-1">
+                                                <li>Analisis pembelajaran mendalam</li>
+                                                <li>Rekomendasi konten personal</li>
+                                                <li>Prediksi performa akademik</li>
+                                                <li>Adaptasi gaya belajar otomatis</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Status saat ini:</strong>
+                                            <ul class="small mb-0 mt-1">
+                                                <li>✓ Interface dan workflow lengkap</li>
+                                                <li>⚠️ Skor menggunakan simulasi random</li>
+                                                <li>🔄 AI engine dalam pengembangan</li>
+                                                <li>📊 Data untuk training AI dikumpulkan</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <?php if ($user['role'] === 'siswa'): ?>
+                        <!-- Student Stats -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total Poin
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo formatPoints($studentStats['total_points']); ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Diselesaikan
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $studentStats['completed_assignments']; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Skor MSLQ
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $questionnaireScores['mslq'] ? number_format($questionnaireScores['mslq'], 1) : 'T/A'; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-brain fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Skor AMS
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $questionnaireScores['ams'] ? number_format($questionnaireScores['ams'], 1) : 'T/A'; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                
+                <!-- VARK Learning Style Card -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-left-primary shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-brain me-2"></i>
+                                    Profil Gaya Belajar Anda
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <?php if ($questionnaireScores['vark']): ?>
+                                    <?php 
+                                    $vark = $questionnaireScores['vark'];
+                                    $learningTips = getVARKLearningTips($vark['dominant_style']); 
+                                    ?>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <h5 class="text-primary mb-2">
+                                                        <i class="<?php echo $learningTips['icon']; ?> me-2"></i>
+                                                        <?php echo htmlspecialchars($vark['learning_preference']); ?>
+                                                    </h5>
+                                                    <p class="text-muted mb-3">
+                                                        <?php echo $learningTips['description']; ?>
+                                                    </p>
+                                                    
+                                                    <div class="vark-scores">
+                                                        <small class="text-muted">VARK Scores:</small>
+                                                        <div class="row mt-2">
+                                                            <div class="col-6">
+                                                                <span class="badge bg-info">Visual: <?php echo $vark['visual_score']; ?></span>
+                                                                <span class="badge bg-warning">Auditory: <?php echo $vark['auditory_score']; ?></span>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <span class="badge bg-success">Reading: <?php echo $vark['reading_score']; ?></span>
+                                                                <span class="badge bg-danger">Kinesthetic: <?php echo $vark['kinesthetic_score']; ?></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <h6 class="text-success">Study Tips for You:</h6>
+                                                    <ul class="small">
+                                                        <?php foreach (array_slice($learningTips['study_tips'], 0, 3) as $tip): ?>
+                                                            <li><?php echo htmlspecialchars($tip); ?></li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <i class="<?php echo $learningTips['icon']; ?> fa-4x text-primary opacity-50 mb-3"></i>
+                                            <br>
+                                            <a href="vark-assessment.php" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-sync-alt me-1"></i>
+                                                Retake Assessment
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center">
+                                        <i class="fas fa-brain fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">Learning Style Not Assessed</h6>
+                                        <p class="text-muted">Take the VARK assessment to discover your learning style preferences and get personalized study recommendations.</p>
+                                        <a href="vark-assessment.php" class="btn btn-primary">
+                                            <i class="fas fa-brain me-1"></i>
+                                            Take VARK Assessment
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        
+                    <?php elseif ($user['role'] === 'guru'): ?>
+                        <!-- Teacher Stats -->
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                My Assignments
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $counts['my_assignments'] ?? 0; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                My Materials
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $counts['my_materials'] ?? 0; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Total Students
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $counts['students'] ?? 0; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    <?php else: // Admin ?>
+                        <!-- Admin Stats -->
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total Users
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $counts['users'] ?? 0; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Total Assignments
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $counts['assignments'] ?? 0; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Total Materials
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo $counts['materials'] ?? 0; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-bolt me-2"></i>
+                                    Quick Actions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <?php if ($user['role'] === 'siswa'): ?>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="assignments.php" class="btn btn-primary w-100">
+                                                <i class="fas fa-tasks me-2"></i>
+                                                View Assignments
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="quiz.php" class="btn btn-success w-100">
+                                                <i class="fas fa-question-circle me-2"></i>
+                                                Take Quiz
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="questionnaire.php" class="btn btn-info w-100">
+                                                <i class="fas fa-clipboard-list me-2"></i>
+                                                Questionnaires
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="materials.php" class="btn btn-warning w-100">
+                                                <i class="fas fa-book me-2"></i>
+                                                Study Materials
+                                            </a>
+                                        </div>
+                                    <?php elseif ($user['role'] === 'guru'): ?>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="assignments.php?action=create" class="btn btn-primary w-100">
+                                                <i class="fas fa-plus me-2"></i>
+                                                Create Assignment
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="quiz.php?action=create" class="btn btn-success w-100">
+                                                <i class="fas fa-plus me-2"></i>
+                                                Create Quiz
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="materials.php?action=create" class="btn btn-info w-100">
+                                                <i class="fas fa-upload me-2"></i>
+                                                Upload Material
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="students.php" class="btn btn-warning w-100">
+                                                <i class="fas fa-users me-2"></i>
+                                                Manage Students
+                                            </a>
+                                        </div>
+                                    <?php else: // Admin ?>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="users.php" class="btn btn-primary w-100">
+                                                <i class="fas fa-users-cog me-2"></i>
+                                                Manage Users
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="reports.php" class="btn btn-success w-100">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                View Reports
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="settings.php" class="btn btn-info w-100">
+                                                <i class="fas fa-cog me-2"></i>
+                                                System Settings
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="backup.php" class="btn btn-warning w-100">
+                                                <i class="fas fa-database me-2"></i>
+                                                Backup Data
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Simulation Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-robot me-2"></i>
+                                    AI Performance Simulation
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                                            <h6>Reinforcement Learning</h6>
+                                            <div class="progress mb-2">
+                                                <div class="progress-bar bg-primary" style="width: 87%"></div>
+                                            </div>
+                                            <small class="text-muted">Accuracy: 87%</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-filter fa-3x text-success mb-3"></i>
+                                            <h6>Content-Based Filtering</h6>
+                                            <div class="progress mb-2">
+                                                <div class="progress-bar bg-success" style="width: 92%"></div>
+                                            </div>
+                                            <small class="text-muted">Accuracy: 92%</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-language fa-3x text-info mb-3"></i>
+                                            <h6>Natural Language Processing</h6>
+                                            <div class="progress mb-2">
+                                                <div class="progress-bar bg-info" style="width: 89%"></div>
+                                            </div>
+                                            <small class="text-muted">Accuracy: 89%</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- End container-fluid -->
+            </main>
+        </div> <!-- End content-wrapper -->
+    </div> <!-- End main-wrapper -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/dashboard.js?v=<?php echo time(); ?>"></script>
+</body>
+</html>

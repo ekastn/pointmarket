@@ -13,6 +13,16 @@ class BaseController
     public function __construct(ApiClient $apiClient)
     {
         $this->apiClient = $apiClient;
+
+        // Start the session and check for JWT token
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (isset($_SESSION['jwt_token'])) {
+            $this->apiClient->setJwtToken($_SESSION['jwt_token']);
+        }
+
         $this->renderer = new ViewRenderer(
             __DIR__ . '/../Views', // Path to your views
             __DIR__ . '/../Views/layouts' // Path to your layouts

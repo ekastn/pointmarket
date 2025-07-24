@@ -19,6 +19,6 @@ class ErrorController
     protected function render(string $viewPath, array $data = []): void
     {
         extract($data);
-        require __DIR__ . '/../../views/' . $viewPath;
+        require __DIR__ . '/../views/' . $viewPath;
     }
 }

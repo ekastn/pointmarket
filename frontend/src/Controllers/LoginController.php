@@ -46,9 +46,10 @@ class LoginController extends BaseController
 
         if ($response['success']) {
             // Store JWT token in session
-            $_SESSION['jwt_token'] = $response['data']['data']['token'];
+            session_start(); // Ensure session is started before setting
+            $_SESSION['jwt_token'] = $response['data']['token'];
             // Optionally store user info from response
-            $_SESSION['user_data'] = $response['data']['data']['user'] ?? null;
+            $_SESSION['user_data'] = $response['data']['user'] ?? null;
 
             $_SESSION['messages'] = ['success' => 'Login berhasil! Selamat datang.'];
             $this->redirect('/dashboard');

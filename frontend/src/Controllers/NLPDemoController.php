@@ -30,7 +30,7 @@ class NLPDemoController extends BaseController
             return;
         }
 
-        $user = $userProfileResponse['data']['data'];
+        $user = $userProfileResponse['data'];
 
         $this->render('nlp-demo', [
             'title' => 'NLP Demo',

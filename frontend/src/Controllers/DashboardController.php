@@ -33,7 +33,7 @@ class DashboardController extends BaseController
             return;
         }
 
-        $user = $userProfileResponse['data']['data'];
+        $user = $userProfileResponse['data'];
 
         // Fetch other dashboard data using $this->apiClient
         // For now, just pass the user data and messages

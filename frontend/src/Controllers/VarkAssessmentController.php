@@ -30,7 +30,7 @@ class VarkAssessmentController extends BaseController
             return;
         }
 
-        $user = $userProfileResponse['data']['data'];
+        $user = $userProfileResponse['data'];
 
         // In a real application, you would fetch these from the Go backend
         $varkQuestions = []; // Placeholder
@@ -66,7 +66,7 @@ class VarkAssessmentController extends BaseController
             return;
         }
 
-        $user = $userProfileResponse['data']['data'];
+        $user = $userProfileResponse['data'];
         
         $answers = [];
         for ($i = 1; $i <= 16; $i++) {

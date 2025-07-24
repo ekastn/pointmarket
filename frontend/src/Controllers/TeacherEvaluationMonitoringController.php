@@ -30,7 +30,7 @@ class TeacherEvaluationMonitoringController extends BaseController
             return;
         }
 
-        $user = $userProfileResponse['data']['data'];
+        $user = $userProfileResponse['data'];
 
         // In a real application, you would fetch these from the Go backend
         $studentStatus = []; // Placeholder

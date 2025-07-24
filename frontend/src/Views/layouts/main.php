@@ -15,11 +15,15 @@
     <div class="container-fluid">
         <div class="row">
             <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <?php include __DIR__ . '/../components/sidebar.php'; ?>
+                <div class="position-sticky pt-3">
+                    <?php include __DIR__ . '/../components/sidebar.php'; ?>
+                </div>
             </nav>
 
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <?php echo $content; ?>
+                <div class="pt-3">
+                    <?php echo $content; // This is where the view content will be injected ?>
+                </div>
             </main>
         </div>
     </div>

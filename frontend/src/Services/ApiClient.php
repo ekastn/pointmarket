@@ -42,7 +42,7 @@ class ApiClient
             $body = json_decode($response->getBody()->getContents(), true);
 
             if ($statusCode >= 200 && $statusCode < 300) {
-                return ['success' => true, 'data' => $body];
+                return ['success' => true, 'data' => $body['data']];
             } else {
                 return ['success' => false, 'error' => $body['message'] ?? 'Unknown API error', 'status' => $statusCode];
             }
@@ -61,7 +61,7 @@ class ApiClient
 
     public function login(string $username, string $password, string $role): array
     {
-        $response = $this->request('POST', '/auth/login', [
+        $response = $this->request('POST', '/api/v1/auth/login', [
             'json' => [
                 'username' => $username,
                 'password' => $password,
@@ -69,22 +69,20 @@ class ApiClient
             ],
         ]);
 
-        if ($response['success'] && isset($response['data']['data']['token'])) {
-            $this->setJwtToken($response['data']['data']['token']);
+        if ($response['success'] && isset($response['data']['token'])) {
+            $this->setJwtToken($response['data']['token']);
         }
         return $response;
     }
 
     public function getUserProfile(): array
     {
-        return $this->request('GET', '/profile');
+        return $this->request('GET', '/api/v1/profile');
     }
 
-    // Add methods for other API endpoints as needed
-    // Example for assignments:
     public function getAssignments(?int $teacherId = null): array
     {
-        $uri = '/assignments';
+        $uri = '/api/v1/assignments';
         $options = [];
         if ($teacherId !== null) {
             $options['query'] = ['teacher_id' => $teacherId];
@@ -94,23 +92,22 @@ class ApiClient
 
     public function createAssignment(array $data): array
     {
-        return $this->request('POST', '/assignments', ['json' => $data]);
+        return $this->request('POST', '/api/v1/assignments', ['json' => $data]);
     }
 
     public function updateAssignment(int $id, array $data): array
     {
-        return $this->request('PUT', '/assignments/' . $id, ['json' => $data]);
+        return $this->request('PUT', '/api/v1/assignments/' . $id, ['json' => $data]);
     }
 
     public function deleteAssignment(int $id): array
     {
-        return $this->request('DELETE', '/assignments/' . $id);
+        return $this->request('DELETE', '/api/v1/assignments/' . $id);
     }
 
-    // Example for quizzes:
     public function getQuizzes(?int $teacherId = null): array
     {
-        $uri = '/quizzes';
+        $uri = '/api/v1/quizzes';
         $options = [];
         if ($teacherId !== null) {
             $options['query'] = ['teacher_id' => $teacherId];
@@ -120,28 +117,27 @@ class ApiClient
 
     public function createQuiz(array $data): array
     {
-        return $this->request('POST', '/quizzes', ['json' => $data]);
+        return $this->request('POST', '/api/v1/quizzes', ['json' => $data]);
     }
 
     public function updateQuiz(int $id, array $data): array
     {
-        return $this->request('PUT', '/quizzes/' . $id, ['json' => $data]);
+        return $this->request('PUT', '/api/v1/quizzes/' . $id, ['json' => $data]);
     }
 
     public function deleteQuiz(int $id): array
     {
-        return $this->request('DELETE', '/quizzes/' . $id);
+        return $this->request('DELETE', '/api/v1/quizzes/' . $id);
     }
 
-    // Example for questionnaires:
     public function getQuestionnaire(int $id): array
     {
-        return $this->request('GET', '/questionnaires/' . $id);
+        return $this->request('GET', '/api/v1/questionnaires/' . $id);
     }
 
     public function submitQuestionnaire(int $questionnaireId, array $answers, int $weekNumber, int $year): array
     {
-        return $this->request('POST', '/questionnaires/submit', [
+        return $this->request('POST', '/api/v1/questionnaires/submit', [
             'json' => [
                 'questionnaire_id' => $questionnaireId,
                 'answers' => $answers,
@@ -151,26 +147,24 @@ class ApiClient
         ]);
     }
 
-    // Example for VARK:
     public function getVARKAssessment(): array
     {
-        return $this->request('GET', '/vark');
+        return $this->request('GET', '/api/v1/vark');
     }
 
     public function submitVARK(array $answers): array
     {
-        return $this->request('POST', '/vark/submit', ['json' => ['answers' => $answers]]);
+        return $this->request('POST', '/api/v1/vark/submit', ['json' => ['answers' => $answers]]);
     }
 
     public function getLatestVARKResult(): array
     {
-        return $this->request('GET', '/vark/latest');
+        return $this->request('GET', '/api/v1/vark/latest');
     }
 
-    // Example for NLP:
     public function analyzeText(string $text, string $contextType, ?int $assignmentId = null, ?int $quizId = null): array
     {
-        return $this->request('POST', '/nlp/analyze', [
+        return $this->request('POST', '/api/v1/nlp/analyze', [
             'json' => [
                 'text' => $text,
                 'context_type' => $contextType,
@@ -182,6 +176,6 @@ class ApiClient
 
     public function getNLPStats(): array
     {
-        return $this->request('GET', '/nlp/stats');
+        return $this->request('GET', '/api/v1/nlp/stats');
     }
 }

@@ -4,14 +4,14 @@ namespace App\Controllers;
 
 use App\Services\ApiClient;
 
-class AIExplanationController extends BaseController
+class UserController extends BaseController
 {
     public function __construct(ApiClient $apiClient)
     {
         parent::__construct($apiClient);
     }
 
-    public function show(): void
+    public function showProfile(): void
     {
         session_start();
         $jwt = $_SESSION['jwt_token'] ?? null;
@@ -32,8 +32,11 @@ class AIExplanationController extends BaseController
 
         $user = $userProfileResponse['data'];
 
-        $this->render('ai-explanation', [
-            'title' => 'AI Explanation',
+        // In a real application, you would render a profile view
+        // For now, we can just show a placeholder or redirect to the dashboard
+        // For this refactoring, let's assume we want to show the dashboard with the user's profile data
+        $this->render('dashboard', [
+            'title' => 'Profile',
             'user' => $user,
         ]);
     }

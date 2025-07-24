@@ -1,0 +1,13 @@
+{
+    "name": "pointmarket/frontend",
+    "description": "PointMarket PHP Frontend",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^7.0"
+    }
+}

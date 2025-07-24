@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Alert Auto-Dismiss</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Test Alert Auto-Dismiss</h2>
+        
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Regular Alert:</strong> This should disappear after 5 seconds.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div class="alert alert-info alert-dismissible fade show demo-alert" role="alert">
+            <strong>Demo Alert:</strong> This should stay visible until manually dismissed.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Success Alert:</strong> This should also disappear after 5 seconds.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

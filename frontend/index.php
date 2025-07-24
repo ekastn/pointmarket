@@ -1,0 +1,49 @@
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use App\Router;
+use App\Services\ApiClient;
+use App\Controllers\LoginController;
+use App\Controllers\DashboardController;
+use App\Controllers\AIExplanationController;
+use App\Controllers\AIRecommendationsController;
+use App\Controllers\NLPDemoController;
+use App\Controllers\AssignmentsController;
+use App\Controllers\QuestionnaireController;
+use App\Controllers\QuestionnaireProgressController;
+use App\Controllers\TeacherEvaluationMonitoringController;
+use App\Controllers\VarkAssessmentController;
+use App\Controllers\VarkCorrelationAnalysisController;
+
+// Load environment variables from .env file
+if (file_exists(__DIR__ . '/.env')) {
+    $env = parse_ini_file(__DIR__ . '/.env');
+    define('API_BASE_URL', $env['API_BASE_URL'] ?? 'http://localhost:8080');
+} else {
+    define('API_BASE_URL', 'http://localhost:8080');
+}
+
+// Initialize API Client
+$apiClient = new ApiClient(API_BASE_URL);
+
+$router = new Router($apiClient);
+
+// Define routes
+$router->get('/', [LoginController::class, 'showLoginForm']);
+$router->get('/login', [LoginController::class, 'showLoginForm']);
+$router->post('/login', [LoginController::class, 'processLogin']);
+$router->get('/dashboard', [DashboardController::class, 'showDashboard']);
+$router->get('/ai-explanation', [AIExplanationController::class, 'show']);
+$router->get('/ai-recommendations', [AIRecommendationsController::class, 'show']);
+$router->get('/nlp-demo', [NLPDemoController::class, 'show']);
+$router->get('/assignments', [AssignmentsController::class, 'index']);
+$router->get('/questionnaire', [QuestionnaireController::class, 'index']);
+$router->get('/questionnaire-progress', [QuestionnaireProgressController::class, 'index']);
+$router->get('/teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index']);
+$router->get('/vark-assessment', [VarkAssessmentController::class, 'show']);
+$router->post('/vark-assessment', [VarkAssessmentController::class, 'submit']);
+$router->get('/vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
+
+// Dispatch the request
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

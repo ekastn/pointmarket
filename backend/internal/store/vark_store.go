@@ -40,6 +40,17 @@ func (s *VARKStore) GetQuestionsByQuestionnaireID(questionnaireID int) ([]models
 	return questions, nil
 }
 
+// GetVARKAnswerOptionsByQuestionnaireID retrieves all VARK answer options for a given questionnaire ID
+func (s *VARKStore) GetVARKAnswerOptionsByQuestionnaireID(questionnaireID int) ([]models.VARKAnswerOption, error) {
+	var options []models.VARKAnswerOption
+	query := `SELECT id, question_id, option_letter, option_text, learning_style FROM vark_answer_options WHERE question_id IN (SELECT id FROM questionnaire_questions WHERE questionnaire_id = ?)`
+	err := s.db.Select(&options, query, questionnaireID)
+	if err != nil {
+		return nil, err
+	}
+	return options, nil
+}
+
 // CreateVARKResult saves a student's VARK assessment result
 func (s *VARKStore) CreateVARKResult(result *models.VARKResult) error {
 	query := `INSERT INTO vark_results (student_id, visual_score, auditory_score, reading_score, kinesthetic_score, dominant_style, learning_preference, answers, completed_at, week_number, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`

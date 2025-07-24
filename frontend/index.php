@@ -15,6 +15,7 @@ use App\Controllers\QuestionnaireProgressController;
 use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\VarkAssessmentController;
 use App\Controllers\VarkCorrelationAnalysisController;
+use App\Controllers\QuizController;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -38,6 +39,7 @@ $router->get('/ai-explanation', [AIExplanationController::class, 'show']);
 $router->get('/ai-recommendations', [AIRecommendationsController::class, 'show']);
 $router->get('/nlp-demo', [NLPDemoController::class, 'show']);
 $router->get('/assignments', [AssignmentsController::class, 'index']);
+$router->get('/quiz', [QuizController::class, 'index']);
 $router->get('/questionnaire', [QuestionnaireController::class, 'index']);
 $router->get('/questionnaire-progress', [QuestionnaireProgressController::class, 'index']);
 $router->get('/teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index']);

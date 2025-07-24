@@ -18,6 +18,15 @@ func NewQuestionnaireHandler(questionnaireService services.QuestionnaireService)
 	return &QuestionnaireHandler{questionnaireService: questionnaireService}
 }
 
+func (h *QuestionnaireHandler) GetAllQuestionnaires(c *gin.Context) {
+	questionnaires, err := h.questionnaireService.GetAllQuestionnaires()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Questionnaires retrieved successfully", questionnaires)
+}
+
 func (h *QuestionnaireHandler) GetQuestionnaireByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	questionnaire, questions, err := h.questionnaireService.GetQuestionnaireByID(uint(id))
@@ -44,4 +53,24 @@ func (h *QuestionnaireHandler) SubmitQuestionnaire(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", result)
+}
+
+func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	history, err := h.questionnaireService.GetQuestionnaireHistoryByStudentID(userID.(uint))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Questionnaire history retrieved successfully", history)
+}
+
+func (h *QuestionnaireHandler) GetQuestionnaireStats(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	stats, err := h.questionnaireService.GetQuestionnaireStatsByStudentID(userID.(uint))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Questionnaire statistics retrieved successfully", stats)
 }

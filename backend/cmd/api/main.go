@@ -91,8 +91,11 @@ func main() {
 		// Questionnaire routes
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{
+			questionnaireRoutes.GET("", questionnaireHandler.GetAllQuestionnaires) // New route
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
 			questionnaireRoutes.POST("/submit", questionnaireHandler.SubmitQuestionnaire)
+			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory) // New route
+			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)     // New route
 		}
 
 		// VARK routes

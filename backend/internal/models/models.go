@@ -79,6 +79,17 @@ type QuestionnaireResult struct {
 	Year          int       `db:"year"`
 }
 
+// QuestionnaireStat represents aggregated statistics for a questionnaire type for a student
+type QuestionnaireStat struct {
+	Type          string     `db:"type" json:"type"`
+	Name          string     `db:"name" json:"name"`
+	TotalCompleted int        `db:"total_completed" json:"total_completed"`
+	AverageScore  *float64   `db:"average_score" json:"average_score"`
+	BestScore     *float64   `db:"best_score" json:"best_score"`
+	LowestScore   *float64   `db:"lowest_score" json:"lowest_score"`
+	LastCompleted *time.Time `db:"last_completed" json:"last_completed"`
+}
+
 // VARKAnswerOption represents an answer option for a VARK question
 type VARKAnswerOption struct {
 	ID          int    `db:"id"`

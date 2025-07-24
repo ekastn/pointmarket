@@ -21,7 +21,7 @@ func NewVARKService(varkStore *store.VARKStore) *VARKService {
 }
 
 // GetVARKQuestions retrieves VARK questions and their options
-func (s *VARKService) GetVARKQuestions() (models.Questionnaire, []models.QuestionnaireQuestion, error) {
+func (s *VARKService) GetVARKQuestions() (models.Questionnaire, []dtos.QuestionResponse, error) {
 	q, err := s.varkStore.GetVARKQuestionnaire()
 	if err != nil {
 		return models.Questionnaire{}, nil, err
@@ -32,11 +32,28 @@ func (s *VARKService) GetVARKQuestions() (models.Questionnaire, []models.Questio
 		return models.Questionnaire{}, nil, err
 	}
 
-	// For the frontend to display options, we need to attach them to questions
-	// This might require a custom DTO or modifying the existing QuestionnaireQuestion model
-	// For now, assuming frontend handles options based on question ID and option letter (a,b,c,d)
+	options, err := s.varkStore.GetVARKAnswerOptionsByQuestionnaireID(q.ID)
+	if err != nil {
+		return models.Questionnaire{}, nil, err
+	}
 
-	return *q, questions, nil
+	// Map options to questions
+	questionOptionsMap := make(map[int][]dtos.VARKAnswerOptionDTO)
+	for _, opt := range options {
+		var optDTO dtos.VARKAnswerOptionDTO
+		optDTO.FromVARKAnswerOption(opt)
+		questionOptionsMap[opt.QuestionID] = append(questionOptionsMap[opt.QuestionID], optDTO)
+	}
+
+	var questionDTOs []dtos.QuestionResponse
+	for _, question := range questions {
+		var questionDTO dtos.QuestionResponse
+		questionDTO.FromQuestion(question)
+		questionDTO.Options = questionOptionsMap[question.ID]
+		questionDTOs = append(questionDTOs, questionDTO)
+	}
+
+	return *q, questionDTOs, nil
 }
 
 // SubmitVARK calculates and saves a student's VARK assessment result
@@ -170,3 +187,4 @@ func (s *VARKService) generateLearningPreference(dominantStyle string) string {
 		return "Learning preference not specified."
 	}
 }
+

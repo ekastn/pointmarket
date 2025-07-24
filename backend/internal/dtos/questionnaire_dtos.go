@@ -29,26 +29,32 @@ type QuestionnaireResponse struct {
 }
 
 type QuestionResponse struct {
-	ID             int     `json:"id"`
-	QuestionnaireID int     `json:"questionnaire_id"`
-	QuestionNumber int     `json:"question_number"`
-	QuestionText   string  `json:"question_text"`
-	Subscale       *string `json:"subscale"`
-	ReverseScored  bool    `json:"reverse_scored"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID             int                  `json:"id"`
+	QuestionnaireID int                  `json:"questionnaire_id"`
+	QuestionNumber int                  `json:"question_number"`
+	QuestionText   string               `json:"question_text"`
+	Subscale       *string              `json:"subscale"`
+	ReverseScored  bool                 `json:"reverse_scored"`
+	Options        []VARKAnswerOptionDTO `json:"options,omitempty"` // Added for VARK questions
+	CreatedAt      time.Time            `json:"created_at"`
+}
+
+type VARKAnswerOptionDTO struct {
+	ID          int    `json:"id"`
+	QuestionID  int    `json:"question_id"`
+	OptionLetter string `json:"option_letter"`
+	OptionText  string `json:"option_text"`
 }
 
 // FromQuestionnaire converts a models.Questionnaire and its questions to a QuestionnaireResponse DTO.
-func (dto *QuestionnaireResponse) FromQuestionnaire(q models.Questionnaire, questions []models.QuestionnaireQuestion) {
+func (dto *QuestionnaireResponse) FromQuestionnaire(q models.Questionnaire, questions []QuestionResponse) {
 	dto.ID = q.ID
 	dto.Name = q.Name
 	dto.Description = q.Description
 	dto.CreatedAt = q.CreatedAt
 	dto.Questions = make([]QuestionResponse, len(questions))
 	for i, question := range questions {
-		var questionDTO QuestionResponse
-		questionDTO.FromQuestion(question)
-		dto.Questions[i] = questionDTO
+		dto.Questions[i] = question // Directly assign as it's already a DTO
 	}
 }
 
@@ -61,4 +67,12 @@ func (dto *QuestionResponse) FromQuestion(question models.QuestionnaireQuestion)
 	dto.Subscale = question.Subscale
 	dto.ReverseScored = question.ReverseScored
 	dto.CreatedAt = question.CreatedAt
+}
+
+// FromVARKAnswerOption converts a models.VARKAnswerOption to a VARKAnswerOptionDTO.
+func (dto *VARKAnswerOptionDTO) FromVARKAnswerOption(option models.VARKAnswerOption) {
+	dto.ID = option.ID
+	dto.QuestionID = option.QuestionID
+	dto.OptionLetter = option.OptionLetter
+	dto.OptionText = option.OptionText
 }

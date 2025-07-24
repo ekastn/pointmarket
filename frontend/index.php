@@ -38,6 +38,7 @@ $router->get('/dashboard', [DashboardController::class, 'showDashboard']);
 $router->get('/ai-explanation', [AIExplanationController::class, 'show']);
 $router->get('/ai-recommendations', [AIRecommendationsController::class, 'show']);
 $router->get('/nlp-demo', [NLPDemoController::class, 'show']);
+$router->post('/nlp-demo/analyze', [NLPDemoController::class, 'analyze']); // Added route for NLP analysis
 $router->get('/assignments', [AssignmentsController::class, 'index']);
 $router->get('/quiz', [QuizController::class, 'index']);
 $router->get('/questionnaire', [QuestionnaireController::class, 'index']);

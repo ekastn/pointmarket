@@ -19,7 +19,7 @@ func NewQuestionnaireService(questionnaireStore *store.QuestionnaireStore) *Ques
 }
 
 // GetQuestionnaireByID retrieves a questionnaire by ID with its questions
-func (s *QuestionnaireService) GetQuestionnaireByID(id uint) (models.Questionnaire, []models.QuestionnaireQuestion, error) {
+func (s *QuestionnaireService) GetQuestionnaireByID(id uint) (models.Questionnaire, []dtos.QuestionResponse, error) {
 	q, err := s.questionnaireStore.GetQuestionnaireByID(int(id))
 	if err != nil {
 		return models.Questionnaire{}, nil, err
@@ -30,7 +30,14 @@ func (s *QuestionnaireService) GetQuestionnaireByID(id uint) (models.Questionnai
 		return models.Questionnaire{}, nil, err
 	}
 
-	return *q, questions, nil
+	var questionDTOs []dtos.QuestionResponse
+	for _, question := range questions {
+		var questionDTO dtos.QuestionResponse
+		questionDTO.FromQuestion(question)
+		questionDTOs = append(questionDTOs, questionDTO)
+	}
+
+	return *q, questionDTOs, nil
 }
 
 // SubmitQuestionnaire saves a student's questionnaire answers

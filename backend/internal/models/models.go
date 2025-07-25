@@ -53,6 +53,7 @@ type Questionnaire struct {
 	TotalQuestions int       `db:"total_questions"`
 	Status       string    `db:"status"`
 	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
 // QuestionnaireQuestion represents a question within a questionnaire
@@ -64,6 +65,7 @@ type QuestionnaireQuestion struct {
 	Subscale     *string   `db:"subscale"`
 	ReverseScored bool      `db:"reverse_scored"`
 	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
 // QuestionnaireResult represents a student's submission for a questionnaire
@@ -89,8 +91,6 @@ type QuestionnaireStat struct {
 	LowestScore   *float64   `db:"lowest_score" json:"lowest_score"`
 	LastCompleted *time.Time `db:"last_completed" json:"last_completed"`
 }
-
-
 
 // StudentDashboardStats represents aggregated statistics for a student's dashboard
 type StudentDashboardStats struct {
@@ -141,6 +141,21 @@ type WeeklyEvaluationOverview struct {
 	AverageScore      *float64   `db:"average_score" json:"average_score"`
 }
 
+// Material represents a study material in the database
+type Material struct {
+	ID          int       `db:"id"`
+	Title       string    `db:"title"`
+	Description *string   `db:"description"`
+	Subject     string    `db:"subject"`
+	TeacherID   int       `db:"teacher_id"`
+	FilePath    *string   `db:"file_path"`
+	FileType    *string   `db:"file_type"`
+	Status      string    `db:"status"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
+}
+
+// VARKAnswerOption represents an answer option for a VARK question
 type VARKAnswerOption struct {
 	ID          int    `db:"id"`
 	QuestionID  int    `db:"question_id"`

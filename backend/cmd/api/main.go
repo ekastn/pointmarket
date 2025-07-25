@@ -23,6 +23,7 @@ func main() {
 	questionnaireStore := store.NewQuestionnaireStore(db)
 	varkStore := store.NewVARKStore(db)
 	nlpStore := store.NewNLPStore(db)
+	materialStore := store.NewMaterialStore(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userStore, cfg)
@@ -32,6 +33,7 @@ func main() {
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore)
 	varkService := services.NewVARKService(varkStore)
 	nlpService := services.NewNLPService(nlpStore)
+	materialService := services.NewMaterialService(materialStore)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(*authService)
@@ -41,6 +43,7 @@ func main() {
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
 	varkHandler := handler.NewVARKHandler(*varkService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
+	materialHandler := handler.NewMaterialHandler(*materialService)
 
 	r := gin.Default()
 
@@ -126,6 +129,16 @@ func main() {
 			dashboardRoutes.GET("/student/stats", userHandler.GetStudentDashboardStats)
 			dashboardRoutes.GET("/admin/counts", userHandler.GetAdminDashboardCounts)
 			dashboardRoutes.GET("/teacher/counts", userHandler.GetTeacherDashboardCounts)
+		}
+
+		// Material routes
+		materialRoutes := authRequired.Group("/materials")
+		{
+			materialRoutes.GET("", materialHandler.GetAllMaterials)
+			materialRoutes.POST("", materialHandler.CreateMaterial)
+			materialRoutes.GET("/:id", materialHandler.GetMaterialByID)
+			materialRoutes.PUT("/:id", materialHandler.UpdateMaterial)
+			materialRoutes.DELETE("/:id", materialHandler.DeleteMaterial)
 		}
 	}
 

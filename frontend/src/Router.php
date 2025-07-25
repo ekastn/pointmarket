@@ -34,22 +34,32 @@ class Router
     {
         $path = parse_url($uri, PHP_URL_PATH);
 
+        // Try direct match
         if (isset($this->routes[$method][$path])) {
             [$controllerClass, $methodName] = $this->routes[$method][$path];
-
-            if (class_exists($controllerClass)) {
-                $controller = new $controllerClass($this->apiClient);
-                if (method_exists($controller, $methodName)) {
-                    $controller->$methodName();
-                } else {
-                    $this->handleError(500, "Method {$methodName} not found in {$controllerClass}");
-                }
-            } else {
-                $this->handleError(500, "Controller class {$controllerClass} not found");
-            }
-        } else {
-            $this->handleError(404, "No route found for {$method} {$path}");
+            $controller = new $controllerClass($this->apiClient);
+            $controller->$methodName();
+            return;
         }
+
+        // Try dynamic routes
+        foreach ($this->routes[$method] as $routePath => $handler) {
+            // Convert route path to a regex pattern
+            $pattern = preg_replace('/{([a-zA-Z0-9_]+)}', '([a-zA-Z0-9_]+)', $routePath);
+            $pattern = '#^' . $pattern . '$#';
+
+            if (preg_match($pattern, $path, $matches)) {
+                array_shift($matches); // Remove the full match
+                [$controllerClass, $methodName] = $handler;
+                $controller = new $controllerClass($this->apiClient);
+                
+                // Call the method with captured parameters
+                call_user_func_array([$controller, $methodName], $matches);
+                return;
+            }
+        }
+
+        $this->handleError(404, "No route found for {$method} {$path}");
     }
 
     protected function handleError(int $statusCode, string $message): void

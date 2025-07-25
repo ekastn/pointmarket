@@ -218,4 +218,29 @@ class ApiClient
     {
         return $this->request('GET', '/api/v1/dashboard/teacher/counts');
     }
+
+    public function getAllMaterials(): array
+    {
+        return $this->request('GET', '/api/v1/materials');
+    }
+
+    public function getMaterialByID(int $id): array
+    {
+        return $this->request('GET', '/api/v1/materials/' . $id);
+    }
+
+    public function createMaterial(array $data): array
+    {
+        return $this->request('POST', '/api/v1/materials', ['json' => $data]);
+    }
+
+    public function updateMaterial(int $id, array $data): array
+    {
+        return $this->request('PUT', '/api/v1/materials/' . $id, ['json' => $data]);
+    }
+
+    public function deleteMaterial(int $id): array
+    {
+        return $this->request('DELETE', '/api/v1/materials/' . $id);
+    }
 }

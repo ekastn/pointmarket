@@ -32,11 +32,26 @@ class TeacherEvaluationMonitoringController extends BaseController
 
         $user = $userProfileResponse['data'];
 
-        // In a real application, you would fetch these from the Go backend
-        $studentStatus = []; // Placeholder
-        $weeklyOverview = []; // Placeholder
+        $studentStatus = [];
+        $weeklyOverview = [];
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
+
+        // Fetch student evaluation status
+        $studentStatusResponse = $this->apiClient->getStudentEvaluationStatus();
+        if ($studentStatusResponse['success']) {
+            $studentStatus = $studentStatusResponse['data'] ?? [];
+        } else {
+            $_SESSION['messages'] = ['error' => $studentStatusResponse['error'] ?? 'Failed to fetch student statuses.'];
+        }
+
+        // Fetch weekly evaluation overview
+        $weeklyOverviewResponse = $this->apiClient->getWeeklyEvaluationOverview();
+        if ($weeklyOverviewResponse['success']) {
+            $weeklyOverview = $weeklyOverviewResponse['data'] ?? [];
+        } else {
+            $_SESSION['messages'] = ['error' => $weeklyOverviewResponse['error'] ?? 'Failed to fetch weekly overview.'];
+        }
 
         $this->render('teacher-evaluation-monitoring', [
             'title' => 'Teacher Evaluation Monitoring',

@@ -178,4 +178,29 @@ class ApiClient
     {
         return $this->request('GET', '/api/v1/nlp/stats');
     }
+
+    public function getAllQuestionnaires(): array
+    {
+        return $this->request('GET', '/api/v1/questionnaires');
+    }
+
+    public function getQuestionnaireHistory(): array
+    {
+        return $this->request('GET', '/api/v1/questionnaires/history');
+    }
+
+    public function getQuestionnaireStats(): array
+    {
+        return $this->request('GET', '/api/v1/questionnaires/stats');
+    }
+
+    public function getStudentEvaluationStatus(): array
+    {
+        return $this->request('GET', '/api/v1/teacher/evaluations/status');
+    }
+
+    public function getWeeklyEvaluationOverview(int $weeks = 4): array
+    {
+        return $this->request('GET', '/api/v1/teacher/evaluations/overview?weeks=' . $weeks);
+    }
 }

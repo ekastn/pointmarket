@@ -91,6 +91,30 @@ type QuestionnaireStat struct {
 }
 
 // VARKAnswerOption represents an answer option for a VARK question
+type StudentEvaluationStatus struct {
+	StudentID         int        `db:"student_id" json:"student_id"`
+	StudentName       string     `db:"student_name" json:"student_name"`
+	StudentEmail      string     `db:"student_email" json:"student_email"`
+	CompletedThisWeek int        `db:"completed_this_week" json:"completed_this_week"`
+	PendingThisWeek   int        `db:"pending_this_week" json:"pending_this_week"`
+	OverdueThisWeek   int        `db:"overdue_this_week" json:"overdue_this_week"`
+	MSLQScoreThisWeek *float64   `db:"mslq_score_this_week" json:"mslq_score_this_week"`
+	AMSScoreThisWeek  *float64   `db:"ams_score_this_week" json:"ams_score_this_week"`
+	LastEvaluation    *time.Time `db:"last_evaluation" json:"last_evaluation"`
+}
+
+// WeeklyEvaluationOverview represents aggregated weekly progress for teachers
+type WeeklyEvaluationOverview struct {
+	WeekNumber        int        `db:"week_number" json:"week_number"`
+	Year              int        `db:"year" json:"year"`
+	QuestionnaireType string     `db:"questionnaire_type" json:"questionnaire_type"`
+	CompletedCount    int        `db:"completed_count" json:"completed_count"`
+	PendingCount      int        `db:"pending_count" json:"pending_count"`
+	OverdueCount      int        `db:"overdue_count" json:"overdue_count"`
+	TotalCount        int        `db:"total_count" json:"total_count"`
+	AverageScore      *float64   `db:"average_score" json:"average_score"`
+}
+
 type VARKAnswerOption struct {
 	ID          int    `db:"id"`
 	QuestionID  int    `db:"question_id"`

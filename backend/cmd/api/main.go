@@ -112,6 +112,13 @@ func main() {
 			nlpRoutes.POST("/analyze", nlpHandler.AnalyzeText)
 			nlpRoutes.GET("/stats", nlpHandler.GetNLPStats)
 		}
+
+		// Teacher routes
+		teacherRoutes := authRequired.Group("/teacher")
+		{
+			teacherRoutes.GET("/evaluations/status", userHandler.GetStudentEvaluationStatus)
+			teacherRoutes.GET("/evaluations/overview", userHandler.GetWeeklyEvaluationOverview)
+		}
 	}
 
 	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)

@@ -243,4 +243,19 @@ class ApiClient
     {
         return $this->request('DELETE', '/api/v1/materials/' . $id);
     }
+
+    public function getAssignmentStatsByStudentID(): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/student/assignments/stats');
+    }
+
+    public function getRecentActivityByUserID(int $limit = 10): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/student/activity?limit=' . $limit);
+    }
+
+    public function getWeeklyEvaluationProgressByStudentID(int $weeks = 8): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/student/evaluations/progress?weeks=' . $weeks);
+    }
 }

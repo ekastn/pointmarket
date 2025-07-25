@@ -196,3 +196,80 @@ func (s *UserStore) GetWeeklyEvaluationOverview(weeks int) ([]models.WeeklyEvalu
 	}
 	return overviews, nil
 }
+
+// GetAssignmentStatsByStudentID retrieves assignment statistics for a student
+func (s *UserStore) GetAssignmentStatsByStudentID(studentID int) (*models.AssignmentStats, error) {
+	var stats models.AssignmentStats
+	query := `
+		SELECT 
+			COUNT(*) as total_assignments,
+			COALESCE(AVG(sa.score), 0) as avg_score,
+			COALESCE(MAX(sa.score), 0) as best_score,
+			COALESCE(MIN(sa.score), 0) as lowest_score,
+			COUNT(CASE WHEN sa.score >= 80 THEN 1 END) as high_scores,
+			COUNT(CASE WHEN sa.submitted_at > a.due_date THEN 1 END) as late_submissions
+		FROM student_assignments sa
+		JOIN assignments a ON sa.assignment_id = a.id
+		WHERE sa.student_id = ? AND sa.status = 'completed'
+	`
+	err := s.db.Get(&stats, query, studentID)
+	if err == sql.ErrNoRows {
+		return &models.AssignmentStats{}, nil // Return empty stats if no rows
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &stats, nil
+}
+
+// GetRecentActivityByUserID retrieves recent activity for a user
+func (s *UserStore) GetRecentActivityByUserID(userID int, limit int) ([]models.ActivityLog, error) {
+	var activities []models.ActivityLog
+	query := `
+		SELECT id, user_id, action, description, ip_address, user_agent, created_at
+		FROM activity_log
+		WHERE user_id = ?
+		ORDER BY created_at DESC
+		LIMIT ?
+	`
+	err := s.db.Select(&activities, query, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	return activities, nil
+}
+
+// GetWeeklyEvaluationProgressByStudentID retrieves weekly evaluation progress for a student
+func (s *UserStore) GetWeeklyEvaluationProgressByStudentID(studentID int, weeks int) ([]models.WeeklyEvaluationProgress, error) {
+	var progress []models.WeeklyEvaluationProgress
+	query := `
+		SELECT 
+			we.week_number,
+			we.year,
+			q.type as questionnaire_type,
+			q.name as questionnaire_name,
+			we.status,
+			we.due_date,
+			we.completed_at,
+			qr.total_score as mslq_score, -- Assuming MSLQ score for now
+			(SELECT qr2.total_score FROM questionnaire_results qr2 JOIN questionnaires q2 ON qr2.questionnaire_id = q2.id WHERE qr2.student_id = we.student_id AND q2.type = 'ams' AND qr2.week_number = we.week_number AND qr2.year = we.year ORDER BY qr2.completed_at DESC LIMIT 1) as ams_score
+		FROM weekly_evaluations we
+		JOIN questionnaires q ON we.questionnaire_id = q.id
+		LEFT JOIN questionnaire_results qr ON (
+			qr.student_id = we.student_id 
+			AND qr.questionnaire_id = we.questionnaire_id 
+			AND qr.week_number = we.week_number 
+			AND qr.year = we.year
+		)
+		WHERE we.student_id = ? 
+		AND q.type != 'vark'
+		AND ((we.year = YEAR(CURDATE()) AND we.week_number >= (WEEK(CURDATE(), 1) - ? + 1)) OR we.year > YEAR(CURDATE()))
+		ORDER BY we.year DESC, we.week_number DESC, q.type
+		LIMIT ? * 2 -- 2 questionnaires per week
+	`
+	err := s.db.Select(&progress, query, studentID, weeks, weeks)
+	if err != nil {
+		return nil, err
+	}
+	return progress, nil
+}

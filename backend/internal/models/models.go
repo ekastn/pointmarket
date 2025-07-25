@@ -155,6 +155,56 @@ type Material struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
+
+// NLPFeedbackTemplate represents a template for NLP feedback
+type NLPFeedbackTemplate struct {
+	ID          int       `db:"id"`
+	TemplateName string    `db:"template_name"`
+	ScoreRangeMin int       `db:"score_range_min"`
+	ScoreRangeMax int       `db:"score_range_max"`
+	Component   string    `db:"component"`
+	VARKStyle   string    `db:"vark_style"`
+	MSLQProfile string    `db:"mslq_profile"`
+	FeedbackText string    `db:"feedback_text"`
+	IsActive    bool      `db:"is_active"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
+}
+
+// AssignmentStats represents aggregated statistics for a student's assignments
+type AssignmentStats struct {
+	TotalAssignments int       `db:"total_assignments" json:"total_assignments"`
+	AvgScore         float64   `db:"avg_score" json:"avg_score"`
+	BestScore        float64   `db:"best_score" json:"best_score"`
+	LowestScore      float64   `db:"lowest_score" json:"lowest_score"`
+	HighScores       int       `db:"high_scores" json:"high_scores"`
+	LateSubmissions  int       `db:"late_submissions" json:"late_submissions"`
+}
+
+// ActivityLog represents a log entry for user activity
+type ActivityLog struct {
+	ID          int       `db:"id" json:"id"`
+	UserID      *int      `db:"user_id" json:"user_id"`
+	Action      string    `db:"action" json:"action"`
+	Description *string   `db:"description" json:"description"`
+	IPAddress   *string   `db:"ip_address" json:"ip_address"`
+	UserAgent   *string   `db:"user_agent" json:"user_agent"`
+	CreatedAt   time.Time `db:"created_at" json:"created_at"`
+}
+
+// WeeklyEvaluationProgress represents a student's weekly evaluation progress
+type WeeklyEvaluationProgress struct {
+	WeekNumber        int        `db:"week_number" json:"week_number"`
+	Year              int        `db:"year" json:"year"`
+	QuestionnaireType string     `db:"questionnaire_type" json:"questionnaire_type"`
+	QuestionnaireName string     `db:"questionnaire_name" json:"questionnaire_name"`
+	Status            string     `db:"status" json:"status"`
+	DueDate           *time.Time `db:"due_date" json:"due_date"`
+	CompletedAt       *time.Time `db:"completed_at" json:"completed_at"`
+	MSLQScore         *float64   `db:"mslq_score" json:"mslq_score"`
+	AMSScore          *float64   `db:"ams_score" json:"ams_score"`
+}
+
 // VARKAnswerOption represents an answer option for a VARK question
 type VARKAnswerOption struct {
 	ID          int    `db:"id"`
@@ -231,19 +281,4 @@ type NLPProgress struct {
 	StructureImprovement float64   `db:"structure_improvement"`
 	CreatedAt          time.Time `db:"created_at"`
 	UpdatedAt          time.Time `db:"updated_at"`
-}
-
-// NLPFeedbackTemplate represents a template for NLP feedback
-type NLPFeedbackTemplate struct {
-	ID          int       `db:"id"`
-	TemplateName string    `db:"template_name"`
-	ScoreRangeMin int       `db:"score_range_min"`
-	ScoreRangeMax int       `db:"score_range_max"`
-	Component   string    `db:"component"`
-	VARKStyle   string    `db:"vark_style"`
-	MSLQProfile string    `db:"mslq_profile"`
-	FeedbackText string    `db:"feedback_text"`
-	IsActive    bool      `db:"is_active"`
-	CreatedAt   time.Time `db:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"`
 }

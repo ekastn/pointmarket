@@ -104,3 +104,64 @@ func (h *UserHandler) GetWeeklyEvaluationOverview(c *gin.Context) {
 	}
 	response.Success(c, http.StatusOK, "Weekly evaluation overview retrieved successfully", overviews)
 }
+
+// GetAssignmentStatsByStudentID handles fetching assignment statistics for a student
+func (h *UserHandler) GetAssignmentStatsByStudentID(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	stats, err := h.userService.GetAssignmentStatsByStudentID(userID.(uint))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Assignment statistics retrieved successfully", stats)
+}
+
+// GetRecentActivityByUserID handles fetching recent activity for a user
+func (h *UserHandler) GetRecentActivityByUserID(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		response.Error(c, http.StatusBadRequest, "Invalid limit parameter")
+		return
+	}
+
+	activities, err := h.userService.GetRecentActivityByUserID(userID.(uint), limit)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Recent activity retrieved successfully", activities)
+}
+
+// GetWeeklyEvaluationProgressByStudentID handles fetching weekly evaluation progress for a student
+func (h *UserHandler) GetWeeklyEvaluationProgressByStudentID(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	weeksStr := c.DefaultQuery("weeks", "8")
+	weeks, err := strconv.Atoi(weeksStr)
+	if err != nil || weeks <= 0 {
+		response.Error(c, http.StatusBadRequest, "Invalid weeks parameter")
+		return
+	}
+
+	progress, err := h.userService.GetWeeklyEvaluationProgressByStudentID(userID.(uint), weeks)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return	}
+	response.Success(c, http.StatusOK, "Weekly evaluation progress retrieved successfully", progress)
+}

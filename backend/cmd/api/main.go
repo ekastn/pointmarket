@@ -129,6 +129,9 @@ func main() {
 			dashboardRoutes.GET("/student/stats", userHandler.GetStudentDashboardStats)
 			dashboardRoutes.GET("/admin/counts", userHandler.GetAdminDashboardCounts)
 			dashboardRoutes.GET("/teacher/counts", userHandler.GetTeacherDashboardCounts)
+			dashboardRoutes.GET("/student/assignments/stats", userHandler.GetAssignmentStatsByStudentID)
+			dashboardRoutes.GET("/student/activity", userHandler.GetRecentActivityByUserID)
+			dashboardRoutes.GET("/student/evaluations/progress", userHandler.GetWeeklyEvaluationProgressByStudentID)
 		}
 
 		// Material routes

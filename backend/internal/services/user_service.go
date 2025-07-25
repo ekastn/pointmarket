@@ -49,3 +49,18 @@ func (s *UserService) GetStudentEvaluationStatus() ([]models.StudentEvaluationSt
 func (s *UserService) GetWeeklyEvaluationOverview(weeks int) ([]models.WeeklyEvaluationOverview, error) {
 	return s.userStore.GetWeeklyEvaluationOverview(weeks)
 }
+
+// GetAssignmentStatsByStudentID retrieves assignment statistics for a student
+func (s *UserService) GetAssignmentStatsByStudentID(studentID uint) (*models.AssignmentStats, error) {
+	return s.userStore.GetAssignmentStatsByStudentID(int(studentID))
+}
+
+// GetRecentActivityByUserID retrieves recent activity for a user
+func (s *UserService) GetRecentActivityByUserID(userID uint, limit int) ([]models.ActivityLog, error) {
+	return s.userStore.GetRecentActivityByUserID(int(userID), limit)
+}
+
+// GetWeeklyEvaluationProgressByStudentID retrieves weekly evaluation progress for a student
+func (s *UserService) GetWeeklyEvaluationProgressByStudentID(studentID uint, weeks int) ([]models.WeeklyEvaluationProgress, error) {
+	return s.userStore.GetWeeklyEvaluationProgressByStudentID(int(studentID), weeks)
+}

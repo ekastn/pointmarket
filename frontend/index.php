@@ -17,6 +17,7 @@ use App\Controllers\VarkAssessmentController;
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\QuizController;
 use App\Controllers\MaterialsController;
+use App\Controllers\ProgressController;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -56,6 +57,9 @@ $router->post('/materials/create', [MaterialsController::class, 'create']);
 $router->get('/materials/edit/{id}', [MaterialsController::class, 'edit']);
 $router->post('/materials/edit/{id}', [MaterialsController::class, 'edit']);
 $router->post('/materials/delete/{id}', [MaterialsController::class, 'delete']);
+
+// Progress/Analytics routes
+$router->get('/progress', [ProgressController::class, 'index']);
 
 // Dispatch the request
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

@@ -34,12 +34,58 @@ class ProfileController extends BaseController
 
         $user = $userProfileResponse['data'];
 
+        $assignmentStats = null;
+        $questionnaireStats = [];
+        $nlpStats = null;
+        $varkResult = null;
+        $weeklyProgress = [];
+        $recentActivities = [];
+
+        // Fetch additional data for student profile
+        if ($user['role'] === 'siswa') {
+            $assignmentStatsResponse = $this->apiClient->getAssignmentStatsByStudentID();
+            if ($assignmentStatsResponse['success']) {
+                $assignmentStats = $assignmentStatsResponse['data'];
+            }
+
+            $questionnaireStatsResponse = $this->apiClient->getQuestionnaireStats();
+            if ($questionnaireStatsResponse['success']) {
+                $questionnaireStats = $questionnaireStatsResponse['data'] ?? [];
+            }
+
+            $nlpStatsResponse = $this->apiClient->getNLPStats();
+            if ($nlpStatsResponse['success']) {
+                $nlpStats = $nlpStatsResponse['data'] ?? null;
+            }
+
+            $varkResultResponse = $this->apiClient->getLatestVARKResult();
+            if ($varkResultResponse['success']) {
+                $varkResult = $varkResultResponse['data'] ?? null;
+            }
+
+            $weeklyProgressResponse = $this->apiClient->getWeeklyEvaluationProgressByStudentID();
+            if ($weeklyProgressResponse['success']) {
+                $weeklyProgress = $weeklyProgressResponse['data'] ?? [];
+            }
+
+            $recentActivitiesResponse = $this->apiClient->getRecentActivityByUserID();
+            if ($recentActivitiesResponse['success']) {
+                $recentActivities = $recentActivitiesResponse['data'] ?? [];
+            }
+        }
+
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
         $this->render('profile', [
             'title' => 'My Profile',
             'user' => $user,
+            'assignmentStats' => $assignmentStats,
+            'questionnaireStats' => $questionnaireStats,
+            'nlpStats' => $nlpStats,
+            'varkResult' => $varkResult,
+            'weeklyProgress' => $weeklyProgress,
+            'recentActivities' => $recentActivities,
             'messages' => $messages,
         ]);
     }

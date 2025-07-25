@@ -59,32 +59,29 @@ class NLPDemoController extends BaseController
         $jwt = $_SESSION['jwt_token'] ?? null;
 
         if (!$jwt) {
-            $this->redirect('/login');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
             return;
         }
 
         $this->apiClient->setJwtToken($jwt);
 
-        $textToAnalyze = $_POST['text_to_analyze'] ?? '';
-        $contextType = $_POST['context_type'] ?? 'general';
-        $assignmentId = isset($_POST['assignment_id']) && $_POST['assignment_id'] !== '' ? (int)$_POST['assignment_id'] : null;
-        $quizId = isset($_POST['quiz_id']) && $_POST['quiz_id'] !== '' ? (int)$_POST['quiz_id'] : null;
+        $input = json_decode(file_get_contents('php://input'), true);
+        $textToAnalyze = $input['text_to_analyze'] ?? '';
+        $contextType = $input['context_type'] ?? 'general';
+        $assignmentId = isset($input['assignment_id']) && $input['assignment_id'] !== '' ? (int)$input['assignment_id'] : null;
+        $quizId = isset($input['quiz_id']) && $input['quiz_id'] !== '' ? (int)$input['quiz_id'] : null;
 
         if (empty($textToAnalyze)) {
-            $_SESSION['messages'] = ['error' => 'Text to analyze cannot be empty.'];
-            $this->redirect('/nlp-demo');
+            echo json_encode(['success' => false, 'message' => 'Text to analyze cannot be empty.']);
             return;
         }
 
         $response = $this->apiClient->analyzeText($textToAnalyze, $contextType, $assignmentId, $quizId);
 
         if ($response['success']) {
-            $_SESSION['nlp_result'] = $response['data'];
-            $_SESSION['messages'] = ['success' => 'Text analyzed successfully!'];
+            echo json_encode(['success' => true, 'data' => $response['data']]);
         } else {
-            $_SESSION['messages'] = ['error' => $response['error'] ?? 'Failed to perform NLP analysis.'];
+            echo json_encode(['success' => false, 'message' => $response['error'] ?? 'Failed to perform NLP analysis.']);
         }
-
-        $this->redirect('/nlp-demo');
     }
 }

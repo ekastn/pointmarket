@@ -29,6 +29,10 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = "<?php echo API_BASE_URL; ?>";
+    </script>
     <script src="/assets/js/dashboard.js"></script>
+    <script src="/public/assets/js/nlp-analyzer.js"></script>
 </body>
 </html>

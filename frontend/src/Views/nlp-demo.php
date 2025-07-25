@@ -67,7 +67,7 @@ $messages = $messages ?? [];
         <h5><i class="fas fa-edit me-2"></i>Coba Analisis Teks Anda</h5>
     </div>
     <div class="card-body">
-        <form id="nlpDemoForm" action="/nlp-demo/analyze" method="POST">
+        <form id="nlpDemoForm">
             <div class="mb-3">
                 <label for="text_to_analyze" class="form-label">Tulis teks yang ingin dianalisis:</label>
                 <textarea 
@@ -76,166 +76,38 @@ $messages = $messages ?? [];
                     class="form-control" 
                     rows="8" 
                     placeholder="Contoh: Teknologi dalam pendidikan sangat penting karena dapat meningkatkan kualitas pembelajaran. Dengan adanya komputer dan internet, siswa dapat mengakses berbagai sumber belajar yang tidak terbatas..."
-                    required
+                    data-nlp="true"
+                    data-context="assignment"
                 ></textarea>
                 <div class="form-text">
                     <i class="fas fa-info-circle me-1"></i>
-                    Minimal 10 karakter untuk analisis.
+                    Minimal 10 karakter untuk analisis. Analisis otomatis akan berjalan 3 detik setelah berhenti mengetik.
                 </div>
             </div>
             
             <div class="mb-3">
                 <label for="context_type" class="form-label">Konteks:</label>
-                <select id="context_type" name="context_type" class="form-select">
-                    <option value="general">General</option>
+                <select id="context_type" name="context_type" class="form-select" onchange="updateContext()">
                     <option value="assignment">Assignment (Tugas)</option>
-                    <option value="quiz">Quiz</option>
                     <option value="matematik">Matematika</option>
                     <option value="fisika">Fisika</option>
                     <option value="kimia">Kimia</option>
                     <option value="biologi">Biologi</option>
                 </select>
             </div>
-
-            <div class="mb-3">
-                <label for="assignment_id" class="form-label">Assignment ID (Optional, if context is Assignment):</label>
-                <input type="number" id="assignment_id" name="assignment_id" class="form-control" placeholder="e.g., 123">
-            </div>
-            <div class="mb-3">
-                <label for="quiz_id" class="form-label">Quiz ID (Optional, if context is Quiz):</label>
-                <input type="number" id="quiz_id" name="quiz_id" class="form-control" placeholder="e.g., 456">
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-brain me-2"></i>Analisis Teks
-            </button>
         </form>
     </div>
 </div>
 
-<?php if ($nlpResult): ?>
-    <div class="card mt-4">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Hasil Analisis AI</h5>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <div class="text-center">
-                        <div class="display-4 <?php echo ($nlpResult['total_score'] >= 80) ? 'text-success' : (($nlpResult['total_score'] >= 60) ? 'text-warning' : 'text-danger'); ?>">
-                            <?php echo htmlspecialchars(number_format($nlpResult['total_score'], 1)); ?>
-                        </div>
-                        <small class="text-muted">Total Score</small>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <div class="row">
-                        <div class="col-6 col-md-4">
-                            <div class="text-center">
-                                <div class="h5 <?php echo ($nlpResult['grammar_score'] >= 80) ? 'text-success' : (($nlpResult['grammar_score'] >= 60) ? 'text-warning' : 'text-danger'); ?>">
-                                    <?php echo htmlspecialchars(number_format($nlpResult['grammar_score'], 1)); ?>
-                                </div>
-                                <small>Grammar</small>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <div class="text-center">
-                                <div class="h5 <?php echo ($nlpResult['keyword_score'] >= 80) ? 'text-success' : (($nlpResult['keyword_score'] >= 60) ? 'text-warning' : 'text-danger'); ?>">
-                                    <?php echo htmlspecialchars(number_format($nlpResult['keyword_score'], 1)); ?>
-                                </div>
-                                <small>Keywords</small>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <div class="text-center">
-                                <div class="h5 <?php echo ($nlpResult['structure_score'] >= 80) ? 'text-success' : (($nlpResult['structure_score'] >= 60) ? 'text-warning' : 'text-danger'); ?>">
-                                    <?php echo htmlspecialchars(number_format($nlpResult['structure_score'], 1)); ?>
-                                </div>
-                                <small>Structure</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <?php
-                $scores = [
-                    'Grammar' => $nlpResult['grammar_score'],
-                    'Keywords' => $nlpResult['keyword_score'],
-                    'Structure' => $nlpResult['structure_score'],
-                    'Readability' => $nlpResult['readability_score'],
-                    'Sentiment' => $nlpResult['sentiment_score'],
-                    'Complexity' => $nlpResult['complexity_score'],
-                ];
-                foreach ($scores as $label => $score): 
-                    $progressColor = ($score >= 80) ? 'success' : (($score >= 60) ? 'warning' : 'danger');
-                ?>
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between">
-                            <small><?php echo htmlspecialchars($label); ?></small>
-                            <small><?php echo htmlspecialchars(number_format($score, 1)); ?>%</small>
-                        </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-<?php echo $progressColor; ?>" role="progressbar" 
-                                 style="width: <?php echo htmlspecialchars($score); ?>%" aria-valuenow="<?php echo htmlspecialchars($score); ?>" 
-                                 aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <small class="text-muted">
-                        <i class="fas fa-font me-1"></i>Jumlah Kata: <strong><?php echo htmlspecialchars($nlpResult['word_count']); ?></strong>
-                    </small>
-                </div>
-                <div class="col-md-6">
-                    <small class="text-muted">
-                        <i class="fas fa-paragraph me-1"></i>Jumlah Kalimat: <strong><?php echo htmlspecialchars($nlpResult['sentence_count']); ?></strong>
-                    </small>
-                </div>
-            </div>
-            
-            <?php if (!empty($nlpResult['feedback'])): ?>
-                <div class="mb-3">
-                    <h6><i class="fas fa-comments me-2"></i>Feedback</h6>
-                    <div class="alert alert-light">
-                        <?php 
-                        $feedbackArray = json_decode($nlpResult['feedback'], true); 
-                        if (is_array($feedbackArray)) {
-                            foreach ($feedbackArray as $f) {
-                                echo '<div class="mb-1">' . htmlspecialchars($f) . '</div>';
-                            }
-                        } else {
-                            echo htmlspecialchars($nlpResult['feedback']);
-                        }
-                        ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (!empty($nlpResult['personalized_feedback'])): ?>
-                <div class="mb-3">
-                    <h6><i class="fas fa-user-cog me-2"></i>Feedback Personal</h6>
-                    <div class="alert alert-info">
-                        <?php 
-                        $personalizedFeedbackArray = json_decode($nlpResult['personalized_feedback'], true); 
-                        if (is_array($personalizedFeedbackArray)) {
-                            foreach ($personalizedFeedbackArray as $f) {
-                                echo '<div class="mb-1">' . htmlspecialchars($f) . '</div>';
-                            }
-                        } else {
-                            echo htmlspecialchars($nlpResult['personalized_feedback']);
-                        }
-                        ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
+<!-- NLP Analysis Results -->
+<div id="nlp-results-container" class="card mt-4" style="display: none;">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Hasil Analisis AI</h5>
     </div>
-<?php endif; ?>
+    <div class="card-body" id="nlp-results-body">
+        <!-- Results will be loaded here by JavaScript -->
+    </div>
+</div>
 
 <!-- Statistics -->
 <div class="card mt-4">
@@ -243,52 +115,12 @@ $messages = $messages ?? [];
         <h6><i class="fas fa-chart-bar me-2"></i>Statistik Analisis Anda</h6>
     </div>
     <div class="card-body">
-        <?php if ($nlpStats): ?>
-            <div id="user-stats">
-                <div class="row">
-                    <div class="col-md-4 text-center">
-                        <h4 class="text-primary"><?php echo htmlspecialchars($nlpStats['total_analyses']); ?></h4>
-                        <small class="text-muted">Total Analisis</small>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <h4 class="text-success"><?php echo htmlspecialchars(number_format($nlpStats['average_score'], 1)); ?></h4>
-                        <small class="text-muted">Skor Rata-rata</small>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <h4 class="text-info"><?php echo htmlspecialchars(number_format($nlpStats['best_score'], 1)); ?></h4>
-                        <small class="text-muted">Skor Terbaik</small>
-                    </div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-md-4 text-center">
-                        <small class="text-muted">Grammar Improvement:</small>
-                        <h5 class="text-<?php echo ($nlpStats['grammar_improvement'] >= 0) ? 'success' : 'danger'; ?>">
-                            <?php echo htmlspecialchars(number_format($nlpStats['grammar_improvement'], 1)); ?>%
-                        </h5>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <small class="text-muted">Keyword Improvement:</small>
-                        <h5 class="text-<?php echo ($nlpStats['keyword_improvement'] >= 0) ? 'success' : 'danger'; ?>">
-                            <?php echo htmlspecialchars(number_format($nlpStats['keyword_improvement'], 1)); ?>%
-                        </h5>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <small class="text-muted">Structure Improvement:</small>
-                        <h5 class="text-<?php echo ($nlpStats['structure_improvement'] >= 0) ? 'success' : 'danger'; ?>">
-                            <?php echo htmlspecialchars(number_format($nlpStats['structure_improvement'], 1)); ?>%
-                        </h5>
-                    </div>
-                </div>
+        <div id="user-stats">
+            <div class="text-center text-muted">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <p>Lakukan analisis pertama untuk melihat statistik</p>
             </div>
-        <?php else: ?>
-            <div id="user-stats">
-                <div class="text-center text-muted">
-                    <i class="fas fa-chart-line fa-2x mb-2"></i>
-                    <p>Lakukan analisis pertama untuk melihat statistik</p>
-                </div>
-            </div>
-        <?php endif; ?>
+        </div>
     </div>
 </div>
 

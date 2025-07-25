@@ -16,6 +16,7 @@ use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\VarkAssessmentController;
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\QuizController;
+use App\Controllers\MaterialsController;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -38,7 +39,7 @@ $router->get('/dashboard', [DashboardController::class, 'showDashboard']);
 $router->get('/ai-explanation', [AIExplanationController::class, 'show']);
 $router->get('/ai-recommendations', [AIRecommendationsController::class, 'show']);
 $router->get('/nlp-demo', [NLPDemoController::class, 'show']);
-$router->post('/nlp-demo/analyze', [NLPDemoController::class, 'analyze']); // Added route for NLP analysis
+$router->post('/nlp-demo/analyze', [NLPDemoController::class, 'analyze']);
 $router->get('/assignments', [AssignmentsController::class, 'index']);
 $router->get('/quiz', [QuizController::class, 'index']);
 $router->get('/questionnaire', [QuestionnaireController::class, 'index']);
@@ -47,6 +48,14 @@ $router->get('/teacher-evaluation-monitoring', [TeacherEvaluationMonitoringContr
 $router->get('/vark-assessment', [VarkAssessmentController::class, 'show']);
 $router->post('/vark-assessment', [VarkAssessmentController::class, 'submit']);
 $router->get('/vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
+
+// Materials routes
+$router->get('/materials', [MaterialsController::class, 'index']);
+$router->get('/materials/create', [MaterialsController::class, 'create']);
+$router->post('/materials/create', [MaterialsController::class, 'create']);
+$router->get('/materials/edit/{id}', [MaterialsController::class, 'edit']);
+$router->post('/materials/edit/{id}', [MaterialsController::class, 'edit']);
+$router->post('/materials/delete/{id}', [MaterialsController::class, 'delete']);
 
 // Dispatch the request
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

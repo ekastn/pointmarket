@@ -46,10 +46,6 @@ class AssignmentsController extends BaseController
 
         $assignmentsResponse = $this->apiClient->getAssignments(null, $user['id']);
 
-        error_log(json_encode($assignmentsResponse));
-        echo json_encode($assignmentsResponse);
-        die();
-
         if ($assignmentsResponse['success']) {
             $assignments = $assignmentsResponse['data'] ?? [];
 

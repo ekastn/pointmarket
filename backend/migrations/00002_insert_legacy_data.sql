@@ -98,9 +98,9 @@ INSERT INTO `nlp_feedback_templates` (`template_name`, `score_range_min`, `score
 ('kinesthetic_feedback', 0, 100, 'general', 'Kinesthetic', 'all', '🏃 Sebagai kinesthetic learner, coba hubungkan konsep dengan contoh praktis dan aplikasi nyata.');
 
 -- Data from vark_data.sql
-INSERT INTO questionnaires (id, name, description, type) VALUES 
-(3, 'VARK Learning Style Assessment', 'Assessment to determine Visual, Auditory, Reading/Writing, and Kinesthetic learning preferences', 'vark')
-ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), type = VALUES(type);
+INSERT INTO questionnaires (id, name, description, type, total_questions) VALUES 
+(3, 'VARK Learning Style Assessment', 'Assessment to determine Visual, Auditory, Reading/Writing, and Kinesthetic learning preferences', 'vark', 16)
+ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), type = VALUES(type), total_questions = VALUES(total_questions);
 
 INSERT INTO questionnaire_questions (questionnaire_id, question_number, question_text, subscale) VALUES
 (3, 1, 'Ketika saya ingin mempelajari sesuatu yang baru, saya lebih suka:', 'Learning Preference'),

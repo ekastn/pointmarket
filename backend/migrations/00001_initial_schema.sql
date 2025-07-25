@@ -6,7 +6,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    role ENUM('admin', 'teacher', 'siswa') NOT NULL,
+    role ENUM('admin', 'teacher', 'siswa', 'guru') NOT NULL,
     avatar VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

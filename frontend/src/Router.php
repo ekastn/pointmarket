@@ -45,7 +45,7 @@ class Router
         // Try dynamic routes
         foreach ($this->routes[$method] as $routePath => $handler) {
             // Convert route path to a regex pattern
-            $pattern = preg_replace('/{([a-zA-Z0-9_]+)}', '([a-zA-Z0-9_]+)', $routePath);
+            $pattern = preg_replace('/{([a-zA-Z0-9_]+)}', '([a-zA-Z0-9_]+)', preg_quote($routePath, '/'));
             $pattern = '#^' . $pattern . '$#';
 
             if (preg_match($pattern, $path, $matches)) {
@@ -65,7 +65,7 @@ class Router
     protected function handleError(int $statusCode, string $message): void
     {
         http_response_code($statusCode);
-        $errorController = new ErrorController();
+        $errorController = new ErrorController($this->apiClient);
         if ($statusCode === 404) {
             $errorController->show404($message);
         } else {

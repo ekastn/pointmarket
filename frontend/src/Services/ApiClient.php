@@ -80,14 +80,41 @@ class ApiClient
         return $this->request('GET', '/api/v1/profile');
     }
 
-    public function getAssignments(?int $teacherId = null): array
+    public function getAssignments(?int $teacherId = null, ?int $studentId = null): array
     {
         $uri = '/api/v1/assignments';
         $options = [];
         if ($teacherId !== null) {
-            $options['query'] = ['teacher_id' => $teacherId];
+            $options['query']['teacher_id'] = $teacherId;
+        }
+        if ($studentId !== null) {
+            $options['query']['student_id'] = $studentId;
         }
         return $this->request('GET', $uri, $options);
+    }
+
+    public function getAssignmentByID(int $id, ?int $studentId = null): array
+    {
+        $uri = '/api/v1/assignments/' . $id;
+        $options = [];
+        if ($studentId !== null) {
+            $options['query']['student_id'] = $studentId;
+        }
+        return $this->request('GET', $uri, $options);
+    }
+
+    public function startAssignment(int $assignmentId): array
+    {
+        return $this->request('POST', '/api/v1/assignments/' . $assignmentId . '/start');
+    }
+
+    public function submitAssignment(int $assignmentId, string $submissionContent): array
+    {
+        return $this->request('POST', '/api/v1/assignments/' . $assignmentId . '/submit', [
+            'json' => [
+                'submission_content' => $submissionContent,
+            ],
+        ]);
     }
 
     public function createAssignment(array $data): array

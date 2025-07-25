@@ -102,3 +102,43 @@ func (s *AssignmentStore) ListAssignments(teacherID *int) ([]models.Assignment, 
 	}
 	return assignments, nil
 }
+
+// GetStudentAssignment retrieves a student's specific assignment record
+func (s *AssignmentStore) GetStudentAssignment(studentID, assignmentID int) (*models.StudentAssignment, error) {
+	var sa models.StudentAssignment
+	err := s.db.Get(&sa, "SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at FROM student_assignments WHERE student_id = ? AND assignment_id = ?", studentID, assignmentID)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &sa, nil
+}
+
+// CreateOrUpdateStudentAssignmentStatus creates or updates a student's assignment status
+func (s *AssignmentStore) CreateOrUpdateStudentAssignmentStatus(studentID, assignmentID int, status string) error {
+	// Check if a record already exists
+	var existingID int
+	err := s.db.Get(&existingID, "SELECT id FROM student_assignments WHERE student_id = ? AND assignment_id = ?", studentID, assignmentID)
+
+	if err == sql.ErrNoRows {
+		// No record, create a new one
+		query := `INSERT INTO student_assignments (student_id, assignment_id, status) VALUES (?, ?, ?)`
+		_, err = s.db.Exec(query, studentID, assignmentID, status)
+	} else if err != nil {
+		return err
+	} else {
+		// Record exists, update its status
+		query := `UPDATE student_assignments SET status = ?, updated_at = NOW() WHERE id = ?`
+		_, err = s.db.Exec(query, status, existingID)
+	}
+	return err
+}
+
+// SubmitStudentAssignment updates a student's assignment with score and submission content
+func (s *AssignmentStore) SubmitStudentAssignment(studentID, assignmentID int, score float64, submission string) error {
+	query := `UPDATE student_assignments SET status = ?, score = ?, submission = ?, submitted_at = NOW(), graded_at = NOW(), updated_at = NOW() WHERE student_id = ? AND assignment_id = ?`
+	_, err := s.db.Exec(query, "completed", score, submission, studentID, assignmentID)
+	return err
+}

@@ -44,84 +44,66 @@ class AssignmentsController extends BaseController
         $subjects = [];
         $pendingEvaluations = []; // Placeholder for now
 
-        $assignmentsResponse = $this->apiClient->getAssignments();
+        $assignmentsResponse = $this->apiClient->getAssignments(null, $user['id']);
+
+        error_log(json_encode($assignmentsResponse));
+        echo json_encode($assignmentsResponse);
+        die();
 
         if ($assignmentsResponse['success']) {
-            $assignments = $assignmentsResponse['data']['assignments'] ?? [];
+            $assignments = $assignmentsResponse['data'] ?? [];
 
+            // Calculate stats and subjects based on fetched data
             $totalPointsSum = 0;
             $completedCount = 0;
-            $totalScoreSum = 0;
+            $inProgressCount = 0;
+            $overdueCount = 0;
+            $subjects = [];
 
-            foreach ($assignments as &$assignment) {
-                // Calculate days remaining and urgency status
-                $dueDate = new \DateTime($assignment['due_date']);
-                $now = new \DateTime();
-                $interval = $now->diff($dueDate);
-                $daysRemaining = (int)$interval->format('%r%a');
-                $assignment['days_remaining'] = $daysRemaining;
-
-                if ($daysRemaining < 0) {
-                    $assignment['urgency_status'] = 'overdue';
-                } elseif ($daysRemaining <= 2) {
-                    $assignment['urgency_status'] = 'urgent';
-                } else {
-                    $assignment['urgency_status'] = 'normal';
-                }
-
-                // Simulate student status and score for demo purposes
-                // In a real app, this would come from student_assignments table
-                $assignment['student_status'] = 'not_started'; // Default
-                $assignment['score'] = null;
-                $assignment['submitted_at'] = null;
-
-                // Simple simulation: if assignment ID is even, it's completed
-                // if ($assignment['id'] % 2 == 0) {
-                //     $assignment['student_status'] = 'completed';
-                //     $assignment['score'] = rand(60, 100); // Simulated score
-                //     $assignment['submitted_at'] = date('Y-m-d H:i:s', strtotime('-' . rand(1, 10) . ' days'));
-                // } else if ($assignment['id'] % 3 == 0) {
-                //     $assignment['student_status'] = 'in_progress';
-                // }
-
-                // Update stats
+            foreach ($assignments as $assignment) {
                 $stats['total_assignments']++;
                 if ($assignment['student_status'] === 'completed') {
                     $stats['completed']++;
                     $totalPointsSum += $assignment['points'];
                     if ($assignment['score'] !== null) {
                         $completedCount++;
-                        $totalScoreSum += $assignment['score'];
+                        // $totalScoreSum += $assignment['score']; // This is not directly available in the new DTO
                     }
                 } elseif ($assignment['student_status'] === 'in_progress') {
                     $stats['in_progress']++;
-                } elseif ($assignment['urgency_status'] === 'overdue' && $assignment['student_status'] !== 'completed') {
+                }
+
+                if ($assignment['urgency_status'] === 'overdue') {
                     $stats['overdue']++;
                 }
 
-                // Collect subjects
-                if (!in_array($assignment['subject'], array_column($subjects, 'subject'))) {
-                    $subjects[] = ['subject' => $assignment['subject'], 'total_assignments' => 0, 'completed_assignments' => 0];
-                }
-                // Update subject counts (this part needs to be done after collecting all subjects)
-            }
-            unset($assignment); // Break the reference
-
-            // Recalculate subject counts after all assignments are processed
-            foreach ($subjects as &$subject) {
-                foreach ($assignments as $assignment) {
-                    if ($assignment['subject'] === $subject['subject']) {
+                // Collect subjects and their counts
+                $subjectFound = false;
+                foreach ($subjects as &$subject) {
+                    if ($subject['subject'] === $assignment['subject']) {
                         $subject['total_assignments']++;
                         if ($assignment['student_status'] === 'completed') {
                             $subject['completed_assignments']++;
                         }
+                        $subjectFound = true;
+                        break;
                     }
                 }
+                unset($subject); // Break the reference
+
+                if (!$subjectFound) {
+                    $subjects[] = [
+                        'subject' => $assignment['subject'],
+                        'total_assignments' => 1,
+                        'completed_assignments' => ($assignment['student_status'] === 'completed') ? 1 : 0
+                    ];
+                }
             }
-            unset($subject);
 
             $stats['total_points'] = $totalPointsSum;
-            $stats['average_score'] = $completedCount > 0 ? $totalScoreSum / $completedCount : 0;
+            // Average score calculation might need to be done on backend or re-evaluated based on available data
+            // For now, keep it simple or remove if not directly supported by backend DTO
+            $stats['average_score'] = 0; // Reset or calculate based on new DTO
 
         } else {
             $_SESSION['messages'] = ['error' => $assignmentsResponse['error'] ?? 'Failed to fetch assignments.'];
@@ -143,5 +125,64 @@ class AssignmentsController extends BaseController
             'subject_filter' => $subject_filter,
             'messages' => $messages,
         ]);
+    }
+
+    public function startAssignment(): void
+    {
+        session_start();
+        $jwt = $_SESSION['jwt_token'] ?? null;
+
+        if (!$jwt) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $this->apiClient->setJwtToken($jwt);
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $assignmentId = $input['assignment_id'] ?? null;
+
+        if (!$assignmentId) {
+            echo json_encode(['success' => false, 'message' => 'Invalid assignment ID']);
+            return;
+        }
+
+        $response = $this->apiClient->startAssignment($assignmentId);
+
+        if ($response['success']) {
+            echo json_encode(['success' => true, 'message' => 'Assignment started successfully!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => $response['error'] ?? 'Failed to start assignment.']);
+        }
+    }
+
+    public function submitAssignment(): void
+    {
+        session_start();
+        $jwt = $_SESSION['jwt_token'] ?? null;
+
+        if (!$jwt) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $this->apiClient->setJwtToken($jwt);
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $assignmentId = $input['assignment_id'] ?? null;
+        $submissionText = $input['submission_text'] ?? '';
+
+        if (!$assignmentId || empty($submissionText)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid input']);
+            return;
+        }
+
+        $response = $this->apiClient->submitAssignment($assignmentId, $submissionText);
+
+        if ($response['success']) {
+            echo json_encode(['success' => true, 'message' => 'Assignment submitted successfully!', 'score' => $response['data']['score'] ?? null]);
+        } else {
+            echo json_encode(['success' => false, 'message' => $response['error'] ?? 'Failed to submit assignment.']);
+        }
     }
 }

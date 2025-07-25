@@ -28,7 +28,7 @@ func main() {
 	// Initialize services
 	authService := services.NewAuthService(userStore, cfg)
 	userService := services.NewUserService(userStore)
-	assignmentService := services.NewAssignmentService(assignmentStore)
+	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore)
 	varkService := services.NewVARKService(varkStore)
@@ -89,6 +89,8 @@ func main() {
 			assignmentRoutes.GET("/:id", assignmentHandler.GetAssignmentByID)
 			assignmentRoutes.PUT("/:id", assignmentHandler.UpdateAssignment)
 			assignmentRoutes.DELETE("/:id", assignmentHandler.DeleteAssignment)
+			assignmentRoutes.POST("/:id/start", assignmentHandler.StartAssignment)
+			assignmentRoutes.POST("/:id/submit", assignmentHandler.SubmitAssignment)
 		}
 
 		// Quiz routes

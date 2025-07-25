@@ -30,6 +30,21 @@ type Assignment struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
+// StudentAssignment represents a student's specific assignment record
+type StudentAssignment struct {
+	ID           int        `db:"id"`
+	StudentID    int        `db:"student_id"`
+	AssignmentID int        `db:"assignment_id"`
+	Status       string     `db:"status"` // e.g., not_started, in_progress, completed
+	Score        *float64   `db:"score"`
+	Submission   *string    `db:"submission"`
+	SubmittedAt  *time.Time `db:"submitted_at"`
+	GradedAt     *time.Time `db:"graded_at"`
+	CreatedAt    time.Time  `db:"created_at"`
+	UpdatedAt    time.Time  `db:"updated_at"`
+}
+
+
 // Quiz represents a quiz in the database
 type Quiz struct {
 	ID          int       `db:"id"`

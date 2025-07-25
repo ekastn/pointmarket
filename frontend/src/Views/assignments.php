@@ -179,17 +179,17 @@ $messages = $messages ?? [];
     <?php if (!empty($assignments)): ?>
         <?php foreach ($assignments as $assignment): ?>
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card assignment-card <?php echo $assignment['student_status']; ?> <?php echo $assignment['urgency_status']; ?> h-100">
+            <div class="card assignment-card <?php echo htmlspecialchars($assignment['student_status']); ?> <?php echo htmlspecialchars($assignment['urgency_status']); ?> h-100">
                 <div class="card-body position-relative">
                     <!-- Urgency Indicator -->
                     <?php if ($assignment['urgency_status'] !== 'normal'): ?>
-                        <div class="urgency-indicator <?php echo $assignment['urgency_status']; ?>"></div>
+                        <div class="urgency-indicator <?php echo htmlspecialchars($assignment['urgency_status']); ?>"></div>
                     <?php endif; ?>
                     
                     <!-- Status Badge -->
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge status-badge <?php echo $assignment['student_status']; ?> text-white">
-                            <?php echo ucfirst(str_replace('_', ' ', $assignment['student_status'])); ?>
+                        <span class="badge status-badge <?php echo htmlspecialchars($assignment['student_status']); ?> text-white">
+                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $assignment['student_status']))); ?>
                         </span>
                         <small class="text-muted"><?php echo htmlspecialchars($assignment['subject']); ?></small>
                     </div>
@@ -209,7 +209,7 @@ $messages = $messages ?? [];
                     <div class="row text-center mb-3">
                         <div class="col-6">
                             <small class="text-muted">Points</small>
-                            <div class="fw-bold text-primary"><?php echo $assignment['points']; ?></div>
+                            <div class="fw-bold text-primary"><?php echo htmlspecialchars($assignment['points']); ?></div>
                         </div>
                         <div class="col-6">
                             <small class="text-muted">Days Left</small>
@@ -218,7 +218,7 @@ $messages = $messages ?? [];
                                 if ($assignment['days_remaining'] < 0) {
                                     echo abs($assignment['days_remaining']) . ' overdue';
                                 } else {
-                                    echo $assignment['days_remaining'];
+                                    echo htmlspecialchars($assignment['days_remaining']);
                                 }
                                 ?>
                             </div>
@@ -229,7 +229,7 @@ $messages = $messages ?? [];
                     <div class="mb-3">
                         <small class="text-muted">
                             <i class="fas fa-calendar me-1"></i>
-                            Due: <?php echo date('d M Y', strtotime($assignment['due_date'])); ?>
+                            Due: <?php echo htmlspecialchars(date('d M Y', strtotime($assignment['due_date']))); ?>
                         </small>
                         <br>
                         <small class="text-muted">
@@ -241,10 +241,10 @@ $messages = $messages ?? [];
                     <!-- Score Display (if completed) -->
                     <?php if ($assignment['student_status'] === 'completed' && $assignment['score'] !== null): ?>
                         <div class="alert alert-success py-2">
-                            <strong><i class="fas fa-star me-1"></i>Score: <?php echo number_format($assignment['score'], 1); ?></strong>
+                            <strong><i class="fas fa-star me-1"></i>Score: <?php echo htmlspecialchars(number_format($assignment['score'], 1)); ?></strong>
                             <small class="text-muted d-block mt-1">
                                 <i class="fas fa-robot me-1"></i>AI-Simulated Score (Demo) | 
-                                Submitted: <?php echo date('d M Y', strtotime($assignment['submitted_at'])); ?>
+                                Submitted: <?php echo htmlspecialchars(date('d M Y', strtotime($assignment['submitted_at']))); ?>
                             </small>
                             <div class="mt-2">
                                 <small class="text-info">
@@ -258,11 +258,11 @@ $messages = $messages ?? [];
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2">
                         <?php if ($assignment['student_status'] === 'not_started'): ?>
-                            <button class="btn btn-primary btn-sm flex-fill" onclick="startAssignment(<?php echo $assignment['id']; ?>)">
+                            <button class="btn btn-primary btn-sm flex-fill" onclick="startAssignment(<?php echo htmlspecialchars($assignment['id']); ?>)">
                                 <i class="fas fa-play me-1"></i> Start
                             </button>
                         <?php elseif ($assignment['student_status'] === 'in_progress'): ?>
-                            <button class="btn btn-success btn-sm flex-fill" onclick="submitAssignment(<?php echo $assignment['id']; ?>, '<?php echo htmlspecialchars($assignment['title']); ?>')">
+                            <button class="btn btn-success btn-sm flex-fill" onclick="submitAssignment(<?php echo htmlspecialchars($assignment['id']); ?>, '<?php echo htmlspecialchars($assignment['title']); ?>')">
                                 <i class="fas fa-upload me-1"></i> Submit
                             </button>
                         <?php else: ?>
@@ -271,7 +271,7 @@ $messages = $messages ?? [];
                             </button>
                         <?php endif; ?>
                         
-                        <button class="btn btn-outline-info btn-sm" onclick="viewAssignmentDetails(<?php echo $assignment['id']; ?>)">
+                        <button class="btn btn-outline-info btn-sm" onclick="viewAssignmentDetails(<?php echo htmlspecialchars($assignment['id']); ?>)">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -300,3 +300,188 @@ $messages = $messages ?? [];
         </div>
     <?php endif; ?>
 </div>
+
+    <!-- Assignment Submission Modal -->
+    <div class="modal fade submission-modal" id="submissionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submissionModalTitle">
+                        <i class="fas fa-upload me-2"></i>Submit Assignment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="submissionModalBody">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Filter change handlers
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            updateFilters();
+        });
+
+        document.getElementById('subjectFilter').addEventListener('change', function() {
+            updateFilters();
+        });
+
+        function updateFilters() {
+            const status = document.getElementById('statusFilter').value;
+            const subject = document.getElementById('subjectFilter').value;
+            
+            const params = new URLSearchParams();
+            if (status !== 'all') params.append('status', status);
+            if (subject !== 'all') params.append('subject', subject);
+            
+            const newUrl = '/assignments' + (params.toString() ? '?' + params.toString() : '');
+            window.location.href = newUrl;
+        }
+
+        async function startAssignment(assignmentId) {
+            if (!confirm('Are you sure you want to start this assignment?')) {
+                return;
+            }
+
+            const response = await fetch('/api/v1/assignments/' + assignmentId + '/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
+                },
+                body: JSON.stringify({})
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        }
+
+        function submitAssignment(assignmentId, assignmentTitle) {
+            document.getElementById('submissionModalTitle').innerHTML = `
+                <i class="fas fa-upload me-2"></i>Submit: ${assignmentTitle}
+            `;
+            
+            document.getElementById('submissionModalBody').innerHTML = `
+                <form id="submissionForm">
+                    <div class="mb-3">
+                        <label for="submissionText" class="form-label">Your Submission</label>
+                        <textarea class="form-control" id="submissionText" rows="6" 
+                                  placeholder="Enter your assignment solution, answers, or attach relevant content..."
+                                  required></textarea>
+                        <div class="form-text">Provide your complete solution or attach relevant files.</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Demo Notice:</strong> This is a proof-of-concept demonstration. In the full implementation, AI will provide:
+                        <ul class="mb-0 mt-2">
+                            <li><strong>Real-time NLP Analysis:</strong> Grammar checking and content analysis as you type</li>
+                            <li><strong>Intelligent Scoring:</strong> Context-aware evaluation based on assignment requirements</li>
+                            <li><strong>Detailed Feedback:</strong> Specific suggestions for improvement</li>
+                            <li><strong>Draft Management:</strong> Auto-save and revision tracking capabilities</li>
+                        </ul>
+                        <small class="text-muted mt-2 d-block">Current submission will receive a simulated AI score for demonstration purposes.</small>
+                    </div>
+                </form>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="confirmSubmission(${assignmentId})">
+                        <i class="fas fa-upload me-1"></i> Submit Assignment
+                    </button>
+                </div>
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('submissionModal'));
+            modal.show();
+        }
+
+        async function confirmSubmission(assignmentId) {
+            const submissionText = document.getElementById('submissionText').value.trim();
+            
+            if (!submissionText) {
+                alert('Please provide your submission content.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to submit this assignment? You cannot make changes after submission.')) {
+                return;
+            }
+
+            // Show loading
+            document.getElementById('submissionModalBody').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <p>Submitting your assignment...</p>
+                </div>
+            `;
+
+            const response = await fetch('/api/v1/assignments/' + assignmentId + '/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
+                },
+                body: JSON.stringify({ submission_content: submissionText })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('submissionModalBody').innerHTML = `
+                        <div class="alert alert-success text-center">
+                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                            <h5>Assignment Submitted Successfully!</h5>
+                            <p>Your simulated AI score: <strong>${data.score}</strong></p>
+                            <div class="alert alert-info mt-3 mb-3">
+                                <small>
+                                    <i class="fas fa-robot me-1"></i>
+                                    <strong>Demo Mode:</strong> This score is generated for demonstration. 
+                                    In production, our NLP AI will analyze your content for grammar, structure, relevance, and provide detailed feedback.
+                                </small>
+                            </div>
+                            <p class="mb-0">${data.message}</p>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-primary" onclick="location.reload()">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh Page
+                            </button>
+                        </div>
+                    `;
+            } else {
+                document.getElementById('submissionModalBody').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error: ${data.message}
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    `;
+            }
+        }
+
+        function viewAssignmentDetails(assignmentId) {
+            // This would open a detailed view of the assignment
+            // For now, we'll just show an alert
+            alert('Assignment details view - Feature coming soon!');
+        }
+
+        // Auto-refresh every 5 minutes to update due dates and overdue status
+        setInterval(() => {
+            // Only refresh if there are pending assignments
+            const pendingCards = document.querySelectorAll('.assignment-card.not-started, .assignment-card.in-progress');
+            if (pendingCards.length > 0) {
+                location.reload();
+            }
+        }, 300000); // 5 minutes
+    </script>

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"net/http"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/response"
@@ -34,6 +35,32 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	var userDTO dtos.UserDTO
 	userDTO.FromUser(user)
 	response.Success(c, http.StatusOK, "User profile retrieved successfully", userDTO)
+}
+
+// UpdateUserProfile handles updating a user's profile information
+func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	var req dtos.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.userService.UpdateUserProfile(userID.(uint), req)
+	if err == sql.ErrNoRows {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
 }
 
 // GetStudentDashboardStats handles fetching aggregated statistics for a student's dashboard

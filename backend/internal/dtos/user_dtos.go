@@ -6,6 +6,16 @@ import (
 )
 
 // ==================
+//     Requests
+// ==================
+
+type UpdateProfileRequest struct {
+	Name    string  `json:"name" binding:"required"`
+	Email   string  `json:"email" binding:"required,email"`
+	Avatar  *string `json:"avatar"`
+}
+
+// ==================
 //      Response
 // ==================
 

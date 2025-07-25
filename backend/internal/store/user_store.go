@@ -45,6 +45,12 @@ func (s *UserStore) CreateUser(user *models.User) error {
 	return nil
 }
 
+// UpdateUser updates an existing user's profile information
+func (s *UserStore) UpdateUser(user *models.User) error {
+	query := `UPDATE users SET name = ?, email = ?, avatar = ?, updated_at = NOW() WHERE id = ?`
+	_, err := s.db.Exec(query, user.Name, user.Email, user.Avatar, user.ID)
+	return err
+}
 
 // GetUserByUsernameAndRole retrieves a user by username and role
 func (s *UserStore) GetUserByUsernameAndRole(username, role string) (*models.User, error) {

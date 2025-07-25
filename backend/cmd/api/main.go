@@ -70,6 +70,7 @@ func main() {
 	{
 		// User routes
 		authRequired.GET("/profile", userHandler.GetUserProfile)
+		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
 
 		// Assignment routes
 		assignmentRoutes := authRequired.Group("/assignments")

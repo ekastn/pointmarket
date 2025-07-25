@@ -258,4 +258,9 @@ class ApiClient
     {
         return $this->request('GET', '/api/v1/dashboard/student/evaluations/progress?weeks=' . $weeks);
     }
+
+    public function updateProfile(array $data): array
+    {
+        return $this->request('PUT', '/api/v1/profile', ['json' => $data]);
+    }
 }

@@ -35,6 +35,9 @@ class ProgressController extends BaseController
         $assignmentStats = null;
         $recentActivities = [];
         $weeklyProgress = [];
+        $questionnaireStats = [];
+        $nlpStats = null;
+        $varkResult = null;
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
@@ -62,12 +65,39 @@ class ProgressController extends BaseController
             $_SESSION['messages'] = ['error' => $weeklyProgressResponse['error'] ?? 'Failed to fetch weekly progress.'];
         }
 
+        // Fetch questionnaire statistics
+        $questionnaireStatsResponse = $this->apiClient->getQuestionnaireStats();
+        if ($questionnaireStatsResponse['success']) {
+            $questionnaireStats = $questionnaireStatsResponse['data'] ?? [];
+        } else {
+            $_SESSION['messages'] = ['error' => $questionnaireStatsResponse['error'] ?? 'Failed to fetch questionnaire statistics.'];
+        }
+
+        // Fetch NLP statistics
+        $nlpStatsResponse = $this->apiClient->getNLPStats();
+        if ($nlpStatsResponse['success']) {
+            $nlpStats = $nlpStatsResponse['data'] ?? null;
+        } else {
+            $_SESSION['messages'] = ['error' => $nlpStatsResponse['error'] ?? 'Failed to fetch NLP statistics.'];
+        }
+
+        // Fetch VARK result
+        $varkResultResponse = $this->apiClient->getLatestVARKResult();
+        if ($varkResultResponse['success']) {
+            $varkResult = $varkResultResponse['data'] ?? null;
+        } else {
+            $_SESSION['messages'] = ['error' => $varkResultResponse['error'] ?? 'Failed to fetch VARK result.'];
+        }
+
         $this->render('progress', [
             'title' => 'My Progress',
             'user' => $user,
             'assignmentStats' => $assignmentStats,
             'recentActivities' => $recentActivities,
             'weeklyProgress' => $weeklyProgress,
+            'questionnaireStats' => $questionnaireStats,
+            'nlpStats' => $nlpStats,
+            'varkResult' => $varkResult,
             'messages' => $messages,
         ]);
     }

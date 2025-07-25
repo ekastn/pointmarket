@@ -263,4 +263,19 @@ class ApiClient
     {
         return $this->request('PUT', '/api/v1/profile', ['json' => $data]);
     }
+
+    public function getAllUsers(): array
+    {
+        return $this->request('GET', '/api/v1/admin/users');
+    }
+
+    public function updateUserRole(int $id, string $role): array
+    {
+        return $this->request('PUT', '/api/v1/admin/users/' . $id . '/role', ['json' => ['role' => $role]]);
+    }
+
+    public function deleteUser(int $id): array
+    {
+        return $this->request('DELETE', '/api/v1/admin/users/' . $id);
+    }
 }

@@ -41,6 +41,21 @@ func (s *UserService) UpdateUserProfile(userID uint, req dtos.UpdateProfileReque
 	return s.userStore.UpdateUser(user)
 }
 
+// GetAllUsers retrieves all users
+func (s *UserService) GetAllUsers() ([]models.User, error) {
+	return s.userStore.GetAllUsers()
+}
+
+// UpdateUserRole updates a user's role
+func (s *UserService) UpdateUserRole(userID uint, role string) error {
+	return s.userStore.UpdateUserRole(int(userID), role)
+}
+
+// DeleteUser deletes a user (sets role to 'inactive')
+func (s *UserService) DeleteUser(userID uint) error {
+	return s.userStore.DeleteUser(int(userID))
+}
+
 // GetStudentDashboardStats retrieves aggregated statistics for a student's dashboard
 func (s *UserService) GetStudentDashboardStats(studentID uint) (*models.StudentDashboardStats, error) {
 	return s.userStore.GetStudentDashboardStats(int(studentID))

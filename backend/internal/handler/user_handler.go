@@ -63,6 +63,83 @@ func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
 }
 
+// GetAllUsers handles fetching all users (admin only)
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.userService.GetAllUsers()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	var userDTOs []dtos.UserDTO
+	for _, user := range users {
+		var userDTO dtos.UserDTO
+		userDTO.FromUser(user)
+		userDTOs = append(userDTOs, userDTO)
+	}
+	response.Success(c, http.StatusOK, "Users retrieved successfully", userDTOs)
+}
+
+// GetUserByID handles fetching a user by ID (admin only)
+func (h *UserHandler) GetUserByID(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+	user, err := h.userService.GetUserByID(uint(id))
+	if err == sql.ErrNoRows {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	var userDTO dtos.UserDTO
+	userDTO.FromUser(user)
+	response.Success(c, http.StatusOK, "User retrieved successfully", userDTO)
+}
+
+// UpdateUserRole handles updating a user's role (admin only)
+func (h *UserHandler) UpdateUserRole(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+	var req struct { Role string `json:"role" binding:"required"` }
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.userService.UpdateUserRole(uint(id), req.Role)
+	if err == sql.ErrNoRows {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "User role updated successfully", nil)
+}
+
+// DeleteUser handles deleting a user (admin only)
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+	err = h.userService.DeleteUser(uint(id))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "User deleted successfully", nil)
+}
+
 // GetStudentDashboardStats handles fetching aggregated statistics for a student's dashboard
 func (h *UserHandler) GetStudentDashboardStats(c *gin.Context) {
 	userID, exists := c.Get("userID")

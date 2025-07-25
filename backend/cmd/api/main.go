@@ -72,6 +72,15 @@ func main() {
 		authRequired.GET("/profile", userHandler.GetUserProfile)
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
 
+		// Admin User Management routes
+		adminRoutes := authRequired.Group("/admin/users")
+		{
+			adminRoutes.GET("", userHandler.GetAllUsers)
+			adminRoutes.GET("/:id", userHandler.GetUserByID)
+			adminRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
+			adminRoutes.DELETE("/:id", userHandler.DeleteUser)
+		}
+
 		// Assignment routes
 		assignmentRoutes := authRequired.Group("/assignments")
 		{

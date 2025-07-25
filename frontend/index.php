@@ -19,6 +19,7 @@ use App\Controllers\QuizController;
 use App\Controllers\MaterialsController;
 use App\Controllers\ProgressController;
 use App\Controllers\ProfileController;
+use App\Controllers\UsersController;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -65,6 +66,11 @@ $router->get('/progress', [ProgressController::class, 'index']);
 // User Profile routes
 $router->get('/profile', [ProfileController::class, 'showProfile']);
 $router->post('/profile', [ProfileController::class, 'updateProfile']);
+
+// User Management routes
+$router->get('/admin/users', [UsersController::class, 'index']);
+$router->post('/admin/users/update-role', [UsersController::class, 'updateUserRole']);
+$router->post('/admin/users/delete', [UsersController::class, 'deleteUser']);
 
 // Dispatch the request
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

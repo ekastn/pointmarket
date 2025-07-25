@@ -279,3 +279,27 @@ func (s *UserStore) GetWeeklyEvaluationProgressByStudentID(studentID int, weeks 
 	}
 	return progress, nil
 }
+
+// GetAllUsers retrieves all users
+func (s *UserStore) GetAllUsers() ([]models.User, error) {
+	var users []models.User
+	err := s.db.Select(&users, "SELECT id, username, name, email, role, avatar, created_at, updated_at, last_login FROM users")
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// UpdateUserRole updates a user's role
+func (s *UserStore) UpdateUserRole(userID int, role string) error {
+	query := `UPDATE users SET role = ?, updated_at = NOW() WHERE id = ?`
+	_, err := s.db.Exec(query, role, userID)
+	return err
+}
+
+// DeleteUser deletes a user (sets role to 'inactive')
+func (s *UserStore) DeleteUser(userID int) error {
+	query := `UPDATE users SET role = 'inactive', updated_at = NOW() WHERE id = ?`
+	_, err := s.db.Exec(query, userID)
+	return err
+}

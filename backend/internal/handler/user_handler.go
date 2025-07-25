@@ -36,6 +36,48 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User profile retrieved successfully", userDTO)
 }
 
+// GetStudentDashboardStats handles fetching aggregated statistics for a student's dashboard
+func (h *UserHandler) GetStudentDashboardStats(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	stats, err := h.userService.GetStudentDashboardStats(userID.(uint))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Student dashboard statistics retrieved successfully", stats)
+}
+
+// GetAdminDashboardCounts handles fetching counts for admin dashboard
+func (h *UserHandler) GetAdminDashboardCounts(c *gin.Context) {
+	counts, err := h.userService.GetAdminDashboardCounts()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Admin dashboard counts retrieved successfully", counts)
+}
+
+// GetTeacherDashboardCounts handles fetching counts for teacher dashboard
+func (h *UserHandler) GetTeacherDashboardCounts(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	counts, err := h.userService.GetTeacherDashboardCounts(userID.(uint))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Teacher dashboard counts retrieved successfully", counts)
+}
+
 // GetStudentEvaluationStatus handles fetching weekly evaluation status for all students
 func (h *UserHandler) GetStudentEvaluationStatus(c *gin.Context) {
 	statuses, err := h.userService.GetStudentEvaluationStatus()

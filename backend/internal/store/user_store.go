@@ -72,6 +72,64 @@ func (s *UserStore) GetUserByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
+// GetStudentDashboardStats retrieves aggregated statistics for a student's dashboard
+func (s *UserStore) GetStudentDashboardStats(studentID int) (*models.StudentDashboardStats, error) {
+	var stats models.StudentDashboardStats
+	query := `
+		SELECT 
+			COALESCE((SELECT SUM(sa.score) FROM student_assignments sa WHERE sa.student_id = u.id AND sa.status = 'completed') + 
+					 (SELECT SUM(sq.score) FROM student_quiz sq WHERE sq.student_id = u.id AND sq.status = 'completed'), 0) as total_points,
+			COALESCE((SELECT COUNT(*) FROM student_assignments sa WHERE sa.student_id = u.id AND sa.status = 'completed') + 
+					 (SELECT COUNT(*) FROM student_quiz sq WHERE sq.student_id = u.id AND sq.status = 'completed'), 0) as completed_assignments,
+			(SELECT qr.total_score FROM questionnaire_results qr JOIN questionnaires q ON qr.questionnaire_id = q.id WHERE qr.student_id = u.id AND q.type = 'mslq' ORDER BY qr.completed_at DESC LIMIT 1) as mslq_score,
+			(SELECT qr.total_score FROM questionnaire_results qr JOIN questionnaires q ON qr.questionnaire_id = q.id WHERE qr.student_id = u.id AND q.type = 'ams' ORDER BY qr.completed_at DESC LIMIT 1) as ams_score,
+			(SELECT vr.dominant_style FROM vark_results vr WHERE vr.student_id = u.id ORDER BY vr.completed_at DESC LIMIT 1) as vark_dominant_style,
+			(SELECT vr.learning_preference FROM vark_results vr WHERE vr.student_id = u.id ORDER BY vr.completed_at DESC LIMIT 1) as vark_learning_preference
+		FROM users u
+		WHERE u.id = ? AND u.role = 'siswa'
+	`
+	err := s.db.Get(&stats, query, studentID)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &stats, nil
+}
+
+// GetAdminDashboardCounts retrieves counts for admin dashboard
+func (s *UserStore) GetAdminDashboardCounts() (*models.AdminDashboardCounts, error) {
+	var counts models.AdminDashboardCounts
+	query := `
+		SELECT 
+			(SELECT COUNT(*) FROM users) as total_users,
+			(SELECT COUNT(*) FROM assignments) as total_assignments,
+			(SELECT COUNT(*) FROM materials) as total_materials
+	`
+	err := s.db.Get(&counts, query)
+	if err != nil {
+		return nil, err
+	}
+	return &counts, nil
+}
+
+// GetTeacherDashboardCounts retrieves counts for teacher dashboard
+func (s *UserStore) GetTeacherDashboardCounts(teacherID int) (*models.TeacherDashboardCounts, error) {
+	var counts models.TeacherDashboardCounts
+	query := `
+		SELECT 
+			(SELECT COUNT(*) FROM assignments WHERE teacher_id = ?) as my_assignments,
+			(SELECT COUNT(*) FROM materials WHERE teacher_id = ?) as my_materials,
+			(SELECT COUNT(*) FROM users WHERE role = 'siswa') as total_students
+	`
+	err := s.db.Get(&counts, query, teacherID, teacherID)
+	if err != nil {
+		return nil, err
+	}
+	return &counts, nil
+}
+
 // GetStudentEvaluationStatus retrieves the weekly evaluation status for all students
 func (s *UserStore) GetStudentEvaluationStatus(currentWeek, currentYear int) ([]models.StudentEvaluationStatus, error) {
 	var statuses []models.StudentEvaluationStatus

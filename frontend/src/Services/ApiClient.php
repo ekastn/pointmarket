@@ -203,4 +203,19 @@ class ApiClient
     {
         return $this->request('GET', '/api/v1/teacher/evaluations/overview?weeks=' . $weeks);
     }
+
+    public function getStudentDashboardStats(): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/student/stats');
+    }
+
+    public function getAdminDashboardCounts(): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/admin/counts');
+    }
+
+    public function getTeacherDashboardCounts(): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/teacher/counts');
+    }
 }

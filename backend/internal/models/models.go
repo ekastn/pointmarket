@@ -90,7 +90,33 @@ type QuestionnaireStat struct {
 	LastCompleted *time.Time `db:"last_completed" json:"last_completed"`
 }
 
-// VARKAnswerOption represents an answer option for a VARK question
+
+
+// StudentDashboardStats represents aggregated statistics for a student's dashboard
+type StudentDashboardStats struct {
+	TotalPoints        float64 `db:"total_points" json:"total_points"`
+	CompletedAssignments int     `db:"completed_assignments" json:"completed_assignments"`
+	MSLQScore          *float64 `db:"mslq_score" json:"mslq_score"`
+	AMSScore           *float64 `db:"ams_score" json:"ams_score"`
+	VARKDominantStyle  *string  `db:"vark_dominant_style" json:"vark_dominant_style"`
+	VARKLearningPreference *string  `db:"vark_learning_preference" json:"vark_learning_preference"`
+}
+
+// AdminDashboardCounts represents counts for admin dashboard
+type AdminDashboardCounts struct {
+	TotalUsers      int `db:"total_users" json:"total_users"`
+	TotalAssignments int `db:"total_assignments" json:"total_assignments"`
+	TotalMaterials  int `db:"total_materials" json:"total_materials"`
+}
+
+// TeacherDashboardCounts represents counts for teacher dashboard
+type TeacherDashboardCounts struct {
+	MyAssignments  int `db:"my_assignments" json:"my_assignments"`
+	MyMaterials    int `db:"my_materials" json:"my_materials"`
+	TotalStudents  int `db:"total_students" json:"total_students"`
+}
+
+// StudentEvaluationStatus represents a student's weekly evaluation status for teachers
 type StudentEvaluationStatus struct {
 	StudentID         int        `db:"student_id" json:"student_id"`
 	StudentName       string     `db:"student_name" json:"student_name"`

@@ -119,6 +119,14 @@ func main() {
 			teacherRoutes.GET("/evaluations/status", userHandler.GetStudentEvaluationStatus)
 			teacherRoutes.GET("/evaluations/overview", userHandler.GetWeeklyEvaluationOverview)
 		}
+
+		// Dashboard routes
+		dashboardRoutes := authRequired.Group("/dashboard")
+		{
+			dashboardRoutes.GET("/student/stats", userHandler.GetStudentDashboardStats)
+			dashboardRoutes.GET("/admin/counts", userHandler.GetAdminDashboardCounts)
+			dashboardRoutes.GET("/teacher/counts", userHandler.GetTeacherDashboardCounts)
+		}
 	}
 
 	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)

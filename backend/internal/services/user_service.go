@@ -22,6 +22,21 @@ func (s *UserService) GetUserByID(id uint) (models.User, error) {
 	return *user, nil
 }
 
+// GetStudentDashboardStats retrieves aggregated statistics for a student's dashboard
+func (s *UserService) GetStudentDashboardStats(studentID uint) (*models.StudentDashboardStats, error) {
+	return s.userStore.GetStudentDashboardStats(int(studentID))
+}
+
+// GetAdminDashboardCounts retrieves counts for admin dashboard
+func (s *UserService) GetAdminDashboardCounts() (*models.AdminDashboardCounts, error) {
+	return s.userStore.GetAdminDashboardCounts()
+}
+
+// GetTeacherDashboardCounts retrieves counts for teacher dashboard
+func (s *UserService) GetTeacherDashboardCounts(teacherID uint) (*models.TeacherDashboardCounts, error) {
+	return s.userStore.GetTeacherDashboardCounts(int(teacherID))
+}
+
 // GetStudentEvaluationStatus retrieves the weekly evaluation status for all students
 func (s *UserService) GetStudentEvaluationStatus() ([]models.StudentEvaluationStatus, error) {
 	// Get current week and year

@@ -18,6 +18,7 @@ type Config struct {
 	JWTSecret      string
 	JWTExpiration  int
 	ServerPort     int
+	AllowedOrigins string
 }
 
 // Init loads the configuration from environment variables
@@ -35,6 +36,7 @@ func Init() *Config {
 		JWTSecret:      env.GetString("JWT_SECRET", "your-secret-key"),
 		JWTExpiration:  env.GetInt("JWT_EXPIRATION_HOURS", 72),
 		ServerPort:     env.GetInt("SERVER_PORT", 8080),
+		AllowedOrigins: env.GetString("ALLOWED_ORIGINS", "http://localhost:8081"),
 	}
 }
 

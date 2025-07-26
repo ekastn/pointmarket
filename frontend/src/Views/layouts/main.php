@@ -31,6 +31,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_BASE_URL = "<?php echo API_BASE_URL; ?>";
+        const JWT_TOKEN = "<?php echo $_SESSION['jwt_token'] ?? ''; ?>";
     </script>
     <script src="/public/assets/js/dashboard.js"></script>
     <script src="/public/assets/js/nlp-analyzer.js"></script>

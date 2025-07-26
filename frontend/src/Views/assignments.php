@@ -346,11 +346,11 @@ $messages = $messages ?? [];
                 return;
             }
 
-            const response = await fetch('/api/v1/assignments/' + assignmentId + '/start', {
+            const response = await fetch(API_BASE_URL + '/api/v1/assignments/' + assignmentId + '/start', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
+                    'Authorization': 'Bearer ' + JWT_TOKEN
                 },
                 body: JSON.stringify({})
             });
@@ -424,11 +424,11 @@ $messages = $messages ?? [];
                 </div>
             `;
 
-            const response = await fetch('/api/v1/assignments/' + assignmentId + '/submit', {
+            const response = await fetch(API_BASE_URL + '/api/v1/assignments/' + assignmentId + '/submit', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
+                    'Authorization': 'Bearer ' + JWT_TOKEN
                 },
                 body: JSON.stringify({ submission_content: submissionText })
             });

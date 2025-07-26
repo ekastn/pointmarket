@@ -8,8 +8,11 @@ import (
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/services"
 	"pointmarket/backend/internal/store"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 )
 
 func main() {
@@ -46,6 +49,16 @@ func main() {
 	materialHandler := handler.NewMaterialHandler(*materialService)
 
 	r := gin.Default()
+
+	// CORS middleware
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     strings.Split(cfg.AllowedOrigins, ","),
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Health check endpoint
 	r.GET("/ping", func(c *gin.Context) {

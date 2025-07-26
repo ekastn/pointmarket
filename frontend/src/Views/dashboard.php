@@ -425,13 +425,13 @@ use App\Helpers\VARKHelpers;
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <a href="/quizzes" class="btn btn-success w-100">
+                                <a href="/quiz" class="btn btn-success w-100">
                                     <i class="fas fa-question-circle me-2"></i>
                                     Take Quiz
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <a href="/questionnaires" class="btn btn-info w-100">
+                                <a href="/questionnaire" class="btn btn-info w-100">
                                     <i class="fas fa-clipboard-list me-2"></i>
                                     Questionnaires
                                 </a>

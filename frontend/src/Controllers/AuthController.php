@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Services\ApiClient;
 
-class LoginController extends BaseController
+class AuthController extends BaseController
 {
     public function __construct(ApiClient $apiClient)
     {
@@ -57,5 +57,13 @@ class LoginController extends BaseController
             $_SESSION['messages'] = ['error' => $response['error'] ?? 'Login failed. Please check your credentials.'];
             $this->redirect('/login');
         }
+    }
+
+    public function logout(): void
+    {
+        session_start();
+        session_unset();   // Unset all session variables
+        session_destroy(); // Destroy the session
+        $this->redirect('/login');
     }
 }

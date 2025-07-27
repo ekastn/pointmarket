@@ -4,7 +4,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Router;
 use App\Services\ApiClient;
-use App\Controllers\LoginController;
+use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\AIExplanationController;
 use App\Controllers\AIRecommendationsController;
@@ -36,9 +36,10 @@ $apiClient = new ApiClient(API_BASE_URL);
 $router = new Router($apiClient);
 
 // Public routes
-$router->get('/', [LoginController::class, 'showLoginForm']);
-$router->get('/login', [LoginController::class, 'showLoginForm']);
-$router->post('/login', [LoginController::class, 'processLogin']);
+$router->get('/', [AuthController::class, 'showLoginForm']);
+$router->get('/login', [AuthController::class, 'showLoginForm']);
+$router->post('/login', [AuthController::class, 'processLogin']);
+$router->get('/logout', [AuthController::class, 'logout']);
 
 // Authenticated routes group
 $router->group('/', function($router) {

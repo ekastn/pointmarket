@@ -14,23 +14,21 @@ class VarkAssessmentController extends BaseController
     public function show(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $this->redirect('/login');
-            return;
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
         }
-
-        $this->apiClient->setJwtToken($jwt);
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            session_destroy();
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
 
         $varkQuestions = [];
         $existingResult = null;
@@ -78,23 +76,15 @@ class VarkAssessmentController extends BaseController
     public function submit(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $this->redirect('/login');
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
             return;
         }
 
-        $this->apiClient->setJwtToken($jwt);
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            session_destroy();
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
+        $this->apiClient->setJwtToken($_SESSION['jwt_token']);
         
         $answers = $_POST['answers'] ?? []; // Assuming answers are now passed as answers[question_id] = option_letter
 

@@ -4,24 +4,31 @@ namespace App\Controllers;
 
 use App\Services\ApiClient;
 
-class UsersController
+class UsersController extends BaseController
 {
-    private ApiClient $apiClient;
-
     public function __construct(ApiClient $apiClient)
     {
-        $this->apiClient = $apiClient;
+        parent::__construct($apiClient);
     }
 
     public function index(): void
     {
         session_start();
-        if (!isset($_SESSION['jwt_token'])) {
-            header('Location: /login');
-            exit();
+        $user = $_SESSION['user_data'] ?? null;
+
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                // This case should ideally be handled by AuthMiddleware, but as a fallback
+                echo "Error fetching user profile: " . ($userProfileResponse['error'] ?? 'Unknown error');
+                return;
+            }
         }
 
-        $this->apiClient->setJwtToken($_SESSION['jwt_token']);
         $response = $this->apiClient->getAllUsers();
 
         if (!$response['success']) {
@@ -38,11 +45,7 @@ class UsersController
     public function updateUserRole(): void
     {
         session_start();
-        if (!isset($_SESSION['jwt_token'])) {
-            header('Location: /login');
-            exit();
-        }
-
+        // The AuthMiddleware handles authentication and role checks
         $this->apiClient->setJwtToken($_SESSION['jwt_token']);
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -62,11 +65,7 @@ class UsersController
     public function deleteUser(): void
     {
         session_start();
-        if (!isset($_SESSION['jwt_token'])) {
-            header('Location: /login');
-            exit();
-        }
-
+        // The AuthMiddleware handles authentication and role checks
         $this->apiClient->setJwtToken($_SESSION['jwt_token']);
 
         $input = json_decode(file_get_contents('php://input'), true);

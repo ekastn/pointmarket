@@ -20,6 +20,7 @@ use App\Controllers\MaterialsController;
 use App\Controllers\ProgressController;
 use App\Controllers\ProfileController;
 use App\Controllers\UsersController;
+use App\Middleware\AuthMiddleware;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
@@ -34,43 +35,56 @@ $apiClient = new ApiClient(API_BASE_URL);
 
 $router = new Router($apiClient);
 
-// Define routes
+// Public routes
 $router->get('/', [LoginController::class, 'showLoginForm']);
 $router->get('/login', [LoginController::class, 'showLoginForm']);
 $router->post('/login', [LoginController::class, 'processLogin']);
-$router->get('/dashboard', [DashboardController::class, 'showDashboard']);
-$router->get('/ai-explanation', [AIExplanationController::class, 'show']);
-$router->get('/ai-recommendations', [AIRecommendationsController::class, 'show']);
-$router->get('/nlp-demo', [NLPDemoController::class, 'show']);
-$router->post('/nlp-demo/analyze', [NLPDemoController::class, 'analyze']);
-$router->get('/assignments', [AssignmentsController::class, 'index']);
-$router->get('/quiz', [QuizController::class, 'index']);
-$router->get('/questionnaire', [QuestionnaireController::class, 'index']);
-$router->get('/questionnaire-progress', [QuestionnaireProgressController::class, 'index']);
-$router->get('/teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index']);
-$router->get('/vark-assessment', [VarkAssessmentController::class, 'show']);
-$router->post('/vark-assessment', [VarkAssessmentController::class, 'submit']);
-$router->get('/vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
-// Materials routes
-$router->get('/materials', [MaterialsController::class, 'index']);
-$router->get('/materials/create', [MaterialsController::class, 'create']);
-$router->post('/materials/create', [MaterialsController::class, 'create']);
-$router->get('/materials/edit/{id}', [MaterialsController::class, 'edit']);
-$router->post('/materials/edit/{id}', [MaterialsController::class, 'edit']);
-$router->post('/materials/delete/{id}', [MaterialsController::class, 'delete']);
+// Authenticated routes group
+$router->group('/', function($router) {
+    $router->get('dashboard', [DashboardController::class, 'showDashboard']);
+    $router->get('ai-explanation', [AIExplanationController::class, 'show']);
+    $router->get('ai-recommendations', [AIRecommendationsController::class, 'show']);
+    $router->get('nlp-demo', [NLPDemoController::class, 'show']);
+    $router->post('nlp-demo/analyze', [NLPDemoController::class, 'analyze']);
+    $router->get('assignments', [AssignmentsController::class, 'index']);
+    $router->get('quiz', [QuizController::class, 'index']);
+    $router->get('questionnaire', [QuestionnaireController::class, 'index']);
+    $router->get('questionnaire-progress', [QuestionnaireProgressController::class, 'index']);
+    $router->get('vark-assessment', [VarkAssessmentController::class, 'show']);
+    $router->post('vark-assessment', [VarkAssessmentController::class, 'submit']);
+    $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
-// Progress/Analytics routes
-$router->get('/progress', [ProgressController::class, 'index']);
+    // Materials routes
+    $router->group('materials', function($router) {
+        $router->get('/', [MaterialsController::class, 'index']);
+        $router->get('/create', [MaterialsController::class, 'create'], [[AuthMiddleware::class, 'requireTeacher']]);
+        $router->post('/create', [MaterialsController::class, 'create'], [[AuthMiddleware::class, 'requireTeacher']]);
+        $router->get('/edit/{id}', [MaterialsController::class, 'edit'], [[AuthMiddleware::class, 'requireTeacher']]);
+        $router->post('/edit/{id}', [MaterialsController::class, 'edit'], [[AuthMiddleware::class, 'requireTeacher']]);
+        $router->post('/delete/{id}', [MaterialsController::class, 'delete'], [[AuthMiddleware::class, 'requireTeacher']]);
+    }, [[AuthMiddleware::class, 'requireLogin']]);
 
-// User Profile routes
-$router->get('/profile', [ProfileController::class, 'showProfile']);
-$router->post('/profile', [ProfileController::class, 'updateProfile']);
+    // Progress/Analytics routes
+    $router->get('progress', [ProgressController::class, 'index']);
 
-// User Management routes
-$router->get('/admin/users', [UsersController::class, 'index']);
-$router->post('/admin/users/update-role', [UsersController::class, 'updateUserRole']);
-$router->post('/admin/users/delete', [UsersController::class, 'deleteUser']);
+    // User Profile routes
+    $router->get('profile', [ProfileController::class, 'showProfile']);
+    $router->post('profile', [ProfileController::class, 'updateProfile']);
+
+    // Admin routes group
+    $router->group('admin', function($router) {
+        $router->group('users', function($router) {
+            $router->get('/', [UsersController::class, 'index']);
+            $router->post('/update-role', [UsersController::class, 'updateUserRole']);
+            $router->post('/delete', [UsersController::class, 'deleteUser']);
+        });
+    }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+
+    // Teacher specific routes
+    $router->get('teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index'], [[AuthMiddleware::class, 'requireTeacher']]);
+
+}, [[AuthMiddleware::class, 'requireLogin']]);
 
 // Dispatch the request
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

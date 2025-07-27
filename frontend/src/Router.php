@@ -9,25 +9,43 @@ class Router
 {
     protected array $routes = [];
     protected ApiClient $apiClient;
+    protected string $currentGroupPrefix = '';
+    protected array $currentGroupMiddleware = [];
 
     public function __construct(ApiClient $apiClient)
     {
         $this->apiClient = $apiClient;
     }
 
-    public function get(string $path, array $handler): void
+    public function get(string $path, array $handler, array $middleware = []): void
     {
-        $this->addRoute('GET', $path, $handler);
+        $this->addRoute('GET', $path, $handler, $middleware);
     }
 
-    public function post(string $path, array $handler): void
+    public function post(string $path, array $handler, array $middleware = []): void
     {
-        $this->addRoute('POST', $path, $handler);
+        $this->addRoute('POST', $path, $handler, $middleware);
     }
 
-    public function addRoute(string $method, string $path, array $handler): void
+    public function addRoute(string $method, string $path, array $handler, array $middleware = []): void
     {
-        $this->routes[$method][$path] = $handler;
+        $fullPath = $this->currentGroupPrefix . $path;
+        $fullMiddleware = array_merge($this->currentGroupMiddleware, $middleware);
+        $this->routes[$method][$fullPath] = ['handler' => $handler, 'middleware' => $fullMiddleware];
+    }
+
+    public function group(string $prefix, callable $callback, array $middleware = []): void
+    {
+        $previousGroupPrefix = $this->currentGroupPrefix;
+        $previousGroupMiddleware = $this->currentGroupMiddleware;
+
+        $this->currentGroupPrefix .= $prefix;
+        $this->currentGroupMiddleware = array_merge($this->currentGroupMiddleware, $middleware);
+
+        $callback($this);
+
+        $this->currentGroupPrefix = $previousGroupPrefix;
+        $this->currentGroupMiddleware = $previousGroupMiddleware;
     }
 
     public function dispatch(string $method, string $uri): void
@@ -36,20 +54,44 @@ class Router
 
         // Try direct match
         if (isset($this->routes[$method][$path])) {
-            [$controllerClass, $methodName] = $this->routes[$method][$path];
+            $route = $this->routes[$method][$path];
+            $handler = $route['handler'];
+            $middleware = $route['middleware'];
+
+            foreach ($middleware as $m) {
+                [$middlewareClass, $middlewareMethod] = $m;
+                $middlewareInstance = new $middlewareClass($this->apiClient);
+                if (!$middlewareInstance->$middlewareMethod()) {
+                    return; // Middleware stopped the request
+                }
+            }
+
+            [$controllerClass, $methodName] = $handler;
             $controller = new $controllerClass($this->apiClient);
             $controller->$methodName();
             return;
         }
 
         // Try dynamic routes
-        foreach ($this->routes[$method] as $routePath => $handler) {
+        foreach ($this->routes[$method] as $routePath => $route) {
+            $handler = $route['handler'];
+            $middleware = $route['middleware'];
+
             // Convert route path to a regex pattern
             $pattern = preg_replace('/{([a-zA-Z0-9_]+)}', '([a-zA-Z0-9_]+)', preg_quote($routePath, '/'));
             $pattern = '#^' . $pattern . '$#';
 
             if (preg_match($pattern, $path, $matches)) {
                 array_shift($matches); // Remove the full match
+
+                foreach ($middleware as $m) {
+                    [$middlewareClass, $middlewareMethod] = $m;
+                    $middlewareInstance = new $middlewareClass($this->apiClient);
+                    if (!$middlewareInstance->$middlewareMethod()) {
+                        return; // Middleware stopped the request
+                    }
+                }
+
                 [$controllerClass, $methodName] = $handler;
                 $controller = new $controllerClass($this->apiClient);
                 

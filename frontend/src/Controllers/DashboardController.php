@@ -14,26 +14,22 @@ class DashboardController extends BaseController
     public function showDashboard(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $_SESSION['messages'] = ['error' => 'Sesi Anda telah berakhir. Silakan login kembali.'];
-            $this->redirect('/login');
-            return;
+        // If user data is not in session (e.g., first login after middleware), fetch it
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                // This case should ideally be handled by AuthMiddleware, but as a fallback
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
         }
-
-        $this->apiClient->setJwtToken($jwt);
-
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-            session_destroy(); // Clear session on API error
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
 
         $studentStats = null;
         $questionnaireScores = null;

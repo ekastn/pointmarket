@@ -14,25 +14,21 @@ class ProfileController extends BaseController
     public function showProfile(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $this->redirect('/login');
-            return;
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
         }
-
-        $this->apiClient->setJwtToken($jwt);
-
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Failed to load user profile.'];
-            session_destroy();
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
 
         $assignmentStats = null;
         $questionnaireStats = [];
@@ -93,14 +89,13 @@ class ProfileController extends BaseController
     public function updateProfile(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
-
-        if (!$jwt) {
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!isset($_SESSION['jwt_token'])) {
             $this->redirect('/login');
             return;
         }
 
-        $this->apiClient->setJwtToken($jwt);
+        $this->apiClient->setJwtToken($_SESSION['jwt_token']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
@@ -113,6 +108,11 @@ class ProfileController extends BaseController
 
             if ($response['success']) {
                 $_SESSION['messages'] = ['success' => 'Profile updated successfully!'];
+                // Update user_data in session after successful profile update
+                $userProfileResponse = $this->apiClient->getUserProfile();
+                if ($userProfileResponse['success']) {
+                    $_SESSION['user_data'] = $userProfileResponse['data'];
+                }
                 $this->redirect('/profile');
             } else {
                 $_SESSION['messages'] = ['error' => $response['error'] ?? 'Failed to update profile.'];

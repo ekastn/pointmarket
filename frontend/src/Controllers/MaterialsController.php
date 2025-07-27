@@ -14,23 +14,21 @@ class MaterialsController extends BaseController
     public function index(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $this->redirect('/login');
-            return;
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
         }
-
-        $this->apiClient->setJwtToken($jwt);
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            session_destroy();
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
 
         $materials = [];
         $messages = $_SESSION['messages'] ?? [];
@@ -54,23 +52,21 @@ class MaterialsController extends BaseController
     public function create(): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $this->redirect('/login');
-            return;
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
         }
-
-        $this->apiClient->setJwtToken($jwt);
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            session_destroy();
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
@@ -103,23 +99,21 @@ class MaterialsController extends BaseController
     public function edit(int $id): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
+        $user = $_SESSION['user_data'] ?? null;
 
-        if (!$jwt) {
-            $this->redirect('/login');
-            return;
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
         }
-
-        $this->apiClient->setJwtToken($jwt);
-        $userProfileResponse = $this->apiClient->getUserProfile();
-
-        if (!$userProfileResponse['success']) {
-            session_destroy();
-            $this->redirect('/login');
-            return;
-        }
-
-        $user = $userProfileResponse['data'];
 
         $materialResponse = $this->apiClient->getMaterialByID($id);
         if (!$materialResponse['success']) {
@@ -162,14 +156,13 @@ class MaterialsController extends BaseController
     public function delete(int $id): void
     {
         session_start();
-        $jwt = $_SESSION['jwt_token'] ?? null;
-
-        if (!$jwt) {
+        // This should ideally be handled by AuthMiddleware, but as a fallback
+        if (!isset($_SESSION['jwt_token'])) {
             $this->redirect('/login');
             return;
         }
 
-        $this->apiClient->setJwtToken($jwt);
+        $this->apiClient->setJwtToken($_SESSION['jwt_token']);
 
         $response = $this->apiClient->deleteMaterial($id);
 

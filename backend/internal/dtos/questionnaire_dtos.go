@@ -20,11 +20,35 @@ type SubmitQuestionnaireRequest struct {
 //     Responses
 // ==================
 
+type QuestionnaireResultResponse struct {
+	ID                       int       `json:"id"`
+	TotalScore               *float64  `json:"total_score"`
+	CompletedAt              time.Time `json:"completed_at"`
+	WeekNumber               int       `json:"week_number"`
+	Year                     int       `json:"year"`
+	QuestionnaireName        string    `json:"questionnaire_name"`
+	QuestionnaireType        string    `json:"questionnaire_type"`
+	QuestionnaireDescription *string   `json:"questionnaire_description"`
+}
+
+// FromQuestionnaireResult converts a models.QuestionnaireResult to a QuestionnaireResultResponse DTO.
+func (dto *QuestionnaireResultResponse) FromQuestionnaireResult(result models.QuestionnaireResult) {
+	dto.ID = result.ID
+	dto.TotalScore = result.TotalScore
+	dto.CompletedAt = result.CompletedAt
+	dto.WeekNumber = result.WeekNumber
+	dto.Year = result.Year
+	dto.QuestionnaireName = result.QuestionnaireName
+	dto.QuestionnaireType = result.QuestionnaireType
+	dto.QuestionnaireDescription = result.QuestionnaireDescription
+}
+
 type QuestionnaireResponse struct {
 	ID          int                `json:"id"`
 	Name        string             `json:"name"`
 	Description *string            `json:"description"`
 	Questions   []QuestionResponse `json:"questions"`
+	RecentResult *QuestionnaireResultResponse `json:"recent_result,omitempty"`
 	CreatedAt   time.Time          `json:"created_at"`
 }
 

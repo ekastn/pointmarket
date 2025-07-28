@@ -303,3 +303,21 @@ func (s *UserStore) DeleteUser(userID int) error {
 	_, err := s.db.Exec(query, userID)
 	return err
 }
+
+// GetPendingWeeklyEvaluationsByStudentID retrieves pending weekly evaluations for a given student
+func (s *UserStore) GetPendingWeeklyEvaluationsByStudentID(studentID int) ([]models.WeeklyEvaluationProgress, error) {
+	var pendingEvaluations []models.WeeklyEvaluationProgress
+	query := `
+		SELECT we.*, q.name as questionnaire_name, q.type as questionnaire_type
+		FROM weekly_evaluations we
+		JOIN questionnaires q ON we.questionnaire_id = q.id
+		WHERE we.student_id = ? AND we.status = 'pending' AND we.due_date <= CURDATE()
+		AND q.type != 'vark'
+		ORDER BY we.due_date ASC
+	`
+	err := s.db.Select(&pendingEvaluations, query, studentID)
+	if err != nil {
+		return nil, err
+	}
+	return pendingEvaluations, nil
+}

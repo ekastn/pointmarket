@@ -29,13 +29,15 @@ func (h *QuestionnaireHandler) GetAllQuestionnaires(c *gin.Context) {
 
 func (h *QuestionnaireHandler) GetQuestionnaireByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	questionnaire, questions, err := h.questionnaireService.GetQuestionnaireByID(uint(id))
+	userID, _ := c.Get("userID")
+	questionnaire, questions, recentResult, err := h.questionnaireService.GetQuestionnaireByID(uint(id), userID.(uint))
 	if err != nil {
 		response.Error(c, http.StatusNotFound, "Questionnaire not found")
 		return
 	}
 	var questionnaireDTO dtos.QuestionnaireResponse
 	questionnaireDTO.FromQuestionnaire(questionnaire, questions)
+	questionnaireDTO.RecentResult = recentResult
 	response.Success(c, http.StatusOK, "Questionnaire retrieved successfully", questionnaireDTO)
 }
 
@@ -52,7 +54,7 @@ func (h *QuestionnaireHandler) SubmitQuestionnaire(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", result)
+	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", gin.H{"total_score": result.TotalScore})
 }
 
 func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {

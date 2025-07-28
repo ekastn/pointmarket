@@ -98,3 +98,8 @@ func (s *UserService) GetRecentActivityByUserID(userID uint, limit int) ([]model
 func (s *UserService) GetWeeklyEvaluationProgressByStudentID(studentID uint, weeks int) ([]models.WeeklyEvaluationProgress, error) {
 	return s.userStore.GetWeeklyEvaluationProgressByStudentID(int(studentID), weeks)
 }
+
+// GetPendingWeeklyEvaluationsByStudentID retrieves pending weekly evaluations for a given student
+func (s *UserService) GetPendingWeeklyEvaluationsByStudentID(studentID uint) ([]models.WeeklyEvaluationProgress, error) {
+	return s.userStore.GetPendingWeeklyEvaluationsByStudentID(int(studentID))
+}

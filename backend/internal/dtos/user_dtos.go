@@ -31,6 +31,16 @@ type UserDTO struct {
 	LastLogin *time.Time `json:"last_login"`
 }
 
+type PendingEvaluationDTO struct {
+	WeekNumber        int       `json:"week_number"`
+	Year              int       `json:"year"`
+	QuestionnaireType string    `json:"questionnaire_type"`
+	QuestionnaireName string    `json:"questionnaire_name"`
+	Status            string    `json:"status"`	
+	DueDate           *time.Time `json:"due_date"`
+	CompletedAt       *time.Time `json:"completed_at"`
+}
+
 // FromUser converts a models.User to a UserDTO.
 func (dto *UserDTO) FromUser(user models.User) {
 	dto.ID = user.ID

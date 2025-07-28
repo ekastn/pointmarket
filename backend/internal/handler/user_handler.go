@@ -269,3 +269,19 @@ func (h *UserHandler) GetWeeklyEvaluationProgressByStudentID(c *gin.Context) {
 		return	}
 	response.Success(c, http.StatusOK, "Weekly evaluation progress retrieved successfully", progress)
 }
+
+// GetPendingWeeklyEvaluationsByStudentID handles fetching pending weekly evaluations for a given student
+func (h *UserHandler) GetPendingWeeklyEvaluationsByStudentID(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		return
+	}
+
+	pendingEvaluations, err := h.userService.GetPendingWeeklyEvaluationsByStudentID(userID.(uint))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Pending weekly evaluations retrieved successfully", pendingEvaluations)
+}

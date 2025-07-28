@@ -526,7 +526,13 @@ if (!function_exists('getVARKLearningTips')) {
         modal.show();
         
         // Load questionnaire info
-        fetch('/api/v1/questionnaires/' + questionnaireId) // Use API client for info
+        fetch(API_BASE_URL + '/api/v1/questionnaires/' + questionnaireId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + JWT_TOKEN
+            },
+        })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -675,7 +681,13 @@ if (!function_exists('getVARKLearningTips')) {
         modal.show();
         
         // Load questionnaire data
-        fetch('/api/v1/questionnaires/' + questionnaireId) // Use API client for questions
+        fetch(API_BASE_URL + '/api/v1/questionnaires/' + questionnaireId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + JWT_TOKEN
+            },
+        })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -806,11 +818,11 @@ if (!function_exists('getVARKLearningTips')) {
         `;
         
         // Submit data to backend API
-        fetch('/api/v1/questionnaires/submit', {
+        fetch(API_BASE_URL + '/api/v1/questionnaires/submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token') // Assuming JWT is stored in session storage
+                'Authorization': 'Bearer ' + JWT_TOKEN
             },
             body: JSON.stringify({
                 questionnaire_id: currentQuestionnaireId,

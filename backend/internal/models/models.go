@@ -94,6 +94,9 @@ type QuestionnaireResult struct {
 	CompletedAt   time.Time `db:"completed_at"`
 	WeekNumber    int       `db:"week_number"`
 	Year          int       `db:"year"`
+	QuestionnaireName string    `db:"questionnaire_name"`
+	QuestionnaireType string    `db:"questionnaire_type"`
+	QuestionnaireDescription *string `db:"questionnaire_description"`
 }
 
 // QuestionnaireStat represents aggregated statistics for a questionnaire type for a student

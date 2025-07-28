@@ -87,6 +87,28 @@ func (s *QuestionnaireStore) GetLatestQuestionnaireResult(studentID int, qType s
 	return &result, nil
 }
 
+// GetLatestQuestionnaireResultByQuestionnaireIDAndStudentID retrieves the latest result for a student and a specific questionnaire ID
+func (s *QuestionnaireStore) GetLatestQuestionnaireResultByQuestionnaireIDAndStudentID(studentID int, questionnaireID int) (*models.QuestionnaireResult, error) {
+	var result models.QuestionnaireResult
+	query := `
+		SELECT qr.id, qr.student_id, qr.questionnaire_id, qr.answers, qr.total_score, qr.subscale_scores, qr.completed_at, qr.week_number, qr.year,
+			q.name as questionnaire_name, q.type as questionnaire_type, q.description as questionnaire_description
+		FROM questionnaire_results qr
+		JOIN questionnaires q ON qr.questionnaire_id = q.id
+		WHERE qr.student_id = ? AND qr.questionnaire_id = ?
+		ORDER BY qr.completed_at DESC
+		LIMIT 1
+	`
+	err := s.db.Get(&result, query, studentID, questionnaireID)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 // GetQuestionnaireResultsByStudentID retrieves all questionnaire results for a given student
 func (s *QuestionnaireStore) GetQuestionnaireResultsByStudentID(studentID int) ([]models.QuestionnaireResult, error) {
 	var results []models.QuestionnaireResult

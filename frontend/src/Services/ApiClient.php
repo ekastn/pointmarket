@@ -110,11 +110,17 @@ class ApiClient
 
     public function submitAssignment(int $assignmentId, string $submissionContent): array
     {
-        return $this->request('POST', '/api/v1/assignments/' . $assignmentId . '/submit', [
+        $response = $this->request('POST', '/api/v1/assignments/' . $assignmentId . '/submit', [
             'json' => [
                 'submission_content' => $submissionContent,
             ],
         ]);
+
+        // Adjust to handle backend response for score
+        if ($response['success'] && isset($response['data']['total_score'])) {
+            $response['score'] = $response['data']['total_score'];
+        }
+        return $response;
     }
 
     public function createAssignment(array $data): array
@@ -284,6 +290,11 @@ class ApiClient
     public function getWeeklyEvaluationProgressByStudentID(int $weeks = 8): array
     {
         return $this->request('GET', '/api/v1/dashboard/student/evaluations/progress?weeks=' . $weeks);
+    }
+
+    public function getPendingWeeklyEvaluations(): array
+    {
+        return $this->request('GET', '/api/v1/student/pending-evaluations');
     }
 
     public function updateProfile(array $data): array

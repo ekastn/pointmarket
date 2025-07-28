@@ -16,25 +16,11 @@ class QuestionnaireController extends BaseController
         session_start();
         $user = $_SESSION['user_data'] ?? null;
 
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
         $questionnaires = [];
         $history = [];
         $stats = [];
         $varkResult = null;
-        $pendingEvaluations = []; // This might be handled by a separate weekly evaluation system
+        $pendingEvaluations = [];
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
@@ -66,6 +52,14 @@ class QuestionnaireController extends BaseController
         $varkResultResponse = $this->apiClient->getLatestVARKResult();
         if ($varkResultResponse['success'] && !empty($varkResultResponse['data'])) {
             $varkResult = $varkResultResponse['data'];
+        }
+
+        // Fetch pending weekly evaluations
+        $pendingEvaluationsResponse = $this->apiClient->getPendingWeeklyEvaluations(); 
+        if ($pendingEvaluationsResponse['success']) {
+            $pendingEvaluations = $pendingEvaluationsResponse['data'] ?? [];
+        } else {
+            $_SESSION['messages'] = ['error' => $pendingEvaluationsResponse['error'] ?? 'Failed to fetch pending evaluations.'];
         }
 
         $this->render('questionnaire', [

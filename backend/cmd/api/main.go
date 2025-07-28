@@ -33,7 +33,7 @@ func main() {
 	userService := services.NewUserService(userStore)
 	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
-	questionnaireService := services.NewQuestionnaireService(questionnaireStore)
+	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore)
 	varkService := services.NewVARKService(varkStore)
 	nlpService := services.NewNLPService(nlpStore)
 	materialService := services.NewMaterialService(materialStore)
@@ -157,6 +157,7 @@ func main() {
 			dashboardRoutes.GET("/student/assignments/stats", userHandler.GetAssignmentStatsByStudentID)
 			dashboardRoutes.GET("/student/activity", userHandler.GetRecentActivityByUserID)
 			dashboardRoutes.GET("/student/evaluations/progress", userHandler.GetWeeklyEvaluationProgressByStudentID)
+			dashboardRoutes.GET("/student/pending-evaluations", userHandler.GetPendingWeeklyEvaluationsByStudentID)
 		}
 
 		// Material routes

@@ -17,16 +17,25 @@ type AnalyzeNLPRequest struct {
 //     Responses
 // ==================
 
-type AnalyzeNLPResponse struct {
-	TotalScore       float64  `json:"total_score"`
-	GrammarScore     float64  `json:"grammar_score"`
-	KeywordScore     float64  `json:"keyword_score"`
-	StructureScore   float64  `json:"structure_score"`
-	ReadabilityScore float64  `json:"readability_score"`
-	SentimentScore   float64  `json:"sentiment_score"`
-	ComplexityScore  float64  `json:"complexity_score"`
-	Feedback         *string  `json:"feedback"`
-	PersonalizedFeedback *string `json:"personalized_feedback"`
+type ScoreDetail struct {
+	Score float64 `json:"score"`
+	Label string  `json:"label"`
+}
+
+type TextStats struct {
+	WordCount     int     `json:"wordCount"`
+	SentenceCount int     `json:"sentenceCount"`
+	AvgWordLength float64 `json:"avgWordLength"`
+	ReadingTime   int     `json:"readingTime"`
+}
+
+type NLPAnalysisResponseDTO struct {
+	Sentiment  ScoreDetail `json:"sentiment"`
+	Complexity ScoreDetail `json:"complexity"`
+	Coherence  ScoreDetail `json:"coherence"`
+	Keywords   []string    `json:"keywords"`
+	KeySentences []string  `json:"keySentences"`
+	Stats      TextStats   `json:"stats"`
 }
 
 type NLPStatsResponse struct {
@@ -36,19 +45,6 @@ type NLPStatsResponse struct {
 	GrammarImprovement float64 `json:"grammar_improvement"`
 	KeywordImprovement float64 `json:"keyword_improvement"`
 	StructureImprovement float64 `json:"structure_improvement"`
-}
-
-// FromNLPAnalysis converts a models.NLPAnalysisResult to an AnalyzeNLPResponse DTO.
-func (dto *AnalyzeNLPResponse) FromNLPAnalysis(analysis models.NLPAnalysisResult) {
-	dto.TotalScore = analysis.TotalScore
-	dto.GrammarScore = analysis.GrammarScore
-	dto.KeywordScore = analysis.KeywordScore
-	dto.StructureScore = analysis.StructureScore
-	dto.ReadabilityScore = analysis.ReadabilityScore
-	dto.SentimentScore = analysis.SentimentScore
-	dto.ComplexityScore = analysis.ComplexityScore
-	dto.Feedback = analysis.Feedback
-	dto.PersonalizedFeedback = analysis.PersonalizedFeedback
 }
 
 // FromNLPStats converts a models.NLPProgress to an NLPStatsResponse DTO.

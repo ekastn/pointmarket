@@ -51,7 +51,7 @@ $router->group('/', function($router) {
     $router->get('assignments', [AssignmentsController::class, 'index']);
     $router->get('quiz', [QuizController::class, 'index']);
     $router->get('questionnaire', [QuestionnaireController::class, 'index']);
-    $router->get('questionnaire-progress', [QuestionnaireProgressController::class, 'index']);
+    
     $router->get('vark-assessment', [VarkAssessmentController::class, 'show']);
     $router->post('vark-assessment', [VarkAssessmentController::class, 'submit']);
     $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);

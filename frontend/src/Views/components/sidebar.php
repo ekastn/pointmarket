@@ -28,12 +28,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/questionnaire-progress">
-                        <i class="fas fa-chart-line me-2"></i>
-                        Progress Kuesioner
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="/questionnaire">
                         <i class="fas fa-clipboard-list me-2"></i>
                         Kuesioner

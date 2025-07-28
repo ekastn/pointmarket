@@ -115,7 +115,7 @@ if (!function_exists('getVARKLearningTips')) {
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>Questionnaires</h1>
+    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>Questionnaires & Progress</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="/weekly-evaluations" class="btn btn-outline-primary">
@@ -550,7 +550,7 @@ if (!function_exists('getVARKLearningTips')) {
             document.getElementById('questionnaireInfoModalBody').innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Network error. Please try again.
+                    ${error}
                 </div>
             `;
         });

@@ -44,12 +44,19 @@ func (dto *QuestionnaireResultResponse) FromQuestionnaireResult(result models.Qu
 }
 
 type QuestionnaireResponse struct {
-	ID          int                `json:"id"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description"`
-	Questions   []QuestionResponse `json:"questions"`
-	RecentResult *QuestionnaireResultResponse `json:"recent_result,omitempty"`
-	CreatedAt   time.Time          `json:"created_at"`
+	ID             int                `json:"id"`
+	Name           string             `json:"name"`
+	Description    *string            `json:"description"`
+	TotalQuestions int                `json:"total_questions"`
+	Questions      []QuestionResponse `json:"questions"`
+	RecentResult   *QuestionnaireResultResponse `json:"recent_result,omitempty"`
+	CreatedAt      time.Time          `json:"created_at"`
+}
+
+type QuestionnaireDetailResponse struct {
+	Questionnaire QuestionnaireResponse      `json:"questionnaire"`
+	Questions     []QuestionResponse         `json:"questions"`
+	RecentResult  *QuestionnaireResultResponse `json:"recent_result,omitempty"`
 }
 
 type QuestionnaireListDTO struct {
@@ -84,10 +91,11 @@ func (dto *QuestionnaireResponse) FromQuestionnaire(q models.Questionnaire, ques
 	dto.ID = q.ID
 	dto.Name = q.Name
 	dto.Description = q.Description
+	dto.TotalQuestions = q.TotalQuestions
 	dto.CreatedAt = q.CreatedAt
 	dto.Questions = make([]QuestionResponse, len(questions))
 	for i, question := range questions {
-		dto.Questions[i] = question // Directly assign as it's already a DTO
+		dto.Questions[i] = question
 	}
 }
 

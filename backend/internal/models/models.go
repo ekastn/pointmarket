@@ -212,6 +212,9 @@ type ActivityLog struct {
 
 // WeeklyEvaluationProgress represents a student's weekly evaluation progress
 type WeeklyEvaluationProgress struct {
+	ID                int        `db:"id" json:"id"`
+	StudentID         int        `db:"student_id" json:"student_id"`
+	QuestionnaireID   int        `db:"questionnaire_id" json:"questionnaire_id"`
 	WeekNumber        int        `db:"week_number" json:"week_number"`
 	Year              int        `db:"year" json:"year"`
 	QuestionnaireType string     `db:"questionnaire_type" json:"questionnaire_type"`
@@ -221,6 +224,8 @@ type WeeklyEvaluationProgress struct {
 	CompletedAt       *time.Time `db:"completed_at" json:"completed_at"`
 	MSLQScore         *float64   `db:"mslq_score" json:"mslq_score"`
 	AMSScore          *float64   `db:"ams_score" json:"ams_score"`
+	CreatedAt         time.Time  `db:"created_at" json:"created_at"`
+    UpdatedAt         time.Time  `db:"updated_at" json:"updated_at"`
 }
 
 // VARKAnswerOption represents an answer option for a VARK question

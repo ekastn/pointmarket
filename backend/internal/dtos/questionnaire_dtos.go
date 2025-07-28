@@ -52,6 +52,15 @@ type QuestionnaireResponse struct {
 	CreatedAt   time.Time          `json:"created_at"`
 }
 
+type QuestionnaireListDTO struct {
+	ID             int       `json:"id"`
+	Type           string    `json:"type"`
+	Name           string    `json:"name"`
+	Description    *string   `json:"description"`
+	TotalQuestions int       `json:"total_questions"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
 type QuestionResponse struct {
 	ID             int                  `json:"id"`
 	QuestionnaireID int                  `json:"questionnaire_id"`

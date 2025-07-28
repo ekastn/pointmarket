@@ -294,7 +294,7 @@ class ApiClient
 
     public function getPendingWeeklyEvaluations(): array
     {
-        return $this->request('GET', '/api/v1/student/pending-evaluations');
+        return $this->request('GET', '/api/v1/dashboard/student/pending-evaluations');
     }
 
     public function updateProfile(array $data): array

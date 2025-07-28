@@ -24,7 +24,19 @@ func (h *QuestionnaireHandler) GetAllQuestionnaires(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response.Success(c, http.StatusOK, "Questionnaires retrieved successfully", questionnaires)
+
+	var questionnaireDTOs []dtos.QuestionnaireListDTO
+	for _, q := range questionnaires {
+		questionnaireDTOs = append(questionnaireDTOs, dtos.QuestionnaireListDTO{
+			ID:             q.ID,
+			Type:           q.Type,
+			Name:           q.Name,
+			Description:    q.Description,
+			TotalQuestions: q.TotalQuestions,
+			CreatedAt:      q.CreatedAt,
+		})
+	}
+	response.Success(c, http.StatusOK, "Questionnaires retrieved successfully", questionnaireDTOs)
 }
 
 func (h *QuestionnaireHandler) GetQuestionnaireByID(c *gin.Context) {

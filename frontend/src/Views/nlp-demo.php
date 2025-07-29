@@ -509,6 +509,45 @@ $messages = $messages ?? [];
                 </div>
             `;
             
+            html += `
+                <h6>Preferensi Belajar:</h6>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <h4><i class="${getVARKIcon(data.learning_preference.label)} me-2"></i>${data.learning_preference.label}</h4>
+                                <p class="text-muted mb-0">Tipe: ${data.learning_preference.type}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="card-title">Skor Gabungan VARK:</h6>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Visual
+                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.visual.toFixed(1)}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Aural
+                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.aural.toFixed(1)}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Read/Write
+                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.read_write.toFixed(1)}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Kinesthetic
+                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.kinesthetic.toFixed(1)}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
             nlpResultsBody.innerHTML = html;
         }
 
@@ -517,6 +556,17 @@ $messages = $messages ?? [];
             if (score >= 0.7) return 'score-high';
             if (score >= 0.4) return 'score-medium';
             return 'score-low';
+        }
+
+        // Helper to get VARK icon
+        function getVARKIcon(type) {
+            switch (type) {
+                case 'Visual': return 'fas fa-eye';
+                case 'Aural': return 'fas fa-volume-up';
+                case 'Read/Write': return 'fas fa-book-open';
+                case 'Kinesthetic': return 'fas fa-running';
+                default: return 'fas fa-question-circle';
+            }
         }
     });
 </script>

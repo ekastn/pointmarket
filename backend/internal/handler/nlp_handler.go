@@ -25,7 +25,7 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 	}
 
 	userID, _ := c.Get("userID")
-	analysis, err := h.nlpService.AnalyzeText(analyzeDTO, userID.(uint))
+	analysis, learningPreference, err := h.nlpService.AnalyzeText(analyzeDTO, userID.(uint))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
@@ -52,6 +52,7 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 			AvgWordLength: 0.0, // Placeholder, service does not provide yet
 			ReadingTime:   0,   // Placeholder, service does not provide yet
 		},
+		LearningPreference: learningPreference,
 	}
 
 	response.Success(c, http.StatusOK, "Text analyzed successfully", responseDTO)

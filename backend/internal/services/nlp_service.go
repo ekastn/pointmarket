@@ -3,13 +3,19 @@ package services
 import (
 	"encoding/json"
 	"math"
+	"math/rand"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // NLPService provides business logic for NLP analysis
 type NLPService struct {
@@ -22,7 +28,7 @@ func NewNLPService(nlpStore *store.NLPStore) *NLPService {
 }
 
 // AnalyzeText performs NLP analysis on the given text
-func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.NLPAnalysisResult, error) {
+func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.NLPAnalysisResult, dtos.LearningPreferenceDetail, error) {
 	originalText := req.Text
 	cleanText := s.cleanText(originalText)
 
@@ -47,6 +53,12 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 
 	// Personalized feedback can be generated based on VARK/MSLQ profiles, which is a future enhancement
 	var personalizedFeedback *string = nil
+
+	// Simulate Learning Preference
+	nlpVARKScores := s.simulateVARKScores(cleanText, req.ContextType)
+	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(wordCount)
+	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight)
+	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
 
 	analysis := models.NLPAnalysisResult{
 		StudentID:            int(studentID),
@@ -73,18 +85,177 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 
 	err := s.nlpStore.CreateNLPAnalysis(&analysis)
 	if err != nil {
-		return models.NLPAnalysisResult{}, err
+		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, err
 	}
 
 	// Update NLP progress
 	s.updateNLPProgress(int(studentID), analysis.TotalScore, analysis.GrammarScore, analysis.KeywordScore, analysis.StructureScore)
 
-	return analysis, nil
+	return analysis, learningPreference, nil
 }
 
 // GetNLPStats retrieves NLP statistics for a student
 func (s *NLPService) GetNLPStats(studentID uint) (*models.NLPProgress, error) {
 	return s.nlpStore.GetOverallNLPStats(int(studentID))
+}
+
+// simulateVARKScores simulates VARK scores based on text and context
+func (s *NLPService) simulateVARKScores(text string, contextType string) dtos.VARKScores {
+	// Define keywords for each VARK style (simplified for simulation)
+	keywords := map[string][]string{
+		"visual":    {"gambar", "diagram", "ilustrasi", "melihat", "visualisasi", "skema"},
+		"aural":     {"diskusi", "mendengar", "berbicara", "menjelaskan", "suara", "ceramah"},
+		"read_write": {"membaca", "menulis", "catatan", "artikel", "buku", "definisi", "ringkasan"},
+		"kinesthetic": {"melakukan", "praktik", "bergerak", "membangun", "eksperimen", "aplikasi"},
+	}
+
+	textLower := strings.ToLower(text)
+	wordCount := s.countWords(textLower)
+
+	scores := dtos.VARKScores{}
+
+	// Keyword-based scoring
+	for style, kws := range keywords {
+		score := 0.0
+		foundCount := 0
+		for _, kw := range kws {
+			if strings.Contains(textLower, kw) {
+				foundCount++
+			}
+		}
+		if len(kws) > 0 {
+			score = (float64(foundCount) / float64(len(kws))) * 100.0
+		}
+
+		// Add a small random component for simulation realism
+		score += rand.Float64() * 10.0 // Add up to 10 points randomly
+
+		// Apply context bias
+		switch contextType {
+		case "matematik", "fisika":
+			if style == "visual" || style == "kinesthetic" {
+				score += 15.0 // Boost for visual/kinesthetic in these contexts
+			}
+		case "biologi":
+			if style == "visual" || style == "read_write" {
+				score += 15.0 // Boost for visual/read_write in biology
+			}
+		case "assignment":
+			if style == "read_write" {
+				score += 10.0 // Slight boost for read_write in assignments
+			}
+		}
+
+		// Cap scores at 100
+		score = math.Min(100.0, score)
+
+		switch style {
+		case "visual":
+			scores.Visual = score
+		case "aural":
+			scores.Aural = score
+		case "read_write":
+			scores.ReadWrite = score
+		case "kinesthetic":
+			scores.Kinesthetic = score
+		}
+	}
+
+	// Linguistic Style/Structure Analysis (very simplified simulation)
+	// Longer texts might slightly favor Read/Write
+	if wordCount > 100 {
+		scores.ReadWrite += 5.0
+	}
+
+	return scores
+}
+
+// calculateNLPConfidenceWeight calculates W_NLP based on word count
+func (s *NLPService) calculateNLPConfidenceWeight(wordCount int) float64 {
+	if wordCount < 100 {
+		return 0.3
+	} else if wordCount >= 300 {
+		return 0.7
+	}
+	return 0.5
+}
+
+// fuseLearningPreferences simulates weighted fusion of NLP and VARK questionnaire scores
+func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeight float64) dtos.VARKScores {
+	// Placeholder for VARK questionnaire scores (fixed for simulation)
+	// In a real system, these would come from the database
+	varkQuestionnaireScores := dtos.VARKScores{
+		Visual:    rand.Float64() * 100, // Simulate some VARK scores
+		Aural:     rand.Float64() * 100,
+		ReadWrite: rand.Float64() * 100,
+		Kinesthetic: rand.Float64() * 100,
+	}
+
+	// Fixed W_VARK for simulation
+	wVARK := 1.0 - nlpWeight // W_VARK + W_NLP = 1
+
+	fused := dtos.VARKScores{
+		Visual:    s.roundScore(wVARK*varkQuestionnaireScores.Visual + nlpWeight*nlpScores.Visual),
+		Aural:     s.roundScore(wVARK*varkQuestionnaireScores.Aural + nlpWeight*nlpScores.Aural),
+		ReadWrite: s.roundScore(wVARK*varkQuestionnaireScores.ReadWrite + nlpWeight*nlpScores.ReadWrite),
+		Kinesthetic: s.roundScore(wVARK*varkQuestionnaireScores.Kinesthetic + nlpWeight*nlpScores.Kinesthetic),
+	}
+	return fused
+}
+
+// determineLearningPreferenceType classifies preference as Dominant or Multimodal
+func (s *NLPService) determineLearningPreferenceType(fusedScores dtos.VARKScores) dtos.LearningPreferenceDetail {
+	scoresMap := map[string]float64{
+		"Visual":    fusedScores.Visual,
+		"Aural":     fusedScores.Aural,
+		"Read/Write": fusedScores.ReadWrite,
+		"Kinesthetic": fusedScores.Kinesthetic,
+	}
+
+	// Sort scores to find max1 and max2
+	type ScoreEntry struct {
+		Name  string
+		Score float64
+	}
+
+	var entries []ScoreEntry
+	for name, score := range scoresMap {
+		entries = append(entries, ScoreEntry{Name: name, Score: score})
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Score > entries[j].Score
+	})
+
+	// Default values
+	prefType := "Dominant"
+	label := "Undefined"
+
+	if len(entries) == 0 {
+		return dtos.LearningPreferenceDetail{Type: prefType, Combined: fusedScores, Label: label}
+	}
+
+	max1 := entries[0]
+	if len(entries) == 1 {
+		label = max1.Name
+	} else {
+		max2 := entries[1]
+		// Threshold for Multimodal (theta from PDF is 0.15, here using 15 points difference)
+		// Assuming scores are out of 100, 15 points is 0.15 * 100
+		const theta = 15.0
+
+		if math.Abs(max1.Score-max2.Score) < theta {
+			prefType = "Multimodal"
+			// Sort alphabetically for consistent multimodal label
+			names := []string{max1.Name, max2.Name}
+			sort.Strings(names)
+			label = strings.Join(names, "-")
+		} else {
+			label = max1.Name
+		}
+	}
+
+	return dtos.LearningPreferenceDetail{Type: prefType, Combined: fusedScores, Label: label}
 }
 
 // Helper functions for NLP analysis
@@ -93,7 +264,7 @@ func (s *NLPService) cleanText(text string) string {
 	// Convert to lowercase
 	text = strings.ToLower(text)
 	// Remove extra spaces
-	re := regexp.MustCompile(`\s+`)
+	re := regexp.MustCompile(`\\s+`)
 	text = re.ReplaceAllString(text, " ")
 	// Remove leading/trailing spaces
 	text = strings.TrimSpace(text)

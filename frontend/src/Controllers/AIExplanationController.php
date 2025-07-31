@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class AIExplanationController extends BaseController
 {
@@ -30,7 +30,7 @@ class AIExplanationController extends BaseController
             }
         }
 
-        $this->render('ai-explanation', [
+        $this->render('siswa/ai-explanation', [
             'title' => 'AI Explanation',
             'user' => $user,
         ]);

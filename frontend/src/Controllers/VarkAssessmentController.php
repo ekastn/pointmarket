@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class VarkAssessmentController extends BaseController
 {
@@ -62,7 +62,7 @@ class VarkAssessmentController extends BaseController
             }
         }
 
-        $this->render('vark-assessment', [
+        $this->render('siswa/vark-assessment', [
             'title' => 'VARK Assessment',
             'user' => $user,
             'varkQuestions' => $varkQuestions,

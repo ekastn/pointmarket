@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class TeacherEvaluationMonitoringController extends BaseController
 {
@@ -51,7 +51,7 @@ class TeacherEvaluationMonitoringController extends BaseController
             $_SESSION['messages'] = ['error' => $weeklyOverviewResponse['error'] ?? 'Failed to fetch weekly overview.'];
         }
 
-        $this->render('teacher-evaluation-monitoring', [
+        $this->render('guru/teacher-evaluation-monitoring', [
             'title' => 'Teacher Evaluation Monitoring',
             'user' => $user,
             'studentStatus' => $studentStatus,

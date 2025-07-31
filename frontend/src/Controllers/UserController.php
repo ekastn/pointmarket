@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class UserController extends BaseController
 {

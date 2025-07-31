@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class AssignmentsController extends BaseController
 {
@@ -108,7 +108,7 @@ class AssignmentsController extends BaseController
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $this->render('assignments', [
+        $this->render('siswa/assignments', [
             'title' => 'Assignments',
             'user' => $user,
             'assignments' => $assignments,

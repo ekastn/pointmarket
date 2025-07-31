@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class AIRecommendationsController extends BaseController
 {
@@ -42,7 +42,7 @@ class AIRecommendationsController extends BaseController
             ['type' => 'CBF', 'title' => 'Materi Rekomendasi', 'description' => 'Siswa dengan profil serupa sukses dengan video "Matematika Visual".', 'action' => 'Tonton Video', 'confidence' => 92]
         ];
 
-        $this->render('ai-recommendations', [
+        $this->render('siswa/ai-recommendations', [
             'title' => 'AI Recommendations',
             'user' => $user,
             'aiMetrics' => $aiMetrics,

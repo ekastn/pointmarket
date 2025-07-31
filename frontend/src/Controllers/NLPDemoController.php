@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class NLPDemoController extends BaseController
 {
@@ -42,7 +42,7 @@ class NLPDemoController extends BaseController
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $this->render('nlp-demo', [
+        $this->render('siswa/nlp-demo', [
             'title' => 'NLP Demo',
             'user' => $user,
             'nlpStats' => $nlpStats,

@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class MaterialsController extends BaseController
 {
@@ -41,7 +41,7 @@ class MaterialsController extends BaseController
             $_SESSION['messages'] = ['error' => $materialsResponse['error'] ?? 'Failed to fetch materials.'];
         }
 
-        $this->render('materials', [
+        $this->render('guru/materials', [
             'title' => 'Study Materials',
             'user' => $user,
             'materials' => $materials,
@@ -88,7 +88,7 @@ class MaterialsController extends BaseController
             }
         }
 
-        $this->render('materials_create', [
+        $this->render('guru/materials_create', [
             'title' => 'Create Material',
             'user' => $user,
             'messages' => $_SESSION['messages'] ?? [],
@@ -144,7 +144,7 @@ class MaterialsController extends BaseController
             }
         }
 
-        $this->render('materials_edit', [
+        $this->render('guru/materials_edit', [
             'title' => 'Edit Material',
             'user' => $user,
             'material' => $material,

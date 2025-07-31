@@ -10,12 +10,6 @@
             
             <?php if (isset($user) && $user['role'] === 'siswa'): ?>
                 <li class="nav-item">
-                    <a class="nav-link" href="/profile">
-                        <i class="fas fa-user-circle me-2"></i>
-                        Profil Saya
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="/assignments">
                         <i class="fas fa-tasks me-2"></i>
                         Tugas
@@ -111,13 +105,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="/help">
                     <i class="fas fa-question-circle me-2"></i>
-                    Help
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/profile">
-                    <i class="fas fa-user me-2"></i>
-                    Profile
+                    Bantuan
                 </a>
             </li>
         </ul>

@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class ProfileController extends BaseController
 {
@@ -73,7 +73,9 @@ class ProfileController extends BaseController
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $this->render('profile', [
+        $viewName = $user['role'] . '/profile';
+
+        $this->render($viewName, [
             'title' => 'My Profile',
             'user' => $user,
             'assignmentStats' => $assignmentStats,

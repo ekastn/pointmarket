@@ -2,8 +2,8 @@
 
 namespace App\Middleware;
 
-use App\Services\ApiClient;
 use App\Controllers\BaseController;
+use App\Core\ApiClient;
 
 class AuthMiddleware extends BaseController
 {

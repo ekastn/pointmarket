@@ -2,8 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
-use App\Services\ViewRenderer;
+use App\Core\ApiClient;
+use App\Core\ViewRenderer;
 
 class BaseController
 {

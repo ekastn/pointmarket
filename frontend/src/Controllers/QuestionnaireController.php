@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class QuestionnaireController extends BaseController
 {
@@ -62,7 +62,7 @@ class QuestionnaireController extends BaseController
             $_SESSION['messages'] = ['error' => $pendingEvaluationsResponse['error'] ?? 'Failed to fetch pending evaluations.'];
         }
 
-        $this->render('questionnaire', [
+        $this->render('siswa/questionnaire', [
             'title' => 'Questionnaires',
             'user' => $user,
             'questionnaires' => $questionnaires,

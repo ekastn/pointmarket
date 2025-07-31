@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class QuizController extends BaseController
 {
@@ -42,7 +42,7 @@ class QuizController extends BaseController
             $_SESSION['messages'] = ['error' => $quizzesResponse['error'] ?? 'Failed to fetch quizzes.'];
         }
 
-        $this->render('quizzes', [
+        $this->render('siswa/quizzes', [
             'title' => 'Quizzes',
             'user' => $user,
             'quizzes' => $quizzes,

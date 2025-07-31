@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class DashboardController extends BaseController
 {
@@ -82,7 +82,9 @@ class DashboardController extends BaseController
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $this->render('dashboard', [
+        $viewName = $user['role'] . '/dashboard';
+
+        $this->render($viewName, [
             'user' => $user,
             'messages' => $messages,
             'studentStats' => $studentStats,

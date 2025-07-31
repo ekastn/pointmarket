@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class ProgressController extends BaseController
 {
@@ -87,7 +87,7 @@ class ProgressController extends BaseController
             $_SESSION['messages'] = ['error' => $varkResultResponse['error'] ?? 'Failed to fetch VARK result.'];
         }
 
-        $this->render('progress', [
+        $this->render('siswa/progress', [
             'title' => 'My Progress',
             'user' => $user,
             'assignmentStats' => $assignmentStats,

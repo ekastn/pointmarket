@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class VarkCorrelationAnalysisController extends BaseController
 {
@@ -39,7 +39,7 @@ class VarkCorrelationAnalysisController extends BaseController
         ];
         $dominant_style = array_search(max($vark_data), $vark_data);
 
-        $this->render('vark-correlation-analysis', [
+        $this->render('siswa/vark-correlation-analysis', [
             'title' => 'VARK Correlation Analysis',
             'user' => $user,
             'vark_data' => $vark_data,

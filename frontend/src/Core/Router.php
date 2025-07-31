@@ -1,8 +1,7 @@
 <?php
 
-namespace App;
+namespace App\Core;
 
-use App\Services\ApiClient;
 use App\Controllers\ErrorController;
 
 class Router

@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Services\ApiClient;
+use App\Core\ApiClient;
 
 class UsersController extends BaseController
 {
@@ -39,7 +39,7 @@ class UsersController extends BaseController
 
         $users = $response['data'];
 
-        require_once __DIR__ . '/../Views/users.php';
+        require_once __DIR__ . '/../Views/admin/users.php';
     }
 
     public function updateUserRole(): void

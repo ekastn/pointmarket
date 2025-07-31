@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/database"
+	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/handler"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/services"
@@ -28,6 +29,9 @@ func main() {
 	nlpStore := store.NewNLPStore(db)
 	materialStore := store.NewMaterialStore(db)
 
+	// Initialize gateways
+	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
+
 	// Initialize services
 	authService := services.NewAuthService(userStore, cfg)
 	userService := services.NewUserService(userStore)
@@ -35,7 +39,7 @@ func main() {
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore)
 	varkService := services.NewVARKService(varkStore)
-	nlpService := services.NewNLPService(nlpStore)
+	nlpService := services.NewNLPService(nlpStore, aiServiceGateway)
 	materialService := services.NewMaterialService(materialStore)
 
 	// Initialize handlers

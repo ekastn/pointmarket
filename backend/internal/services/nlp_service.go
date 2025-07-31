@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
 	"regexp"
@@ -19,12 +20,13 @@ func init() {
 
 // NLPService provides business logic for NLP analysis
 type NLPService struct {
-	nlpStore *store.NLPStore
+	nlpStore         *store.NLPStore
+	aiServiceGateway *gateway.AIServiceGateway
 }
 
 // NewNLPService creates a new NLPService
-func NewNLPService(nlpStore *store.NLPStore) *NLPService {
-	return &NLPService{nlpStore: nlpStore}
+func NewNLPService(nlpStore *store.NLPStore, aiServiceGateway *gateway.AIServiceGateway) *NLPService {
+	return &NLPService{nlpStore: nlpStore, aiServiceGateway: aiServiceGateway}
 }
 
 // AnalyzeText performs NLP analysis on the given text
@@ -34,6 +36,19 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 
 	wordCount := s.countWords(cleanText)
 	sentenceCount := s.countSentences(cleanText)
+
+	// Get VARK scores from the external AI service
+	aiServiceReq := dtos.NLPAnalysisRequest{
+		Text:        originalText,
+		ContextType: req.ContextType,
+	}
+	aiServiceResp, err := s.aiServiceGateway.GetNLPScores(aiServiceReq)
+	if err != nil {
+		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, err
+	}
+
+	// Use scores from AI service
+	nlpVARKScores := aiServiceResp.Scores
 
 	grammarScore := s.calculateGrammarScore(originalText)
 	keywordScore := s.calculateKeywordScore(cleanText, req.ContextType)
@@ -55,7 +70,6 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 	var personalizedFeedback *string = nil
 
 	// Simulate Learning Preference
-	nlpVARKScores := s.simulateVARKScores(cleanText, req.ContextType)
 	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(wordCount)
 	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight)
 	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
@@ -83,7 +97,7 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 		UpdatedAt:            time.Now(),
 	}
 
-	err := s.nlpStore.CreateNLPAnalysis(&analysis)
+	err = s.nlpStore.CreateNLPAnalysis(&analysis)
 	if err != nil {
 		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, err
 	}

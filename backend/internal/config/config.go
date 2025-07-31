@@ -19,6 +19,7 @@ type Config struct {
 	JWTExpiration  int
 	ServerPort     int
 	AllowedOrigins string
+	AIServiceURL   string
 }
 
 // Init loads the configuration from environment variables
@@ -37,6 +38,7 @@ func Init() *Config {
 		JWTExpiration:  env.GetInt("JWT_EXPIRATION_HOURS", 72),
 		ServerPort:     env.GetInt("SERVER_PORT", 8080),
 		AllowedOrigins: env.GetString("ALLOWED_ORIGINS", "http://localhost:8081"),
+		AIServiceURL:   env.GetString("AI_SERVICE_URL", "http://localhost:5000"),
 	}
 }
 

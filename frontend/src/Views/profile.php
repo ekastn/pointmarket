@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../Helpers/VARKHelpers.php';
-use App\Helpers\VARKHelpers;
 
 // Data for this view will be passed from the ProfileController
 $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'role' => 'siswa', 'avatar' => null];
@@ -154,7 +153,7 @@ if (!function_exists('formatDate')) {
                 </div>
                 <div class="card-body text-center">
                     <?php if ($varkResult): ?>
-                        <?php $learningTips = VARKHelpers::getVARKLearningTips($varkResult['dominant_style']); ?>
+                        <?php $learningTips = \app\Helpers\getVARKLearningTips($varkResult['dominant_style']); ?>
                         <div class="mb-3">
                             <i class="<?php echo htmlspecialchars($learningTips['icon']); ?> fa-3x text-info mb-2"></i>
                         </div>
@@ -232,7 +231,7 @@ if (!function_exists('formatDate')) {
                                 <h6 class="text-primary">💡 Recommendation</h6>
                                 <ul class="small mb-0">
                                     <?php if ($varkResult): ?>
-                                        <?php $tips = VARKHelpers::getVARKLearningTips($varkResult['dominant_style']); ?>
+                                        <?php $tips = \app\Helpers\getVARKLearningTips($varkResult['dominant_style']); ?>
                                         <?php foreach (array_slice($tips['study_tips'], 0, 3) as $tip): ?>
                                             <li><?php echo htmlspecialchars($tip); ?></li>
                                         <?php endforeach; ?>

@@ -22,7 +22,7 @@ if (!function_exists('formatPoints')) {
     }
 }
 require_once __DIR__ . '/../Helpers/VARKHelpers.php';
-use App\Helpers\VARKHelpers;
+
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -216,7 +216,7 @@ use App\Helpers\VARKHelpers;
                         <?php 
                         $varkDominantStyle = $studentStats['vark_dominant_style'];
                         $varkLearningPreference = $studentStats['vark_learning_preference'];
-                        $learningTips = getVARKLearningTips($varkDominantStyle); 
+                        $learningTips = \App\Helpers\getVARKLearningTips($varkDominantStyle); 
                         ?>
                         <div class="row">
                             <div class="col-md-8">

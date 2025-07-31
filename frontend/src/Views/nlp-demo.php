@@ -206,7 +206,7 @@ $messages = $messages ?? [];
 </div>
 
 <script>
-    const API_BASE_URL = '<?php echo rtrim(getenv('API_BASE_URL') ?: 'http://localhost:8080', '/'); ?>';
+    const API_BASE_URL = '<?php echo rtrim(API_BASE_URL, '/'); ?>';
     const JWT_TOKEN = '<?php echo $_SESSION['jwt_token'] ?? ''; ?>';
 
     document.addEventListener('DOMContentLoaded', function() {

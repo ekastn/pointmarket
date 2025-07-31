@@ -99,7 +99,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="/nlp-demo">
                     <i class="fas fa-brain me-2"></i>
-                    Demo NLP Analysis
+                    Demo NLP
                 </a>
             </li>
         </ul>

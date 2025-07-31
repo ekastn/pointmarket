@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Core\ApiClient;
+
 class ErrorController extends BaseController
 {
     public function __construct(ApiClient $apiClient)

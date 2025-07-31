@@ -77,7 +77,7 @@ class Router
             $middleware = $route['middleware'];
 
             // Convert route path to a regex pattern
-            $pattern = preg_replace('/{([a-zA-Z0-9_]+)}', '([a-zA-Z0-9_]+)', preg_quote($routePath, '/'));
+            $pattern = preg_replace('#\{([a-zA-Z0-9_]+)\}#', '([a-zA-Z0-9_]+)', preg_quote($routePath, '#'));
             $pattern = '#^' . $pattern . '$#';
 
             if (preg_match($pattern, $path, $matches)) {

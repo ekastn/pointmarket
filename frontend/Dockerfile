@@ -2,13 +2,7 @@ FROM php:8.4-apache
 
 WORKDIR /var/www/html
 
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    libonig-dev \
-    libxml2-dev \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+RUN apt-get update && apt-get install -y     git     unzip     libzip-dev     libonig-dev     libxml2-dev     libpng-dev     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -20,9 +14,8 @@ COPY . /var/www/html/frontend
 RUN sed -i -e 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/frontend\/public/g' /etc/apache2/sites-available/000-default.conf \
     && a2enmod rewrite
 
-# Change ownership of the application files
-RUN chown -R www-data:www-data /var/www/html/frontend \
-    && chmod -R 755 /var/www/html/frontend/storage
+# Create storage directory and set permissions
+RUN mkdir -p /var/www/html/frontend/storage     && chown -R www-data:www-data /var/www/html/frontend     && chmod -R 755 /var/www/html/frontend/storage
 
 # Install Composer dependencies
 WORKDIR /var/www/html/frontend

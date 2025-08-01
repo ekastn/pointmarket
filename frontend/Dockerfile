@@ -10,9 +10,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy the application code
 COPY . /var/www/html/frontend
 
-# Set the Apache document root to the 'public' directory
-RUN sed -i -e 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/frontend\/public/g' /etc/apache2/sites-available/000-default.conf \
-    && a2enmod rewrite
+# Set the Apache document root to the 'frontend' directory
+RUN sed -i -e 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/frontend/g' /etc/apache2/sites-available/000-default.conf     && a2enmod rewrite
+
+# Allow access to the new DocumentRoot
+RUN echo '<Directory /var/www/html/frontend>\n    Options Indexes FollowSymLinks\n    AllowOverride All\n    Require all granted\n</Directory>' >> /etc/apache2/sites-available/000-default.conf
 
 # Create storage directory and set permissions
 RUN mkdir -p /var/www/html/frontend/storage     && chown -R www-data:www-data /var/www/html/frontend     && chmod -R 755 /var/www/html/frontend/storage

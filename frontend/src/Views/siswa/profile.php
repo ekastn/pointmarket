@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
+require_once __DIR__ . '/../../Helpers/DateHelpers.php';
 
 // Data for this view will be passed from the ProfileController
 $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'role' => 'siswa', 'avatar' => null];
@@ -11,14 +12,7 @@ $weeklyProgress = $weeklyProgress ?? [];
 $recentActivities = $recentActivities ?? [];
 $messages = $messages ?? [];
 
-// Helper function to format date (ideally in a utility file or passed from controller)
-if (!function_exists('formatDate')) {
-    function formatDate($dateString) {
-        if (!$dateString) return 'N/A';
-        $date = new DateTime($dateString);
-        return $date->format('d/m/Y H:i');
-    }
-}
+use function App\Helpers\formatDate;
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

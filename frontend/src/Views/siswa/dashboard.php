@@ -22,8 +22,12 @@ if (!function_exists('formatPoints')) {
     }
 }
 require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
+require_once __DIR__ . '/../../Helpers/DateHelpers.php';
+
+use function App\Helpers\formatDate;
 
 ?>
+
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
@@ -300,6 +304,133 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Statistics -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Performance Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <?php if ($studentStats && $studentStats['total_assignments'] > 0): ?>
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h4 class="text-success"><?php echo htmlspecialchars(number_format($studentStats['best_score'], 1)); ?></h4>
+                            <small class="text-muted">Best Score</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-info"><?php echo htmlspecialchars(number_format($studentStats['average_score'], 1)); ?></h4>
+                            <small class="text-muted">Average Score</small>
+                        </div>
+                    </div>
+                    <div class="progress progress-custom mb-2">
+                        <div class="progress-bar bg-info" style="width: <?php echo htmlspecialchars(($studentStats['average_score'] / 100) * 100); ?>%"></div>
+                    </div>
+                    <p class="small text-muted">
+                        Based on <?php echo htmlspecialchars($studentStats['total_assignments']); ?> completed assignments
+                    </p>
+                <?php else: ?>
+                    <div class="text-center">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No performance data yet</h6>
+                        <p class="small text-muted">Complete assignments to see your statistics</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Evaluation Progress -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-check me-2"></i>
+                    Weekly Evaluations
+                </h5>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($weeklyProgress)): ?>
+                    <div class="text-center mb-3">
+                        <h4 class="text-warning"><?php echo htmlspecialchars(count($weeklyProgress)); ?></h4>
+                        <small class="text-muted">Completed Evaluations</small>
+                    </div>
+                    <div class="row">
+                        <?php
+                        $recentWeeks = array_slice($weeklyProgress, -4, 4, true);
+                        foreach ($recentWeeks as $progress):
+                            ?>
+                            <div class="col-6 mb-2">
+                                <div class="small">
+                                    <strong>Week <?php echo htmlspecialchars($progress['week_number']); ?>:</strong><br>
+                                    <span class="text-success">MSLQ: <?php echo htmlspecialchars(number_format($progress['mslq_score'], 1)); ?></span><br>
+                                    <span class="text-info">AMS: <?php echo htmlspecialchars(number_format($progress['ams_score'], 1)); ?></span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <a href="/weekly-evaluations" class="btn btn-sm btn-warning">
+                        <i class="fas fa-arrow-right me-1"></i>View All
+                    </a>
+                <?php else: ?>
+                    <div class="text-center">
+                        <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No evaluations yet</h6>
+                        <p class="small text-muted">Weekly evaluations help track your progress</p>
+                        <a href="/weekly-evaluations" class="btn btn-sm btn-primary">
+                            <i class="fas fa-play me-1"></i>Start Evaluating
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($recentActivities)): ?>
+                    <div class="row">
+                        <?php foreach (array_slice($recentActivities, 0, 6) as $activity): ?>
+                            <div class="col-md-6">
+                                <div class="activity-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong><?php echo htmlspecialchars($activity['action']); ?></strong><br>
+                                            <small class="text-muted"><?php echo htmlspecialchars($activity['description']); ?></small>
+                                        </div>
+                                        <small class="text-muted">
+                                            <?php echo htmlspecialchars(formatDate($activity['created_at'])); ?>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center">
+                        <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No recent activity</h6>
+                        <p class="small text-muted">Your learning activities will appear here</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -46,19 +46,51 @@ class DashboardController extends BaseController
                 $studentStatsResponse = $this->apiClient->getStudentDashboardStats();
                 if ($studentStatsResponse['success']) {
                     $studentStats = $studentStatsResponse['data'];
-                    // Assuming VARK data is part of studentStats or fetched separately
-                    $varkResult = [
-                        'dominant_style' => $studentStats['vark_dominant_style'] ?? null,
-                        'learning_preference' => $studentStats['vark_learning_preference'] ?? null,
-                        // Add other VARK scores if available in studentStats
-                    ];
-                    $questionnaireScores = [
-                        'mslq' => $studentStats['mslq_score'] ?? null,
-                        'ams' => $studentStats['ams_score'] ?? null,
-                        'vark' => $varkResult,
-                    ];
                 } else {
                     $_SESSION['messages'] = ['error' => $studentStatsResponse['error'] ?? 'Failed to fetch student dashboard stats.'];
+                }
+
+                $assignmentStats = null;
+                $questionnaireStats = [];
+                $nlpStats = null;
+                $varkResult = null;
+                $weeklyProgress = [];
+                $recentActivities = [];
+
+                // Fetch assignment/quiz statistics
+                $assignmentStatsResponse = $this->apiClient->getAssignmentStatsByStudentID();
+                if ($assignmentStatsResponse['success']) {
+                    $assignmentStats = $assignmentStatsResponse['data'];
+                }
+
+                // Fetch questionnaire statistics
+                $questionnaireStatsResponse = $this->apiClient->getQuestionnaireStats();
+                if ($questionnaireStatsResponse['success']) {
+                    $questionnaireStats = $questionnaireStatsResponse['data'] ?? [];
+                }
+
+                // Fetch NLP statistics
+                $nlpStatsResponse = $this->apiClient->getNLPStats();
+                if ($nlpStatsResponse['success']) {
+                    $nlpStats = $nlpStatsResponse['data'] ?? null;
+                }
+
+                // Fetch VARK result
+                $varkResultResponse = $this->apiClient->getLatestVARKResult();
+                if ($varkResultResponse['success']) {
+                    $varkResult = $varkResultResponse['data'] ?? null;
+                }
+
+                // Fetch weekly evaluation progress
+                $weeklyProgressResponse = $this->apiClient->getWeeklyEvaluationProgressByStudentID();
+                if ($weeklyProgressResponse['success']) {
+                    $weeklyProgress = $weeklyProgressResponse['data'] ?? [];
+                }
+
+                // Fetch recent activity
+                $recentActivitiesResponse = $this->apiClient->getRecentActivityByUserID();
+                if ($recentActivitiesResponse['success']) {
+                    $recentActivities = $recentActivitiesResponse['data'] ?? [];
                 }
                 break;
             case 'guru':
@@ -91,6 +123,12 @@ class DashboardController extends BaseController
             'questionnaireScores' => $questionnaireScores,
             'counts' => $counts,
             'aiMetrics' => $aiMetrics,
+            'assignmentStats' => $assignmentStats,
+            'questionnaireStats' => $questionnaireStats,
+            'nlpStats' => $nlpStats,
+            'varkResult' => $varkResult,
+            'weeklyProgress' => $weeklyProgress,
+            'recentActivities' => $recentActivities,
         ]);
     }
 }

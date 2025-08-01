@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS builder
+FROM golang:latest AS builder
 
 WORKDIR /app
 
@@ -8,10 +8,12 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main .cmd/api/
+RUN CGO_ENABLED=0 go build -o main ./cmd/api/
+
+RUN ls -l
+RUN pwd
 
 FROM alpine:latest
-
 
 COPY --from=builder /app/main .
 

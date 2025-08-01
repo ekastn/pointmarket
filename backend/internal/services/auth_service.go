@@ -42,7 +42,7 @@ func (s *AuthService) Register(req dtos.RegisterRequest) (models.User, error) {
 
 // Login authenticates a user and returns a JWT token
 func (s *AuthService) Login(req dtos.LoginRequest) (models.User, string, error) {
-	user, err := s.userStore.GetUserByUsernameAndRole(req.Username, req.Role)
+	user, err := s.userStore.GetUserByUsername(req.Username)
 	if err != nil {
 		return models.User{}, "", err
 	}

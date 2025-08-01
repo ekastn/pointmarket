@@ -83,15 +83,7 @@
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="role" class="form-label">Role</label>
-                                <select class="form-select" id="role" name="role" required>
-                                    <option value="">Pilih Role</option>
-                                    <option value="siswa">Siswa</option>
-                                    <option value="guru">Guru</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
+                            
                             
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">

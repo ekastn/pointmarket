@@ -33,16 +33,15 @@ class AuthController extends BaseController
         // Basic input validation
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
-        $role = $_POST['role'] ?? '';
 
-        if (empty($username) || empty($password) || empty($role)) {
+        if (empty($username) || empty($password)) {
             $_SESSION['messages'] = ['error' => 'Semua field harus diisi.'];
             $this->redirect('/login');
             return;
         }
 
         // Call Go backend API for login
-        $response = $this->apiClient->login($username, $password, $role);
+        $response = $this->apiClient->login($username, $password);
 
         if ($response['success']) {
             // Store JWT token in session

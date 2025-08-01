@@ -395,6 +395,109 @@ use function App\Helpers\formatDate;
     </div>
 </div>
 
+<!-- Assessment Results Overview -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-brain me-2"></i>
+                    MSLQ Assessment
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <?php if (isset($questionnaireStats['mslq']) && $questionnaireStats['mslq']['total_completed'] > 0): ?>
+                    <div class="score-badge badge bg-success mb-3">
+                        <?php echo htmlspecialchars(number_format($questionnaireStats['mslq']['average_score'], 1)); ?>/5.0
+                    </div>
+                    <h6 class="text-success">Completed</h6>
+                    <p class="small text-muted">Learning strategies and motivation assessment</p>
+                    <div class="progress progress-custom mb-2">
+                        <div class="progress-bar bg-success" style="width: <?php echo htmlspecialchars(($questionnaireStats
+['mslq']['average_score'] / 5) * 100); ?>%"></div>
+                    </div>
+                    <a href="/questionnaire" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </a>
+                <?php else: ?>
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Not Completed</h6>
+                    <p class="small text-muted">Take the assessment to get personalized learning insights</p>
+                    <a href="/questionnaire" class="btn btn-sm btn-primary">
+                        <i class="fas fa-play me-1"></i>Start Assessment
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-heart me-2"></i>
+                    AMS Assessment
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <?php if (isset($questionnaireStats['ams']) && $questionnaireStats['ams']['total_completed'] > 0): ?>
+                    <div class="score-badge badge bg-warning text-dark mb-3">
+                        <?php echo htmlspecialchars(number_format($questionnaireStats['ams']['average_score'], 1)); ?>/5.0
+                    </div>
+                    <h6 class="text-warning">Completed</h6>
+                    <p class="small text-muted">Academic motivation scale assessment</p>
+                    <div class="progress progress-custom mb-2">
+                        <div class="progress-bar bg-warning" style="width: <?php echo htmlspecialchars(($questionnaireStats
+['ams']['average_score'] / 5) * 100); ?>%"></div>
+                    </div>
+                    <a href="/questionnaire" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </a>
+                <?php else: ?>
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Not Completed</h6>
+                    <p class="small text-muted">Assess your academic motivation patterns</p>
+                    <a href="/questionnaire" class="btn btn-sm btn-primary">
+                        <i class="fas fa-play me-1"></i>Start Assessment
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    VARK Assessment
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <?php if ($varkResult): ?>
+                    <?php $learningTips = \App\Helpers\getVARKLearningTips($varkResult['dominant_style']); ?>
+                    <div class="mb-3">
+                        <i class="<?php echo htmlspecialchars($learningTips['icon']); ?> fa-3x text-info mb-2"></i>
+                    </div>
+                    <h6 class="text-info"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></h6>
+                    <p class="small text-muted"><?php echo htmlspecialchars($learningTips['description']); ?></p>
+                    <a href="/vark-assessment" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </a>
+                <?php else: ?>
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Not Completed</h6>
+                    <p class="small text-muted">Discover your learning style preferences</p>
+                    <a href="/vark-assessment" class="btn btn-sm btn-primary">
+                        <i class="fas fa-play me-1"></i>Start Assessment
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Recent Activity -->
 <div class="row mb-4">
     <div class="col-12">

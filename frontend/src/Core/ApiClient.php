@@ -59,13 +59,12 @@ class ApiClient
         }
     }
 
-    public function login(string $username, string $password, string $role): array
+    public function login(string $username, string $password): array
     {
         $response = $this->request('POST', '/api/v1/auth/login', [
             'json' => [
                 'username' => $username,
                 'password' => $password,
-                'role' => $role,
             ],
         ]);
 

@@ -43,13 +43,18 @@ class DashboardController extends BaseController
 
         switch ($user['role']) {
             case 'siswa':
-                $studentStatsResponse = $this->apiClient->getStudentDashboardStats();
-                if ($studentStatsResponse['success']) {
-                    $studentStats = $studentStatsResponse['data'];
-                } else {
-                    $_SESSION['messages'] = ['error' => $studentStatsResponse['error'] ?? 'Failed to fetch student dashboard stats.'];
-                }
-
+                $studentStats = [
+                    'total_points' => 0,
+                    'completed_assignments' => 0,
+                    'mslq_score' => null,
+                    'ams_score' => null,
+                    'vark_dominant_style' => null,
+                    'vark_learning_preference' => null,
+                    'total_assignments' => 0,
+                    'avg_score' => 0,
+                    'best_score' => 0,
+                ];
+                $questionnaireScores = ['mslq' => null, 'ams' => null, 'vark' => null];
                 $assignmentStats = null;
                 $questionnaireStats = [];
                 $nlpStats = null;
@@ -57,10 +62,23 @@ class DashboardController extends BaseController
                 $weeklyProgress = [];
                 $recentActivities = [];
 
+                $studentStatsResponse = $this->apiClient->getStudentDashboardStats();
+                if ($studentStatsResponse['success']) {
+                    $studentStats = array_merge($studentStats, $studentStatsResponse['data']);
+                } else {
+                    $_SESSION['messages'] = ['error' => $studentStatsResponse['error'] ?? 'Failed to fetch student dashboard stats.'];
+                }
+
                 // Fetch assignment/quiz statistics
                 $assignmentStatsResponse = $this->apiClient->getAssignmentStatsByStudentID();
                 if ($assignmentStatsResponse['success']) {
                     $assignmentStats = $assignmentStatsResponse['data'];
+                    // Merge assignment stats into studentStats for dashboard display
+                    if ($assignmentStats) {
+                        $studentStats['total_assignments'] = $assignmentStats['total_assignments'] ?? 0;
+                        $studentStats['avg_score'] = $assignmentStats['avg_score'] ?? 0;
+                        $studentStats['best_score'] = $assignmentStats['best_score'] ?? 0;
+                    }
                 }
 
                 // Fetch questionnaire statistics
@@ -79,6 +97,14 @@ class DashboardController extends BaseController
                 $varkResultResponse = $this->apiClient->getLatestVARKResult();
                 if ($varkResultResponse['success']) {
                     $varkResult = $varkResultResponse['data'] ?? null;
+                    if ($varkResult) {
+                        $studentStats['vark_dominant_style'] = $varkResult['dominant_style'] ?? null;
+                        $studentStats['vark_learning_preference'] = $varkResult['learning_preference'] ?? null;
+                        $studentStats['visual_score'] = $varkResult['visual_score'] ?? null;
+                        $studentStats['auditory_score'] = $varkResult['auditory_score'] ?? null;
+                        $studentStats['reading_score'] = $varkResult['reading_score'] ?? null;
+                        $studentStats['kinesthetic_score'] = $varkResult['kinesthetic_score'] ?? null;
+                    }
                 }
 
                 // Fetch weekly evaluation progress

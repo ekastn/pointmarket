@@ -117,7 +117,7 @@ if (!function_exists('getVARKLearningTips')) {
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="fas fa-brain me-2 text-primary"></i>
-        VARK Learning Style Assessment
+        Asesmen Gaya Belajar VARK
     </h1>
 </div>
 
@@ -139,13 +139,13 @@ if (!function_exists('getVARKLearningTips')) {
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-chart-pie me-2"></i>
-                        Your VARK Learning Style Profile
+                        Profil Gaya Belajar VARK Anda
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-primary">Learning Style Scores:</h6>
+                            <h6 class="text-primary">Skor Gaya Belajar:</h6>
                             <div class="mb-3">
                                 <?php 
                                 $maxScore = 0;
@@ -174,7 +174,7 @@ if (!function_exists('getVARKLearningTips')) {
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-success">Your Learning Preference:</h6>
+                            <h6 class="text-success">Preferensi Belajar Anda:</h6>
                             <div class="p-3 bg-light rounded">
                                 <h5 class="text-success mb-2">
                                     <i class="<?php echo getVARKLearningTips($result_data['dominant_style'])['icon']; ?> me-2"></i>
@@ -186,11 +186,10 @@ if (!function_exists('getVARKLearningTips')) {
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3 text-center">
-                        <a href="/questionnaire" class="btn btn-primary">
-                            <i class="fas fa-arrow-left me-1"></i> Back to Questionnaires
+                    <a href="/vark-assessment?retake=true" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Ulangi Asesmen
                         </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -203,36 +202,36 @@ if (!function_exists('getVARKLearningTips')) {
                 <div class="card-body">
                     <h5 class="card-title text-primary">
                         <i class="fas fa-info-circle me-2"></i>
-                        About the VARK Learning Style Assessment
+                        Tentang Asesmen Gaya Belajar VARK
                     </h5>
                     <div class="row">
                         <div class="col-md-6">
-                            <p>VARK is an acronym for <strong>V</strong>isual, <strong>A</strong>uditory, <strong>R</strong>eading/Writing, and <strong>K</strong>inesthetic learning styles. This assessment helps identify your preferred learning mode.</p>
+                            <p>VARK adalah akronim dari <strong>V</strong>isual, <strong>A</strong>uditori, <strong>M</strong>embaca/Menulis, dan <strong>K</strong>inestetik. Asesmen ini membantu mengidentifikasi mode belajar pilihan Anda.</p>
                             
-                            <h6 class="mt-3">The Four Learning Styles:</h6>
+                            <h6 class="mt-3">Empat Gaya Belajar:</h6>
                             <ul class="list-unstyled">
-                                <li><i class="fas fa-eye text-info me-2"></i><strong>Visual:</strong> Learning through graphs, diagrams, and maps</li>
-                                <li><i class="fas fa-volume-up text-warning me-2"></i><strong>Auditory:</strong> Learning through listening and discussion</li>
-                                <li><i class="fas fa-book-open text-success me-2"></i><strong>Reading/Writing:</strong> Learning through text and notes</li>
-                                <li><i class="fas fa-hand-rock text-danger me-2"></i><strong>Kinesthetic:</strong> Learning through hands-on practice</li>
+                                <li><i class="fas fa-eye text-info me-2"></i><strong>Visual:</strong> Belajar melalui grafik, diagram, dan peta</li>
+                                <li><i class="fas fa-volume-up text-warning me-2"></i><strong>Auditori:</strong> Belajar melalui mendengarkan dan diskusi</li>
+                                <li><i class="fas fa-book-open text-success me-2"></i><strong>Membaca/Menulis:</strong> Belajar melalui teks dan catatan</li>
+                                <li><i class="fas fa-hand-rock text-danger me-2"></i><strong>Kinestetik:</strong> Belajar melalui praktik langsung</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
                             <div class="bg-light p-3 rounded">
-                                <h6 class="text-primary">Assessment Details:</h6>
+                                <h6 class="text-primary">Detail Asesmen:</h6>
                                 <ul class="list-unstyled mb-0">
-                                    <li><i class="fas fa-clock me-2"></i><strong>Time:</strong> ~10-15 minutes</li>
-                                    <li><i class="fas fa-list-ol me-2"></i><strong>Questions:</strong> 16 scenarios</li>
-                                    <li><i class="fas fa-tasks me-2"></i><strong>Format:</strong> Multiple choice</li>
-                                    <li><i class="fas fa-chart-line me-2"></i><strong>Result:</strong> Learning style profile</li>
+                                    <li><i class="fas fa-clock me-2"></i><strong>Waktu:</strong> ~10-15 menit</li>
+                                    <li><i class="fas fa-list-ol me-2"></i><strong>Pertanyaan:</strong> 16 skenario</li>
+                                    <li><i class="fas fa-tasks me-2"></i><strong>Format:</strong> Pilihan ganda</li>
+                                    <li><i class="fas fa-chart-line me-2"></i><strong>Hasil:</strong> Profil gaya belajar</li>
                                 </ul>
                             </div>
                             
                             <?php if ($existingResult): ?>
                                 <div class="alert alert-info mt-3">
                                     <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Previous Result:</strong> <?php echo htmlspecialchars($existingResult['learning_preference']); ?>
-                                    <br><small>Completed: <?php echo date('d M Y', strtotime($existingResult['completed_at'])); ?></small>
+                                    <strong>Hasil Sebelumnya:</strong> <?php echo htmlspecialchars($existingResult['learning_preference']); ?>
+                                    <br><small>Selesai: <?php echo date('d M Y', strtotime($existingResult['completed_at'])); ?></small>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -249,7 +248,7 @@ if (!function_exists('getVARKLearningTips')) {
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-clipboard-list me-2"></i>
-                        VARK Learning Style Questionnaire
+                        Kuesioner Gaya Belajar VARK
                     </h5>
                 </div>
                 <div class="card-body">
@@ -259,7 +258,7 @@ if (!function_exists('getVARKLearningTips')) {
                                 <?php foreach ($varkQuestions as $index => $question): ?>
                                     <div class="question-card mb-4 p-3 border rounded">
                                         <h6 class="text-primary mb-3">
-                                            Question <?php echo htmlspecialchars($question['question_number']); ?> of 16
+                                            Pertanyaan <?php echo htmlspecialchars($question['question_number']); ?> dari 16
                                         </h6>
                                         <p class="fw-bold mb-3">
                                             <?php echo htmlspecialchars($question['question_text']); ?>
@@ -283,7 +282,7 @@ if (!function_exists('getVARKLearningTips')) {
                                                     </div>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
-                                                <p class="text-muted">No options available for this question.</p>
+                                                <p class="text-muted">Tidak ada opsi tersedia untuk pertanyaan ini.</p>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -291,8 +290,8 @@ if (!function_exists('getVARKLearningTips')) {
                             <?php else: ?>
                                 <div class="text-center py-4">
                                     <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No VARK questions available.</h5>
-                                    <p class="text-muted">Please check back later or contact support.</p>
+                                    <h5 class="text-muted">Tidak ada pertanyaan VARK tersedia.</h5>
+                                    <p class="text-muted">Silakan coba lagi nanti atau hubungi dukungan.</p>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -301,7 +300,7 @@ if (!function_exists('getVARKLearningTips')) {
                             <div class="text-center mt-4">
                                 <button type="submit" name="submit_vark" class="btn btn-primary btn-lg">
                                     <i class="fas fa-check me-2"></i>
-                                    Submit VARK Assessment
+                                    Kirim Asesmen VARK
                                 </button>
                             </div>
                         <?php endif; ?>
@@ -318,28 +317,28 @@ if (!function_exists('getVARKLearningTips')) {
         <div class="alert alert-primary" role="alert">
             <h6 class="alert-heading">
                 <i class="fas fa-info-circle me-2"></i>
-                VARK Learning Style Assessment - Proof of Concept
+                Asesmen Gaya Belajar VARK - Bukti Konsep
             </h6>
             <p class="mb-2">
-                <strong>Status:</strong> This learning system uses the validated VARK algorithm to identify your learning style.
+                <strong>Status:</strong> Sistem pembelajaran ini menggunakan algoritma VARK yang tervalidasi untuk mengidentifikasi gaya belajar Anda.
             </p>
             <div class="row">
                 <div class="col-md-6">
-                    <strong>VARK Learning Styles:</strong>
+                    <strong>Gaya Belajar VARK:</strong>
                     <ul class="small mb-0 mt-1">
-                        <li><strong>Visual:</strong> Learning through graphs, diagrams, maps</li>
-                        <li><strong>Auditory:</strong> Learning through listening and discussion</li>
-                        <li><strong>Reading/Writing:</strong> Learning through text and notes</li>
-                        <li><strong>Kinesthetic:</strong> Learning through hands-on practice</li>
+                        <li><strong>Visual:</strong> Belajar melalui grafik, diagram, dan peta</li>
+                        <li><strong>Auditori:</strong> Belajar melalui mendengarkan dan diskusi</li>
+                        <li><strong>Membaca/Menulis:</strong> Belajar melalui teks dan catatan</li>
+                        <li><strong>Kinestetik:</strong> Belajar melalui praktik langsung</li>
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <strong>Integration with POINTMARKET AI:</strong>
+                    <strong>Integrasi dengan AI POINTMARKET:</strong>
                     <ul class="small mb-0 mt-1">
-                        <li>📊 Results will influence material recommendations</li>
-                        <li>🎯 The AI will adapt learning methods</li>
-                        <li>📚 Content will be tailored to your learning preference</li>
-                        <li>🔄 The system will continuously learn from your interactions</li>
+                        <li>📊 Hasil akan memengaruhi rekomendasi materi</li>
+                        <li>🎯 AI akan menyesuaikan metode pembelajaran</li>
+                        <li>📚 Konten akan disesuaikan dengan preferensi belajar Anda</li>
+                        <li>🔄 Sistem akan terus belajar dari interaksi Anda</li>
                     </ul>
                 </div>
             </div>

@@ -35,7 +35,7 @@ func (g *AIServiceGateway) GetNLPScores(req dtos.NLPAnalysisRequest) (*dtos.NLPA
 	}
 
 	// Create the HTTP request
-	httpReq, err := http.NewRequest("POST", g.BaseURL+"/api/analyze", bytes.NewBuffer(requestBody))
+	httpReq, err := http.NewRequest("POST", g.BaseURL+"/nlp/predict", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

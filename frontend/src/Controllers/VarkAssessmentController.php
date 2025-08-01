@@ -37,26 +37,33 @@ class VarkAssessmentController extends BaseController
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        // Try to get the latest VARK result first
-        $latestResultResponse = $this->apiClient->getLatestVARKResult();
-        if ($latestResultResponse['success'] && !empty($latestResultResponse['data'])) {
-            $existingResult = $latestResultResponse['data'];
-            $show_result = true;
-            $result_data = [
-                'scores' => [
-                    'Visual' => $existingResult['visual_score'],
-                    'Auditory' => $existingResult['auditory_score'],
-                    'Reading' => $existingResult['reading_score'],
-                    'Kinesthetic' => $existingResult['kinesthetic_score'],
-                ],
-                'dominant_style' => $existingResult['dominant_style'], // Corrected to dominant_style
-                'learning_preference' => $existingResult['learning_preference'], // Corrected to learning_preference
-            ];
-        } else {
-            // If no existing result, fetch questions for a new assessment
+        // Check if the user explicitly wants to retake the assessment
+        $retake = isset($_GET['retake']) && $_GET['retake'] === 'true';
+
+        // If not retaking, try to get the latest VARK result first
+        if (!$retake) {
+            $latestResultResponse = $this->apiClient->getLatestVARKResult();
+            if ($latestResultResponse['success'] && !empty($latestResultResponse['data'])) {
+                $existingResult = $latestResultResponse['data'];
+                $show_result = true;
+                $result_data = [
+                    'scores' => [
+                        'Visual' => $existingResult['visual_score'],
+                        'Auditory' => $existingResult['auditory_score'],
+                        'Reading' => $existingResult['reading_score'],
+                        'Kinesthetic' => $existingResult['kinesthetic_score'],
+                    ],
+                    'dominant_style' => $existingResult['dominant_style'],
+                    'learning_preference' => $existingResult['learning_preference'],
+                ];
+            }
+        }
+
+        // If no existing result (or retake is true), fetch questions for a new assessment
+        if (!$show_result || $retake) { // This condition ensures questions are fetched if no result or if retake is true
             $questionsResponse = $this->apiClient->getVARKAssessment();
             if ($questionsResponse['success']) {
-                $varkQuestions = $questionsResponse['data']['questions'] ?? []; // Access 'questions' key
+                $varkQuestions = $questionsResponse['data']['questions'] ?? [];
             } else {
                 $_SESSION['messages'] = ['error' => $questionsResponse['error'] ?? 'Failed to load VARK questions.'];
             }
@@ -66,9 +73,9 @@ class VarkAssessmentController extends BaseController
             'title' => 'VARK Assessment',
             'user' => $user,
             'varkQuestions' => $varkQuestions,
-            'existingResult' => $existingResult,
+            'existingResult' => $existingResult, // Still pass existing result for display if not retaking
             'messages' => $messages,
-            'show_result' => $show_result,
+            'show_result' => $show_result && !$retake, // Only show result if not retaking
             'result_data' => $result_data,
         ]);
     }

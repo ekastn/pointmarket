@@ -3,9 +3,9 @@ from .services.engine_service import motivational_engine
 from .dtos import AnalysisRequest
 from typing import Tuple, cast
 
-api_bp = Blueprint('api', __name__, url_prefix='/api')
+api_bp = Blueprint('api', __name__)
 
-@api_bp.route('/analyze', methods=['POST'])
+@api_bp.route('/nlp/predict', methods=['POST'])
 def analyze_handler() -> Tuple[Response, int]:
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400

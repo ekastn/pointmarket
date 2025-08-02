@@ -171,13 +171,13 @@ func (s *QuestionnaireService) GetQuestionnaireStatsByStudentID(studentID uint) 
 
 		if !varkStatExists {
 			stats = append(stats, models.QuestionnaireStat{
-				Type:          "vark",
-				Name:          "VARK Learning Style Assessment",
+				Type:           "vark",
+				Name:           "VARK Learning Style Assessment",
 				TotalCompleted: varkTotalCompleted,
-				AverageScore:  nil, // VARK doesn't have traditional scoring
-				BestScore:     nil,
-				LowestScore:   nil,
-				LastCompleted: varkLastCompleted,
+				AverageScore:   nil, // VARK doesn't have traditional scoring
+				BestScore:      nil,
+				LowestScore:    nil,
+				LastCompleted:  varkLastCompleted,
 			})
 		}
 	}

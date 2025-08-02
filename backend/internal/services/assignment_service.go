@@ -118,7 +118,7 @@ func (s *AssignmentService) SubmitStudentAssignment(studentID, assignmentID uint
 	}
 
 	// Simulate scoring (70-95% of max points for demo)
-	score := float64(rand.Intn(26) + 70) * (float64(assignment.Points) / 100.0)
+	score := float64(rand.Intn(26)+70) * (float64(assignment.Points) / 100.0)
 
 	err = s.assignmentStore.SubmitStudentAssignment(int(studentID), int(assignmentID), score, submissionContent)
 	if err != nil {

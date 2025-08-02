@@ -28,14 +28,14 @@ type UpdateMaterialRequest struct {
 // ==================
 
 type MaterialResponse struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
+	ID          int     `json:"id"`
+	Title       string  `json:"title"`
 	Description *string `json:"description"`
-	Subject     string `json:"subject"`
-	TeacherID   int    `json:"teacher_id"`
+	Subject     string  `json:"subject"`
+	TeacherID   int     `json:"teacher_id"`
 	FilePath    *string `json:"file_path"`
 	FileType    *string `json:"file_type"`
-	Status      string `json:"status"`
+	Status      string  `json:"status"`
 }
 
 // FromMaterial converts a models.Material to a MaterialResponse DTO.

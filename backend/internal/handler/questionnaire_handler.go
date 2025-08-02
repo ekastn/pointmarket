@@ -77,8 +77,6 @@ func (h *QuestionnaireHandler) SubmitQuestionnaire(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", gin.H{"total_score": result.TotalScore})
 }
 
-
-
 // GetQuestionnaireHistory handles fetching questionnaire history for a student
 func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {
 	userID, _ := c.Get("userID")

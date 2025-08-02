@@ -15,11 +15,11 @@ type SubmitVARKRequest struct {
 // ==================
 
 type VARKResultResponse struct {
-	VisualScore      int     `json:"visual_score"`
-	AuditoryScore    int     `json:"auditory_score"`
-	ReadingScore     int     `json:"reading_score"`
-	KinestheticScore int     `json:"kinesthetic_score"`
-	DominantStyle    string  `json:"dominant_style"`
+	VisualScore        int     `json:"visual_score"`
+	AuditoryScore      int     `json:"auditory_score"`
+	ReadingScore       int     `json:"reading_score"`
+	KinestheticScore   int     `json:"kinesthetic_score"`
+	DominantStyle      string  `json:"dominant_style"`
 	LearningPreference *string `json:"learning_preference"`
 }
 

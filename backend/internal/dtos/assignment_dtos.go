@@ -53,23 +53,23 @@ type StudentAssignmentResponse struct {
 
 // AssignmentDetailResponse combines Assignment and StudentAssignment data for a comprehensive view
 type AssignmentDetailResponse struct {
-	ID             int        `json:"id"`
-	Title          string     `json:"title"`
-	Description    *string    `json:"description"`
-	Subject        string     `json:"subject"`
-	TeacherID      int        `json:"teacher_id"`
-	Points         int        `json:"points"`
-	DueDate        *time.Time `json:"due_date"`
-	Status         string     `json:"status"` // Assignment status (e.g., Published)
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
-	StudentStatus  string     `json:"student_status"` // Student's status for this assignment
-	Score          *float64   `json:"score"`
-	SubmittedAt    *time.Time `json:"submitted_at"`
-	GradedAt       *time.Time `json:"graded_at"`
-	TeacherName    string     `json:"teacher_name"`
-	UrgencyStatus  string     `json:"urgency_status"`
-	DaysRemaining  int        `json:"days_remaining"`
+	ID            int        `json:"id"`
+	Title         string     `json:"title"`
+	Description   *string    `json:"description"`
+	Subject       string     `json:"subject"`
+	TeacherID     int        `json:"teacher_id"`
+	Points        int        `json:"points"`
+	DueDate       *time.Time `json:"due_date"`
+	Status        string     `json:"status"` // Assignment status (e.g., Published)
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	StudentStatus string     `json:"student_status"` // Student's status for this assignment
+	Score         *float64   `json:"score"`
+	SubmittedAt   *time.Time `json:"submitted_at"`
+	GradedAt      *time.Time `json:"graded_at"`
+	TeacherName   string     `json:"teacher_name"`
+	UrgencyStatus string     `json:"urgency_status"`
+	DaysRemaining int        `json:"days_remaining"`
 }
 
 type AssignmentListResponse struct {

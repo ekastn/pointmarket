@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -123,11 +123,11 @@ func main() {
 		// Questionnaire routes
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{
-			questionnaireRoutes.GET("", questionnaireHandler.GetAllQuestionnaires) // New route
+			questionnaireRoutes.GET("", questionnaireHandler.GetAllQuestionnaires)
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
 			questionnaireRoutes.POST("/submit", questionnaireHandler.SubmitQuestionnaire)
-			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory) // New route
-			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)     // New route
+			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory)
+			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)
 		}
 
 		// VARK routes

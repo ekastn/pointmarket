@@ -130,15 +130,15 @@ func (s *VARKService) SubmitVARK(req dtos.SubmitVARKRequest, studentID uint) (mo
 	}
 
 	result := models.VARKResult{
-		StudentID:        int(studentID),
-		VisualScore:      scores["Visual"],
-		AuditoryScore:    scores["Auditory"],
-		ReadingScore:     scores["Reading"],
-		KinestheticScore: scores["Kinesthetic"],
-		DominantStyle:    dominantStyle,
+		StudentID:          int(studentID),
+		VisualScore:        scores["Visual"],
+		AuditoryScore:      scores["Auditory"],
+		ReadingScore:       scores["Reading"],
+		KinestheticScore:   scores["Kinesthetic"],
+		DominantStyle:      dominantStyle,
 		LearningPreference: &learningPreference,
-		Answers:          string(answersJSON),
-		CompletedAt:      time.Now(),
+		Answers:            string(answersJSON),
+		CompletedAt:        time.Now(),
 	}
 
 	err = s.varkStore.CreateVARKResult(&result)
@@ -187,4 +187,3 @@ func (s *VARKService) generateLearningPreference(dominantStyle string) string {
 		return "Learning preference not specified."
 	}
 }
-

@@ -117,9 +117,9 @@ func (s *NLPService) GetNLPStats(studentID uint) (*models.NLPProgress, error) {
 func (s *NLPService) simulateVARKScores(text string, contextType string) dtos.VARKScores {
 	// Define keywords for each VARK style (simplified for simulation)
 	keywords := map[string][]string{
-		"visual":    {"gambar", "diagram", "ilustrasi", "melihat", "visualisasi", "skema"},
-		"aural":     {"diskusi", "mendengar", "berbicara", "menjelaskan", "suara", "ceramah"},
-		"read_write": {"membaca", "menulis", "catatan", "artikel", "buku", "definisi", "ringkasan"},
+		"visual":      {"gambar", "diagram", "ilustrasi", "melihat", "visualisasi", "skema"},
+		"aural":       {"diskusi", "mendengar", "berbicara", "menjelaskan", "suara", "ceramah"},
+		"read_write":  {"membaca", "menulis", "catatan", "artikel", "buku", "definisi", "ringkasan"},
 		"kinesthetic": {"melakukan", "praktik", "bergerak", "membangun", "eksperimen", "aplikasi"},
 	}
 
@@ -199,9 +199,9 @@ func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeigh
 	// Placeholder for VARK questionnaire scores (fixed for simulation)
 	// In a real system, these would come from the database
 	varkQuestionnaireScores := dtos.VARKScores{
-		Visual:    rand.Float64() * 100, // Simulate some VARK scores
-		Aural:     rand.Float64() * 100,
-		ReadWrite: rand.Float64() * 100,
+		Visual:      rand.Float64() * 100, // Simulate some VARK scores
+		Aural:       rand.Float64() * 100,
+		ReadWrite:   rand.Float64() * 100,
 		Kinesthetic: rand.Float64() * 100,
 	}
 
@@ -209,9 +209,9 @@ func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeigh
 	wVARK := 1.0 - nlpWeight // W_VARK + W_NLP = 1
 
 	fused := dtos.VARKScores{
-		Visual:    s.roundScore(wVARK*varkQuestionnaireScores.Visual + nlpWeight*nlpScores.Visual),
-		Aural:     s.roundScore(wVARK*varkQuestionnaireScores.Aural + nlpWeight*nlpScores.Aural),
-		ReadWrite: s.roundScore(wVARK*varkQuestionnaireScores.ReadWrite + nlpWeight*nlpScores.ReadWrite),
+		Visual:      s.roundScore(wVARK*varkQuestionnaireScores.Visual + nlpWeight*nlpScores.Visual),
+		Aural:       s.roundScore(wVARK*varkQuestionnaireScores.Aural + nlpWeight*nlpScores.Aural),
+		ReadWrite:   s.roundScore(wVARK*varkQuestionnaireScores.ReadWrite + nlpWeight*nlpScores.ReadWrite),
 		Kinesthetic: s.roundScore(wVARK*varkQuestionnaireScores.Kinesthetic + nlpWeight*nlpScores.Kinesthetic),
 	}
 	return fused
@@ -220,9 +220,9 @@ func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeigh
 // determineLearningPreferenceType classifies preference as Dominant or Multimodal
 func (s *NLPService) determineLearningPreferenceType(fusedScores dtos.VARKScores) dtos.LearningPreferenceDetail {
 	scoresMap := map[string]float64{
-		"Visual":    fusedScores.Visual,
-		"Aural":     fusedScores.Aural,
-		"Read/Write": fusedScores.ReadWrite,
+		"Visual":      fusedScores.Visual,
+		"Aural":       fusedScores.Aural,
+		"Read/Write":  fusedScores.ReadWrite,
 		"Kinesthetic": fusedScores.Kinesthetic,
 	}
 
@@ -490,14 +490,14 @@ func (s *NLPService) updateNLPProgress(studentID int, currentTotalScore, current
 	if progress == nil {
 		// First analysis for the month
 		progress = &models.NLPProgress{
-			StudentID:          studentID,
-			Month:              month,
-			Year:               year,
-			TotalAnalyses:      1,
-			AverageScore:       currentTotalScore,
-			BestScore:          currentTotalScore,
-			GrammarImprovement: 0, // No previous data for improvement
-			KeywordImprovement: 0,
+			StudentID:            studentID,
+			Month:                month,
+			Year:                 year,
+			TotalAnalyses:        1,
+			AverageScore:         currentTotalScore,
+			BestScore:            currentTotalScore,
+			GrammarImprovement:   0, // No previous data for improvement
+			KeywordImprovement:   0,
 			StructureImprovement: 0,
 		}
 	} else {
@@ -510,9 +510,9 @@ func (s *NLPService) updateNLPProgress(studentID int, currentTotalScore, current
 
 		// Simplified improvement calculation (can be more sophisticated)
 		// For now, just a dummy increase or based on current vs. average
-		progress.GrammarImprovement = s.roundScore(math.Max(0, currentGrammarScore - progress.GrammarImprovement)) // This logic needs refinement for real improvement tracking
-		progress.KeywordImprovement = s.roundScore(math.Max(0, currentKeywordScore - progress.KeywordImprovement))
-		progress.StructureImprovement = s.roundScore(math.Max(0, currentStructureScore - progress.StructureImprovement))
+		progress.GrammarImprovement = s.roundScore(math.Max(0, currentGrammarScore-progress.GrammarImprovement)) // This logic needs refinement for real improvement tracking
+		progress.KeywordImprovement = s.roundScore(math.Max(0, currentKeywordScore-progress.KeywordImprovement))
+		progress.StructureImprovement = s.roundScore(math.Max(0, currentStructureScore-progress.StructureImprovement))
 	}
 
 	return s.nlpStore.SaveNLPProgress(progress)

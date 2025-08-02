@@ -52,8 +52,6 @@ func (s *UserStore) UpdateUser(user *models.User) error {
 	return err
 }
 
-
-
 // GetUserByUsername retrieves a user by username
 func (s *UserStore) GetUserByUsername(username string) (*models.User, error) {
 	var user models.User
@@ -262,7 +260,7 @@ func (s *UserStore) GetWeeklyEvaluationProgressByStudentID(studentID int, weeks 
 		ORDER BY we.year DESC, we.week_number DESC, q.type
 		LIMIT ? -- 2 questionnaires per week
 	`
-	err := s.db.Select(&progress, query, studentID, weeks, weeks * 2)
+	err := s.db.Select(&progress, query, studentID, weeks, weeks*2)
 	if err != nil {
 		return nil, err
 	}

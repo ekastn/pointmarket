@@ -107,7 +107,9 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 		response.Error(c, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
-	var req struct { Role string `json:"role" binding:"required"` }
+	var req struct {
+		Role string `json:"role" binding:"required"`
+	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
@@ -266,7 +268,8 @@ func (h *UserHandler) GetWeeklyEvaluationProgressByStudentID(c *gin.Context) {
 	progress, err := h.userService.GetWeeklyEvaluationProgressByStudentID(userID.(uint), weeks)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
-		return	}
+		return
+	}
 	response.Success(c, http.StatusOK, "Weekly evaluation progress retrieved successfully", progress)
 }
 

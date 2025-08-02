@@ -10,9 +10,9 @@ import (
 // ==================
 
 type UpdateProfileRequest struct {
-	Name    string  `json:"name" binding:"required"`
-	Email   string  `json:"email" binding:"required,email"`
-	Avatar  *string `json:"avatar"`
+	Name   string  `json:"name" binding:"required"`
+	Email  string  `json:"email" binding:"required,email"`
+	Avatar *string `json:"avatar"`
 }
 
 // ==================
@@ -32,11 +32,11 @@ type UserDTO struct {
 }
 
 type PendingEvaluationDTO struct {
-	WeekNumber        int       `json:"week_number"`
-	Year              int       `json:"year"`
-	QuestionnaireType string    `json:"questionnaire_type"`
-	QuestionnaireName string    `json:"questionnaire_name"`
-	Status            string    `json:"status"`	
+	WeekNumber        int        `json:"week_number"`
+	Year              int        `json:"year"`
+	QuestionnaireType string     `json:"questionnaire_type"`
+	QuestionnaireName string     `json:"questionnaire_name"`
+	Status            string     `json:"status"`
 	DueDate           *time.Time `json:"due_date"`
 	CompletedAt       *time.Time `json:"completed_at"`
 }

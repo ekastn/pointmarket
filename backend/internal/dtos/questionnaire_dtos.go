@@ -44,18 +44,18 @@ func (dto *QuestionnaireResultResponse) FromQuestionnaireResult(result models.Qu
 }
 
 type QuestionnaireResponse struct {
-	ID             int                `json:"id"`
-	Name           string             `json:"name"`
-	Description    *string            `json:"description"`
-	TotalQuestions int                `json:"total_questions"`
-	Questions      []QuestionResponse `json:"questions"`
+	ID             int                          `json:"id"`
+	Name           string                       `json:"name"`
+	Description    *string                      `json:"description"`
+	TotalQuestions int                          `json:"total_questions"`
+	Questions      []QuestionResponse           `json:"questions"`
 	RecentResult   *QuestionnaireResultResponse `json:"recent_result,omitempty"`
-	CreatedAt      time.Time          `json:"created_at"`
+	CreatedAt      time.Time                    `json:"created_at"`
 }
 
 type QuestionnaireDetailResponse struct {
-	Questionnaire QuestionnaireResponse      `json:"questionnaire"`
-	Questions     []QuestionResponse         `json:"questions"`
+	Questionnaire QuestionnaireResponse        `json:"questionnaire"`
+	Questions     []QuestionResponse           `json:"questions"`
 	RecentResult  *QuestionnaireResultResponse `json:"recent_result,omitempty"`
 }
 
@@ -69,21 +69,21 @@ type QuestionnaireListDTO struct {
 }
 
 type QuestionResponse struct {
-	ID             int                  `json:"id"`
-	QuestionnaireID int                  `json:"questionnaire_id"`
-	QuestionNumber int                  `json:"question_number"`
-	QuestionText   string               `json:"question_text"`
-	Subscale       *string              `json:"subscale"`
-	ReverseScored  bool                 `json:"reverse_scored"`
-	Options        []VARKAnswerOptionDTO `json:"options,omitempty"` // Added for VARK questions
-	CreatedAt      time.Time            `json:"created_at"`
+	ID              int                   `json:"id"`
+	QuestionnaireID int                   `json:"questionnaire_id"`
+	QuestionNumber  int                   `json:"question_number"`
+	QuestionText    string                `json:"question_text"`
+	Subscale        *string               `json:"subscale"`
+	ReverseScored   bool                  `json:"reverse_scored"`
+	Options         []VARKAnswerOptionDTO `json:"options,omitempty"` // Added for VARK questions
+	CreatedAt       time.Time             `json:"created_at"`
 }
 
 type VARKAnswerOptionDTO struct {
-	ID          int    `json:"id"`
-	QuestionID  int    `json:"question_id"`
+	ID           int    `json:"id"`
+	QuestionID   int    `json:"question_id"`
 	OptionLetter string `json:"option_letter"`
-	OptionText  string `json:"option_text"`
+	OptionText   string `json:"option_text"`
 }
 
 // FromQuestionnaire converts a models.Questionnaire and its questions to a QuestionnaireResponse DTO.
@@ -119,14 +119,14 @@ func (dto *VARKAnswerOptionDTO) FromVARKAnswerOption(option models.VARKAnswerOpt
 }
 
 type QuestionnaireHistoryResponse struct {
-	ID                       int        `json:"id"`
-	StudentID                int        `json:"student_id"`
-	QuestionnaireID          int        `json:"questionnaire_id"`
-	TotalScore               *float64   `json:"total_score"`
-	CompletedAt              time.Time  `json:"completed_at"`
-	WeekNumber               int        `json:"week_number"`
-	Year                     int        `json:"year"`
-	QuestionnaireName        string     `json:"questionnaire_name"`
-	QuestionnaireType        string     `json:"questionnaire_type"`
-	QuestionnaireDescription *string    `json:"questionnaire_description"`
+	ID                       int       `json:"id"`
+	StudentID                int       `json:"student_id"`
+	QuestionnaireID          int       `json:"questionnaire_id"`
+	TotalScore               *float64  `json:"total_score"`
+	CompletedAt              time.Time `json:"completed_at"`
+	WeekNumber               int       `json:"week_number"`
+	Year                     int       `json:"year"`
+	QuestionnaireName        string    `json:"questionnaire_name"`
+	QuestionnaireType        string    `json:"questionnaire_type"`
+	QuestionnaireDescription *string   `json:"questionnaire_description"`
 }

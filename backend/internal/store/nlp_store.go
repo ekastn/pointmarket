@@ -75,7 +75,6 @@ func (s *NLPStore) GetNLPStats(studentID int) (*models.NLPProgress, error) {
 	return &stats, nil
 }
 
-
 // GetNLPKeywords retrieves NLP keywords for a given context
 func (s *NLPStore) GetNLPKeywords(context string) ([]models.NLPKeyword, error) {
 	var keywords []models.NLPKeyword

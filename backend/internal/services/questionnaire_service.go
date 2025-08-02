@@ -12,13 +12,14 @@ import (
 
 // QuestionnaireService provides business logic for questionnaires
 type QuestionnaireService struct {
-	questionnaireStore *store.QuestionnaireStore
-	varkStore          *store.VARKStore
+	questionnaireStore    *store.QuestionnaireStore
+	varkStore             *store.VARKStore
+	weeklyEvaluationStore *store.WeeklyEvaluationStore // Added for weekly evaluation updates
 }
 
 // NewQuestionnaireService creates a new QuestionnaireService
-func NewQuestionnaireService(questionnaireStore *store.QuestionnaireStore, varkStore *store.VARKStore) *QuestionnaireService {
-	return &QuestionnaireService{questionnaireStore: questionnaireStore, varkStore: varkStore}
+func NewQuestionnaireService(questionnaireStore *store.QuestionnaireStore, varkStore *store.VARKStore, weeklyEvaluationStore *store.WeeklyEvaluationStore) *QuestionnaireService {
+	return &QuestionnaireService{questionnaireStore: questionnaireStore, varkStore: varkStore, weeklyEvaluationStore: weeklyEvaluationStore}
 }
 
 // GetAllQuestionnaires retrieves all active questionnaires (excluding VARK)
@@ -128,7 +129,22 @@ func (s *QuestionnaireService) SubmitQuestionnaire(req dtos.SubmitQuestionnaireR
 	}
 
 	err = s.questionnaireStore.CreateQuestionnaireResult(&result)
-	return result, err
+	if err != nil {
+		return models.QuestionnaireResult{}, fmt.Errorf("failed to create questionnaire result: %w", err)
+	}
+
+	// After successfully saving the questionnaire result, update the weekly_evaluations status
+	if req.WeekNumber != 0 && req.Year != 0 {
+		err = s.weeklyEvaluationStore.UpdateWeeklyEvaluationStatusByStudentWeekYearAndQuestionnaire(
+			int(studentID), req.WeekNumber, req.Year, req.QuestionnaireID, "completed")
+		if err != nil {
+			// Log the error but don't return it, as the questionnaire result was already saved.
+			fmt.Printf("Warning: Failed to update weekly evaluation status for student %d, week %d, year %d, questionnaire %d: %v\n",
+				studentID, req.WeekNumber, req.Year, req.QuestionnaireID, err)
+		}
+	}
+
+	return result, nil
 }
 
 // GetQuestionnaireHistoryByStudentID retrieves all questionnaire results for a given student

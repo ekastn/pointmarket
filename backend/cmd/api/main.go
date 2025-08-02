@@ -28,6 +28,7 @@ func main() {
 	varkStore := store.NewVARKStore(db)
 	nlpStore := store.NewNLPStore(db)
 	materialStore := store.NewMaterialStore(db)
+	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
 
 	// Initialize gateways
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
@@ -37,15 +38,10 @@ func main() {
 	userService := services.NewUserService(userStore)
 	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
-	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore)
+	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
 	varkService := services.NewVARKService(varkStore)
 	nlpService := services.NewNLPService(nlpStore, aiServiceGateway)
 	materialService := services.NewMaterialService(materialStore)
-
-	// Initialize stores
-	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
-
-	// Initialize services
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 
 	// Initialize handlers

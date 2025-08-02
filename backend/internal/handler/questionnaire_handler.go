@@ -77,14 +77,34 @@ func (h *QuestionnaireHandler) SubmitQuestionnaire(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", gin.H{"total_score": result.TotalScore})
 }
 
+
+
+// GetQuestionnaireHistory handles fetching questionnaire history for a student
 func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	history, err := h.questionnaireService.GetQuestionnaireHistoryByStudentID(userID.(uint))
+	results, err := h.questionnaireService.GetQuestionnaireHistoryByStudentID(userID.(uint))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response.Success(c, http.StatusOK, "Questionnaire history retrieved successfully", history)
+
+	var historyResponses []dtos.QuestionnaireHistoryResponse
+	for _, r := range results {
+		historyResponses = append(historyResponses, dtos.QuestionnaireHistoryResponse{
+			ID:                       r.ID,
+			StudentID:                r.StudentID,
+			QuestionnaireID:          r.QuestionnaireID,
+			TotalScore:               r.TotalScore,
+			CompletedAt:              r.CompletedAt,
+			WeekNumber:               r.WeekNumber,
+			Year:                     r.Year,
+			QuestionnaireName:        r.QuestionnaireName,
+			QuestionnaireType:        r.QuestionnaireType,
+			QuestionnaireDescription: r.QuestionnaireDescription,
+		})
+	}
+
+	response.Success(c, http.StatusOK, "Questionnaire history retrieved successfully", historyResponses)
 }
 
 func (h *QuestionnaireHandler) GetQuestionnaireStats(c *gin.Context) {

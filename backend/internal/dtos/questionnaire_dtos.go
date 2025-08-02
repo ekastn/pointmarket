@@ -117,3 +117,16 @@ func (dto *VARKAnswerOptionDTO) FromVARKAnswerOption(option models.VARKAnswerOpt
 	dto.OptionLetter = option.OptionLetter
 	dto.OptionText = option.OptionText
 }
+
+type QuestionnaireHistoryResponse struct {
+	ID                       int        `json:"id"`
+	StudentID                int        `json:"student_id"`
+	QuestionnaireID          int        `json:"questionnaire_id"`
+	TotalScore               *float64   `json:"total_score"`
+	CompletedAt              time.Time  `json:"completed_at"`
+	WeekNumber               int        `json:"week_number"`
+	Year                     int        `json:"year"`
+	QuestionnaireName        string     `json:"questionnaire_name"`
+	QuestionnaireType        string     `json:"questionnaire_type"`
+	QuestionnaireDescription *string    `json:"questionnaire_description"`
+}

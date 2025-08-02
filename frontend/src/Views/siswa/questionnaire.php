@@ -223,7 +223,7 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                                         <i class="fas fa-<?php echo $item['questionnaire_type'] === 'mslq' ? 'brain' : 'heart'; ?> me-2"></i>
                                         <?php echo htmlspecialchars($item['questionnaire_name']); ?>
                                     </h6>
-                                    <p class="text-muted mb-2"><?php echo htmlspecialchars($item['questionnaire_description']); ?></p>
+                                    <p class="text-muted mb-2"><?php echo htmlspecialchars($item['questionnaire_description'] ?? 'No description available.'); ?></p>
                                     <small class="text-muted">
                                         <i class="fas fa-calendar me-1"></i>
                                         <?php echo htmlspecialchars(date('d M Y', strtotime($item['completed_at']))); ?>
@@ -238,7 +238,7 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                                     $scoreClass = $score >= 5.5 ? 'score-high' : ($score >= 4 ? 'score-medium' : 'score-low');
                                     ?>
                                     <span class="score-badge <?php echo $scoreClass; ?>">
-                                        Score: <?php echo htmlspecialchars(number_format($score, 2)); ?>
+                                        Score: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
                                     </span>
                                 </div>
                             </div>

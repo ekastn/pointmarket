@@ -644,7 +644,7 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                     <div class="row">
                         ${[1,2,3,4,5,6,7].map(value => `
                             <div class="col">
-                                <div class="scale-option" onclick="selectPracticeAnswer(${question.id}, ${value})"> <!-- Use question.id -->
+                                <div class="scale-option js-scale-option" data-question-id="${question.id}" data-value="${value}"> <!-- Use question.id -->
                                     <strong>${value}</strong>
                                 </div>
                             </div>
@@ -671,14 +671,28 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
         document.getElementById('practiceQuestionnaireModalBody').innerHTML = html;
     }
 
-    function selectPracticeAnswer(questionId, value) {
-        // Remove previous selection
-        document.querySelectorAll(`[onclick*="selectPracticeAnswer(${questionId}"]`).forEach(option => {
-            option.classList.remove('selected');
-        });
+    // Event delegation for dynamically loaded practice questionnaire
+    document.getElementById('practiceQuestionnaireModalBody').addEventListener('click', function(event) {
+        const clickedOption = event.target.closest('.js-scale-option');
+        if (clickedOption) {
+            const questionId = clickedOption.dataset.questionId;
+            const value = clickedOption.dataset.value;
+            selectPracticeAnswer(clickedOption, questionId, value);
+        }
+    });
+
+    function selectPracticeAnswer(clickedOption, questionId, value) {
+        // Find the parent question-card
+        const questionCard = clickedOption.closest('.question-card');
+        if (questionCard) {
+            // Remove 'selected' from all scale-options within this question-card
+            questionCard.querySelectorAll('.scale-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+        }
         
         // Add selection to clicked option
-        event.target.classList.add('selected');
+        clickedOption.classList.add('selected');
         
         // Set hidden input value
         document.getElementById(`practice_answer_${questionId}`).value = value;

@@ -31,3 +31,22 @@
         top: 0;
     }
 }
+
+.scale-option {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    user-select: none; /* Prevent text selection on click */
+}
+
+.scale-option:hover {
+    background-color: #f0f0f0;
+}
+
+.scale-option.selected {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}

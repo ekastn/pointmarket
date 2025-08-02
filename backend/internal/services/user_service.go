@@ -5,7 +5,6 @@ import (
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
-	"time"
 )
 
 type UserService struct {
@@ -71,19 +70,6 @@ func (s *UserService) GetTeacherDashboardCounts(teacherID uint) (*models.Teacher
 	return s.userStore.GetTeacherDashboardCounts(int(teacherID))
 }
 
-// GetStudentEvaluationStatus retrieves the weekly evaluation status for all students
-func (s *UserService) GetStudentEvaluationStatus() ([]models.StudentEvaluationStatus, error) {
-	// Get current week and year
-	_, week := time.Now().ISOWeek()
-	year := time.Now().Year()
-	return s.userStore.GetStudentEvaluationStatus(week, year)
-}
-
-// GetWeeklyEvaluationOverview retrieves aggregated weekly progress for teachers
-func (s *UserService) GetWeeklyEvaluationOverview(weeks int) ([]models.WeeklyEvaluationOverview, error) {
-	return s.userStore.GetWeeklyEvaluationOverview(weeks)
-}
-
 // GetAssignmentStatsByStudentID retrieves assignment statistics for a student
 func (s *UserService) GetAssignmentStatsByStudentID(studentID uint) (*models.AssignmentStats, error) {
 	return s.userStore.GetAssignmentStatsByStudentID(int(studentID))
@@ -92,14 +78,4 @@ func (s *UserService) GetAssignmentStatsByStudentID(studentID uint) (*models.Ass
 // GetRecentActivityByUserID retrieves recent activity for a user
 func (s *UserService) GetRecentActivityByUserID(userID uint, limit int) ([]models.ActivityLog, error) {
 	return s.userStore.GetRecentActivityByUserID(int(userID), limit)
-}
-
-// GetWeeklyEvaluationProgressByStudentID retrieves weekly evaluation progress for a student
-func (s *UserService) GetWeeklyEvaluationProgressByStudentID(studentID uint, weeks int) ([]models.WeeklyEvaluationProgress, error) {
-	return s.userStore.GetWeeklyEvaluationProgressByStudentID(int(studentID), weeks)
-}
-
-// GetPendingWeeklyEvaluationsByStudentID retrieves pending weekly evaluations for a given student
-func (s *UserService) GetPendingWeeklyEvaluationsByStudentID(studentID uint) ([]models.WeeklyEvaluationProgress, error) {
-	return s.userStore.GetPendingWeeklyEvaluationsByStudentID(int(studentID))
 }

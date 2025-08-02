@@ -23,7 +23,7 @@ class WeeklyEvaluationsController extends BaseController
         }
 
         $weeklyProgress = [];
-        $response = $this->apiClient->getWeeklyEvaluationProgressByStudentID(52); // Fetch for a full year
+        $response = $this->apiClient->getWeeklyEvaluationProgressByStudentID();
 
         if ($response['success']) {
             $weeklyProgress = $response['data'] ?? [];

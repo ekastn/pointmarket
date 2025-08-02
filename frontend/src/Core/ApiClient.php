@@ -228,12 +228,12 @@ class ApiClient
 
     public function getStudentEvaluationStatus(): array
     {
-        return $this->request('GET', '/api/v1/teacher/evaluations/status');
+        return $this->request('GET', '/api/v1/evaluations/weekly/teacher/status');
     }
 
     public function getWeeklyEvaluationOverview(int $weeks = 4): array
     {
-        return $this->request('GET', '/api/v1/teacher/evaluations/overview?weeks=' . $weeks);
+        return $this->request('GET', '/api/v1/evaluations/weekly/teacher/overview?weeks=' . $weeks);
     }
 
     public function getStudentDashboardStats(): array
@@ -288,12 +288,12 @@ class ApiClient
 
     public function getWeeklyEvaluationProgressByStudentID(int $weeks = 8): array
     {
-        return $this->request('GET', '/api/v1/dashboard/student/evaluations/progress?weeks=' . $weeks);
+        return $this->request('GET', '/api/v1/evaluations/weekly/student/progress?weeks=' . $weeks);
     }
 
     public function getPendingWeeklyEvaluations(): array
     {
-        return $this->request('GET', '/api/v1/dashboard/student/pending-evaluations');
+        return $this->request('GET', '/api/v1/evaluations/weekly/student/pending');
     }
 
     public function updateProfile(array $data): array

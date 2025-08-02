@@ -42,6 +42,12 @@ func main() {
 	nlpService := services.NewNLPService(nlpStore, aiServiceGateway)
 	materialService := services.NewMaterialService(materialStore)
 
+	// Initialize stores
+	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
+
+	// Initialize services
+	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(*authService)
 	userHandler := handler.NewUserHandler(*userService)
@@ -51,6 +57,7 @@ func main() {
 	varkHandler := handler.NewVARKHandler(*varkService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
 	materialHandler := handler.NewMaterialHandler(*materialService)
+	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
 	r := gin.Default()
 
@@ -145,13 +152,6 @@ func main() {
 			nlpRoutes.GET("/stats", nlpHandler.GetNLPStats)
 		}
 
-		// Teacher routes
-		teacherRoutes := authRequired.Group("/teacher")
-		{
-			teacherRoutes.GET("/evaluations/status", userHandler.GetStudentEvaluationStatus)
-			teacherRoutes.GET("/evaluations/overview", userHandler.GetWeeklyEvaluationOverview)
-		}
-
 		// Dashboard routes
 		dashboardRoutes := authRequired.Group("/dashboard")
 		{
@@ -160,8 +160,6 @@ func main() {
 			dashboardRoutes.GET("/teacher/counts", userHandler.GetTeacherDashboardCounts)
 			dashboardRoutes.GET("/student/assignments/stats", userHandler.GetAssignmentStatsByStudentID)
 			dashboardRoutes.GET("/student/activity", userHandler.GetRecentActivityByUserID)
-			dashboardRoutes.GET("/student/evaluations/progress", userHandler.GetWeeklyEvaluationProgressByStudentID)
-			dashboardRoutes.GET("/student/pending-evaluations", userHandler.GetPendingWeeklyEvaluationsByStudentID)
 		}
 
 		// Material routes
@@ -172,6 +170,15 @@ func main() {
 			materialRoutes.GET("/:id", materialHandler.GetMaterialByID)
 			materialRoutes.PUT("/:id", materialHandler.UpdateMaterial)
 			materialRoutes.DELETE("/:id", materialHandler.DeleteMaterial)
+		}
+
+		// Weekly Evaluation routes
+		weeklyEvaluationRoutes := authRequired.Group("/evaluations/weekly")
+		{
+			weeklyEvaluationRoutes.GET("/student/progress", weeklyEvaluationHandler.GetWeeklyEvaluationProgressByStudentID)
+			weeklyEvaluationRoutes.GET("/student/pending", weeklyEvaluationHandler.GetPendingWeeklyEvaluationsByStudentID)
+			weeklyEvaluationRoutes.GET("/teacher/overview", weeklyEvaluationHandler.GetWeeklyEvaluationOverview)
+			weeklyEvaluationRoutes.GET("/teacher/status", weeklyEvaluationHandler.GetStudentEvaluationStatus)
 		}
 	}
 

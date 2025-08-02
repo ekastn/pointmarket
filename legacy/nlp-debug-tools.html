@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP Demo Debug Tools - POINTMARKET</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .debug-card { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NLP Demo Debug Tools</h1>
+        <p class="lead">Gunakan halaman ini untuk mendiagnosis dan memperbaiki masalah demo NLP.</p>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card debug-card">
+                    <div class="card-header">Links ke Semua Versi Halaman Demo</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <a href="nlp-demo.php" target="_blank">Original: nlp-demo.php</a>
+                            </li>
+                            <li class="list-group-item">
+                                <a href="fixed-nlp-demo-final.php" target="_blank">Fixed (Final): fixed-nlp-demo-final.php</a>
+                            </li>
+                            <li class="list-group-item">
+                                <a href="fixed-nlp-demo-optimized.php" target="_blank">Optimized: fixed-nlp-demo-optimized.php</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card debug-card">
+                    <div class="card-header">API Debug Tools</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <a href="api/nlp-api-debug.php" target="_blank">API Debug Tool: api/nlp-api-debug.php</a>
+                            </li>
+                            <li class="list-group-item">
+                                <a href="#" id="test-api">Test API dengan Javascript</a>
+                                <div id="api-result" class="mt-2" style="display: none;"></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card debug-card">
+                    <div class="card-header">Session Debug</div>
+                    <div class="card-body">
+                        <div id="session-info">Loading session info...</div>
+                        <div class="mt-3">
+                            <button id="create-session" class="btn btn-primary btn-sm">Create Test Session</button>
+                            <button id="destroy-session" class="btn btn-danger btn-sm">Destroy Session</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card debug-card">
+                    <div class="card-header">Browser Console</div>
+                    <div class="card-body">
+                        <p>Open your browser's developer console (F12) to see detailed logs and error messages.</p>
+                        <button id="test-console" class="btn btn-info btn-sm">Test Console Log</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check session info
+            fetch('get-session-info.php')
+                .then(response => response.json())
+                .then(data => {
+                    const sessionInfo = document.getElementById('session-info');
+                    if (data.isLoggedIn) {
+                        sessionInfo.innerHTML = `
+                            <div class="alert alert-success">
+                                <strong>Session Active!</strong><br>
+                                User ID: ${data.user.id}<br>
+                                Username: ${data.user.username}<br>
+                                Role: ${data.user.role}
+                            </div>
+                        `;
+                    } else {
+                        sessionInfo.innerHTML = `
+                            <div class="alert alert-warning">
+                                <strong>No Active Session</strong><br>
+                                You are not logged in.
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('session-info').innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>Error loading session info:</strong><br>
+                            ${error.message}
+                        </div>
+                    `;
+                });
+                
+            // Create test session
+            document.getElementById('create-session').addEventListener('click', function() {
+                fetch('create-test-session.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Test session created!');
+                            location.reload();
+                        } else {
+                            alert('Failed to create session: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error: ' + error.message);
+                    });
+            });
+            
+            // Destroy session
+            document.getElementById('destroy-session').addEventListener('click', function() {
+                fetch('destroy-session.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Session destroyed!');
+                            location.reload();
+                        } else {
+                            alert('Failed to destroy session: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error: ' + error.message);
+                    });
+            });
+            
+            // Test console
+            document.getElementById('test-console').addEventListener('click', function() {
+                console.log('Console test - INFO');
+                console.warn('Console test - WARNING');
+                console.error('Console test - ERROR');
+                alert('Check browser console (F12) for logs');
+            });
+            
+            // Test API
+            document.getElementById('test-api').addEventListener('click', function(e) {
+                e.preventDefault();
+                const apiResult = document.getElementById('api-result');
+                apiResult.style.display = 'block';
+                apiResult.innerHTML = `
+                    <div class="alert alert-info">
+                        Testing API... Please wait.
+                    </div>
+                `;
+                
+                fetch('api/nlp-analysis.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: 'Ini adalah contoh teks untuk pengujian API NLP.'
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    apiResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>API Test Success!</strong><br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('API Test Error:', error);
+                    apiResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>API Test Failed:</strong><br>
+                            ${error.message}<br><br>
+                            <button id="try-fallback" class="btn btn-warning btn-sm">Try Fallback API</button>
+                        </div>
+                    `;
+                    
+                    // Add event listener for fallback button
+                    document.getElementById('try-fallback').addEventListener('click', function() {
+                        apiResult.innerHTML = `
+                            <div class="alert alert-info">
+                                Testing Fallback API... Please wait.
+                            </div>
+                        `;
+                        
+                        fetch('api/nlp-backup-api.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                text: 'Ini adalah contoh teks untuk pengujian API NLP.'
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            apiResult.innerHTML = `
+                                <div class="alert alert-success">
+                                    <strong>Fallback API Test Success!</strong><br>
+                                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                                </div>
+                            `;
+                        })
+                        .catch(error => {
+                            apiResult.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <strong>Both APIs Failed:</strong><br>
+                                    ${error.message}
+                                </div>
+                            `;
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+Portable NLP Demo Package Information
+=====================================
+
+Created: July 14, 2025
+Package Version: 1.0
+Total Files: 4
+
+File Details:
+- index.php (Main demo): ~15KB
+- api/nlp-mini-api.php (API): ~8KB  
+- README.md (Documentation): ~4KB
+- .htaccess (Configuration): ~1KB
+
+Total Package Size: ~28KB
+
+Requirements:
+- PHP 5.6+
+- Web server with PHP support
+- Internet connection (for CDN resources)
+
+Features:
+- Zero configuration required
+- No database needed
+- Responsive design
+- 11 example texts included
+- Real-time analysis simulation
+- Modern Bootstrap interface
+
+Deployment:
+1. Upload entire folder to web server
+2. Access index.php in browser
+3. Start using immediately
+
+Support:
+- No installation required
+- No dependencies to install
+- Works on any PHP hosting
+- Compatible with shared hosting
+
+This package is completely self-contained and portable.

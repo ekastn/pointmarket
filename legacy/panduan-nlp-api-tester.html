@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan NLP API Tester - POINTMARKET</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 30px;
+            padding-bottom: 50px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        /* Header dengan gradient yang menarik */
+        .header-section {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header-section .lead {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        /* Navigasi dengan card design modern */
+        .nav-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: none;
+        }
+        
+        .nav-card .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px !important;
+            border: none;
+            padding: 20px;
+            margin: -30px -30px 20px -30px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 20px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Content sections dengan card modern */
+        .step-section {
+            background: white;
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+        
+        .step-section h3 {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        /* Alert styling */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .alert-info {
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            color: #1565c0;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .alert-primary {
+            background: linear-gradient(45deg, #e8f5e8, #c8e6c9);
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(45deg, #fff3e0, #ffcc02);
+            color: #ef6c00;
+            border-left: 4px solid #ff9800;
+        }
+        
+        /* Card styling untuk langkah-langkah */
+        .instruction-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .instruction-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .instruction-card .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 15px 20px;
+        }
+        
+        .instruction-card .card-body {
+            padding: 20px;
+        }
+        
+        /* Code blocks dengan syntax highlighting style */
+        .code-block {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .code-block::before {
+            content: 'CODE';
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        /* API URL styling */
+        .api-url {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(45deg, #e8f5e8, #c8e6c9);
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            margin: 10px 0;
+            display: inline-block;
+            font-weight: bold;
+        }
+        
+        /* Troubleshooting boxes */
+        .troubleshooting {
+            background: linear-gradient(45deg, #fff8e1, #ffecb3);
+            border-left: 4px solid #ffa726;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(255, 167, 38, 0.2);
+        }
+        
+        .troubleshooting h5 {
+            color: #ef6c00;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        /* Button styling */
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-outline-secondary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-secondary:hover {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .header-section {
+                padding: 30px 20px;
+            }
+            
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .step-section {
+                padding: 20px;
+            }
+            
+            .nav-btn {
+                margin-bottom: 15px;
+            }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Progress indicator untuk section yang sedang dilihat */
+        .step-section {
+            position: relative;
+        }
+        
+        .step-section::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 0 5px 5px 0;
+        }
+        
+        /* Floating action button untuk kembali ke atas */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .scroll-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section dengan desain menarik -->
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1><i class="fas fa-book me-3"></i>Panduan NLP API Tester</h1>
+                    <p class="lead mb-0">Alat diagnostik untuk menguji dan memperbaiki masalah pada sistem NLP POINTMARKET</p>
+                </div>
+                <div class="col-lg-4 text-center mt-3 mt-lg-0">
+                    <a href="nlp-api-tester.html" class="btn btn-light btn-lg">
+                        <i class="fas fa-external-link-alt me-2"></i>Buka NLP API Tester
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alert Informasi -->
+        <div class="alert alert-info">
+            <h4><i class="fas fa-info-circle me-2"></i>Tentang NLP API Tester</h4>
+            <p class="mb-0">NLP API Tester adalah alat diagnostik yang memungkinkan Anda menguji berbagai API NLP pada sistem POINTMARKET tanpa perlu berinteraksi dengan halaman PHP. Alat ini membantu mengidentifikasi apakah masalah terletak pada frontend, backend, atau keduanya.</p>
+        </div>
+        
+        <!-- Navigasi dengan Card Modern -->
+        <div class="nav-card">
+            <div class="card-header text-white">
+                <h2 class="h4 mb-0"><i class="fas fa-map-signs me-2"></i>Navigasi Panduan</h2>
+                <p class="mb-0 mt-2 opacity-75">Klik salah satu topik di bawah untuk langsung menuju ke bagian yang Anda butuhkan</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#akses" class="nav-btn">
+                            <i class="fas fa-door-open me-2"></i>Cara Mengakses
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#pengujian-api" class="nav-btn">
+                            <i class="fas fa-vial me-2"></i>Pengujian API
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#request-kustom" class="nav-btn">
+                            <i class="fas fa-tools me-2"></i>Request Kustom
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#contoh-kasus" class="nav-btn">
+                            <i class="fas fa-laptop-code me-2"></i>Contoh Kasus
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#troubleshooting" class="nav-btn">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Troubleshooting
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#strategi" class="nav-btn">
+                            <i class="fas fa-chess me-2"></i>Strategi Debugging
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <section id="akses" class="step-section">
+            <h3><i class="fas fa-door-open me-2"></i>Cara Mengakses NLP API Tester</h3>
+            <p class="mb-4">Untuk mengakses NLP API Tester, ikuti langkah-langkah sederhana berikut ini:</p>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="instruction-card">
+                        <div class="card-header">
+                            <i class="fas fa-play-circle me-2"></i>Langkah-langkah Akses
+                        </div>
+                        <div class="card-body">
+                            <ol class="mb-0">
+                                <li class="mb-2">
+                                    <strong>Buka browser web Anda</strong> (Chrome, Firefox, Edge, atau browser lainnya)
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Ketikkan URL berikut</strong> di address bar:
+                                    <div class="api-url mt-2">http://localhost/pointmarket/nlp-api-tester.html</div>
+                                </li>
+                                <li class="mb-0">
+                                    <strong>Tekan Enter</strong> untuk membuka halaman tester
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="alert alert-success h-100 d-flex align-items-center">
+                        <div>
+                            <h5><i class="fas fa-rocket me-2"></i>Kelebihan Versi Ini</h5>
+                            <p class="mb-0">Tool ini tidak memerlukan login atau setup khusus. Langsung bisa digunakan!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mt-4 mb-3"><i class="fas fa-map me-2"></i>Struktur Halaman Tester</h5>
+            <p>Halaman tester terdiri dari tiga bagian utama yang mudah dipahami:</p>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-primary h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-vial fa-2x text-primary mb-3"></i>
+                            <h6 class="card-title">Test API Endpoints</h6>
+                            <p class="card-text small">Untuk pengujian cepat API yang tersedia</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-warning h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-tools fa-2x text-warning mb-3"></i>
+                            <h6 class="card-title">Send Custom Request</h6>
+                            <p class="card-text small">Untuk mengirim request khusus dengan parameter yang dikustomisasi</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-info h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-info-circle fa-2x text-info mb-3"></i>
+                            <h6 class="card-title">API Information</h6>
+                            <p class="card-text small">Informasi tentang endpoint yang tersedia dan tips pengujian</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="pengujian-api" class="step-section">
+            <h3><i class="fas fa-vial me-2"></i>Pengujian API Endpoints</h3>
+            <p class="mb-4">Bagian ini memungkinkan Anda untuk melakukan pengujian cepat terhadap tiga API yang tersedia. Setiap API memiliki fungsi berbeda untuk membantu Anda mendiagnosis masalah:</p>
+            
+            <div class="instruction-card">
+                <div class="card-header">
+                    <i class="fas fa-star me-2"></i>1. Test Main API
+                </div>
+                <div class="card-body">
+                    <p><strong>Fungsi:</strong> Menguji API utama (<code>nlp-analysis.php</code>) untuk memverifikasi fungsionalitasnya.</p>
+                    <h6><i class="fas fa-list-ol me-2"></i>Langkah-langkah:</h6>
+                    <ol class="mb-3">
+                        <li>Klik tombol <span class="badge bg-primary">"Test Main API"</span></li>
+                        <li>Sistem akan mengirim request GET dengan parameter <code>test=1</code></li>
+                        <li>Hasil akan ditampilkan di bagian "Results" di bawah tombol</li>
+                    </ol>
+                    <div class="alert alert-success mb-0">
+                        <strong><i class="fas fa-check-circle me-2"></i>Hasil yang diharapkan:</strong> Status 200 dengan JSON valid yang berisi informasi tentang status API.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-card">
+                <div class="card-header">
+                    <i class="fas fa-shield-alt me-2"></i>2. Test Backup API
+                </div>
+                <div class="card-body">
+                    <p><strong>Fungsi:</strong> Menguji API backup (<code>nlp-backup-api.php</code>) yang menggunakan model NLP dasar.</p>
+                    <h6><i class="fas fa-list-ol me-2"></i>Langkah-langkah:</h6>
+                    <ol class="mb-3">
+                        <li>Klik tombol <span class="badge bg-secondary">"Test Backup API"</span></li>
+                        <li>Sistem akan mengirim request GET dengan parameter <code>test=1</code></li>
+                        <li>Hasil akan ditampilkan di bagian "Results" di bawah tombol</li>
+                    </ol>
+                    <div class="alert alert-success mb-0">
+                        <strong><i class="fas fa-check-circle me-2"></i>Hasil yang diharapkan:</strong> Status 200 dengan JSON valid yang berisi informasi tentang status API backup.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-card">
+                <div class="card-header">
+                    <i class="fas fa-heart me-2"></i>3. Test Mini API
+                </div>
+                <div class="card-body">
+                    <p><strong>Fungsi:</strong> Menguji API mini (<code>nlp-mini-api.php</code>) yang selalu mengembalikan data dummy valid.</p>
+                    <h6><i class="fas fa-list-ol me-2"></i>Langkah-langkah:</h6>
+                    <ol class="mb-3">
+                        <li>Klik tombol <span class="badge bg-success">"Test Mini API"</span></li>
+                        <li>Sistem akan mengirim request GET dengan parameter <code>test=1</code></li>
+                        <li>Hasil akan ditampilkan di bagian "Results" di bawah tombol</li>
+                    </ol>
+                    <div class="alert alert-success mb-0">
+                        <strong><i class="fas fa-check-circle me-2"></i>Hasil yang diharapkan:</strong> Status 200 dengan JSON valid yang berisi data dummy. API ini selalu seharusnya berfungsi karena tidak memiliki dependensi eksternal.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-primary">
+                <h5><i class="fas fa-lightbulb me-2"></i>Tips Untuk Pemula:</h5>
+                <p class="mb-2"><strong>Mulailah dengan menguji Mini API.</strong> Jika ini berhasil, Anda tahu bahwa konektivitas dasar berfungsi, dan masalah mungkin terletak pada API utama atau backup.</p>
+                <p class="mb-0">Urutan yang disarankan: <span class="badge bg-success me-1">Mini API</span> → <span class="badge bg-secondary me-1">Backup API</span> → <span class="badge bg-primary">Main API</span></p>
+            </div>
+        </section>
+        
+        <section id="request-kustom" class="step-section">
+            <h3><i class="fas fa-tools me-2"></i>Mengirim Request Kustom</h3>
+            <p class="mb-4">Bagian "Send Custom Request" memungkinkan Anda untuk membuat request yang disesuaikan dengan kebutuhan spesifik Anda. Fitur ini cocok untuk pengguna yang ingin menguji skenario khusus:</p>
+            
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="instruction-card h-100">
+                        <div class="card-header">
+                            <i class="fas fa-cog me-2"></i>Langkah 1: Pilih API dan Method
+                        </div>
+                        <div class="card-body">
+                            <h6><i class="fas fa-server me-2"></i>Pilih API Endpoint dari dropdown:</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><i class="fas fa-star text-primary me-2"></i>Main API (nlp-analysis.php)</li>
+                                <li><i class="fas fa-shield-alt text-secondary me-2"></i>Backup API (nlp-backup-api.php)</li>
+                                <li><i class="fas fa-heart text-success me-2"></i>Mini API (nlp-mini-api.php)</li>
+                                <li><i class="fas fa-bug text-warning me-2"></i>Debug API (nlp-api-debug.php)</li>
+                            </ul>
+                            
+                            <h6><i class="fas fa-exchange-alt me-2"></i>Pilih Request Method:</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="alert alert-info text-center py-2">
+                                        <strong>GET</strong><br>
+                                        <small>Statistik, tes, parameter</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="alert alert-warning text-center py-2">
+                                        <strong>POST</strong><br>
+                                        <small>Kirim teks untuk analisis</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="instruction-card h-100">
+                        <div class="card-header">
+                            <i class="fas fa-edit me-2"></i>Langkah 2: Isi Parameter
+                        </div>
+                        <div class="card-body">
+                            <p>Tergantung pada method yang dipilih, Anda perlu mengisi:</p>
+                            
+                            <h6><i class="fas fa-download me-2"></i>Untuk Request GET:</h6>
+                            <div class="api-url mb-3">action=statistics&v=12345</div>
+                            <small class="text-muted mb-3 d-block">Parameter umum: action, test, v (cache busting)</small>
+                            
+                            <h6><i class="fas fa-upload me-2"></i>Untuk Request POST:</h6>
+                            <div class="code-block mb-3">{"text": "Ini adalah contoh teks untuk dianalisis."}</div>
+                            <small class="text-muted">Selalu gunakan format JSON yang valid</small>
+                            
+                            <div class="mt-3 text-center">
+                                <button class="btn btn-primary btn-sm disabled">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Request
+                                </button>
+                                <br><small class="text-muted">Klik untuk mengirim request</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Penting untuk Diingat!</h5>
+                <p class="mb-0">Pastikan format JSON valid saat menggunakan method POST. JSON yang tidak valid akan menyebabkan error pada API. Gunakan tools online JSON validator jika diperlukan.</p>
+            </div>
+        </section>
+        
+        <section id="contoh-kasus" class="step-section">
+            <h3><i class="fas fa-laptop-code me-2"></i>Contoh Kasus Penggunaan</h3>
+            <p class="mb-4">Berikut adalah beberapa contoh praktis cara menggunakan NLP API Tester untuk berbagai kebutuhan. Ikuti langkah-langkah ini untuk memahami cara kerja alat ini:</p>
+            
+            <div class="instruction-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-2"></i>Contoh 1: Mengambil Statistik NLP
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h6><i class="fas fa-list-ol me-2"></i>Langkah-langkah:</h6>
+                            <ol class="mb-3">
+                                <li>Pilih <span class="badge bg-primary">"Main API (nlp-analysis.php)"</span> dari dropdown</li>
+                                <li>Pilih method <span class="badge bg-info">"GET"</span></li>
+                                <li>Isi GET Parameters dengan: <code class="text-success">action=statistics&v=12345</code></li>
+                                <li>Klik <span class="badge bg-success">"Send Request"</span></li>
+                            </ol>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="alert alert-success">
+                                <strong><i class="fas fa-target me-2"></i>Tujuan:</strong><br>
+                                Mendapatkan data statistik penggunaan NLP
+                            </div>
+                        </div>
+                    </div>
+                    <h6><i class="fas fa-check-circle me-2"></i>Hasil yang diharapkan:</h6>
+                    <p>JSON dengan data statistik penggunaan NLP:</p>
+                    <div class="code-block">{
+  "success": true,
+  "data": {
+    "overall": {
+      "total_analyses": 15,
+      "average_score": 75.5,
+      "best_score": 92.0
+    },
+    "recent": [...]
+  }
+}</div>
+                </div>
+            </div>
+            
+            <div class="instruction-card">
+                <div class="card-header">
+                    <i class="fas fa-brain me-2"></i>Contoh 2: Menganalisis Teks
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h6><i class="fas fa-list-ol me-2"></i>Langkah-langkah:</h6>
+                            <ol class="mb-3">
+                                <li>Pilih <span class="badge bg-success">"Mini API (nlp-mini-api.php)"</span> dari dropdown</li>
+                                <li>Pilih method <span class="badge bg-warning text-dark">"POST"</span></li>
+                                <li>Isi POST Body dengan JSON berikut:</li>
+                            </ol>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="alert alert-info">
+                                <strong><i class="fas fa-lightbulb me-2"></i>Tips:</strong><br>
+                                Gunakan Mini API untuk test pertama karena selalu berhasil
+                            </div>
+                        </div>
+                    </div>
+                    <div class="code-block">{
+  "text": "Teknologi dalam pendidikan sangat penting karena dapat meningkatkan kualitas pembelajaran."
+}</div>
+                    <p class="mt-3">4. Klik <span class="badge bg-success">"Send Request"</span></p>
+                    <div class="alert alert-success mt-3">
+                        <strong><i class="fas fa-check-circle me-2"></i>Hasil yang diharapkan:</strong> JSON dengan hasil analisis teks lengkap termasuk sentiment, complexity, dan coherence score.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-card">
+                <div class="card-header">
+                    <i class="fas fa-bug me-2"></i>Contoh 3: Debug API
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h6><i class="fas fa-list-ol me-2"></i>Langkah-langkah:</h6>
+                            <ol class="mb-3">
+                                <li>Pilih <span class="badge bg-warning text-dark">"Debug API (nlp-api-debug.php)"</span> dari dropdown</li>
+                                <li>Pilih method <span class="badge bg-info">"GET"</span></li>
+                                <li>Klik <span class="badge bg-success">"Send Request"</span></li>
+                            </ol>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="alert alert-warning">
+                                <strong><i class="fas fa-wrench me-2"></i>Kegunaan:</strong><br>
+                                Mendapatkan informasi debugging sistem
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-success">
+                        <strong><i class="fas fa-check-circle me-2"></i>Hasil yang diharapkan:</strong> JSON dengan informasi debugging lengkap tentang status API dan sistem.
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="troubleshooting" class="step-section">
+            <h3><i class="fas fa-exclamation-triangle me-2"></i>Troubleshooting Masalah Umum</h3>
+            
+            <div class="troubleshooting">
+                <h5>1. API Mengembalikan Error 401 Unauthorized</h5>
+                <p><strong>Kemungkinan Penyebab</strong>:</p>
+                <ul>
+                    <li>Session login tidak ada atau tidak valid</li>
+                    <li>API memeriksa status login sebelum memproses request</li>
+                </ul>
+                <p><strong>Solusi</strong>:</p>
+                <ol>
+                    <li>Gunakan file <code>get-session-info.php</code> untuk memeriksa status session</li>
+                    <li>Gunakan file <code>create-test-session.php</code> untuk membuat session pengujian</li>
+                    <li>Edit file API untuk menonaktifkan sementara pengecekan login untuk debugging</li>
+                </ol>
+            </div>
+            
+            <div class="troubleshooting">
+                <h5>2. API Mengembalikan HTML Alih-alih JSON</h5>
+                <p><strong>Kemungkinan Penyebab</strong>:</p>
+                <ul>
+                    <li>Error PHP yang muncul sebelum header JSON ditetapkan</li>
+                    <li>Include file yang gagal atau error syntax</li>
+                </ul>
+                <p><strong>Solusi</strong>:</p>
+                <ol>
+                    <li>Periksa response HTML untuk mengidentifikasi error PHP</li>
+                    <li>Tambahkan error handling di awal file API</li>
+                    <li>Gunakan Mini API sebagai alternatif sementara</li>
+                </ol>
+                <p><strong>Contoh error yang sering muncul</strong>:</p>
+                <div class="code-block">&lt;b&gt;Warning&lt;/b&gt;: require_once(includes/nlp-model.php): Failed to open stream: No such file or directory in &lt;b&gt;/path/to/api/nlp-analysis.php&lt;/b&gt; on line &lt;b&gt;10&lt;/b&gt;</div>
+            </div>
+            
+            <div class="troubleshooting">
+                <h5>3. Network Error atau CORS Issue</h5>
+                <p><strong>Kemungkinan Penyebab</strong>:</p>
+                <ul>
+                    <li>Konfigurasi server yang tidak benar</li>
+                    <li>Headers CORS tidak ditetapkan dengan benar</li>
+                </ul>
+                <p><strong>Solusi</strong>:</p>
+                <ol>
+                    <li>Periksa console browser (F12) untuk detail error</li>
+                    <li>Pastikan headers CORS ditetapkan dengan benar di file API</li>
+                    <li>Pastikan server web (Apache/XAMPP) berjalan dengan benar</li>
+                </ol>
+                <p><strong>Headers CORS yang diperlukan</strong>:</p>
+                <div class="code-block">header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');</div>
+            </div>
+        </section>
+        
+        <section id="strategi" class="step-section">
+            <h3><i class="fas fa-chess me-2"></i>Strategi Debugging yang Efektif</h3>
+            
+            <div class="card mb-4">
+                <div class="card-header">Langkah-langkah Sistematis</div>
+                <div class="card-body">
+                    <ol>
+                        <li><strong>Verifikasi Konektivitas Dasar</strong>
+                            <ul>
+                                <li>Klik "Test Mini API"</li>
+                                <li>Jika berhasil, konektivitas dasar berfungsi</li>
+                                <li>Jika gagal, kemungkinan ada masalah dengan server atau konfigurasi web</li>
+                            </ul>
+                        </li>
+                        <li><strong>Periksa API Utama</strong>
+                            <ul>
+                                <li>Klik "Test Main API"</li>
+                                <li>Bandingkan dengan hasil Mini API</li>
+                                <li>Jika Main API gagal tapi Mini API berhasil, masalahnya ada pada API utama</li>
+                            </ul>
+                        </li>
+                        <li><strong>Coba Request POST Sederhana</strong>
+                            <ul>
+                                <li>Gunakan bagian "Send Custom Request"</li>
+                                <li>Pilih Mini API dengan method POST</li>
+                                <li>Kirim teks sederhana untuk dianalisis</li>
+                                <li>Verifikasi bahwa response berformat JSON yang valid</li>
+                            </ul>
+                        </li>
+                        <li><strong>Debug API Utama dengan Detail</strong>
+                            <ul>
+                                <li>Ulangi langkah 3 tapi gunakan Main API</li>
+                                <li>Periksa error yang muncul</li>
+                                <li>Gunakan informasi error untuk mengidentifikasi masalah spesifik</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Pemecahan Masalah Komprehensif</div>
+                <div class="card-body">
+                    <p>Jika NLP API Tester tidak cukup untuk mendiagnosis masalah, gunakan alat-alat tambahan:</p>
+                    <ul>
+                        <li><strong>nlp-diagnostics.php</strong>: Diagnosa menyeluruh sistem NLP
+                            <div class="api-url">http://localhost/pointmarket/nlp-diagnostics.php</div>
+                        </li>
+                        <li><strong>super-simple-nlp-demo.php</strong>: Versi paling sederhana dari demo NLP
+                            <div class="api-url">http://localhost/pointmarket/super-simple-nlp-demo.php</div>
+                        </li>
+                        <li><strong>nlp-debug-tools.html</strong>: Dashboard debugging untuk NLP
+                            <div class="api-url">http://localhost/pointmarket/nlp-debug-tools.html</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <div class="step-section">
+            <div class="card border-0" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                <div class="card-body text-white text-center py-5">
+                    <h3 class="h2 mb-4"><i class="fas fa-check-circle me-3"></i>Kesimpulan</h3>
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
+                            <p class="lead mb-4">NLP API Tester adalah alat yang ampuh untuk mendiagnosis masalah pada sistem NLP POINTMARKET. Dengan mengikuti panduan ini, Anda dapat secara metodis mengidentifikasi dan mengisolasi masalah, memungkinkan perbaikan yang lebih efisien dan efektif.</p>
+                            
+                            <div class="row text-center mb-4">
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                                        <i class="fas fa-heart fa-2x mb-2"></i>
+                                        <h6>Mini API</h6>
+                                        <small>Mulai dari sini</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                                        <i class="fas fa-arrow-right fa-2x mb-2"></i>
+                                        <h6>Bertahap</h6>
+                                        <small>Tingkatkan kompleksitas</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                                        <i class="fas fa-search fa-2x mb-2"></i>
+                                        <h6>Isolasi</h6>
+                                        <small>Temukan akar masalah</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                                        <i class="fas fa-tools fa-2x mb-2"></i>
+                                        <h6>Alat Tambahan</h6>
+                                        <small>Gunakan jika diperlukan</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-light">
+                                <h5 class="text-dark"><i class="fas fa-info-circle me-2"></i>Ingat Selalu!</h5>
+                                <p class="text-dark mb-0">Jika Anda masih mengalami kesulitan setelah mengikuti panduan ini, pertimbangkan untuk memeriksa log error server dan/atau menggunakan alat-alat diagnostik tambahan yang telah dibuat.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-5 mb-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card border-0" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
+                        <div class="card-body py-4">
+                            <h4><i class="fas fa-rocket me-2"></i>Siap Memulai?</h4>
+                            <p class="mb-4">Gunakan panduan ini untuk mendiagnosis dan memperbaiki masalah pada sistem NLP POINTMARKET dengan mudah!</p>
+                            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+                                <a href="nlp-api-tester.html" class="btn btn-light btn-lg">
+                                    <i class="fas fa-external-link-alt me-2"></i>Mulai Menggunakan NLP API Tester
+                                </a>
+                                <a href="NLP-API-TESTER-GUIDE.md" class="btn btn-outline-light btn-lg">
+                                    <i class="fas fa-file-alt me-2"></i>Lihat Panduan Format Markdown
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating Scroll to Top Button -->
+        <button class="scroll-top" onclick="scrollToTop()" title="Kembali ke atas">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Smooth scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Show/hide scroll to top button
+        window.addEventListener('scroll', function() {
+            const scrollTopBtn = document.querySelector('.scroll-top');
+            if (window.pageYOffset > 300) {
+                scrollTopBtn.style.opacity = '1';
+                scrollTopBtn.style.visibility = 'visible';
+            } else {
+                scrollTopBtn.style.opacity = '0';
+                scrollTopBtn.style.visibility = 'hidden';
+            }
+        });
+        
+        // Initialize scroll button as hidden
+        document.addEventListener('DOMContentLoaded', function() {
+            const scrollTopBtn = document.querySelector('.scroll-top');
+            scrollTopBtn.style.opacity = '0';
+            scrollTopBtn.style.visibility = 'hidden';
+            scrollTopBtn.style.transition = 'all 0.3s ease';
+        });
+        
+        // Add click animations to navigation buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // Create ripple effect
+                const ripple = document.createElement('span');
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'rgba(255,255,255,0.6)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s linear';
+                ripple.style.left = e.clientX - this.offsetLeft - 10 + 'px';
+                ripple.style.top = e.clientY - this.offsetTop - 10 + 'px';
+                ripple.style.width = '20px';
+                ripple.style.height = '20px';
+                
+                this.style.position = 'relative';
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+    </script>
+    
+    <style>
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+</html>

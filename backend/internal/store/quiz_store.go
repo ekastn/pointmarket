@@ -20,7 +20,7 @@ func NewQuizStore(db *sqlx.DB) *QuizStore {
 // GetAllQuizzes retrieves all quizzes
 func (s *QuizStore) GetAllQuizzes() ([]models.Quiz, error) {
 	var quizzes []models.Quiz
-	err := s.db.Select(&quizzes, "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quiz")
+	err := s.db.Select(&quizzes, "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quizzes")
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (s *QuizStore) GetAllQuizzes() ([]models.Quiz, error) {
 
 // CreateQuiz inserts a new quiz into the database
 func (s *QuizStore) CreateQuiz(quiz *models.Quiz) error {
-	query := `INSERT INTO quiz (title, description, subject, teacher_id, points, duration, status) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO quizzes (title, description, subject, teacher_id, points, duration, status) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	result, err := s.db.Exec(query,
 		quiz.Title,
 		quiz.Description,
@@ -53,7 +53,7 @@ func (s *QuizStore) CreateQuiz(quiz *models.Quiz) error {
 // GetQuizByID retrieves a quiz by its ID
 func (s *QuizStore) GetQuizByID(id int) (*models.Quiz, error) {
 	var quiz models.Quiz
-	err := s.db.Get(&quiz, "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quiz WHERE id = ?", id)
+	err := s.db.Get(&quiz, "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quizzes WHERE id = ?", id)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -65,7 +65,7 @@ func (s *QuizStore) GetQuizByID(id int) (*models.Quiz, error) {
 
 // UpdateQuiz updates an existing quiz in the database
 func (s *QuizStore) UpdateQuiz(quiz *models.Quiz) error {
-	query := `UPDATE quiz SET title = ?, description = ?, subject = ?, teacher_id = ?, points = ?, duration = ?, status = ? WHERE id = ?`
+	query := `UPDATE quizzes SET title = ?, description = ?, subject = ?, teacher_id = ?, points = ?, duration = ?, status = ? WHERE id = ?`
 	_, err := s.db.Exec(query,
 		quiz.Title,
 		quiz.Description,
@@ -81,14 +81,14 @@ func (s *QuizStore) UpdateQuiz(quiz *models.Quiz) error {
 
 // DeleteQuiz deletes a quiz from the database by its ID
 func (s *QuizStore) DeleteQuiz(id int) error {
-	_, err := s.db.Exec("DELETE FROM quiz WHERE id = ?", id)
+	_, err := s.db.Exec("DELETE FROM quizzes WHERE id = ?", id)
 	return err
 }
 
 // ListQuizzes retrieves all quizzes, optionally filtered by teacher_id
 func (s *QuizStore) ListQuizzes(teacherID *int) ([]models.Quiz, error) {
 	var quizzes []models.Quiz
-	query := "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quiz"
+	query := "SELECT id, title, description, subject, teacher_id, points, duration, status, created_at, updated_at FROM quizzes"
 	args := []interface{}{} // Use interface{} for args
 
 	if teacherID != nil {

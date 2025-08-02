@@ -12,12 +12,12 @@ use App\Controllers\NLPDemoController;
 use App\Controllers\ProfileController;
 use App\Controllers\ProgressController;
 use App\Controllers\QuestionnaireController;
-use App\Controllers\QuestionnaireProgressController;
 use App\Controllers\QuizController;
 use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\UsersController;
 use App\Controllers\VarkAssessmentController;
 use App\Controllers\VarkCorrelationAnalysisController;
+use App\Controllers\WeeklyEvaluationsController;
 use App\Core\ApiClient;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
@@ -84,6 +84,7 @@ $router->group('/', function($router) {
 
     // Teacher specific routes
     $router->get('teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index'], [[AuthMiddleware::class, 'requireTeacher']]);
+    $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);
 
 }, [[AuthMiddleware::class, 'requireLogin']]);
 

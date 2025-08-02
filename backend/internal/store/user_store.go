@@ -260,9 +260,9 @@ func (s *UserStore) GetWeeklyEvaluationProgressByStudentID(studentID int, weeks 
 		AND q.type != 'vark'
 		AND ((we.year = YEAR(CURDATE()) AND we.week_number >= (WEEK(CURDATE(), 1) - ? + 1)) OR we.year > YEAR(CURDATE()))
 		ORDER BY we.year DESC, we.week_number DESC, q.type
-		LIMIT ? * 2 -- 2 questionnaires per week
+		LIMIT ? -- 2 questionnaires per week
 	`
-	err := s.db.Select(&progress, query, studentID, weeks, weeks)
+	err := s.db.Select(&progress, query, studentID, weeks, weeks * 2)
 	if err != nil {
 		return nil, err
 	}

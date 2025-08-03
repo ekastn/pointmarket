@@ -76,8 +76,6 @@ class VarkCorrelationAnalysisController extends BaseController
             }
         }
 
-        error_log(json_encode($correlation_results));
-
         $this->render('siswa/vark-correlation-analysis', [
             'title' => 'VARK Correlation Analysis',
             'user' => $user,

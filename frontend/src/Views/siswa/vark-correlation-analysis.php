@@ -8,14 +8,13 @@ $ams_score = $ams_score ?? 'N/A';
 ?>
 
 <div class="hero-section text-center">
-    <h1><i class="fas fa-chart-network me-3"></i>VARK-MSLQ-AMS Correlation Analysis</h1>
-    <p class="lead">Understanding the relationship between learning style, motivation, and learning strategies</p>
-    <p>Welcome, <strong><?php echo htmlspecialchars($user['name']); ?></strong>!</p>
+    <h1><i class="fas fa-chart-network me-3"></i>Analisis Korelasi VARK-MSLQ-AMS</h1>
+    <p class="lead">Memahami hubungan antara gaya belajar, motivasi, dan strategi pembelajaran</p>
 </div>
 
 <!-- VARK Scores Display -->
 <div class="correlation-card">
-    <h4><i class="fas fa-eye me-2"></i>VARK Scores (Demo Data)</h4>
+    <h4><i class="fas fa-eye me-2"></i>Skor VARK (Data Demo)</h4>
     <div class="row mt-3">
         <?php foreach ($vark_data as $style => $score): ?>
         <div class="col-md-3 text-center mb-3">
@@ -25,7 +24,7 @@ $ams_score = $ams_score ?? 'N/A';
                     <?php echo $score; ?>
                 </div>
                 <?php if ($style === $dominant_style): ?>
-                    <small class="text-primary"><strong>Dominant</strong></small>
+                    <small class="text-primary"><strong>Dominan</strong></small>
                 <?php endif; ?>
             </div>
         </div>
@@ -34,7 +33,7 @@ $ams_score = $ams_score ?? 'N/A';
     
     <div class="text-center mt-3">
         <span class="style-badge bg-primary text-white">
-            Dominant Learning Style: <?php echo $dominant_style; ?>
+            Gaya Belajar Dominan: <?php echo $dominant_style; ?>
         </span>
     </div>
 </div>
@@ -43,15 +42,15 @@ $ams_score = $ams_score ?? 'N/A';
 <div class="row">
     <div class="col-md-6">
         <div class="correlation-card">
-            <h5><i class="fas fa-brain me-2 text-primary"></i>MSLQ Score</h5>
+            <h5><i class="fas fa-brain me-2 text-primary"></i>Skor MSLQ</h5>
             <p class="lead text-center"><?php echo htmlspecialchars($mslq_score); ?></p>
             <?php if (!empty($correlation_results['mslq_correlation'])): ?>
                 <table class="table table-bordered table-striped mt-3">
                     <thead>
                         <tr>
-                            <th>Component</th>
-                            <th>Correlation (r)</th>
-                            <th>Explanation</th>
+                            <th>Komponen</th>
+                            <th>Korelasi (r)</th>
+                            <th>Penjelasan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,7 +65,7 @@ $ams_score = $ams_score ?? 'N/A';
                 </table>
             <?php else: ?>
                 <div class="alert alert-info">
-                    No detailed MSLQ correlation data available.
+                    Tidak ada data korelasi MSLQ yang tersedia secara rinci.
                 </div>
             <?php endif; ?>
         </div>
@@ -74,15 +73,15 @@ $ams_score = $ams_score ?? 'N/A';
     
     <div class="col-md-6">
         <div class="correlation-card">
-            <h5><i class="fas fa-heart me-2 text-success"></i>AMS Score</h5>
+            <h5><i class="fas fa-heart me-2 text-success"></i>Skor AMS</h5>
             <p class="lead text-center"><?php echo htmlspecialchars($ams_score); ?></p>
             <?php if (!empty($correlation_results['ams_correlation'])): ?>
                 <table class="table table-bordered table-striped mt-3">
                     <thead>
                         <tr>
-                            <th>Component</th>
-                            <th>Correlation (r)</th>
-                            <th>Explanation</th>
+                            <th>Komponen</th>
+                            <th>Korelasi (r)</th>
+                            <th>Penjelasan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -97,7 +96,7 @@ $ams_score = $ams_score ?? 'N/A';
                 </table>
             <?php else: ?>
                 <div class="alert alert-info">
-                    No detailed AMS correlation data available.
+                    Tidak ada data korelasi AMS yang tersedia secara rinci.
                 </div>
             <?php endif; ?>
         </div>
@@ -106,10 +105,9 @@ $ams_score = $ams_score ?? 'N/A';
 
 <!-- Recommendations -->
 <div class="correlation-card">
-    <h5><i class="fas fa-lightbulb me-2 text-warning"></i>Personalized Recommendations</h5>
+    <h5><i class="fas fa-lightbulb me-2 text-warning"></i>Rekomendasi Personal</h5>
     <?php if (isset($correlation_results) && $correlation_results !== null): ?>
-        <p><strong>Dominant VARK Style:</strong> <?php echo htmlspecialchars($correlation_results['dominant_vark_style']); ?></p>
-        <h6>Recommended Strategies:</h6>
+        <h6>Strategi yang Direkomendasikan:</h6>
         <ul>
             <?php foreach ($correlation_results['recommendations'] as $rec): ?>
                 <li><?php echo htmlspecialchars($rec); ?></li>
@@ -117,7 +115,7 @@ $ams_score = $ams_score ?? 'N/A';
         </ul>
     <?php else: ?>
         <div class="alert alert-info">
-            <strong>Coming Soon:</strong> Personalized learning strategies and motivation enhancements based on your VARK, MSLQ, and AMS scores will be displayed here in Phase 2.
+            <strong>Segera Hadir:</strong> Strategi pembelajaran personal dan peningkatan motivasi berdasarkan skor VARK, MSLQ, dan AMS Anda akan ditampilkan di sini pada Fase 2.
         </div>
     <?php endif; ?>
 </div>

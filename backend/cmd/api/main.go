@@ -43,9 +43,11 @@ func main() {
 	nlpService := services.NewNLPService(nlpStore, aiServiceGateway)
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
+	correlationService := services.NewCorrelationService()
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(*authService)
+	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
 	assignmentHandler := handler.NewAssignmentHandler(*assignmentService)
 	quizHandler := handler.NewQuizHandler(*quizService)
@@ -131,6 +133,7 @@ func main() {
 			questionnaireRoutes.POST("/submit", questionnaireHandler.SubmitQuestionnaire)
 			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory)
 			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)
+			questionnaireRoutes.GET("/latest-by-type", questionnaireHandler.GetLatestQuestionnaireResultByType)
 		}
 
 		// VARK routes
@@ -175,6 +178,12 @@ func main() {
 			weeklyEvaluationRoutes.GET("/student/pending", weeklyEvaluationHandler.GetPendingWeeklyEvaluationsByStudentID)
 			weeklyEvaluationRoutes.GET("/teacher/overview", weeklyEvaluationHandler.GetWeeklyEvaluationOverview)
 			weeklyEvaluationRoutes.GET("/teacher/status", weeklyEvaluationHandler.GetStudentEvaluationStatus)
+		}
+
+		// Correlation routes
+		correlationRoutes := authRequired.Group("/correlation")
+		{
+			correlationRoutes.POST("/analyze", correlationHandler.AnalyzeCorrelation)
 		}
 	}
 

@@ -130,3 +130,19 @@ type QuestionnaireHistoryResponse struct {
 	QuestionnaireType        string    `json:"questionnaire_type"`
 	QuestionnaireDescription *string   `json:"questionnaire_description"`
 }
+
+type LatestQuestionnaireResultResponse struct {
+	ID                int                `json:"id"`
+	QuestionnaireType string             `json:"questionnaire_type"`
+	QuestionnaireName string             `json:"questionnaire_name"`
+	TotalScore        *float64           `json:"total_score,omitempty"`
+	SubscaleScores    map[string]float64 `json:"subscale_scores,omitempty"`
+	VisualScore       *int               `json:"visual_score,omitempty"`
+	AuditoryScore     *int               `json:"auditory_score,omitempty"`
+	ReadingScore      *int               `json:"reading_score,omitempty"`
+	KinestheticScore  *int               `json:"kinesthetic_score,omitempty"`
+	DominantStyle     *string            `json:"dominant_style,omitempty"`
+	CompletedAt       time.Time          `json:"completed_at"`
+	WeekNumber        *int               `json:"week_number,omitempty"`
+	Year              *int               `json:"year,omitempty"`
+}

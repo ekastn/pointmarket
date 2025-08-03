@@ -200,3 +200,64 @@ func (s *QuestionnaireService) GetQuestionnaireStatsByStudentID(studentID uint) 
 
 	return stats, nil
 }
+
+// GetLatestQuestionnaireResultByType retrieves the latest questionnaire result for a student by questionnaire type.
+func (s *QuestionnaireService) GetLatestQuestionnaireResultByType(studentID uint, qType string) (*dtos.LatestQuestionnaireResultResponse, error) {
+	var latestResultDTO dtos.LatestQuestionnaireResultResponse
+
+	switch qType {
+	case "vark":
+		varkResult, err := s.varkStore.GetLatestVARKResult(int(studentID))
+		if err != nil {
+			return nil, err
+		}
+		if varkResult == nil {
+			return nil, nil // No VARK result found
+		}
+
+		latestResultDTO = dtos.LatestQuestionnaireResultResponse{
+			ID:                varkResult.ID,
+			QuestionnaireType: "vark",
+			QuestionnaireName: "VARK Learning Style Assessment",
+			VisualScore:       &varkResult.VisualScore,
+			AuditoryScore:     &varkResult.AuditoryScore,
+			ReadingScore:      &varkResult.ReadingScore,
+			KinestheticScore:  &varkResult.KinestheticScore,
+			DominantStyle:     &varkResult.DominantStyle,
+			CompletedAt:       varkResult.CompletedAt,
+			WeekNumber:        varkResult.WeekNumber,
+			Year:              varkResult.Year,
+		}
+	case "mslq", "ams":
+		questionnaireResult, err := s.questionnaireStore.GetLatestQuestionnaireResult(int(studentID), qType)
+		if err != nil {
+			return nil, err
+		}
+		if questionnaireResult == nil {
+			return nil, nil // No result found for this type
+		}
+
+		var subscaleScores map[string]float64
+		if questionnaireResult.SubscaleScores != nil && *questionnaireResult.SubscaleScores != "" {
+			err = json.Unmarshal([]byte(*questionnaireResult.SubscaleScores), &subscaleScores)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal subscale scores: %w", err)
+			}
+		}
+
+		latestResultDTO = dtos.LatestQuestionnaireResultResponse{
+			ID:                questionnaireResult.ID,
+			QuestionnaireType: questionnaireResult.QuestionnaireType,
+			QuestionnaireName: questionnaireResult.QuestionnaireName,
+			TotalScore:        questionnaireResult.TotalScore,
+			SubscaleScores:    subscaleScores,
+			CompletedAt:       questionnaireResult.CompletedAt,
+			WeekNumber:        &questionnaireResult.WeekNumber,
+			Year:              &questionnaireResult.Year,
+		}
+	default:
+		return nil, fmt.Errorf("unsupported questionnaire type: %s", qType)
+	}
+
+	return &latestResultDTO, nil
+}

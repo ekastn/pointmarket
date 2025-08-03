@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/response"
@@ -113,4 +114,28 @@ func (h *QuestionnaireHandler) GetQuestionnaireStats(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusOK, "Questionnaire statistics retrieved successfully", stats)
+}
+
+// GetLatestQuestionnaireResultByType handles fetching the latest questionnaire result for a student by type
+func (h *QuestionnaireHandler) GetLatestQuestionnaireResultByType(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	qType := c.Query("type")
+
+	if qType == "" {
+		response.Error(c, http.StatusBadRequest, "Questionnaire type is required")
+		return
+	}
+
+	result, err := h.questionnaireService.GetLatestQuestionnaireResultByType(userID.(uint), qType)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if result == nil {
+		response.Error(c, http.StatusNotFound, fmt.Sprintf("No %s questionnaire result found for this student", qType))
+		return
+	}
+
+	response.Success(c, http.StatusOK, fmt.Sprintf("Latest %s questionnaire result retrieved successfully", qType), result)
 }

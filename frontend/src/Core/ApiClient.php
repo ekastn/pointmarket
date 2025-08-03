@@ -189,6 +189,11 @@ class ApiClient
         return $this->request('POST', '/api/v1/vark/submit', ['json' => ['answers' => $answers]]);
     }
 
+    public function getLatestQuestionnaireResultByType(string $type): array
+    {
+        return $this->request('GET', "/api/v1/questionnaires/latest-by-type?type=" . urlencode($type));
+    }
+
     public function getLatestVARKResult(): array
     {
         return $this->request('GET', '/api/v1/vark/latest');
@@ -294,6 +299,17 @@ class ApiClient
     public function getPendingWeeklyEvaluations(): array
     {
         return $this->request('GET', '/api/v1/evaluations/weekly/student/pending');
+    }
+
+    public function analyzeCorrelation(array $varkScores, float $mslqScore, float $amsScore): array
+    {
+        return $this->request('POST', '/api/v1/correlation/analyze', [
+            'json' => [
+                'vark_scores' => $varkScores,
+                'mslq_score' => $mslqScore,
+                'ams_score' => $amsScore,
+            ],
+        ]);
     }
 
     public function updateProfile(array $data): array

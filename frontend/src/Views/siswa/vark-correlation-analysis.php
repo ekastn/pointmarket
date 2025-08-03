@@ -14,7 +14,7 @@ $ams_score = $ams_score ?? 'N/A';
 
 <!-- VARK Scores Display -->
 <div class="correlation-card">
-    <h4><i class="fas fa-eye me-2"></i>Skor VARK (Data Demo)</h4>
+    <h4><i class="fas fa-eye me-2"></i>Skor VARK</h4>
     <div class="row mt-3">
         <?php foreach ($vark_data as $style => $score): ?>
         <div class="col-md-3 text-center mb-3">

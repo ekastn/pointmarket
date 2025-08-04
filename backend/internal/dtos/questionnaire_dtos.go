@@ -45,6 +45,7 @@ func (dto *QuestionnaireResultResponse) FromQuestionnaireResult(result models.Qu
 
 type QuestionnaireResponse struct {
 	ID             int                          `json:"id"`
+	Type           string                       `json:"type"`
 	Name           string                       `json:"name"`
 	Description    *string                      `json:"description"`
 	TotalQuestions int                          `json:"total_questions"`
@@ -89,6 +90,7 @@ type VARKAnswerOptionDTO struct {
 // FromQuestionnaire converts a models.Questionnaire and its questions to a QuestionnaireResponse DTO.
 func (dto *QuestionnaireResponse) FromQuestionnaire(q models.Questionnaire, questions []QuestionResponse) {
 	dto.ID = q.ID
+	dto.Type = q.Type
 	dto.Name = q.Name
 	dto.Description = q.Description
 	dto.TotalQuestions = q.TotalQuestions

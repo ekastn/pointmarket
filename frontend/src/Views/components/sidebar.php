@@ -31,14 +31,8 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo ($currentPath === '/vark-assessment') ? 'active' : ''; ?>" href="/vark-assessment">
-                        <i class="fas fa-brain me-2"></i>
-                        Gaya Belajar VARK
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link <?php echo ($currentPath === '/vark-correlation-analysis') ? 'active' : ''; ?>" href="/vark-correlation-analysis">
-                        <i class="fas fa-chart-network me-2"></i>
+                        <i class="fas fa-chart-pie me-2"></i>
                         Analisis Korelasi VARK
                     </a>
                 </li>

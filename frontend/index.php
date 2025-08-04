@@ -15,7 +15,7 @@ use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
 use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\UsersController;
-use App\Controllers\VarkAssessmentController;
+
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
 use App\Core\ApiClient;
@@ -52,8 +52,7 @@ $router->group('/', function($router) {
     $router->get('quiz', [QuizController::class, 'index']);
     $router->get('questionnaire', [QuestionnaireController::class, 'index']);
     
-    $router->get('vark-assessment', [VarkAssessmentController::class, 'show']);
-    $router->post('vark-assessment', [VarkAssessmentController::class, 'submit']);
+    
     $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
     // Materials routes

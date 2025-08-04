@@ -139,7 +139,7 @@ func main() {
 		// VARK routes
 		varkRoutes := authRequired.Group("/vark")
 		{
-			varkRoutes.GET("", varkHandler.GetVARKQuestions)
+
 			varkRoutes.POST("/submit", varkHandler.SubmitVARK)
 			varkRoutes.GET("/latest", varkHandler.GetLatestVARKResult)
 		}

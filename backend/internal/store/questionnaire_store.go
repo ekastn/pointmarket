@@ -17,10 +17,10 @@ func NewQuestionnaireStore(db *sqlx.DB) *QuestionnaireStore {
 	return &QuestionnaireStore{db: db}
 }
 
-// GetAllQuestionnaires retrieves all active questionnaires (excluding VARK)
+// GetAllQuestionnaires retrieves all active questionnaires
 func (s *QuestionnaireStore) GetAllQuestionnaires() ([]models.Questionnaire, error) {
 	var questionnaires []models.Questionnaire
-	err := s.db.Select(&questionnaires, "SELECT id, type, name, description, total_questions, status, created_at FROM questionnaires WHERE status = 'active' AND type != 'vark' ORDER BY type")
+	err := s.db.Select(&questionnaires, "SELECT id, type, name, description, total_questions, status, created_at FROM questionnaires WHERE status = 'active' ORDER BY type")
 	if err != nil {
 		return nil, err
 	}

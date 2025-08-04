@@ -167,7 +167,7 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
             <div class="card questionnaire-card <?php echo htmlspecialchars($questionnaire['type']); ?> h-100">
                 <div class="card-body">
                     <h5 class="card-title">
-                        <i class="fas fa-<?php echo $questionnaire['type'] === 'mslq' ? 'brain' : 'heart'; ?> me-2"></i>
+                        <i class="fas fa-<?php echo $questionnaire['type'] === 'mslq' ? 'brain' : ($questionnaire['type'] === 'ams' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
                         <?php echo htmlspecialchars($questionnaire['name']); ?>
                     </h5>
                     <p class="card-text"><?php echo htmlspecialchars($questionnaire['description']); ?></p>
@@ -253,116 +253,6 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                         <a href="/weekly-evaluations" class="btn btn-primary">
                             <i class="fas fa-calendar-check me-1"></i> Start Weekly Evaluations
                         </a>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- VARK Learning Style Section -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-brain me-2"></i>
-                    VARK Learning Style Assessment
-                </h5>
-            </div>
-            <div class="card-body">
-                <?php if ($varkResult): ?>
-                    <?php 
-                    $learningTips = \App\Helpers\getVARKLearningTips($varkResult['dominant_style']); 
-                    ?>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h6 class="text-primary">Your Learning Style Profile</h6>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="<?php echo htmlspecialchars($learningTips['icon']); ?> fa-2x text-primary me-3"></i>
-                                <div>
-                                    <h5 class="mb-1"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></h5>
-                                    <p class="text-muted mb-0"><?php echo htmlspecialchars($learningTips['description']); ?></p>
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-6">
-                                    <h6>VARK Scores:</h6>
-                                    <div class="small">
-                                        <span class="badge bg-info me-1">Visual: <?php echo htmlspecialchars($varkResult['visual_score']); ?></span>
-                                        <span class="badge bg-warning me-1">Auditory: <?php echo htmlspecialchars($varkResult['auditory_score']); ?></span>
-                                        <br class="d-sm-none">
-                                        <span class="badge bg-success me-1 mt-1">Reading: <?php echo htmlspecialchars($varkResult['reading_score']); ?></span>
-                                        <span class="badge bg-danger me-1 mt-1">Kinesthetic: <?php echo htmlspecialchars($varkResult['kinesthetic_score']); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <h6>Study Tips:</h6>
-                                    <ul class="small mb-0">
-                                        <?php foreach (array_slice($learningTips['study_tips'], 0, 3) as $tip): ?>
-                                            <li><?php echo htmlspecialchars($tip); ?></li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i>
-                                Completed: <?php echo htmlspecialchars(date('d M Y H:i', strtotime($varkResult['completed_at']))); ?>
-                            </small>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="bg-light p-3 rounded">
-                                <h6 class="text-muted">Assessment Status</h6>
-                                <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
-                                <p class="text-success mb-2">Completed</p>
-                                <a href="/vark-assessment" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-sync-alt me-1"></i>
-                                    Retake Assessment
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h6 class="text-primary">Discover Your Learning Style</h6>
-                            <p>VARK stands for <strong>V</strong>isual, <strong>A</strong>uditory, <strong>R</strong>eading/Writing, and <strong>K</strong>inesthetic learning styles. 
-                            This assessment helps identify your preferred learning mode and provides personalized study recommendations.</p>
-                            
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <h6>The Four Learning Styles:</h6>
-                                    <ul class="list-unstyled small">
-                                        <li><i class="fas fa-eye text-info me-2"></i><strong>Visual:</strong> Charts, diagrams, images</li>
-                                        <li><i class="fas fa-volume-up text-warning me-2"></i><strong>Auditory:</strong> Discussion, listening</li>
-                                        <li><i class="fas fa-book-open text-success me-2"></i><strong>Reading/Writing:</strong> Text, notes</li>
-                                        <li><i class="fas fa-hand-rock text-danger me-2"></i><strong>Kinesthetic:</strong> Hands-on practice</li>
-                                    </ul>
-                                </div>
-                                <div class="col-sm-6">
-                                    <h6>Assessment Details:</h6>
-                                    <ul class="list-unstyled small">
-                                        <li><i class="fas fa-clock me-2"></i>Time: ~10-15 minutes</li>
-                                        <li><i class="fas fa-list-ol me-2"></i>Questions: 16 scenarios</li>
-                                        <li><i class="fas fa-tasks me-2"></i>Format: Multiple choice</li>
-                                        <li><i class="fas fa-chart-line me-2"></i>Result: Learning profile</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="bg-light p-3 rounded">
-                                <h6 class="text-muted">Take Assessment</h6>
-                                <i class="fas fa-brain fa-3x text-muted mb-2"></i>
-                                <p class="text-muted mb-2">Not completed</p>
-                                <a href="/vark-assessment" class="btn btn-primary">
-                                    <i class="fas fa-brain me-1"></i>
-                                    Start VARK Assessment
-                                </a>
-                            </div>
-                        </div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -588,7 +478,11 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                loadPracticeForm(data.data.questionnaire, data.data.questions); // Adjusted data access
+                if (data.data.questionnaire.type === 'vark') {
+                    loadVARKPracticeForm(data.data.questionnaire, data.data.questions);
+                } else {
+                    loadPracticeForm(data.data.questionnaire, data.data.questions);
+                }
             } else {
                 document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
                     <div class="alert alert-danger">
@@ -602,7 +496,7 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
             document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Network error. Please try again.
+                    Error loading questionnaire: ${error.message}
                 </div>
             `;
         });
@@ -750,6 +644,135 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                         <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
                         <h5>Practice Completed Successfully!</h5>
                         <p>Your score: <strong>${data.data.total_score.toFixed(2)}</strong></p>
+                        <p class="mb-0">${data.message}</p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-primary" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh Page
+                        </button>
+                    </div>
+                `;
+            } else {
+                document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error: ${data.message}
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Network error:', error);
+            document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Network error. Please try again.
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function loadVARKPracticeForm(questionnaire, questions) {
+        document.getElementById('practiceQuestionnaireModalTitle').innerHTML = `
+            <i class="fas fa-clipboard-list me-2"></i>${questionnaire.name} - Practice
+        `;
+        
+        let html = `
+            <form id="varkPracticeQuestionnaireForm">
+                <div style="max-height: 400px; overflow-y: auto;">
+        `;
+
+        questions.forEach((question, index) => {
+            html += `
+                <div class="question-card p-3 mb-3">
+                    <div class="mb-2">
+                        <strong>Question ${index + 1}:</strong>
+                    </div>
+                    <p class="mb-3">${question.question_text}</p>
+                    <div class="vark-options">
+                        ${question.options.map(option => `
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="answers[${question.id}]" id="option_${option.id}" value="${option.option_letter}" required>
+                                <label class="form-check-label" for="option_${option.id}">
+                                    <strong>${option.option_letter.toUpperCase()}.</strong> ${option.option_text}
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </form>
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Batal
+                </button>
+                <button type="button" class="btn btn-success" onclick="submitVARKPracticeQuestionnaire()">
+                    <i class="fas fa-check me-1"></i> Kirim Jawaban
+                </button>
+            </div>
+        `;
+        
+        document.getElementById('practiceQuestionnaireModalBody').innerHTML = html;
+    }
+
+    function submitVARKPracticeQuestionnaire() {
+        const form = document.getElementById('varkPracticeQuestionnaireForm');
+        const formData = new FormData(form);
+        
+        const answers = {};
+        let questionCount = 0;
+
+        for (let pair of formData.entries()) {
+            const questionId = pair[0].match(/answers\[(\d+)\]/)[1];
+            answers[questionId] = pair[1];
+        }
+
+        questionCount = form.querySelectorAll('.question-card').length;
+
+        if (Object.keys(answers).length < questionCount) {
+            alert('Silakan jawab semua pertanyaan sebelum mengirim.');
+            return;
+        }
+        
+        // Show loading
+        document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                <p>Submitting your VARK assessment...</p>
+            </div>
+        `;
+        
+        // Submit data to backend API
+        fetch(API_BASE_URL + '/api/v1/vark/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + JWT_TOKEN
+            },
+            body: JSON.stringify({ answers: answers })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+                    <div class="alert alert-success text-center">
+                        <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                        <h5>VARK Assessment Completed Successfully!</h5>
+                        <p>Your dominant style is: <strong>${data.data.dominant_style}</strong></p>
                         <p class="mb-0">${data.message}</p>
                     </div>
                     <div class="text-center mt-3">

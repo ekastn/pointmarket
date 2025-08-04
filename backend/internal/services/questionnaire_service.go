@@ -22,7 +22,7 @@ func NewQuestionnaireService(questionnaireStore *store.QuestionnaireStore, varkS
 	return &QuestionnaireService{questionnaireStore: questionnaireStore, varkStore: varkStore, weeklyEvaluationStore: weeklyEvaluationStore}
 }
 
-// GetAllQuestionnaires retrieves all active questionnaires (excluding VARK)
+// GetAllQuestionnaires retrieves all active questionnaires
 func (s *QuestionnaireService) GetAllQuestionnaires() ([]models.Questionnaire, error) {
 	return s.questionnaireStore.GetAllQuestionnaires()
 }
@@ -40,10 +40,32 @@ func (s *QuestionnaireService) GetQuestionnaireByID(id uint, studentID uint) (mo
 	}
 
 	var questionDTOs []dtos.QuestionResponse
-	for _, question := range questions {
-		var questionDTO dtos.QuestionResponse
-		questionDTO.FromQuestion(question)
-		questionDTOs = append(questionDTOs, questionDTO)
+	if q.Type == "vark" {
+		options, err := s.varkStore.GetVARKAnswerOptionsByQuestionnaireID(q.ID)
+		if err != nil {
+			return models.Questionnaire{}, nil, nil, err
+		}
+
+		// Map options to questions
+		questionOptionsMap := make(map[int][]dtos.VARKAnswerOptionDTO)
+		for _, opt := range options {
+			var optDTO dtos.VARKAnswerOptionDTO
+			optDTO.FromVARKAnswerOption(opt)
+			questionOptionsMap[opt.QuestionID] = append(questionOptionsMap[opt.QuestionID], optDTO)
+		}
+
+		for _, question := range questions {
+			var questionDTO dtos.QuestionResponse
+			questionDTO.FromQuestion(question)
+			questionDTO.Options = questionOptionsMap[question.ID]
+			questionDTOs = append(questionDTOs, questionDTO)
+		}
+	} else {
+		for _, question := range questions {
+			var questionDTO dtos.QuestionResponse
+			questionDTO.FromQuestion(question)
+			questionDTOs = append(questionDTOs, questionDTO)
+		}
 	}
 
 	var recentResultDTO *dtos.QuestionnaireResultResponse

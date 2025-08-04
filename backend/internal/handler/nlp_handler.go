@@ -25,12 +25,13 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 	}
 
 	userID, _ := c.Get("userID")
-	analysis, learningPreference, err := h.nlpService.AnalyzeText(analyzeDTO, userID.(uint))
+	analysis, learningPreference, keywords, keySentences, textStats, err := h.nlpService.AnalyzeText(analyzeDTO, userID.(uint))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// Map the analysis result to the new DTO for frontend consumption
+
+	// Map the analysis result to the response DTO for frontend consumption
 	responseDTO := dtos.NLPAnalysisResponseDTO{
 		Sentiment: dtos.ScoreDetail{
 			Score: analysis.SentimentScore,
@@ -44,14 +45,9 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 			Score: analysis.StructureScore, // Using structure score as coherence for now
 			Label: getScoreLabel(analysis.StructureScore),
 		},
-		Keywords:     []string{}, // Placeholder, service does not provide yet
-		KeySentences: []string{}, // Placeholder, service does not provide yet
-		Stats: dtos.TextStats{
-			WordCount:     analysis.WordCount,
-			SentenceCount: analysis.SentenceCount,
-			AvgWordLength: 0.0, // Placeholder, service does not provide yet
-			ReadingTime:   0,   // Placeholder, service does not provide yet
-		},
+		Keywords:           keywords,
+		KeySentences:       keySentences,
+		Stats:              textStats,
 		LearningPreference: learningPreference,
 	}
 

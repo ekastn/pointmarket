@@ -32,25 +32,33 @@ func NewNLPService(nlpStore *store.NLPStore, varkStore *store.VARKStore, aiServi
 }
 
 // AnalyzeText performs NLP analysis on the given text
-func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.NLPAnalysisResult, dtos.LearningPreferenceDetail, error) {
+func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.NLPAnalysisResult, dtos.LearningPreferenceDetail, []string, []string, dtos.TextStats, error) {
 	originalText := req.Text
 	cleanText := s.cleanText(originalText)
 
 	wordCount := s.countWords(cleanText)
 	sentenceCount := s.countSentences(cleanText)
 
-	// Get VARK scores from the external AI service
+	// Get enhanced data from the external AI service
 	aiServiceReq := dtos.NLPAnalysisRequest{
 		Text:        originalText,
 		ContextType: req.ContextType,
 	}
 	aiServiceResp, err := s.aiServiceGateway.GetNLPScores(aiServiceReq)
 	if err != nil {
-		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, err
+		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, []string{}, []string{}, dtos.TextStats{}, err
 	}
 
-	// Use scores from AI service
+	// Extract enhanced data from AI service response
 	nlpVARKScores := aiServiceResp.Scores
+	keywords := aiServiceResp.Keywords
+	keySentences := aiServiceResp.KeySentences
+	textStats := dtos.TextStats{
+		WordCount:     aiServiceResp.TextStats.WordCount,
+		SentenceCount: aiServiceResp.TextStats.SentenceCount,
+		AvgWordLength: aiServiceResp.TextStats.AvgWordLength,
+		ReadingTime:   aiServiceResp.TextStats.ReadingTime,
+	}
 
 	grammarScore := s.calculateGrammarScore(originalText)
 	keywordScore := s.calculateKeywordScore(cleanText, req.ContextType)
@@ -71,7 +79,7 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 	// Personalized feedback can be generated based on VARK/MSLQ profiles, which is a future enhancement
 	var personalizedFeedback *string = nil
 
-	// Simulate Learning Preference
+	// Learning Preference Analysis
 	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(wordCount)
 	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight, int(studentID))
 	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
@@ -101,13 +109,13 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 
 	err = s.nlpStore.CreateNLPAnalysis(&analysis)
 	if err != nil {
-		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, err
+		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, []string{}, []string{}, dtos.TextStats{}, err
 	}
 
 	// Update NLP progress
 	s.updateNLPProgress(int(studentID), analysis.TotalScore, analysis.GrammarScore, analysis.KeywordScore, analysis.StructureScore)
 
-	return analysis, learningPreference, nil
+	return analysis, learningPreference, keywords, keySentences, textStats, nil
 }
 
 // GetNLPStats retrieves NLP statistics for a student

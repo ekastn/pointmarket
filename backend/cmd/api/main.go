@@ -40,7 +40,7 @@ func main() {
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
 	varkService := services.NewVARKService(varkStore)
-	nlpService := services.NewNLPService(nlpStore, aiServiceGateway)
+	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway)
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)

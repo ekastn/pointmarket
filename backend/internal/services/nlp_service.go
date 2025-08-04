@@ -8,6 +8,7 @@ import (
 	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
+	"pointmarket/backend/internal/utils"
 	"regexp"
 	"sort"
 	"strings"
@@ -21,12 +22,13 @@ func init() {
 // NLPService provides business logic for NLP analysis
 type NLPService struct {
 	nlpStore         *store.NLPStore
+	varkStore        *store.VARKStore
 	aiServiceGateway *gateway.AIServiceGateway
 }
 
 // NewNLPService creates a new NLPService
-func NewNLPService(nlpStore *store.NLPStore, aiServiceGateway *gateway.AIServiceGateway) *NLPService {
-	return &NLPService{nlpStore: nlpStore, aiServiceGateway: aiServiceGateway}
+func NewNLPService(nlpStore *store.NLPStore, varkStore *store.VARKStore, aiServiceGateway *gateway.AIServiceGateway) *NLPService {
+	return &NLPService{nlpStore: nlpStore, varkStore: varkStore, aiServiceGateway: aiServiceGateway}
 }
 
 // AnalyzeText performs NLP analysis on the given text
@@ -71,7 +73,7 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 
 	// Simulate Learning Preference
 	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(wordCount)
-	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight)
+	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight, int(studentID))
 	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
 
 	analysis := models.NLPAnalysisResult{
@@ -113,77 +115,6 @@ func (s *NLPService) GetNLPStats(studentID uint) (*models.NLPProgress, error) {
 	return s.nlpStore.GetOverallNLPStats(int(studentID))
 }
 
-// simulateVARKScores simulates VARK scores based on text and context
-func (s *NLPService) simulateVARKScores(text string, contextType string) dtos.VARKScores {
-	// Define keywords for each VARK style (simplified for simulation)
-	keywords := map[string][]string{
-		"visual":      {"gambar", "diagram", "ilustrasi", "melihat", "visualisasi", "skema"},
-		"aural":       {"diskusi", "mendengar", "berbicara", "menjelaskan", "suara", "ceramah"},
-		"read_write":  {"membaca", "menulis", "catatan", "artikel", "buku", "definisi", "ringkasan"},
-		"kinesthetic": {"melakukan", "praktik", "bergerak", "membangun", "eksperimen", "aplikasi"},
-	}
-
-	textLower := strings.ToLower(text)
-	wordCount := s.countWords(textLower)
-
-	scores := dtos.VARKScores{}
-
-	// Keyword-based scoring
-	for style, kws := range keywords {
-		score := 0.0
-		foundCount := 0
-		for _, kw := range kws {
-			if strings.Contains(textLower, kw) {
-				foundCount++
-			}
-		}
-		if len(kws) > 0 {
-			score = (float64(foundCount) / float64(len(kws))) * 100.0
-		}
-
-		// Add a small random component for simulation realism
-		score += rand.Float64() * 10.0 // Add up to 10 points randomly
-
-		// Apply context bias
-		switch contextType {
-		case "matematik", "fisika":
-			if style == "visual" || style == "kinesthetic" {
-				score += 15.0 // Boost for visual/kinesthetic in these contexts
-			}
-		case "biologi":
-			if style == "visual" || style == "read_write" {
-				score += 15.0 // Boost for visual/read_write in biology
-			}
-		case "assignment":
-			if style == "read_write" {
-				score += 10.0 // Slight boost for read_write in assignments
-			}
-		}
-
-		// Cap scores at 100
-		score = math.Min(100.0, score)
-
-		switch style {
-		case "visual":
-			scores.Visual = score
-		case "aural":
-			scores.Aural = score
-		case "read_write":
-			scores.ReadWrite = score
-		case "kinesthetic":
-			scores.Kinesthetic = score
-		}
-	}
-
-	// Linguistic Style/Structure Analysis (very simplified simulation)
-	// Longer texts might slightly favor Read/Write
-	if wordCount > 100 {
-		scores.ReadWrite += 5.0
-	}
-
-	return scores
-}
-
 // calculateNLPConfidenceWeight calculates W_NLP based on word count
 func (s *NLPService) calculateNLPConfidenceWeight(wordCount int) float64 {
 	if wordCount < 100 {
@@ -194,26 +125,59 @@ func (s *NLPService) calculateNLPConfidenceWeight(wordCount int) float64 {
 	return 0.5
 }
 
-// fuseLearningPreferences simulates weighted fusion of NLP and VARK questionnaire scores
-func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeight float64) dtos.VARKScores {
-	// Placeholder for VARK questionnaire scores (fixed for simulation)
-	// In a real system, these would come from the database
-	varkQuestionnaireScores := dtos.VARKScores{
-		Visual:      rand.Float64() * 100, // Simulate some VARK scores
-		Aural:       rand.Float64() * 100,
-		ReadWrite:   rand.Float64() * 100,
-		Kinesthetic: rand.Float64() * 100,
+// getUserVARKScores retrieves and normalizes VARK scores for a student
+func (s *NLPService) getUserVARKScores(studentID int) dtos.VARKScores {
+	// Get the latest VARK result from database
+	varkResult, err := s.varkStore.GetLatestVARKResult(studentID)
+	if err != nil || varkResult == nil {
+		// Return default neutral scores if no VARK data exists
+		defaultScore := utils.GetDefaultVARKScore()
+		return dtos.VARKScores{
+			Visual:      defaultScore,
+			Aural:       defaultScore,
+			ReadWrite:   defaultScore,
+			Kinesthetic: defaultScore,
+		}
 	}
 
-	// Fixed W_VARK for simulation
+	// Normalize scores from database values to 1-10 scale
+	visual, aural, readWrite, kinesthetic := utils.NormalizeVARKScores(
+		varkResult.VisualScore,
+		varkResult.AuditoryScore,
+		varkResult.ReadingScore,
+		varkResult.KinestheticScore,
+	)
+
+	return dtos.VARKScores{
+		Visual:      visual,
+		Aural:       aural,
+		ReadWrite:   readWrite,
+		Kinesthetic: kinesthetic,
+	}
+}
+
+// fuseLearningPreferences combines NLP and VARK questionnaire scores using weighted fusion
+func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeight float64, studentID int) dtos.VARKScores {
+	// Get real VARK questionnaire scores from database
+	varkQuestionnaireScores := s.getUserVARKScores(studentID)
+
+	// Calculate W_VARK weight (complementary to NLP weight)
 	wVARK := 1.0 - nlpWeight // W_VARK + W_NLP = 1
 
+	// Perform weighted fusion of NLP and VARK scores
 	fused := dtos.VARKScores{
 		Visual:      s.roundScore(wVARK*varkQuestionnaireScores.Visual + nlpWeight*nlpScores.Visual),
 		Aural:       s.roundScore(wVARK*varkQuestionnaireScores.Aural + nlpWeight*nlpScores.Aural),
 		ReadWrite:   s.roundScore(wVARK*varkQuestionnaireScores.ReadWrite + nlpWeight*nlpScores.ReadWrite),
 		Kinesthetic: s.roundScore(wVARK*varkQuestionnaireScores.Kinesthetic + nlpWeight*nlpScores.Kinesthetic),
 	}
+
+	// Validate all scores are within 1-10 range
+	fused.Visual = s.validateAndClampScore(fused.Visual)
+	fused.Aural = s.validateAndClampScore(fused.Aural)
+	fused.ReadWrite = s.validateAndClampScore(fused.ReadWrite)
+	fused.Kinesthetic = s.validateAndClampScore(fused.Kinesthetic)
+
 	return fused
 }
 
@@ -471,6 +435,17 @@ func (s *NLPService) generateFeedback(totalScore, grammarScore, keywordScore, st
 	}
 
 	return feedback
+}
+
+// validateAndClampScore ensures score is within the 1-10 range
+func (s *NLPService) validateAndClampScore(score float64) float64 {
+	if score < utils.MinVARKScore {
+		return utils.MinVARKScore
+	}
+	if score > utils.MaxVARKScore {
+		return utils.MaxVARKScore
+	}
+	return s.roundScore(score)
 }
 
 func (s *NLPService) roundScore(score float64) float64 {

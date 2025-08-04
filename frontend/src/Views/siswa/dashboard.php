@@ -406,15 +406,14 @@ use function App\Helpers\formatDate;
                 </h6>
             </div>
             <div class="card-body text-center">
-                <?php if (isset($questionnaireStats['mslq']) && $questionnaireStats['mslq']['total_completed'] > 0): ?>
+                <?php if (isset($questionnaireStats[0]) && $questionnaireStats[0]['total_completed'] > 0): ?>
                     <div class="score-badge badge bg-success mb-3">
-                        <?php echo htmlspecialchars(number_format($questionnaireStats['mslq']['average_score'], 1)); ?>/5.0
+                        <?php echo htmlspecialchars(number_format($questionnaireStats[0]['average_score'], 1)); ?>/7.0
                     </div>
                     <h6 class="text-success">Completed</h6>
                     <p class="small text-muted">Learning strategies and motivation assessment</p>
                     <div class="progress progress-custom mb-2">
-                        <div class="progress-bar bg-success" style="width: <?php echo htmlspecialchars(($questionnaireStats
-['mslq']['average_score'] / 5) * 100); ?>%"></div>
+                        <div class="progress-bar bg-success" style="width: <?php echo htmlspecialchars(($questionnaireStats[0]['average_score'] / 7) * 100); ?>%"></div>
                     </div>
                     <a href="/questionnaire" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-eye me-1"></i>View Details
@@ -440,15 +439,14 @@ use function App\Helpers\formatDate;
                 </h6>
             </div>
             <div class="card-body text-center">
-                <?php if (isset($questionnaireStats['ams']) && $questionnaireStats['ams']['total_completed'] > 0): ?>
+                <?php if (isset($questionnaireStats[1]) && $questionnaireStats[1]['total_completed'] > 0): ?>
                     <div class="score-badge badge bg-warning text-dark mb-3">
-                        <?php echo htmlspecialchars(number_format($questionnaireStats['ams']['average_score'], 1)); ?>/5.0
+                        <?php echo htmlspecialchars(number_format($questionnaireStats[1]['average_score'], 1)); ?>/7.0
                     </div>
                     <h6 class="text-warning">Completed</h6>
                     <p class="small text-muted">Academic motivation scale assessment</p>
                     <div class="progress progress-custom mb-2">
-                        <div class="progress-bar bg-warning" style="width: <?php echo htmlspecialchars(($questionnaireStats
-['ams']['average_score'] / 5) * 100); ?>%"></div>
+                        <div class="progress-bar bg-warning" style="width: <?php echo htmlspecialchars(($questionnaireStats[1]['average_score'] / 7) * 100); ?>%"></div>
                     </div>
                     <a href="/questionnaire" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-eye me-1"></i>View Details

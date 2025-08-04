@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"pointmarket/backend/internal/dtos"
+
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 
@@ -18,18 +18,13 @@ func NewCorrelationHandler(correlationService services.CorrelationService) *Corr
 }
 
 func (h *CorrelationHandler) AnalyzeCorrelation(c *gin.Context) {
-	var req dtos.CorrelationAnalysisRequest // Assuming a DTO for the request body
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not authenticated")
 		return
 	}
 
-	// For now, we'll use dummy data or data passed directly in the request.
-	// In a more complete implementation, these would be fetched from the database
-	// using the studentID from the authenticated user.
-	// For simplicity, let's assume req contains the necessary scores.
-
-	analysisResult, err := h.correlationService.AnalyzeAndRecommend(req.VARKScores, req.MSLQScore, req.AMSScore)
+	analysisResult, err := h.correlationService.GetCorrelationAnalysisForStudent(userID.(uint))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return

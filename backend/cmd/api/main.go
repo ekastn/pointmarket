@@ -43,7 +43,7 @@ func main() {
 	nlpService := services.NewNLPService(nlpStore, aiServiceGateway)
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
-	correlationService := services.NewCorrelationService()
+	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(*authService)
@@ -183,7 +183,7 @@ func main() {
 		// Correlation routes
 		correlationRoutes := authRequired.Group("/correlation")
 		{
-			correlationRoutes.POST("/analyze", correlationHandler.AnalyzeCorrelation)
+			correlationRoutes.GET("/analyze", correlationHandler.AnalyzeCorrelation)
 		}
 	}
 

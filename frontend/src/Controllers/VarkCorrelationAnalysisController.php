@@ -30,50 +30,23 @@ class VarkCorrelationAnalysisController extends BaseController
             }
         }
 
-        // Fetch VARK data
         $vark_data = [];
         $dominant_style = 'N/A';
-        $varkResult = $this->apiClient->getLatestVARKResult();
-        if ($varkResult['success'] && isset($varkResult['data'])) {
-            $vark_data = [
-                'Visual' => $varkResult['data']['visual_score'] ?? 0,
-                'Auditory' => $varkResult['data']['auditory_score'] ?? 0,
-                'Reading/Writing' => $varkResult['data']['reading_score'] ?? 0,
-                'Kinesthetic' => $varkResult['data']['kinesthetic_score'] ?? 0
-            ];
-            // Ensure dominant_style is correctly extracted and not null
-            $dominant_style = $varkResult['data']['dominant_style'] ?? 'N/A';
-        } else {
-            $_SESSION['messages']['warning'] = ($_SESSION['messages']['warning'] ?? '') . 'Gagal memuat data VARK. ';
-        }
-
-        // Fetch MSLQ data
         $mslq_score = 'N/A';
-        $mslqResult = $this->apiClient->getLatestQuestionnaireResultByType('mslq');
-        if ($mslqResult['success'] && isset($mslqResult['data']['total_score'])) {
-            $mslq_score = $mslqResult['data']['total_score'];
-        } else {
-            $_SESSION['messages']['warning'] = ($_SESSION['messages']['warning'] ?? '') . 'Gagal memuat data MSLQ. ';
-        }
-
-        // Fetch AMS data
         $ams_score = 'N/A';
-        $amsResult = $this->apiClient->getLatestQuestionnaireResultByType('ams');
-        if ($amsResult['success'] && isset($amsResult['data']['total_score'])) {
-            $ams_score = $amsResult['data']['total_score'];
-        } else {
-            $_SESSION['messages']['warning'] = ($_SESSION['messages']['warning'] ?? '') . 'Gagal memuat data AMS. ';
-        }
-
-        // Analyze correlation
         $correlation_results = null;
-        if ($vark_data !== [] && $mslq_score !== 'N/A' && $ams_score !== 'N/A') {
-            $correlationResponse = $this->apiClient->analyzeCorrelation($vark_data, (float)$mslq_score, (float)$ams_score);
-            if ($correlationResponse['success'] && isset($correlationResponse['data'])) {
-                $correlation_results = $correlationResponse['data'];
-            } else {
-                $_SESSION['messages']['warning'] = ($_SESSION['messages']['warning'] ?? '') . 'Gagal menganalisis korelasi. ';
-            }
+
+        $correlationResponse = $this->apiClient->analyzeCorrelation();
+
+        if ($correlationResponse['success'] && isset($correlationResponse['data'])) {
+            $data = $correlationResponse['data'];
+            $vark_data = $data['vark_scores'] ?? [];
+            $dominant_style = $data['dominant_vark_style'] ?? 'N/A';
+            $mslq_score = $data['mslq_score'] ?? 'N/A';
+            $ams_score = $data['ams_score'] ?? 'N/A';
+            $correlation_results = $data;
+        } else {
+            $_SESSION['messages']['warning'] = $correlationResponse['error'] ?? 'Gagal memuat analisis korelasi.';
         }
 
         $this->render('siswa/vark-correlation-analysis', [

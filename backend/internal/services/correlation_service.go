@@ -1,14 +1,72 @@
 package services
 
 import (
+	"fmt"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/store"
 )
 
 type CorrelationService struct {
+	varkStore          *store.VARKStore
+	questionnaireStore *store.QuestionnaireStore
 }
 
-func NewCorrelationService() *CorrelationService {
-	return &CorrelationService{}
+func NewCorrelationService(varkStore *store.VARKStore, questionnaireStore *store.QuestionnaireStore) *CorrelationService {
+	return &CorrelationService{
+		varkStore:          varkStore,
+		questionnaireStore: questionnaireStore,
+	}
+}
+
+func (s *CorrelationService) GetCorrelationAnalysisForStudent(studentID uint) (*dtos.CorrelationAnalysisResponse, error) {
+	// 1. Fetch Latest VARK Result
+	varkResult, err := s.varkStore.GetLatestVARKResult(int(studentID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get VARK result: %w", err)
+	}
+	if varkResult == nil {
+		return nil, fmt.Errorf("no VARK result found for student")
+	}
+
+	varkScores := map[string]float64{
+		"Visual":      float64(varkResult.VisualScore),
+		"Auditory":    float64(varkResult.AuditoryScore),
+		"Reading":     float64(varkResult.ReadingScore),
+		"Kinesthetic": float64(varkResult.KinestheticScore),
+	}
+
+	// 2. Fetch Latest MSLQ Result
+	mslqResult, err := s.questionnaireStore.GetLatestQuestionnaireResult(int(studentID), "mslq")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get MSLQ result: %w", err)
+	}
+	if mslqResult == nil || mslqResult.TotalScore == nil {
+		return nil, fmt.Errorf("no MSLQ result found for student")
+	}
+	mslqScore := *mslqResult.TotalScore
+
+	// 3. Fetch Latest AMS Result
+	amsResult, err := s.questionnaireStore.GetLatestQuestionnaireResult(int(studentID), "ams")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AMS result: %w", err)
+	}
+	if amsResult == nil || amsResult.TotalScore == nil {
+		return nil, fmt.Errorf("no AMS result found for student")
+	}
+	amsScore := *amsResult.TotalScore
+
+	// 4. Perform Correlation Analysis
+	analysis, err := s.AnalyzeAndRecommend(varkScores, mslqScore, amsScore)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. Populate the final response DTO
+	analysis.VARKScores = varkScores
+	analysis.MSLQScore = mslqScore
+	analysis.AMSScore = amsScore
+
+	return analysis, nil
 }
 
 func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, mslqScore float64, amsScore float64) (*dtos.CorrelationAnalysisResponse, error) {

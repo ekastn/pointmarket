@@ -13,6 +13,12 @@ type AMSCorrelationDetail struct {
 }
 
 type CorrelationAnalysisResponse struct {
+	// Raw scores for display
+	VARKScores map[string]float64 `json:"vark_scores"`
+	MSLQScore  float64            `json:"mslq_score"`
+	AMSScore   float64            `json:"ams_score"`
+
+	// Analysis results
 	DominantVARKStyle string                  `json:"dominant_vark_style"`
 	MSLQCorrelation   []MSLQCorrelationDetail `json:"mslq_correlation"`
 	AMSCorrelation    []AMSCorrelationDetail  `json:"ams_correlation"`

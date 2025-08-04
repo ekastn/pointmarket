@@ -24,48 +24,17 @@ class TextAnalysisService:
             'tahun', 'hari', 'bulan', 'minggu', 'jam', 'menit', 'detik'
         }
         
-    def extract_keywords(self, text: str, context_type: str = None, max_keywords: int = 10) -> List[str]:
+    def extract_keywords(self, text: str, max_keywords: int = 10) -> List[str]:
         """
-        Extract keywords using a combination of frequency analysis and contextual relevance.
+        Extract keywords using NLP techniques.
         """
         if not text.strip():
             return []
             
-        # Method 1: Extract context-specific keywords from database
-        context_keywords = self._extract_context_keywords(text, context_type)
+        # Directly use NLP techniques for keyword extraction
+        nlp_keywords = self._extract_nlp_keywords(text, max_keywords)
         
-        # Method 2: Extract keywords using NLP techniques
-        nlp_keywords = self._extract_nlp_keywords(text, max_keywords - len(context_keywords))
-        
-        # Combine and deduplicate
-        all_keywords = list(dict.fromkeys(context_keywords + nlp_keywords))
-        
-        return all_keywords[:max_keywords]
-    
-    def _extract_context_keywords(self, text: str, context_type: str) -> List[str]:
-        """Extract keywords that are relevant to the specific context."""
-        if not context_type:
-            return []
-            
-        try:
-            # Get predefined keywords for this context
-            lexicon_data = self.lexicon_store.get_by_context(context_type)
-            if not lexicon_data:
-                return []
-                
-            found_keywords = []
-            text_lower = text.lower()
-            
-            for item in lexicon_data:
-                keyword = item.get('keyword', '').lower()
-                if keyword and keyword in text_lower:
-                    found_keywords.append(item.get('keyword', ''))
-                    
-            return found_keywords
-            
-        except Exception as e:
-            print(f"Error extracting context keywords: {e}")
-            return []
+        return nlp_keywords[:max_keywords]
     
     def _extract_nlp_keywords(self, text: str, max_keywords: int) -> List[str]:
         """Extract keywords using NLP techniques with Stanza."""
@@ -76,14 +45,14 @@ class TextAnalysisService:
             # Process text with Stanza
             doc = self.stanza_pipeline(text)
             
-            # Extract meaningful words (nouns, adjectives, verbs)
+            # Extract meaningful words (nouns, adjectives, verbs, proper nouns)
             meaningful_words = []
             for sentence in doc.sentences:
                 for word in sentence.words:
                     # Filter by POS tags and exclude stop words
-                    if (word.upos in ['NOUN', 'ADJ', 'VERB'] and 
+                    if (word.upos in ['NOUN', 'PROPN', 'ADJ', 'VERB'] and 
                         word.lemma.lower() not in self.stop_words and 
-                        len(word.lemma) > 3):
+                        len(word.lemma) > 2): # Lower length threshold for more keywords
                         meaningful_words.append(word.lemma.lower())
             
             # Count frequency and get top words
@@ -141,18 +110,19 @@ class TextAnalysisService:
         return key_sentences
     
     def _split_sentences(self, text: str) -> List[str]:
-        """Split text into sentences."""
-        # Use regex to split by sentence endings
-        sentences = re.split(r'[.!?]+', text)
-        
-        # Clean and filter sentences
-        cleaned_sentences = []
-        for sentence in sentences:
-            cleaned = sentence.strip()
-            if len(cleaned) > 10:  # Only meaningful sentences
-                cleaned_sentences.append(cleaned)
-                
-        return cleaned_sentences
+        """Split text into sentences using Stanza."""
+        if not self.stanza_pipeline:
+            # Fallback to regex if stanza is not available
+            sentences = re.split(r'[.!?]+', text)
+            cleaned_sentences = []
+            for sentence in sentences:
+                cleaned = sentence.strip()
+                if len(cleaned) > 10:  # Only meaningful sentences
+                    cleaned_sentences.append(cleaned)
+            return cleaned_sentences
+
+        doc = self.stanza_pipeline(text)
+        return [sentence.text for sentence in doc.sentences if len(sentence.text.strip()) > 10] # Filter short sentences
     
     def _score_sentence(self, sentence: str, position: int, total_sentences: int, full_text: str) -> float:
         """Score a sentence based on various factors."""
@@ -165,22 +135,39 @@ class TextAnalysisService:
             score += 0.2  # Last sentence bonus
             
         # Length score (moderate length sentences are often key)
-        words = len(sentence.split())
-        if 10 <= words <= 25:
+        words = sentence.split()
+        word_count = len(words)
+        if 10 <= word_count <= 25:
             score += 0.2
-        elif words > 25:
+        elif word_count > 25:
             score += 0.1
             
-        # Keyword density score
-        keywords = self._extract_frequency_keywords(full_text, 10)
+        # Keyword density score (using NLP-extracted keywords for better relevance)
+        # Re-extracting keywords for the full text here might be inefficient if called frequently.
+        # Consider passing keywords from analyze() or caching them.
+        nlp_keywords = self._extract_nlp_keywords(full_text, 10) # Get top 10 NLP keywords from full text
         sentence_lower = sentence.lower()
-        keyword_count = sum(1 for keyword in keywords if keyword in sentence_lower)
+        keyword_count = sum(1 for keyword in nlp_keywords if keyword in sentence_lower)
         score += min(keyword_count * 0.1, 0.3)  # Cap at 0.3
         
+        # Proper Noun Density
+        if self.stanza_pipeline:
+            doc = self.stanza_pipeline(sentence)
+            proper_nouns = [word.text for sent in doc.sentences for word in sent.words if word.upos == 'PROPN']
+            if word_count > 0:
+                proper_noun_density = len(proper_nouns) / word_count
+                score += min(proper_noun_density * 0.5, 0.2) # Cap at 0.2
+        
+        # Vocabulary Richness (Type-Token Ratio)
+        if word_count > 0:
+            unique_words = set(w.lower() for w in words if w.lower() not in self.stop_words)
+            ttr = len(unique_words) / word_count
+            score += min(ttr * 0.3, 0.15) # Cap at 0.15
+            
         # Question or statement with important words
         if '?' in sentence:
             score += 0.1
-        if any(word in sentence_lower for word in ['penting', 'utama', 'kesimpulan', 'hasil']):
+        if any(word in sentence_lower for word in ['penting', 'utama', 'kesimpulan', 'hasil', 'fakta', 'bukti']):
             score += 0.15
             
         return score
@@ -224,7 +211,7 @@ class TextAnalysisService:
         Perform comprehensive text analysis returning all metrics.
         """
         return {
-            'keywords': self.extract_keywords(text, context_type),
+            'keywords': self.extract_keywords(text),
             'key_sentences': self.extract_key_sentences(text),
             'text_stats': self.calculate_text_stats(text)
         }

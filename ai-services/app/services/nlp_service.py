@@ -61,11 +61,10 @@ class NlpService:
         
         # Get comprehensive text analysis
         text = data.get('text', '')
-        context_type = data.get('context_type', '')
         
         text_analysis = {}
         if self.text_analyzer:
-            text_analysis = self.text_analyzer.analyze(text, context_type)
+            text_analysis = self.text_analyzer.analyze(text)
         
         # Combine results
         result = {

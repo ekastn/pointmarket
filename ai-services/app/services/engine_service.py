@@ -12,8 +12,11 @@ class MotivationalEngineService:
     def get_nlp_profile(self, data: dict) -> AnalysisResponse:
         strategy_name = data.get('strategy')
         text = data.get('text', '')
-        context_type = data.get('context_type', '')
         
+        # Remove context_type from data as it's no longer used by nlp_service.analyze
+        if 'context_type' in data:
+            del data['context_type']
+
         # Get comprehensive analysis from NLP service
         analysis_result = self.nlp_service.analyze(data, strategy_name)
         

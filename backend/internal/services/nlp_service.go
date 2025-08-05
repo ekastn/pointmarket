@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"math"
-	"math/rand"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/models"
@@ -14,26 +13,22 @@ import (
 	"time"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // NLPService provides business logic for NLP analysis
 type NLPService struct {
-	nlpStore         *store.NLPStore
-	varkStore        *store.VARKStore
-	aiServiceGateway *gateway.AIServiceGateway
+	nlpStore                  *store.NLPStore
+	varkStore                 *store.VARKStore
+	aiServiceGateway          *gateway.AIServiceGateway
+	textAnalysisSnapshotStore *store.TextAnalysisSnapshotStore
 }
 
 // NewNLPService creates a new NLPService
-func NewNLPService(nlpStore *store.NLPStore, varkStore *store.VARKStore, aiServiceGateway *gateway.AIServiceGateway) *NLPService {
-	return &NLPService{nlpStore: nlpStore, varkStore: varkStore, aiServiceGateway: aiServiceGateway}
+func NewNLPService(nlpStore *store.NLPStore, varkStore *store.VARKStore, aiServiceGateway *gateway.AIServiceGateway, textAnalysisSnapshotStore *store.TextAnalysisSnapshotStore) *NLPService {
+	return &NLPService{nlpStore: nlpStore, varkStore: varkStore, aiServiceGateway: aiServiceGateway, textAnalysisSnapshotStore: textAnalysisSnapshotStore}
 }
 
 // AnalyzeText performs NLP analysis on the given text
-func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.NLPAnalysisResult, dtos.LearningPreferenceDetail, []string, []string, dtos.TextStats, error) {
+func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.TextAnalysisSnapshot, dtos.LearningPreferenceDetail, []string, []string, dtos.TextStats, error) {
 	originalText := req.Text
-	cleanText := s.cleanText(originalText)
 
 	// Get enhanced data from the external AI service
 	aiServiceReq := dtos.NLPAnalysisRequest{
@@ -41,7 +36,7 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 	}
 	aiServiceResp, err := s.aiServiceGateway.GetNLPScores(aiServiceReq)
 	if err != nil {
-		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, []string{}, []string{}, dtos.TextStats{}, err
+		return models.TextAnalysisSnapshot{}, dtos.LearningPreferenceDetail{}, []string{}, []string{}, dtos.TextStats{}, err
 	}
 
 	// Extract enhanced data from AI service response
@@ -60,61 +55,58 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 	sentimentScore := aiServiceResp.SentimentScore
 	structureScore := aiServiceResp.StructureScore
 	complexityScore := aiServiceResp.ComplexityScore
-	// Keyword score is now directly from AI service, no longer needs contextType
-	keywordScore := aiServiceResp.KeywordScore
 
 	// Calculate total score (weighted average) using scores from AI service
-	totalScore := (grammarScore*0.2 + keywordScore*0.2 + structureScore*0.15 + readabilityScore*0.15 + sentimentScore*0.15 + complexityScore*0.15)
-
-	feedback := s.generateFeedback(totalScore, grammarScore, keywordScore, structureScore, readabilityScore, sentimentScore, complexityScore)
-	feedbackJSON, _ := json.Marshal(feedback)
-	feedbackStr := string(feedbackJSON)
-
-	// Personalized feedback can be generated based on VARK/MSLQ profiles, which is a future enhancement
-	var personalizedFeedback *string = nil
+	totalScore := (grammarScore*0.2 + structureScore*0.15 + readabilityScore*0.15 + sentimentScore*0.15 + complexityScore*0.15)
 
 	// Learning Preference Analysis
 	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(textStats.WordCount)
 	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight, int(studentID))
 	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
 
-	analysis := models.NLPAnalysisResult{
-		StudentID:            int(studentID),
-		AssignmentID:         req.AssignmentID,
-		QuizID:               req.QuizID,
-		OriginalText:         originalText,
-		CleanText:            &cleanText,
-		WordCount:            textStats.WordCount,
-		SentenceCount:        textStats.SentenceCount,
-		TotalScore:           s.roundScore(totalScore),
-		GrammarScore:         s.roundScore(grammarScore),
-		KeywordScore:         s.roundScore(keywordScore),
-		StructureScore:       s.roundScore(structureScore),
-		ReadabilityScore:     s.roundScore(readabilityScore),
-		SentimentScore:       s.roundScore(sentimentScore),
-		ComplexityScore:      s.roundScore(complexityScore),
-		Feedback:             &feedbackStr,
-		PersonalizedFeedback: personalizedFeedback,
-		ContextType:          req.ContextType,
-		AnalysisVersion:      "1.0", // Or dynamically load from config
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
+	// Create a TextAnalysisSnapshot to save all relevant data
+	snapshot := models.TextAnalysisSnapshot{
+		StudentID:               int(studentID),
+		OriginalText:            originalText,
+		WordCount:               textStats.WordCount,
+		SentenceCount:           textStats.SentenceCount,
+		TotalScore:              s.roundScore(totalScore),
+		GrammarScore:            s.roundScore(grammarScore),
+		StructureScore:          s.roundScore(structureScore),
+		ReadabilityScore:        s.roundScore(readabilityScore),
+		SentimentScore:          s.roundScore(sentimentScore),
+		ComplexityScore:         s.roundScore(complexityScore),
+		LearningPreferenceType:  learningPreference.Type,
+		LearningPreferenceLabel: learningPreference.Label,
+		LearningPreferenceCombinedVARK: func() *string {
+			jsonBytes, _ := json.Marshal(learningPreference.Combined)
+			jsonStr := string(jsonBytes)
+			return &jsonStr
+		}(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
-	err = s.nlpStore.CreateNLPAnalysis(&analysis)
+	// Save the snapshot to the new store
+	err = s.textAnalysisSnapshotStore.CreateTextAnalysisSnapshot(&snapshot)
 	if err != nil {
-		return models.NLPAnalysisResult{}, dtos.LearningPreferenceDetail{}, []string{}, []string{}, dtos.TextStats{}, err
+		return models.TextAnalysisSnapshot{}, dtos.LearningPreferenceDetail{}, []string{}, []string{}, dtos.TextStats{}, err
 	}
 
-	// Update NLP progress
-	s.updateNLPProgress(int(studentID), analysis.TotalScore, analysis.GrammarScore, analysis.KeywordScore, analysis.StructureScore)
+	// Update NLP progress (using scores from the snapshot)
+	// s.updateNLPProgress(int(studentID), snapshot.TotalScore, snapshot.GrammarScore, snapshot.KeywordScore, snapshot.StructureScore)
 
-	return analysis, learningPreference, keywords, keySentences, textStats, nil
+	return snapshot, learningPreference, keywords, keySentences, textStats, nil
 }
 
 // GetNLPStats retrieves NLP statistics for a student
 func (s *NLPService) GetNLPStats(studentID uint) (*models.NLPProgress, error) {
 	return s.nlpStore.GetOverallNLPStats(int(studentID))
+}
+
+// GetLatestTextAnalysisSnapshot retrieves the most recent text analysis snapshot for a student
+func (s *NLPService) GetLatestTextAnalysisSnapshot(studentID int) (*models.TextAnalysisSnapshot, error) {
+	return s.textAnalysisSnapshotStore.GetLatestTextAnalysisSnapshot(studentID)
 }
 
 // calculateNLPConfidenceWeight calculates W_NLP based on word count
@@ -238,86 +230,6 @@ func (s *NLPService) determineLearningPreferenceType(fusedScores dtos.VARKScores
 	return dtos.LearningPreferenceDetail{Type: prefType, Combined: fusedScores, Label: label}
 }
 
-// Helper functions for NLP analysis
-
-func (s *NLPService) cleanText(text string) string {
-	// Convert to lowercase
-	text = strings.ToLower(text)
-	// Remove extra spaces
-	re := regexp.MustCompile(`\\s+`)
-	text = re.ReplaceAllString(text, " ")
-	// Remove leading/trailing spaces
-	text = strings.TrimSpace(text)
-	return text
-}
-
-func (s *NLPService) countWords(text string) int {
-	if text == "" {
-		return 0
-	}
-	words := strings.Fields(text)
-	return len(words)
-}
-
-func (s *NLPService) countSentences(text string) int {
-	if text == "" {
-		return 0
-	}
-	// Simple sentence splitting by common punctuation marks
-	sentences := regexp.MustCompile(`[.!?]+`).Split(text, -1)
-	count := 0
-	for _, s := range sentences {
-		if strings.TrimSpace(s) != "" {
-			count++
-		}
-	}
-	return count
-}
-
-// The following functions are now handled by the AI service and are removed from here:
-// func (s *NLPService) calculateGrammarScore(text string) float64 { ... }
-// func (s *NLPService) calculateKeywordScore(text, contextType string) float64 { ... }
-// func (s *NLPService) calculateReadabilityScore(wordCount, sentenceCount int, text string) float64 { ... }
-// func (s *NLPService) calculateSentimentScore(text string) float64 { ... }
-// func (s *NLPService) calculateStructureScore(sentenceCount int) float64 { ... }
-// func (s *NLPService) calculateComplexityScore(wordCount int) float64 { ... }
-
-func (s *NLPService) generateFeedback(totalScore, grammarScore, keywordScore, structureScore, readabilityScore, sentimentScore, complexityScore float64) []string {
-	feedback := []string{}
-
-	if totalScore >= 80 {
-		feedback = append(feedback, "Excellent work! Your text is well-written and effective.")
-	} else if totalScore >= 60 {
-		feedback = append(feedback, "Good effort! Your text is generally clear, but there's room for improvement.")
-	} else {
-		feedback = append(feedback, "Your text needs significant improvement in several areas.")
-	}
-
-	if grammarScore < 70 {
-		feedback = append(feedback, "Consider reviewing your grammar and punctuation for better clarity.")
-	}
-	if keywordScore < 70 {
-		feedback = append(feedback, "Try to incorporate more relevant keywords to strengthen your argument.")
-	}
-	if structureScore < 70 {
-		feedback = append(feedback, "Focus on organizing your thoughts with clearer paragraphs and logical flow.")
-	}
-	if readabilityScore < 70 {
-		feedback = append(feedback, "Aim for shorter sentences and simpler vocabulary to improve readability.")
-	}
-	if sentimentScore < 40 {
-		feedback = append(feedback, "Your text has a somewhat negative tone. Consider using more positive language.")
-	} else if sentimentScore > 60 {
-		feedback = append(feedback, "Your text has a positive tone, which is great!")
-	}
-	if complexityScore < 50 {
-		feedback = append(feedback, "Your text is quite simple. Try to elaborate more on your ideas.")
-	}
-
-	return feedback
-}
-
-// validateAndClampScore ensures score is within the 1-10 range
 func (s *NLPService) validateAndClampScore(score float64) float64 {
 	if score < utils.MinVARKScore {
 		return utils.MinVARKScore

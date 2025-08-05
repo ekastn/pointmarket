@@ -46,12 +46,11 @@ type NLPAnalysisResponseDTO struct {
 	Keywords           []string                 `json:"keywords"`
 	KeySentences       []string                 `json:"key_sentences"`
 	TextStats          TextStats                `json:"text_stats"`
-	GrammarScore       ScoreDetail              `json:"grammar_score"`
-	ReadabilityScore   ScoreDetail              `json:"readability_score"`
-	SentimentScore     ScoreDetail              `json:"sentiment_score"`
-	StructureScore     ScoreDetail              `json:"structure_score"`
-	ComplexityScore    ScoreDetail              `json:"complexity_score"`
-	KeywordScore       ScoreDetail              `json:"keyword_score"`
+	GrammarScore       ScoreDetail              `json:"grammar"`
+	ReadabilityScore   ScoreDetail              `json:"readability"`
+	SentimentScore     ScoreDetail              `json:"sentiment"`
+	StructureScore     ScoreDetail              `json:"structure"`
+	ComplexityScore    ScoreDetail              `json:"complexity"`
 	LearningPreference LearningPreferenceDetail `json:"learning_preference"`
 }
 

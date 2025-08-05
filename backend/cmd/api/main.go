@@ -29,6 +29,7 @@ func main() {
 	nlpStore := store.NewNLPStore(db)
 	materialStore := store.NewMaterialStore(db)
 	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
+	textAnalysisSnapshotStore := store.NewTextAnalysisSnapshotStore(db)
 
 	// Initialize gateways
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
@@ -40,7 +41,7 @@ func main() {
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
 	varkService := services.NewVARKService(varkStore)
-	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway)
+	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
@@ -149,6 +150,7 @@ func main() {
 		{
 			nlpRoutes.POST("/analyze", nlpHandler.AnalyzeText)
 			nlpRoutes.GET("/stats", nlpHandler.GetNLPStats)
+			nlpRoutes.GET("/latest-snapshot", nlpHandler.GetLatestTextAnalysisSnapshot)
 		}
 
 		// Dashboard routes

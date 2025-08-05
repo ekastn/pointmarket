@@ -39,9 +39,9 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 			ReadWrite:   learningPreference.Combined.ReadWrite,
 			Kinesthetic: learningPreference.Combined.Kinesthetic,
 		},
-		Keywords:           keywords,
-		KeySentences:       keySentences,
-		TextStats:          textStats,
+		Keywords:     keywords,
+		KeySentences: keySentences,
+		TextStats:    textStats,
 		GrammarScore: dtos.ScoreDetail{
 			Score: analysis.GrammarScore,
 			Label: getScoreLabel(analysis.GrammarScore),
@@ -61,10 +61,6 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 		ComplexityScore: dtos.ScoreDetail{
 			Score: analysis.ComplexityScore,
 			Label: getScoreLabel(analysis.ComplexityScore),
-		},
-		KeywordScore: dtos.ScoreDetail{
-			Score: analysis.KeywordScore,
-			Label: getScoreLabel(analysis.KeywordScore),
 		},
 		LearningPreference: learningPreference,
 	}
@@ -96,4 +92,18 @@ func (h *NLPHandler) GetNLPStats(c *gin.Context) {
 	var statsDTO dtos.NLPStatsResponse
 	statsDTO.FromNLPStats(*stats)
 	response.Success(c, http.StatusOK, "NLP statistics retrieved successfully", statsDTO)
+}
+
+func (h *NLPHandler) GetLatestTextAnalysisSnapshot(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	snapshot, err := h.nlpService.GetLatestTextAnalysisSnapshot(userID.(int))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if snapshot == nil {
+		response.Success(c, http.StatusNotFound, "No text analysis snapshot found for this student", nil)
+		return
+	}
+	response.Success(c, http.StatusOK, "Latest text analysis snapshot retrieved successfully", snapshot)
 }

@@ -303,3 +303,23 @@ type NLPProgress struct {
 	CreatedAt            time.Time `db:"created_at"`
 	UpdatedAt            time.Time `db:"updated_at"`
 }
+
+// TextAnalysisSnapshot represents a comprehensive snapshot of an NLP analysis, including fused learning preferences.
+type TextAnalysisSnapshot struct {
+	ID                             int       `db:"id"`
+	StudentID                      int       `db:"student_id"`
+	OriginalText                   string    `db:"original_text"`
+	WordCount                      int       `db:"word_count"`
+	SentenceCount                  int       `db:"sentence_count"`
+	TotalScore                     float64   `db:"total_score"`
+	GrammarScore                   float64   `db:"grammar_score"`
+	StructureScore                 float64   `db:"structure_score"`
+	ReadabilityScore               float64   `db:"readability_score"`
+	SentimentScore                 float64   `db:"sentiment_score"`
+	ComplexityScore                float64   `db:"complexity_score"`
+	LearningPreferenceType         string    `db:"learning_preference_type"`
+	LearningPreferenceLabel        string    `db:"learning_preference_label"`
+	LearningPreferenceCombinedVARK *string   `db:"learning_preference_combined_vark"`
+	CreatedAt                      time.Time `db:"created_at"`
+	UpdatedAt                      time.Time `db:"updated_at"`
+}

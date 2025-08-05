@@ -69,9 +69,7 @@ class NlpService:
         # Combine results
         result = {
             **vark_scores,
-            'keywords': text_analysis.get('keywords', []),
-            'key_sentences': text_analysis.get('key_sentences', []),
-            'text_stats': text_analysis.get('text_stats', {})
+            **text_analysis
         }
         
         return result

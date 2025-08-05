@@ -116,7 +116,7 @@ class TextAnalysisService:
             return []
             
         # Clean and tokenize
-        words = re.findall(r'\\b\\w+\\b', text.lower())
+        words = re.findall(r'\b\w+\b', text.lower())
         
         # Filter out stop words and short words
         filtered_words = [
@@ -250,12 +250,6 @@ class TextAnalysisService:
             else:
                 last_char_vowel = False
         
-        # Adjustments for common Indonesian patterns
-        # Diphthongs (ai, au, oi) count as one syllable
-        syllable_count -= word.count("ai")
-        syllable_count -= word.count("au")
-        syllable_count -= word.count("oi")
-
         # Consonant clusters (e.g., 'ng', 'ny', 'kh', 'sy') often act as single sounds
         # This is a simplification; a full phonological analysis is complex.
         # For simplicity, we'll just ensure a minimum of 1 syllable for any word with vowels.
@@ -303,9 +297,10 @@ class TextAnalysisService:
 
     def calculate_readability_score(self, text: str) -> float:
         """
-        Calculates a readability score using a simplified Flesch-Kincaid formula.
+        Calculates a simplified readability score tailored for Indonesian text.
+        This heuristic is based on average sentence length and average word length.
         """
-        words = re.findall(r'\\b\\w+\\b', text)
+        words = re.findall(r'\b\w+\b', text)
         word_count = len(words)
         sentences = self._split_sentences(text)
         sentence_count = len(sentences)
@@ -313,22 +308,25 @@ class TextAnalysisService:
         if word_count == 0 or sentence_count == 0:
             return 0.0
 
-        avg_words_per_sentence = float(word_count) / float(sentence_count)
+        avg_sentence_length = float(word_count) / float(sentence_count)
         
-        # Calculate average syllables per word using the new helper function
-        total_syllables = sum(self._count_syllables_id(word) for word in words)
-        if word_count > 0:
-            avg_syllables_per_word = float(total_syllables) / float(word_count)
-        else:
-            avg_syllables_per_word = 0.0
+        total_char_count = sum(len(w) for w in words)
+        avg_word_length = float(total_char_count) / float(word_count)
+        # Start with a base score of 100
+        score = 100.0
 
-        # Simplified Flesch-Kincaid formula (coefficients are for English, adapted for demonstration)
-        # Score = 206.835 - 1.015 * (words/sentences) - 84.6 * (syllables/words)
-        readability = 206.835 - (1.015 * avg_words_per_sentence) - (84.6 * avg_syllables_per_word)
+        # Penalty for long sentences (common in formal Indonesian, but can reduce readability)
+        if avg_sentence_length > 25: # More than 25 words is quite long
+            score -= (avg_sentence_length - 25) * 1.5 # Penalty factor
+        elif avg_sentence_length < 8: # Very short sentences can feel disjointed
+            score -= (8 - avg_sentence_length) * 1.0 # Smaller penalty
 
-        # Normalize to a 0-100 scale
-        score = max(0, min(100, readability))
-        return score
+        # Penalty for long words (less common in Indonesian but indicates complexity)
+        if avg_word_length > 8: # Average word length over 8 is high for Indonesian
+            score -= (avg_word_length - 8) * 5.0 # Stronger penalty for long words
+
+        # Ensure the score is within the 0-100 range
+        return max(0, min(100, score))
 
     def calculate_sentiment_score(self, text: str) -> float:
         """
@@ -353,7 +351,7 @@ class TextAnalysisService:
 
         if not self.stanza_pipeline:
             # Fallback to simple regex if stanza is not available
-            words = re.findall(r'\\b\\w+\\b', text.lower())
+            words = re.findall(r'\b\w+\b', text.lower())
             for word in words:
                 if word in positive_words:
                     pos_count += 1
@@ -446,7 +444,7 @@ class TextAnalysisService:
         if not text.strip():
             return 0.0
 
-        words = re.findall(r'\\b\\w+\\b', text.lower())
+        words = re.findall(r'\b\w+\b', text.lower())
         word_count = len(words)
 
         if word_count == 0:

@@ -401,42 +401,36 @@ $messages = $messages ?? [];
 
         // Render analysis results
         function renderResults(data) {
+            const qualityMetrics = [
+                { key: 'sentiment', label: 'Sentiment Score' },
+                { key: 'complexity', label: 'Complexity Score' },
+                { key: 'structure', label: 'Structure Score' }, // fixed from 'coherence'
+                { key: 'grammar', label: 'Grammar Score' },
+                { key: 'readability', label: 'Readability Score' }
+            ];
+
             let html = `
                 <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <h3>${data.sentiment.score.toFixed(1)}</h3>
-                                <p class="text-muted mb-0">Sentiment Score</p>
-                                <span class="score-badge ${getScoreClass(data.sentiment.score)}">
-                                    ${data.sentiment.label}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <h3>${data.complexity.score.toFixed(1)}</h3>
-                                <p class="text-muted mb-0">Complexity Score</p>
-                                <span class="score-badge ${getScoreClass(data.complexity.score)}">
-                                    ${data.complexity.label}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <h3>${data.coherence.score.toFixed(1)}</h3>
-                                <p class="text-muted mb-0">Coherence Score</p>
-                                <span class="score-badge ${getScoreClass(data.coherence.score)}">
-                                    ${data.coherence.label}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                   ${qualityMetrics.map(metric => {
+                       const value = data[metric.key] || {};
+                       const score = value.score?.toFixed(1) ?? '–';
+                       const label = value.label ?? 'Unknown';
+                       const scoreClass = getScoreClass(value.score ?? 0);
+                       return `
+                           <div class="col-md-4 mb-3">
+                               <div class="card h-100 border-0 shadow-sm">
+                                   <div class="card-body text-center">
+                                       <h3>${score}</h3>
+                                       <p class="text-muted mb-0">${metric.label}</p>
+                                       <span class="score-badge ${scoreClass}">
+                                           ${label}
+                                       </span>
+                                   </div>
+                               </div>
+                           </div>
+                       `;
+                   }).join('')}
+                 </div>
                 
                 <h6>Kata Kunci:</h6>
                 <div class="mb-4">
@@ -459,9 +453,9 @@ $messages = $messages ?? [];
             `;
             
             // Add key sentences
-            if (data.keySentences && data.keySentences.length > 0) {
+            if (data.key_sentences && data.key_sentences.length > 0) {
                 html += `<ul class="list-group">`;
-                data.keySentences.forEach(sentence => {
+                data.key_sentences.forEach(sentence => {
                     html += `<li class="list-group-item">${sentence}</li>`;
                 });
                 html += `</ul>`;
@@ -477,7 +471,7 @@ $messages = $messages ?? [];
                     <div class="col-md-3 col-6 mb-3">
                         <div class="card border-0 bg-light">
                             <div class="card-body py-2 text-center">
-                                <h4>${data.stats.wordCount}</h4>
+                                <h4>${data.text_stats.wordCount}</h4>
                                 <small class="text-muted">Kata</small>
                             </div>
                         </div>
@@ -485,7 +479,7 @@ $messages = $messages ?? [];
                     <div class="col-md-3 col-6 mb-3">
                         <div class="card border-0 bg-light">
                             <div class="card-body py-2 text-center">
-                                <h4>${data.stats.sentenceCount}</h4>
+                                <h4>${data.text_stats.sentenceCount}</h4>
                                 <small class="text-muted">Kalimat</small>
                             </div>
                         </div>
@@ -493,7 +487,7 @@ $messages = $messages ?? [];
                     <div class="col-md-3 col-6 mb-3">
                         <div class="card border-0 bg-light">
                             <div class="card-body py-2 text-center">
-                                <h4>${data.stats.avgWordLength.toFixed(1)}</h4>
+                                <h4>${data.text_stats.avgWordLength.toFixed(1)}</h4>
                                 <small class="text-muted">Rata-rata Panjang Kata</small>
                             </div>
                         </div>
@@ -501,7 +495,7 @@ $messages = $messages ?? [];
                     <div class="col-md-3 col-6 mb-3">
                         <div class="card border-0 bg-light">
                             <div class="card-body py-2 text-center">
-                                <h4>${data.stats.readingTime}</h4>
+                                <h4>${data.text_stats.readingTime}</h4>
                                 <small class="text-muted">Waktu Baca (detik)</small>
                             </div>
                         </div>

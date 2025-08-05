@@ -38,9 +38,14 @@ class MotivationalEngineService:
                 'sentenceCount': 1,
                 'avgWordLength': 0.0,
                 'readingTime': 1
-            })
+            }),
+            "grammar_score": analysis_result.get('grammar_score', 0.0),
+            "complexity_score": analysis_result.get('complexity_score', 0.0),
+            "readability_score": analysis_result.get('readability_score', 0.0),
+            "sentiment_score": analysis_result.get('sentiment_score', 0.0),
+            "structure_score": analysis_result.get('structure_score', 0.0),
         }
-        
+
         return response
 
 

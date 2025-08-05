@@ -9,7 +9,6 @@ import (
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/utils"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -36,13 +35,9 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 	originalText := req.Text
 	cleanText := s.cleanText(originalText)
 
-	wordCount := s.countWords(cleanText)
-	sentenceCount := s.countSentences(cleanText)
-
 	// Get enhanced data from the external AI service
 	aiServiceReq := dtos.NLPAnalysisRequest{
-		Text:        originalText,
-		ContextType: req.ContextType,
+		Text: originalText,
 	}
 	aiServiceResp, err := s.aiServiceGateway.GetNLPScores(aiServiceReq)
 	if err != nil {
@@ -60,16 +55,15 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 		ReadingTime:   aiServiceResp.TextStats.ReadingTime,
 	}
 
-	grammarScore := s.calculateGrammarScore(originalText)
-	keywordScore := s.calculateKeywordScore(cleanText, req.ContextType)
-	readabilityScore := s.calculateReadabilityScore(wordCount, sentenceCount, cleanText)
-	sentimentScore := s.calculateSentimentScore(cleanText)
+	grammarScore := aiServiceResp.GrammarScore
+	readabilityScore := aiServiceResp.ReadabilityScore
+	sentimentScore := aiServiceResp.SentimentScore
+	structureScore := aiServiceResp.StructureScore
+	complexityScore := aiServiceResp.ComplexityScore
+	// Keyword score is now directly from AI service, no longer needs contextType
+	keywordScore := aiServiceResp.KeywordScore
 
-	// For simplicity, structure and complexity scores are basic for now
-	structureScore := s.calculateStructureScore(sentenceCount)
-	complexityScore := s.calculateComplexityScore(wordCount)
-
-	// Calculate total score (weighted average)
+	// Calculate total score (weighted average) using scores from AI service
 	totalScore := (grammarScore*0.2 + keywordScore*0.2 + structureScore*0.15 + readabilityScore*0.15 + sentimentScore*0.15 + complexityScore*0.15)
 
 	feedback := s.generateFeedback(totalScore, grammarScore, keywordScore, structureScore, readabilityScore, sentimentScore, complexityScore)
@@ -80,7 +74,7 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 	var personalizedFeedback *string = nil
 
 	// Learning Preference Analysis
-	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(wordCount)
+	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(textStats.WordCount)
 	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight, int(studentID))
 	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
 
@@ -90,8 +84,8 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 		QuizID:               req.QuizID,
 		OriginalText:         originalText,
 		CleanText:            &cleanText,
-		WordCount:            wordCount,
-		SentenceCount:        sentenceCount,
+		WordCount:            textStats.WordCount,
+		SentenceCount:        textStats.SentenceCount,
 		TotalScore:           s.roundScore(totalScore),
 		GrammarScore:         s.roundScore(grammarScore),
 		KeywordScore:         s.roundScore(keywordScore),
@@ -280,135 +274,13 @@ func (s *NLPService) countSentences(text string) int {
 	return count
 }
 
-func (s *NLPService) calculateGrammarScore(text string) float64 {
-	// This is a very simplified grammar check for demonstration.
-	// A real NLP system would use advanced parsing and rule sets.
-	score := 100.0
-	errors := 0
-
-	// Check for common issues
-	if strings.Contains(text, "  ") { // Double spaces
-		errors++
-	}
-	if strings.Contains(text, ",,") || strings.Contains(text, "..") { // Double punctuation
-		errors++
-	}
-	if strings.Contains(text, " .") || strings.Contains(text, " ,") { // Space before punctuation
-		errors++
-	}
-	// Add more simple rules as needed
-
-	if errors > 0 {
-		score = math.Max(0, 100.0-(float64(errors)*10)) // Deduct points for errors
-	}
-	return score
-}
-
-func (s *NLPService) calculateKeywordScore(text, contextType string) float64 {
-	keywords, err := s.nlpStore.GetNLPKeywords(contextType)
-	if err != nil {
-		// Log error, but don't fail analysis
-		return 50.0 // Default score if keywords cannot be fetched
-	}
-
-	if len(keywords) == 0 {
-		return 100.0 // No specific keywords defined, so perfect score
-	}
-
-	foundKeywords := 0
-	totalWeight := 0.0
-	matchedWeight := 0.0
-
-	for _, kw := range keywords {
-		totalWeight += kw.Weight
-		if strings.Contains(text, kw.Keyword) {
-			foundKeywords++
-			matchedWeight += kw.Weight
-		}
-	}
-
-	if totalWeight == 0 {
-		return 100.0 // Avoid division by zero if no weights are defined
-	}
-
-	score := (matchedWeight / totalWeight) * 100.0
-	return math.Min(100.0, score) // Cap at 100
-}
-
-func (s *NLPService) calculateReadabilityScore(wordCount, sentenceCount int, text string) float64 {
-	if wordCount == 0 || sentenceCount == 0 {
-		return 0.0
-	}
-
-	avgWordsPerSentence := float64(wordCount) / float64(sentenceCount)
-	avgSyllablesPerWord := 1.5 // Simplified: average syllables per word (can be improved)
-
-	// Flesch-Kincaid like formula (simplified)
-	// Score = 206.835 - 1.015 * (words/sentences) - 84.6 * (syllables/words)
-	// Higher score means easier to read. We'll normalize to 0-100.
-	readability := 206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord)
-
-	// Normalize to a 0-100 scale. This is a rough normalization.
-	// Assuming typical readability scores range from 0 to 100,
-	// we can cap and floor it.
-	score := math.Max(0, math.Min(100, readability))
-	return score
-}
-
-func (s *NLPService) calculateSentimentScore(text string) float64 {
-	// Very basic sentiment analysis: count positive/negative words
-	positiveWords := map[string]bool{
-		"baik": true, "bagus": true, "positif": true, "hebat": true, "efektif": true,
-		"penting": true, "menarik": true, "membantu": true, "sukses": true, "maju": true,
-	}
-	negativeWords := map[string]bool{
-		"buruk": true, "jelek": true, "negatif": true, "sulit": true, "masalah": true,
-		"gagal": true, "kurang": true, "tidak": true, "kesalahan": true, "rumit": true,
-	}
-
-	words := strings.Fields(text)
-	posCount := 0
-	negCount := 0
-
-	for _, word := range words {
-		if positiveWords[word] {
-			posCount++
-		} else if negativeWords[word] {
-			negCount++
-		}
-	}
-
-	totalSentimentWords := posCount + negCount
-	if totalSentimentWords == 0 {
-		return 50.0 // Neutral if no sentiment words found
-	}
-
-	sentimentRatio := float64(posCount) / float64(totalSentimentWords)
-	score := sentimentRatio * 100.0
-	return score
-}
-
-func (s *NLPService) calculateStructureScore(sentenceCount int) float64 {
-	// Simplified structure score: rewards more sentences (implies more detailed thought)
-	// A real structure score would analyze paragraphing, topic sentences, coherence, etc.
-	if sentenceCount < 3 {
-		return 30.0 // Too few sentences
-	} else if sentenceCount < 7 {
-		return 60.0 // Moderate number of sentences
-	}
-	return 90.0 // Good number of sentences
-}
-
-func (s *NLPService) calculateComplexityScore(wordCount int) float64 {
-	// Simplified complexity score: rewards longer texts (implies more complex ideas)
-	// A real complexity score would analyze vocabulary richness, sentence complexity, etc.
-	if wordCount < 50 {
-		return 40.0 // Very simple
-	} else if wordCount < 150 {
-		return 70.0 // Moderate complexity
-	}
-	return 95.0 // High complexity
-}
+// The following functions are now handled by the AI service and are removed from here:
+// func (s *NLPService) calculateGrammarScore(text string) float64 { ... }
+// func (s *NLPService) calculateKeywordScore(text, contextType string) float64 { ... }
+// func (s *NLPService) calculateReadabilityScore(wordCount, sentenceCount int, text string) float64 { ... }
+// func (s *NLPService) calculateSentimentScore(text string) float64 { ... }
+// func (s *NLPService) calculateStructureScore(sentenceCount int) float64 { ... }
+// func (s *NLPService) calculateComplexityScore(wordCount int) float64 { ... }
 
 func (s *NLPService) generateFeedback(totalScore, grammarScore, keywordScore, structureScore, readabilityScore, sentimentScore, complexityScore float64) []string {
 	feedback := []string{}

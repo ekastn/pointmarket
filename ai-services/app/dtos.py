@@ -18,3 +18,8 @@ class AnalysisResponse(TypedDict):
     keywords: List[str]
     key_sentences: List[str]
     text_stats: TextStats
+    grammar_score: float
+    readability_score: float
+    sentiment_score: float
+    structure_score: float
+    complexity_score: float

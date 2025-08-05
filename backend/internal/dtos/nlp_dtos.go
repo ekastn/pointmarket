@@ -8,7 +8,6 @@ import "pointmarket/backend/internal/models"
 
 type AnalyzeNLPRequest struct {
 	Text         string `json:"text" binding:"required"`
-	ContextType  string `json:"context_type" binding:"required"`
 	AssignmentID *int   `json:"assignment_id"`
 	QuizID       *int   `json:"quiz_id"`
 }
@@ -43,12 +42,16 @@ type LearningPreferenceDetail struct {
 }
 
 type NLPAnalysisResponseDTO struct {
-	Sentiment          ScoreDetail              `json:"sentiment"`
-	Complexity         ScoreDetail              `json:"complexity"`
-	Coherence          ScoreDetail              `json:"coherence"`
+	Scores             VARKScores               `json:"scores"`
 	Keywords           []string                 `json:"keywords"`
-	KeySentences       []string                 `json:"keySentences"`
-	Stats              TextStats                `json:"stats"`
+	KeySentences       []string                 `json:"key_sentences"`
+	TextStats          TextStats                `json:"text_stats"`
+	GrammarScore       ScoreDetail              `json:"grammar_score"`
+	ReadabilityScore   ScoreDetail              `json:"readability_score"`
+	SentimentScore     ScoreDetail              `json:"sentiment_score"`
+	StructureScore     ScoreDetail              `json:"structure_score"`
+	ComplexityScore    ScoreDetail              `json:"complexity_score"`
+	KeywordScore       ScoreDetail              `json:"keyword_score"`
 	LearningPreference LearningPreferenceDetail `json:"learning_preference"`
 }
 

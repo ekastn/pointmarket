@@ -33,21 +33,39 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 
 	// Map the analysis result to the response DTO for frontend consumption
 	responseDTO := dtos.NLPAnalysisResponseDTO{
-		Sentiment: dtos.ScoreDetail{
-			Score: analysis.SentimentScore,
-			Label: getScoreLabel(analysis.SentimentScore),
-		},
-		Complexity: dtos.ScoreDetail{
-			Score: analysis.ComplexityScore,
-			Label: getScoreLabel(analysis.ComplexityScore),
-		},
-		Coherence: dtos.ScoreDetail{
-			Score: analysis.StructureScore, // Using structure score as coherence for now
-			Label: getScoreLabel(analysis.StructureScore),
+		Scores: dtos.VARKScores{
+			Visual:      learningPreference.Combined.Visual,
+			Aural:       learningPreference.Combined.Aural,
+			ReadWrite:   learningPreference.Combined.ReadWrite,
+			Kinesthetic: learningPreference.Combined.Kinesthetic,
 		},
 		Keywords:           keywords,
 		KeySentences:       keySentences,
-		Stats:              textStats,
+		TextStats:          textStats,
+		GrammarScore: dtos.ScoreDetail{
+			Score: analysis.GrammarScore,
+			Label: getScoreLabel(analysis.GrammarScore),
+		},
+		ReadabilityScore: dtos.ScoreDetail{
+			Score: analysis.ReadabilityScore,
+			Label: getScoreLabel(analysis.ReadabilityScore),
+		},
+		SentimentScore: dtos.ScoreDetail{
+			Score: analysis.SentimentScore,
+			Label: getScoreLabel(analysis.SentimentScore),
+		},
+		StructureScore: dtos.ScoreDetail{
+			Score: analysis.StructureScore,
+			Label: getScoreLabel(analysis.StructureScore),
+		},
+		ComplexityScore: dtos.ScoreDetail{
+			Score: analysis.ComplexityScore,
+			Label: getScoreLabel(analysis.ComplexityScore),
+		},
+		KeywordScore: dtos.ScoreDetail{
+			Score: analysis.KeywordScore,
+			Label: getScoreLabel(analysis.KeywordScore),
+		},
 		LearningPreference: learningPreference,
 	}
 

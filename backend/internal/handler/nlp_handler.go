@@ -25,7 +25,7 @@ func (h *NLPHandler) AnalyzeText(c *gin.Context) {
 	}
 
 	userID, _ := c.Get("userID")
-	analysis, learningPreference, keywords, keySentences, textStats, err := h.nlpService.AnalyzeText(analyzeDTO, userID.(uint))
+	analysis, learningPreference, keywords, keySentences, textStats, err := h.nlpService.AnalyzeText(analyzeDTO, userID.(uint), nil)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return

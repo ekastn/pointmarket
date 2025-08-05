@@ -11,10 +11,12 @@ import (
 
 type VARKHandler struct {
 	varkService services.VARKService
+	nlpService  services.NLPService // Add nlpService field
 }
 
-func NewVARKHandler(varkService services.VARKService) *VARKHandler {
-	return &VARKHandler{varkService: varkService}
+// NewVARKHandler creates a new VARKHandler
+func NewVARKHandler(varkService services.VARKService, nlpService services.NLPService) *VARKHandler {
+	return &VARKHandler{varkService: varkService, nlpService: nlpService} // Initialize nlpService
 }
 
 func (h *VARKHandler) GetVARKQuestions(c *gin.Context) {
@@ -36,14 +38,44 @@ func (h *VARKHandler) SubmitVARK(c *gin.Context) {
 	}
 
 	userID, _ := c.Get("userID")
-	result, err := h.varkService.SubmitVARK(submitDTO, userID.(uint))
+	result, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, err := h.varkService.SubmitVARK(submitDTO, userID.(uint))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	var resultDTO dtos.VARKResultResponse
-	resultDTO.FromVARKResult(result)
-	response.Success(c, http.StatusCreated, "VARK assessment submitted successfully", resultDTO)
+
+	var varkResultDTO dtos.VARKResultResponse
+	varkResultDTO.FromVARKResult(result)
+
+	combinedResponse := dtos.VARKNLPCombinedResponse{
+		VARKResultResponse: varkResultDTO,
+		LearningPreference: nlpLearningPreference,
+		Keywords:           nlpKeywords,
+		KeySentences:       nlpKeySentences,
+		TextStats:          nlpTextStats,
+		GrammarScore: dtos.ScoreDetail{
+			Score: grammarScore,
+			Label: getScoreLabel(grammarScore),
+		},
+		ReadabilityScore: dtos.ScoreDetail{
+			Score: readabilityScore,
+			Label: getScoreLabel(readabilityScore),
+		},
+		SentimentScore: dtos.ScoreDetail{
+			Score: sentimentScore,
+			Label: getScoreLabel(sentimentScore),
+		},
+		StructureScore: dtos.ScoreDetail{
+			Score: structureScore,
+			Label: getScoreLabel(structureScore),
+		},
+		ComplexityScore: dtos.ScoreDetail{
+			Score: complexityScore,
+			Label: getScoreLabel(complexityScore),
+		},
+	}
+
+	response.Success(c, http.StatusCreated, "VARK assessment submitted successfully", combinedResponse)
 }
 
 func (h *VARKHandler) GetLatestVARKResult(c *gin.Context) {

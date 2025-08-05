@@ -12,12 +12,13 @@ import (
 
 // VARKService provides business logic for VARK assessments
 type VARKService struct {
-	varkStore *store.VARKStore
+	varkStore  *store.VARKStore
+	nlpService *NLPService // Add nlpService field
 }
 
 // NewVARKService creates a new VARKService
-func NewVARKService(varkStore *store.VARKStore) *VARKService {
-	return &VARKService{varkStore: varkStore}
+func NewVARKService(varkStore *store.VARKStore, nlpService *NLPService) *VARKService {
+	return &VARKService{varkStore: varkStore, nlpService: nlpService} // Assign nlpService
 }
 
 // GetVARKQuestions retrieves VARK questions and their options
@@ -57,17 +58,24 @@ func (s *VARKService) GetVARKQuestions() (models.Questionnaire, []dtos.QuestionR
 }
 
 // SubmitVARK calculates and saves a student's VARK assessment result
-func (s *VARKService) SubmitVARK(req dtos.SubmitVARKRequest, studentID uint) (models.VARKResult, error) {
+func (s *VARKService) SubmitVARK(req dtos.SubmitVARKRequest, studentID uint) (models.VARKResult, dtos.LearningPreferenceDetail, []string, []string, dtos.TextStats, float64, float64, float64, float64, float64, error) {
+	// Initialize return values for NLP data
+	var nlpLearningPreference dtos.LearningPreferenceDetail
+	nlpKeywords := []string{}
+	nlpKeySentences := []string{}
+	nlpTextStats := dtos.TextStats{}
+	var grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore float64
+
 	// Get the VARK questionnaire to get its ID
 	varkQuestionnaire, err := s.varkStore.GetVARKQuestionnaire()
 	if err != nil || varkQuestionnaire == nil {
-		return models.VARKResult{}, fmt.Errorf("VARK questionnaire not found: %w", err)
+		return models.VARKResult{}, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, fmt.Errorf("VARK questionnaire not found: %w", err)
 	}
 
 	// Get all VARK answer options for this questionnaire
 	options, err := s.varkStore.GetVARKAnswerOptionsByQuestionnaireID(varkQuestionnaire.ID)
 	if err != nil {
-		return models.VARKResult{}, fmt.Errorf("failed to get VARK answer options: %w", err)
+		return models.VARKResult{}, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, fmt.Errorf("failed to get VARK answer options: %w", err)
 	}
 
 	// Create a map for quick lookup: questionID -> optionLetter -> learningStyle
@@ -126,7 +134,7 @@ func (s *VARKService) SubmitVARK(req dtos.SubmitVARKRequest, studentID uint) (mo
 
 	answersJSON, err := json.Marshal(req.Answers)
 	if err != nil {
-		return models.VARKResult{}, err
+		return models.VARKResult{}, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, err
 	}
 
 	result := models.VARKResult{
@@ -141,8 +149,48 @@ func (s *VARKService) SubmitVARK(req dtos.SubmitVARKRequest, studentID uint) (mo
 		CompletedAt:        time.Now(),
 	}
 
+	// If NLP text is provided, perform NLP analysis and fuse scores
+	if req.NLPText != nil && *req.NLPText != "" {
+		// Convert questionnaire scores to dtos.VARKScores for NLP service
+		questionnaireVARKScores := dtos.VARKScores{
+			Visual:      float64(scores["Visual"]),
+			Aural:       float64(scores["Auditory"]),
+			ReadWrite:   float64(scores["Reading"]),
+			Kinesthetic: float64(scores["Kinesthetic"]),
+		}
+
+		nlpReq := dtos.AnalyzeNLPRequest{
+			Text: *req.NLPText,
+		}
+
+		// Call NLP service with questionnaire scores for fusion
+		nlpSnapshot, fusedLP, nlpKw, nlpKs, nlpTs, nlpErr := s.nlpService.AnalyzeText(nlpReq, studentID, &questionnaireVARKScores)
+		if nlpErr != nil {
+			// Log the error but don't block VARK submission
+			fmt.Printf("Error during NLP analysis for VARK submission: %v\n", nlpErr)
+		} else {
+			// Update VARK result with fused learning preference
+			result.DominantStyle = fusedLP.Label
+			result.LearningPreference = &fusedLP.Label
+
+			// Assign NLP analysis data to return values
+			nlpLearningPreference = fusedLP
+			nlpKeywords = nlpKw
+			nlpKeySentences = nlpKs
+			nlpTextStats = nlpTs
+			grammarScore = nlpSnapshot.GrammarScore
+			readabilityScore = nlpSnapshot.ReadabilityScore
+			sentimentScore = nlpSnapshot.SentimentScore
+			structureScore = nlpSnapshot.StructureScore
+			complexityScore = nlpSnapshot.ComplexityScore
+		}
+	}
+
 	err = s.varkStore.CreateVARKResult(&result)
-	return result, err
+	if err != nil {
+		return models.VARKResult{}, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, err
+	}
+	return result, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, nil
 }
 
 // GetLatestVARKResult retrieves the latest VARK result for a student

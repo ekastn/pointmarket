@@ -7,8 +7,6 @@ $stats = $stats ?? [];
 $pendingEvaluations = $pendingEvaluations ?? [];
 $varkResult = $varkResult ?? null;
 $messages = $messages ?? [];
-
-require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -289,6 +287,8 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
             </div>
             <div class="modal-body" id="practiceQuestionnaireModalBody">
                 <!-- Content will be loaded dynamically -->
+                <div id="vark-questions-step"></div>
+                <div id="nlp-input-step" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -297,6 +297,7 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let currentQuestionnaireId = null;
+    let varkAnswers = {}; // To store VARK answers temporarily
 
     function viewQuestionnaireInfo(questionnaireId) {
         currentQuestionnaireId = questionnaireId;
@@ -688,8 +689,9 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
         `;
         
         let html = `
-            <form id="varkPracticeQuestionnaireForm">
-                <div style="max-height: 400px; overflow-y: auto;">
+            <div id="vark-questions-step">
+                <form id="varkPracticeQuestionnaireForm">
+                    <div style="max-height: 400px; overflow-y: auto;">
         `;
 
         questions.forEach((question, index) => {
@@ -714,36 +716,232 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
         });
         
         html += `
+                    </div>
+                </form>
+                <div class="mt-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="handleVARKStep1Submission()">
+                        <i class="fas fa-arrow-right me-1"></i> Next
+                    </button>
                 </div>
-            </form>
-            <div class="mt-4 d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Batal
-                </button>
-                <button type="button" class="btn btn-success" onclick="submitVARKPracticeQuestionnaire()">
-                    <i class="fas fa-check me-1"></i> Kirim Jawaban
-                </button>
+            </div>
+            <div id="nlp-input-step" style="display: none;">
+                <!-- NLP input form will be loaded here -->
             </div>
         `;
         
         document.getElementById('practiceQuestionnaireModalBody').innerHTML = html;
     }
 
-    function submitVARKPracticeQuestionnaire() {
+    function handleVARKStep1Submission() {
         const form = document.getElementById('varkPracticeQuestionnaireForm');
         const formData = new FormData(form);
         
-        const answers = {};
+        varkAnswers = {}; // Clear previous answers
         let questionCount = 0;
 
         for (let pair of formData.entries()) {
             const questionId = pair[0].match(/answers\[(\d+)\]/)[1];
-            answers[questionId] = pair[1];
+            varkAnswers[questionId] = pair[1];
         }
 
         questionCount = form.querySelectorAll('.question-card').length;
 
-        if (Object.keys(answers).length < questionCount) {
+        if (Object.keys(varkAnswers).length < questionCount) {
+            alert('Silakan jawab semua pertanyaan sebelum melanjutkan.');
+            return;
+        }
+        
+        // Transition to NLP input step
+        showNLPTextInputStep();
+    }
+
+    function showNLPTextInputStep() {
+        document.getElementById('vark-questions-step').style.display = 'none';
+        document.getElementById('nlp-input-step').style.display = 'block';
+        document.getElementById('practiceQuestionnaireModalTitle').innerHTML = `
+            <i class="fas fa-robot me-2"></i>NLP Analysis - Step 2
+        `;
+
+        let html = `
+            <div class="alert alert-info">
+                <h6><i class="fas fa-lightbulb me-2"></i>Enhance Your Profile</h6>
+                <p class="mb-0">Please write a short essay (min. 100 words) about your learning process, challenges, or how you approach studying. This will help us further personalize your learning recommendations.</p>
+            </div>
+            <form id="nlpAnalysisForm">
+                <div class="mb-3">
+                    <label for="nlpTextInput" class="form-label">Your Text:</label>
+                    <textarea class="form-control" id="nlpTextInput" rows="10" required minlength="100"></textarea>
+                </div>
+            </form>
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" onclick="goBackToVARKStep()">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </button>
+                <button type="button" class="btn btn-success" onclick="submitFusedVARKAndNLP()">
+                    <i class="fas fa-check me-1"></i> Submit Analysis
+                </button>
+            </div>
+        `;
+        document.getElementById('nlp-input-step').innerHTML = html;
+    }
+
+    function goBackToVARKStep() {
+        document.getElementById('nlp-input-step').style.display = 'none';
+        document.getElementById('vark-questions-step').style.display = 'block';
+        document.getElementById('practiceQuestionnaireModalTitle').innerHTML = `
+            <i class="fas fa-clipboard-list me-2"></i>VARK Assessment - Practice
+        `;
+    }
+
+    function submitFusedVARKAndNLP() {
+        const nlpTextInput = document.getElementById('nlpTextInput');
+        const nlpText = nlpTextInput.value;
+
+        if (nlpText.length < 100) {
+            alert('Please write at least 100 words for the NLP analysis.');
+            return;
+        }
+
+        // Show loading
+        document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                <p>Submitting your VARK and NLP analysis...</p>
+            </div>
+        `;
+
+        // Combine VARK answers and NLP text
+        const payload = {
+            questionnaire_id: currentQuestionnaireId, // This is the VARK questionnaire ID
+            answers: varkAnswers,
+            nlp_text: nlpText
+        };
+        
+        // Submit data to backend API
+        fetch(API_BASE_URL + '/api/v1/vark/submit', { // Submit to the VARK endpoint
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + JWT_TOKEN
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Display combined VARK and NLP results
+                let resultHtml = `
+                    <div class="alert alert-success text-center">
+                        <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                        <h5>Assessment Completed Successfully!</h5>
+                        <p>Your dominant style (fused): <strong>${data.data.dominant_style}</strong></p>
+                        <p class="mb-0">${data.message}</p>
+                    </div>
+                `;
+
+                // Display VARK scores
+                resultHtml += `
+                    <div class="card mb-3">
+                        <div class="card-header">VARK Scores</div>
+                        <div class="card-body">
+                            <p>Visual: ${data.data.visual_score}</p>
+                            <p>Auditory: ${data.data.auditory_score}</p>
+                            <p>Reading/Writing: ${data.data.reading_score}</p>
+                            <p>Kinesthetic: ${data.data.kinesthetic_score}</p>
+                        </div>
+                    </div>
+                `;
+
+                // Display NLP analysis if available
+                if (data.data.learning_preference && data.data.text_stats) {
+                    resultHtml += `
+                        <div class="card mb-3">
+                            <div class="card-header">NLP Analysis</div>
+                            <div class="card-body">
+                                <h6>Learning Preference: ${data.data.learning_preference.label} (${data.data.learning_preference.type})</h6>
+                                <p>Word Count: ${data.data.text_stats.wordCount}</p>
+                                <p>Sentence Count: ${data.data.text_stats.sentenceCount}</p>
+                                <p>Average Word Length: ${data.data.text_stats.avgWordLength.toFixed(2)}</p>
+                                <p>Reading Time (minutes): ${data.data.text_stats.readingTime}</p>
+                                <p>Grammar Score: ${data.data.grammar_score.score.toFixed(2)} (${data.data.grammar_score.label})</p>
+                                <p>Readability Score: ${data.data.readability_score.score.toFixed(2)} (${data.data.readability_score.label})</p>
+                                <p>Sentiment Score: ${data.data.sentiment_score.score.toFixed(2)} (${data.data.sentiment_score.label})</p>
+                                <p>Structure Score: ${data.data.structure_score.score.toFixed(2)} (${data.data.structure_score.label})</p>
+                                <p>Complexity Score: ${data.data.complexity_score.score.toFixed(2)} (${data.data.complexity_score.label})</p>
+                                <h6>Keywords:</h6>
+                                <ul>
+                                    ${data.data.keywords.map(kw => `<li>${kw}</li>`).join('')}
+                                </ul>
+                                <h6>Key Sentences:</h6>
+                                <ul>
+                                    ${data.data.key_sentences.map(ks => `<li>${ks}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resultHtml += `
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-primary" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh Page
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById('practiceQuestionnaireModalBody').innerHTML = resultHtml;
+            } else {
+                document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error: ${data.message}
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Network error:', error);
+            document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Network error. Please try again.
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    // Original submitPracticeQuestionnaire for non-VARK questionnaires
+    function submitPracticeQuestionnaire() {
+        const form = document.getElementById('practiceQuestionnaireForm');
+        const formData = new FormData(form);
+        
+        const answers = {};
+        let allAnswered = true;
+        
+        // Collect answers and check if all are answered
+        form.querySelectorAll('input[name^="answers["]').forEach(input => {
+            if (!input.value) {
+                allAnswered = false;
+            } else {
+                const questionId = input.name.match(/answers\[(\d+)\]/)[1];
+                answers[questionId] = input.value;
+            }
+        });
+        
+        if (!allAnswered) {
             alert('Silakan jawab semua pertanyaan sebelum mengirim.');
             return;
         }
@@ -752,18 +950,23 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
         document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
             <div class="text-center py-4">
                 <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
-                <p>Submitting your VARK assessment...</p>
+                <p>Submitting your practice questionnaire...</p>
             </div>
         `;
         
         // Submit data to backend API
-        fetch(API_BASE_URL + '/api/v1/vark/submit', {
+        fetch(API_BASE_URL + '/api/v1/questionnaires/submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + JWT_TOKEN
             },
-            body: JSON.stringify({ answers: answers })
+            body: JSON.stringify({
+                questionnaire_id: currentQuestionnaireId,
+                answers: answers,
+                week_number: new Date().getWeek(), // Placeholder for week number
+                year: new Date().getFullYear() // Placeholder for year
+            })
         })
         .then(response => response.json())
         .then(data => {
@@ -771,8 +974,8 @@ require_once __DIR__ . '/../../Helpers/VARKHelpers.php';
                 document.getElementById('practiceQuestionnaireModalBody').innerHTML = `
                     <div class="alert alert-success text-center">
                         <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                        <h5>VARK Assessment Completed Successfully!</h5>
-                        <p>Your dominant style is: <strong>${data.data.dominant_style}</strong></p>
+                        <h5>Practice Completed Successfully!</h5>
+                        <p>Your score: <strong>${data.data.total_score.toFixed(2)}</strong></p>
                         <p class="mb-0">${data.message}</p>
                     </div>
                     <div class="text-center mt-3">

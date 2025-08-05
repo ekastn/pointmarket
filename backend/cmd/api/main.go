@@ -40,8 +40,11 @@ func main() {
 	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
-	varkService := services.NewVARKService(varkStore)
+
+	// Initialize nlpService before varkService as varkService now depends on it
 	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
+	varkService := services.NewVARKService(varkStore, nlpService)
+
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
@@ -53,7 +56,8 @@ func main() {
 	assignmentHandler := handler.NewAssignmentHandler(*assignmentService)
 	quizHandler := handler.NewQuizHandler(*quizService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
-	varkHandler := handler.NewVARKHandler(*varkService)
+	// Pass nlpService to NewVARKHandler
+	varkHandler := handler.NewVARKHandler(*varkService, *nlpService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
 	materialHandler := handler.NewMaterialHandler(*materialService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)

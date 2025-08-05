@@ -27,7 +27,7 @@ func NewNLPService(nlpStore *store.NLPStore, varkStore *store.VARKStore, aiServi
 }
 
 // AnalyzeText performs NLP analysis on the given text
-func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (models.TextAnalysisSnapshot, dtos.LearningPreferenceDetail, []string, []string, dtos.TextStats, error) {
+func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint, questionnaireVARKScores *dtos.VARKScores) (models.TextAnalysisSnapshot, dtos.LearningPreferenceDetail, []string, []string, dtos.TextStats, error) {
 	originalText := req.Text
 
 	// Get enhanced data from the external AI service
@@ -61,7 +61,7 @@ func (s *NLPService) AnalyzeText(req dtos.AnalyzeNLPRequest, studentID uint) (mo
 
 	// Learning Preference Analysis
 	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(textStats.WordCount)
-	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight, int(studentID))
+	fusedVARKScores := s.fuseLearningPreferences(nlpVARKScores, nlpConfidenceWeight, int(studentID), questionnaireVARKScores)
 	learningPreference := s.determineLearningPreferenceType(fusedVARKScores)
 
 	// Create a TextAnalysisSnapshot to save all relevant data
@@ -151,9 +151,14 @@ func (s *NLPService) getUserVARKScores(studentID int) dtos.VARKScores {
 }
 
 // fuseLearningPreferences combines NLP and VARK questionnaire scores using weighted fusion
-func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeight float64, studentID int) dtos.VARKScores {
-	// Get real VARK questionnaire scores from database
-	varkQuestionnaireScores := s.getUserVARKScores(studentID)
+func (s *NLPService) fuseLearningPreferences(nlpScores dtos.VARKScores, nlpWeight float64, studentID int, questionnaireVARKScores *dtos.VARKScores) dtos.VARKScores {
+	var varkQuestionnaireScores dtos.VARKScores
+	if questionnaireVARKScores != nil {
+		varkQuestionnaireScores = *questionnaireVARKScores
+	} else {
+		// Get real VARK questionnaire scores from database
+		varkQuestionnaireScores = s.getUserVARKScores(studentID)
+	}
 
 	// Calculate W_VARK weight (complementary to NLP weight)
 	wVARK := 1.0 - nlpWeight // W_VARK + W_NLP = 1

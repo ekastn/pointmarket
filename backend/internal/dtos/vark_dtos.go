@@ -8,6 +8,7 @@ import "pointmarket/backend/internal/models"
 
 type SubmitVARKRequest struct {
 	Answers map[string]string `json:"answers" binding:"required"`
+	NLPText *string           `json:"nlp_text"` // New field for NLP input
 }
 
 // ==================

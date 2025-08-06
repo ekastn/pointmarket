@@ -20,9 +20,10 @@ use App\Controllers\WeeklyEvaluationsController;
 use App\Core\ApiClient;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
-use App\Services\UserService; // <--- NEW: Import UserService
-use DI\ContainerBuilder; // <--- NEW: Import ContainerBuilder
-use Psr\Container\ContainerInterface; // <--- NEW: Import ContainerInterface
+use App\Services\UserService;
+use App\Services\DashboardService;
+use DI\ContainerBuilder;
+use Psr\Container\ContainerInterface;
 
 // Load environment variables from .env file
 if (file_exists(__DIR__.'/.env')) {
@@ -34,21 +35,24 @@ if (file_exists(__DIR__.'/.env')) {
 
 //$apiClient = new ApiClient(API_BASE_URL);
 
-// NEW: Build the DI Container
+// Build the DI Container
 $containerBuilder = new ContainerBuilder();
 $containerBuilder->addDefinitions([
-    // Define how to create ApiClient
     ApiClient::class => function () {
         return new ApiClient(API_BASE_URL);
     },
-    // Define how to create UserService (it depends on ApiClient)
-    UserService::class => function (ApiClient $apiClient) { // PHP-DI can autowire ApiClient here
+
+    UserService::class => function (ApiClient $apiClient) {
         return new UserService($apiClient);
     },
-    // Define how to create the Router (it depends on ApiClient and the Container itself)
-    Router::class => function (ApiClient $apiClient, ContainerInterface $container) { // PHP-DI can autowire
+    DashboardService::class => function (ApiClient $apiClient) {
+        return new DashboardService($apiClient);
+    },
+
+    Router::class => function (ApiClient $apiClient, ContainerInterface $container) {
         return new Router($apiClient, $container);
     },
+
     // Controllers will be autowired by PHP-DI based on their type hints
     // No explicit definitions needed for controllers if their dependencies are defined
 ]);

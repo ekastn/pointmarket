@@ -310,9 +310,4 @@ class ApiClient
     {
         return $this->request('PUT', '/api/v1/profile', ['json' => $data]);
     }
-
-    public function getDashboardData(): array
-    {
-        return $this->request('GET', '/api/v1/dashboard/all');
-    }
 }

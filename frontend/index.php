@@ -22,6 +22,7 @@ use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 use App\Services\UserService;
 use App\Services\DashboardService;
+use App\Services\QuestionnaireService;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 
@@ -47,6 +48,10 @@ $containerBuilder->addDefinitions([
     },
     DashboardService::class => function (ApiClient $apiClient) {
         return new DashboardService($apiClient);
+    },
+
+    QuestionnaireService::class => function (ApiClient $apiClient) {
+        return new QuestionnaireService($apiClient);
     },
 
     Router::class => function (ApiClient $apiClient, ContainerInterface $container) {

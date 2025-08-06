@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\QuestionnaireService;
 
 class QuestionnaireController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected QuestionnaireService $questionnaireService;
+
+    public function __construct(ApiClient $apiClient, QuestionnaireService $questionnaireService)
     {
         parent::__construct($apiClient);
+        $this->questionnaireService = $questionnaireService;
     }
 
     public function index(): void
@@ -25,41 +29,31 @@ class QuestionnaireController extends BaseController
         unset($_SESSION['messages']);
 
         // Fetch all questionnaires
-        $questionnairesResponse = $this->apiClient->getAllQuestionnaires();
-        if ($questionnairesResponse['success']) {
-            $questionnaires = $questionnairesResponse['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $questionnairesResponse['error'] ?? 'Failed to fetch questionnaires.'];
+        $questionnaires = $this->questionnaireService->getAllQuestionnaires();
+        if ($questionnaires === null) {
+            $_SESSION['messages']['error'] = 'Failed to fetch questionnaires.';
+            $questionnaires = [];
         }
 
         // Fetch questionnaire history
-        $historyResponse = $this->apiClient->getQuestionnaireHistory();
-        if ($historyResponse['success']) {
-            $history = $historyResponse['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $historyResponse['error'] ?? 'Failed to fetch questionnaire history.'];
+        $history = $this->questionnaireService->getQuestionnaireHistory();
+        if ($history === null) {
+            $_SESSION['messages']['error'] = 'Failed to fetch questionnaire history.';
+            $history = [];
         }
 
         // Fetch questionnaire stats
-        $statsResponse = $this->apiClient->getQuestionnaireStats();
-        if ($statsResponse['success']) {
-            $stats = $statsResponse['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $statsResponse['error'] ?? 'Failed to fetch questionnaire statistics.'];
+        $stats = $this->questionnaireService->getQuestionnaireStats();
+        if ($stats === null) {
+            $_SESSION['messages']['error'] = 'Failed to fetch questionnaire statistics.';
+            $stats = [];
         }
 
-        // Fetch VARK result (already implemented in VarkAssessmentController, but needed here for display)
-        $varkResultResponse = $this->apiClient->getLatestVARKResult();
-        if ($varkResultResponse['success'] && !empty($varkResultResponse['data'])) {
-            $varkResult = $varkResultResponse['data'];
-        }
-
-        // Fetch pending weekly evaluations
-        $pendingEvaluationsResponse = $this->apiClient->getPendingWeeklyEvaluations(); 
-        if ($pendingEvaluationsResponse['success']) {
-            $pendingEvaluations = $pendingEvaluationsResponse['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $pendingEvaluationsResponse['error'] ?? 'Failed to fetch pending evaluations.'];
+        // Fetch VARK result
+        $varkResult = $this->questionnaireService->getLatestVARKResult();
+        if ($varkResult === null) {
+            // Error already handled by service, just ensure it's null
+            $varkResult = null;
         }
 
         $this->render('siswa/questionnaire', [

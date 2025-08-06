@@ -162,43 +162,6 @@ class ApiClient
         return $this->request('DELETE', '/api/v1/quizzes/' . $id);
     }
 
-    public function getQuestionnaire(int $id): array
-    {
-        return $this->request('GET', '/api/v1/questionnaires/' . $id);
-    }
-
-    public function submitQuestionnaire(int $questionnaireId, array $answers, int $weekNumber, int $year): array
-    {
-        return $this->request('POST', '/api/v1/questionnaires/submit', [
-            'json' => [
-                'questionnaire_id' => $questionnaireId,
-                'answers' => $answers,
-                'week_number' => $weekNumber,
-                'year' => $year,
-            ],
-        ]);
-    }
-
-    public function getVARKAssessment(): array
-    {
-        return $this->request('GET', '/api/v1/vark');
-    }
-
-    public function submitVARK(array $answers): array
-    {
-        return $this->request('POST', '/api/v1/vark/submit', ['json' => ['answers' => $answers]]);
-    }
-
-    public function getLatestQuestionnaireResultByType(string $type): array
-    {
-        return $this->request('GET', "/api/v1/questionnaires/latest-by-type?type=" . urlencode($type));
-    }
-
-    public function getLatestVARKResult(): array
-    {
-        return $this->request('GET', '/api/v1/vark/latest');
-    }
-
     public function analyzeText(string $text, string $contextType, ?int $assignmentId = null, ?int $quizId = null): array
     {
         return $this->request('POST', '/api/v1/nlp/analyze', [
@@ -214,21 +177,6 @@ class ApiClient
     public function getNLPStats(): array
     {
         return $this->request('GET', '/api/v1/nlp/stats');
-    }
-
-    public function getAllQuestionnaires(): array
-    {
-        return $this->request('GET', '/api/v1/questionnaires');
-    }
-
-    public function getQuestionnaireHistory(): array
-    {
-        return $this->request('GET', '/api/v1/questionnaires/history');
-    }
-
-    public function getQuestionnaireStats(): array
-    {
-        return $this->request('GET', '/api/v1/questionnaires/stats');
     }
 
     public function getStudentEvaluationStatus(): array

@@ -2,17 +2,17 @@ package middleware
 
 import (
 	"net/http"
+	"pointmarket/backend/internal/auth"
+	"pointmarket/backend/internal/config"
+	"pointmarket/backend/internal/response"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
-	"pointmarket/backend/internal/auth"
-	"pointmarket/backend/internal/config"
-	"pointmarket/backend/internal/response"
 )
 
-// AuthMiddleware authenticates requests using JWT
-func AuthMiddleware(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
+// Auth authenticates requests using JWT
+func Auth(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -50,4 +50,22 @@ func AuthMiddleware(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 		c.Set("userID", userID)
 		c.Next()
 	}
+}
+
+// GetUserID retrieves the userID from the Gin context
+func GetUserID(c *gin.Context) (uint) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		c.Abort()
+		return 0
+	}
+
+	uID, ok := userID.(uint)
+	if !ok {
+        response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		c.Abort()
+		return 0
+	}
+	return uID
 }

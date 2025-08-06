@@ -7,16 +7,16 @@ import (
 
 // ComprehensiveDashboardDTO holds all data required for the dashboard.
 type ComprehensiveDashboardDTO struct {
-	UserProfile          UserDTO                     `json:"user_profile"`
-	NLPStats             NLPStatsResponse            `json:"nlp_stats"`
-	LatestVARKResult     VARKResultResponse          `json:"latest_vark_result"`
-	AdminCounts          AdminDashboardCountsDTO     `json:"admin_counts"`
-	StudentStats         StudentDashboardStatsDTO    `json:"student_stats"`
-	TeacherCounts        TeacherDashboardCountsDTO   `json:"teacher_counts"`
-	QuestionnaireStats   []QuestionnaireStatsDTO     `json:"questionnaire_stats"` // Changed to slice
-	RecentActivities     []RecentActivityDTO         `json:"recent_activities"`
-	AssignmentStats      AssignmentStatsDTO          `json:"assignment_stats"`
-	WeeklyProgress       []WeeklyEvaluationProgressDTO `json:"weekly_progress"`
+	UserProfile        UserDTO                       `json:"user_profile"`
+	NLPStats           NLPStatsResponse              `json:"nlp_stats"`
+	LatestVARKResult   VARKResultResponse            `json:"latest_vark_result"`
+	AdminCounts        AdminDashboardCountsDTO       `json:"admin_counts"`
+	StudentStats       StudentDashboardStatsDTO      `json:"student_stats"`
+	TeacherCounts      TeacherDashboardCountsDTO     `json:"teacher_counts"`
+	QuestionnaireStats []QuestionnaireStatsDTO       `json:"questionnaire_stats"` // Changed to slice
+	RecentActivities   []RecentActivityDTO           `json:"recent_activities"`
+	AssignmentStats    AssignmentStatsDTO            `json:"assignment_stats"`
+	WeeklyProgress     []WeeklyEvaluationProgressDTO `json:"weekly_progress"`
 }
 
 // AdminDashboardCountsDTO holds counts for the admin dashboard.
@@ -38,10 +38,10 @@ func (dto *AdminDashboardCountsDTO) FromAdminDashboardCounts(m *models.AdminDash
 
 // StudentDashboardStatsDTO holds aggregated statistics for a student's dashboard.
 type StudentDashboardStatsDTO struct {
-	TotalPoints         float64  `json:"total_points"`
-	CompletedAssignments int      `json:"completed_assignments"`
-	MSLQScore           *float64 `json:"mslq_score"`
-	AMSScore            *float64 `json:"ams_score"`
+	TotalPoints            float64  `json:"total_points"`
+	CompletedAssignments   int      `json:"completed_assignments"`
+	MSLQScore              *float64 `json:"mslq_score"`
+	AMSScore               *float64 `json:"ams_score"`
 	VARKDominantStyle      *string  `json:"vark_dominant_style"`
 	VARKLearningPreference *string  `json:"vark_learning_preference"`
 }
@@ -61,9 +61,9 @@ func (dto *StudentDashboardStatsDTO) FromStudentDashboardStats(m *models.Student
 
 // TeacherDashboardCountsDTO holds counts for the teacher dashboard.
 type TeacherDashboardCountsDTO struct {
-	MyAssignments  int `json:"my_assignments"`
-	MyMaterials    int `json:"my_materials"`
-	TotalStudents  int `json:"total_students"`
+	MyAssignments int `json:"my_assignments"`
+	MyMaterials   int `json:"my_materials"`
+	TotalStudents int `json:"total_students"`
 }
 
 // FromTeacherDashboardCounts converts a models.TeacherDashboardCounts to a TeacherDashboardCountsDTO.
@@ -78,8 +78,8 @@ func (dto *TeacherDashboardCountsDTO) FromTeacherDashboardCounts(m *models.Teach
 
 // RecentActivityDTO represents a recent activity entry.
 type RecentActivityDTO struct {
-	Action      string `json:"action"`
-	Description *string `json:"description"`
+	Action      string    `json:"action"`
+	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"created_at"` // Changed to time.Time
 }
 
@@ -119,7 +119,7 @@ func (dto *AssignmentStatsDTO) FromAssignmentStats(m *models.AssignmentStats) {
 // QuestionnaireStatsDTO holds statistics for questionnaires.
 type QuestionnaireStatsDTO struct {
 	Type           string     `json:"type"`
-	Name           string     `json:"name"`	
+	Name           string     `json:"name"`
 	TotalCompleted int        `json:"total_completed"`
 	AverageScore   *float64   `json:"average_score"`
 	BestScore      *float64   `json:"best_score"`

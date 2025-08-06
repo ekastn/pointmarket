@@ -103,19 +103,22 @@ func main() {
 
 	// Authenticated routes
 	authRequired := v1.Group("/")
-	authRequired.Use(middleware.AuthMiddleware(cfg, db))
+	authRequired.Use(middleware.Auth(cfg, db))
+
+	adminRoutes := authRequired.Group("")
+	adminRoutes.Use(middleware.Authz("admin"))
+
 	{
-		// User routes
 		authRequired.GET("/profile", userHandler.GetUserProfile)
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
 
-		// Admin User Management routes
-		adminRoutes := authRequired.Group("/admin/users")
+		userRoutes := adminRoutes.Group("/users")
 		{
-			adminRoutes.GET("", userHandler.GetAllUsers)
-			adminRoutes.GET("/:id", userHandler.GetUserByID)
-			adminRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
-			adminRoutes.DELETE("/:id", userHandler.DeleteUser)
+			userRoutes.GET("", userHandler.GetAllUsers)
+			userRoutes.GET("/:id", userHandler.GetUserByID)
+			userRoutes.PUT("/:id", userHandler.GetUserByID)
+			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
+			userRoutes.DELETE("/:id", userHandler.DeleteUser)
 		}
 
 		// Assignment routes

@@ -74,7 +74,7 @@ $router->group('/', function($router) {
 
     // Admin routes group
     $router->group('admin', function($router) {
-        $router->group('users', function($router) {
+        $router->group('/users', function($router) {
             $router->get('/', [UsersController::class, 'index']);
             $router->post('/update-role', [UsersController::class, 'updateUserRole']);
             $router->post('/delete', [UsersController::class, 'deleteUser']);

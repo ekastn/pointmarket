@@ -1,5 +1,5 @@
-<div class="container-fluid h-100">
-    <div class="row h-100">
+<div class="container-fluid">
+    <div class="row">
         <!-- Left Side - Branding -->
         <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary">
             <div class="text-center text-white">
@@ -147,3 +147,4 @@
             });
         }, 5000);
     </script>
+</div>

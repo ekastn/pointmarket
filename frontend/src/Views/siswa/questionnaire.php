@@ -32,65 +32,6 @@ $messages = $messages ?? [];
     <?php endforeach; ?>
 <?php endif; ?>
 
-<!-- Pending Weekly Evaluations Alert -->
-<?php if (!empty($pendingEvaluations)): ?>
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="alert pending-alert">
-            <h5><i class="fas fa-bell me-2"></i>Weekly Evaluations Pending</h5>
-            <p>You have <strong><?php echo count($pendingEvaluations); ?> weekly evaluation(s)</strong> that need to be completed.</p>
-            <a href="/weekly-evaluations" class="btn btn-warning btn-sm">
-                <i class="fas fa-calendar-check me-1"></i> Complete Weekly Evaluations
-            </a>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Information Section -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="info-section p-4">
-            <h4><i class="fas fa-info-circle me-2"></i>About Questionnaires & AI Integration</h4>
-            
-            <!-- AI Implementation Notice -->
-            <div class="alert alert-primary mb-3">
-                <h6><i class="fas fa-robot me-2"></i>AI-Powered Learning Personalization (Proof of Concept)</h6>
-                <p class="mb-2">This demonstration showcases how psychological questionnaires will integrate with our AI systems:</p>
-                <div class="row">
-                    <div class="col-md-4">
-                        <strong>🧠 NLP Integration:</strong> Questionnaire results will guide AI feedback style and complexity level for assignments.
-                    </div>
-                    <div class="col-md-4">
-                        <strong>🎯 RL Optimization:</strong> Learning patterns will be analyzed to recommend optimal study schedules and content difficulty.
-                    </div>
-                    <div class="col-md-4">
-                        <strong>📚 CBF Matching:</strong> Content recommendations will be personalized based on learning style and motivation profiles.
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <h6><i class="fas fa-brain me-2 text-success"></i>MSLQ (Motivated Strategies for Learning)</h6>
-                    <p class="mb-3">Mengukur motivasi dan strategi belajar Anda. Hasil MSLQ membantu AI POINTMARKET memahami gaya belajar Anda dan memberikan rekomendasi yang sesuai.</p>
-                </div>
-                <div class="col-md-6">
-                    <h6><i class="fas fa-heart me-2 text-warning"></i>AMS (Academic Motivation Scale)</h6>
-                    <p class="mb-3">Mengukur tipe motivasi akademik Anda. Data AMS digunakan AI untuk menyesuaikan sistem reward dan mendorong engagement belajar.</p>
-                </div>
-            </div>
-            <div class="mt-3">
-                <p class="mb-0">
-                    <i class="fas fa-lightbulb me-2"></i>
-                    <strong>Tip:</strong> Untuk hasil terbaik, jawab dengan jujur berdasarkan kondisi Anda saat ini. 
-                    Data ini digunakan AI untuk personalisasi pembelajaran yang lebih efektif.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Statistics Overview -->
 <div class="row mb-4">
     <div class="col-12">

@@ -153,29 +153,6 @@ $messages = $messages ?? [];
 
 <!-- Assignments List -->
 <div class="row">
-    <div class="col-12">
-        <h4><i class="fas fa-list me-2"></i>Assignments 
-            <small class="text-muted">(<?php echo count($assignments); ?> assignments)</small>
-        </h4>
-        
-        <!-- AI Implementation Notice -->
-        <div class="alert alert-info mb-4">
-            <h6><i class="fas fa-info-circle me-2"></i>Proof of Concept - AI Features Preview</h6>
-            <p class="mb-2">
-                <strong>📊 Current Status:</strong> This demonstration uses simulated AI scoring to showcase the planned NLP analysis capabilities.
-            </p>
-            <p class="mb-1">
-                <strong>🤖 Planned AI Implementation:</strong>
-            </p>
-            <ul class="mb-0 small">
-                <li><strong>NLP Analysis:</strong> Real-time grammar checking, content relevance scoring, and structural analysis</li>
-                <li><strong>Smart Feedback:</strong> Detailed suggestions for improvement based on writing quality</li>
-                <li><strong>Adaptive Scoring:</strong> Context-aware scoring that considers assignment complexity and student level</li>
-                <li><strong>Draft Auto-Save:</strong> Intelligent progress saving with revision tracking</li>
-            </ul>
-        </div>
-    </div>
-    
     <?php if (!empty($assignments)): ?>
         <?php foreach ($assignments as $assignment): ?>
         <div class="col-md-6 col-lg-4 mb-4">

@@ -1,5 +1,6 @@
 body {
     background-color: #f8f9fa;
+    min-height: 100vh; /* Ensure body takes full viewport height */
 }
 
 .sidebar {
@@ -65,4 +66,120 @@ body {
     background-color: #007bff;
     color: white;
     border-color: #007bff;
+}
+
+/* Login Page Specific Styles */
+.container-fluid.h-100 {
+    min-height: 100vh;
+}
+
+.bg-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3) !important; /* Subtle gradient */
+}
+
+.login-form-container .card {
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
+    background-color: #ffffff; /* Ensure white background for the card */
+}
+
+.login-form-container .card-body {
+    padding: 3rem; /* Increased padding inside the card */
+}
+
+.login-form-container .form-label {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.login-form-container .form-control {
+    height: 48px; /* Taller input fields */
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.login-form-container .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+.login-form-container .input-group-text {
+    border-radius: 8px 0 0 8px;
+    background-color: #e9ecef;
+    border-right: none;
+}
+
+.login-form-container .btn-primary {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login-form-container .btn-primary:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.login-form-container .feature-list span {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.login-form-container .feature-list i {
+    font-size: 1.5rem; /* Larger icons in feature list */
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.login-form-container .text-sm {
+    font-size: 0.875rem; /* Smaller text for demo credentials */
+}
+
+.login-form-container .text-center.mb-4.d-lg-none h2 {
+    font-size: 2.5rem; /* Adjust title size for mobile */
+}
+
+/* Specific style for the branding text on the left */
+.col-lg-6.d-none.d-lg-flex .display-4 {
+    font-size: 3.5rem; /* Slightly larger for impact */
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.col-lg-6.d-none.d-lg-flex .lead {
+    font-size: 1.5rem;
+    margin-bottom: 2.5rem !important;
+}
+
+.login-form-container .card-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #343a40;
+}
+
+.login-form-container .alert {
+    border-radius: 8px;
+}
+
+.login-form-container .input-group-text + .form-control {
+    border-left: 1px solid #ced4da; /* Restore left border for input */
+}
+
+.login-form-container .input-group .btn {
+    border-radius: 0 8px 8px 0;
+}
+
+.login-form-container .input-group .form-control:focus + .btn {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+.login-form-container .text-muted small {
+    font-size: 0.8rem;
+}
+
+.login-form-container .text-sm strong {
+    font-weight: 700;
 }

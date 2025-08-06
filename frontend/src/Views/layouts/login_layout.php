@@ -13,7 +13,7 @@
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
-<body class="login-body">
+<body>
     <?php echo $content; // This is where the view content will be injected ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>

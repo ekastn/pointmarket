@@ -79,70 +79,12 @@ class ApiClient
         return $this->request('GET', '/api/v1/profile');
     }
 
-    public function getAssignments(?int $teacherId = null, ?int $studentId = null): array
-    {
-        $uri = '/api/v1/assignments';
-        $options = [];
-        if ($teacherId !== null) {
-            $options['query']['teacher_id'] = $teacherId;
-        }
-        if ($studentId !== null) {
-            $options['query']['student_id'] = $studentId;
-        }
-        return $this->request('GET', $uri, $options);
-    }
-
-    public function getAssignmentByID(int $id, ?int $studentId = null): array
-    {
-        $uri = '/api/v1/assignments/' . $id;
-        $options = [];
-        if ($studentId !== null) {
-            $options['query']['student_id'] = $studentId;
-        }
-        return $this->request('GET', $uri, $options);
-    }
-
-    public function startAssignment(int $assignmentId): array
-    {
-        return $this->request('POST', '/api/v1/assignments/' . $assignmentId . '/start');
-    }
-
-    public function submitAssignment(int $assignmentId, string $submissionContent): array
-    {
-        $response = $this->request('POST', '/api/v1/assignments/' . $assignmentId . '/submit', [
-            'json' => [
-                'submission_content' => $submissionContent,
-            ],
-        ]);
-
-        // Adjust to handle backend response for score
-        if ($response['success'] && isset($response['data']['total_score'])) {
-            $response['score'] = $response['data']['total_score'];
-        }
-        return $response;
-    }
-
-    public function createAssignment(array $data): array
-    {
-        return $this->request('POST', '/api/v1/assignments', ['json' => $data]);
-    }
-
-    public function updateAssignment(int $id, array $data): array
-    {
-        return $this->request('PUT', '/api/v1/assignments/' . $id, ['json' => $data]);
-    }
-
-    public function deleteAssignment(int $id): array
-    {
-        return $this->request('DELETE', '/api/v1/assignments/' . $id);
-    }
-
     public function getQuizzes(?int $teacherId = null): array
     {
         $uri = '/api/v1/quizzes';
         $options = [];
         if ($teacherId !== null) {
-            $options['query'] = ['teacher_id' => $teacherId];
+            $options['query']['teacher_id'] = $teacherId;
         }
         return $this->request('GET', $uri, $options);
     }

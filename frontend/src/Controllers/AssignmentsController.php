@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\AssignmentService;
 
 class AssignmentsController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected AssignmentService $assignmentService;
+
+    public function __construct(ApiClient $apiClient, AssignmentService $assignmentService)
     {
         parent::__construct($apiClient);
+        $this->assignmentService = $assignmentService;
     }
 
     public function index(): void
@@ -42,10 +46,10 @@ class AssignmentsController extends BaseController
         $subjects = [];
         $pendingEvaluations = []; // Placeholder for now
 
-        $assignmentsResponse = $this->apiClient->getAssignments(null, $user['id']);
+        $assignmentsData = $this->assignmentService->getAssignments(null, $user['id']);
 
-        if ($assignmentsResponse['success']) {
-            $assignments = $assignmentsResponse['data'] ?? [];
+        if ($assignmentsData !== null) {
+            $assignments = $assignmentsData ?? [];
 
             // Calculate stats and subjects based on fetched data
             $totalPointsSum = 0;
@@ -61,7 +65,6 @@ class AssignmentsController extends BaseController
                     $totalPointsSum += $assignment['points'];
                     if ($assignment['score'] !== null) {
                         $completedCount++;
-                        // $totalScoreSum += $assignment['score']; // This is not directly available in the new DTO
                     }
                 } elseif ($assignment['student_status'] === 'in_progress') {
                     $stats['in_progress']++;
@@ -95,12 +98,10 @@ class AssignmentsController extends BaseController
             }
 
             $stats['total_points'] = $totalPointsSum;
-            // Average score calculation might need to be done on backend or re-evaluated based on available data
-            // For now, keep it simple or remove if not directly supported by backend DTO
             $stats['average_score'] = 0; // Reset or calculate based on new DTO
 
         } else {
-            $_SESSION['messages'] = ['error' => $assignmentsResponse['error'] ?? 'Failed to fetch assignments.'];
+            $_SESSION['messages'] = ['error' => 'Failed to fetch assignments.'];
         }
 
         $status_filter = $_GET['status'] ?? 'all';
@@ -141,12 +142,12 @@ class AssignmentsController extends BaseController
             return;
         }
 
-        $response = $this->apiClient->startAssignment($assignmentId);
+        $result = $this->assignmentService->startAssignment($assignmentId);
 
-        if ($response['success']) {
+        if ($result !== null) {
             echo json_encode(['success' => true, 'message' => 'Assignment started successfully!']);
         } else {
-            echo json_encode(['success' => false, 'message' => $response['error'] ?? 'Failed to start assignment.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to start assignment.']);
         }
     }
 
@@ -171,12 +172,12 @@ class AssignmentsController extends BaseController
             return;
         }
 
-        $response = $this->apiClient->submitAssignment($assignmentId, $submissionText);
+        $result = $this->assignmentService->submitAssignment($assignmentId, $submissionText);
 
-        if ($response['success']) {
-            echo json_encode(['success' => true, 'message' => 'Assignment submitted successfully!', 'score' => $response['data']['score'] ?? null]);
+        if ($result !== null) {
+            echo json_encode(['success' => true, 'message' => 'Assignment submitted successfully!', 'score' => $result['score'] ?? null]);
         } else {
-            echo json_encode(['success' => false, 'message' => $response['error'] ?? 'Failed to submit assignment.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to submit assignment.']);
         }
     }
 }

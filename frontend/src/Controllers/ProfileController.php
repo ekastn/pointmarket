@@ -3,31 +3,29 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\ProfileService;
+use App\Services\QuestionnaireService;
 
 class ProfileController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected ProfileService $profileService;
+    protected QuestionnaireService $questionnaireService;
+
+    public function __construct(ApiClient $apiClient, ProfileService $profileService, QuestionnaireService $questionnaireService)
     {
         parent::__construct($apiClient);
+        $this->profileService = $profileService;
+        $this->questionnaireService = $questionnaireService;
     }
 
     public function showProfile(): void
     {
-        session_start();
-        $user = $_SESSION['user_data'] ?? null;
-
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
+        $userProfile = $this->profileService->getUserProfile();
+        if ($userProfile === null) {
+            $_SESSION['messages'] = ['error' => 'Failed to load user profile.'];
+            session_destroy();
+            $this->redirect('/login');
+            return;
         }
 
         $assignmentStats = null;
@@ -38,42 +36,48 @@ class ProfileController extends BaseController
         $recentActivities = [];
 
         // Fetch additional data for student profile
-        if ($user['role'] === 'siswa') {
-            $assignmentStatsResponse = $this->apiClient->getAssignmentStatsByStudentID();
-            if ($assignmentStatsResponse['success']) {
-                $assignmentStats = $assignmentStatsResponse['data'];
+        if ($userProfile['role'] === 'siswa') {
+            $assignmentStats = $this->profileService->getAssignmentStatsByStudentID();
+            if ($assignmentStats === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch assignment stats.';
+                $assignmentStats = null;
             }
 
-            $questionnaireStatsResponse = $this->apiClient->getQuestionnaireStats();
-            if ($questionnaireStatsResponse['success']) {
-                $questionnaireStats = $questionnaireStatsResponse['data'] ?? [];
+            $questionnaireStats = $this->questionnaireService->getQuestionnaireStats();
+            if ($questionnaireStats === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch questionnaire stats.';
+                $questionnaireStats = [];
             }
 
-            $nlpStatsResponse = $this->apiClient->getNLPStats();
-            if ($nlpStatsResponse['success']) {
-                $nlpStats = $nlpStatsResponse['data'] ?? null;
+            $nlpStats = $this->profileService->getNLPStats();
+            if ($nlpStats === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch NLP stats.';
+                $nlpStats = null;
             }
 
-            $varkResultResponse = $this->apiClient->getLatestVARKResult();
-            if ($varkResultResponse['success']) {
-                $varkResult = $varkResultResponse['data'] ?? null;
+            $varkResult = $this->questionnaireService->getLatestVARKResult();
+            if ($varkResult === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch VARK result.';
+                $varkResult = null;
             }
 
-            $weeklyProgressResponse = $this->apiClient->getWeeklyEvaluationProgressByStudentID();
-            if ($weeklyProgressResponse['success']) {
-                $weeklyProgress = $weeklyProgressResponse['data'] ?? [];
+            $weeklyProgress = $this->profileService->getWeeklyEvaluationProgressByStudentID();
+            if ($weeklyProgress === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch weekly progress.';
+                $weeklyProgress = [];
             }
 
-            $recentActivitiesResponse = $this->apiClient->getRecentActivityByUserID();
-            if ($recentActivitiesResponse['success']) {
-                $recentActivities = $recentActivitiesResponse['data'] ?? [];
+            $recentActivities = $this->profileService->getRecentActivityByUserID();
+            if ($recentActivities === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch recent activities.';
+                $recentActivities = [];
             }
         }
 
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $viewName = $user['role'] . '/profile';
+        $viewName = $userProfile['role'] . '/profile';
 
         $this->render($viewName, [
             'title' => 'My Profile',
@@ -91,7 +95,6 @@ class ProfileController extends BaseController
     public function updateProfile(): void
     {
         session_start();
-        // This should ideally be handled by AuthMiddleware, but as a fallback
         if (!isset($_SESSION['jwt_token'])) {
             $this->redirect('/login');
             return;
@@ -106,18 +109,18 @@ class ProfileController extends BaseController
                 'avatar' => $_POST['avatar'] ?? null, // Assuming avatar is a URL or path
             ];
 
-            $response = $this->apiClient->updateProfile($data);
+            $result = $this->profileService->updateProfile($data);
 
-            if ($response['success']) {
+            if ($result !== null) {
                 $_SESSION['messages'] = ['success' => 'Profile updated successfully!'];
                 // Update user_data in session after successful profile update
-                $userProfileResponse = $this->apiClient->getUserProfile();
-                if ($userProfileResponse['success']) {
-                    $_SESSION['user_data'] = $userProfileResponse['data'];
+                $userProfileData = $this->profileService->getUserProfile();
+                if ($userProfileData !== null) {
+                    $_SESSION['user_data'] = $userProfileData;
                 }
                 $this->redirect('/profile');
             } else {
-                $_SESSION['messages'] = ['error' => $response['error'] ?? 'Failed to update profile.'];
+                $_SESSION['messages'] = ['error' => 'Failed to update profile.'];
                 $this->redirect('/profile');
             }
         } else {

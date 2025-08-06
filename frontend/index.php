@@ -26,6 +26,7 @@ use App\Services\QuestionnaireService;
 use App\Services\AssignmentService;
 use App\Services\QuizService;
 use App\Services\VarkCorrelationService;
+use App\Services\ProfileService;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 
@@ -67,6 +68,10 @@ $containerBuilder->addDefinitions([
 
     VarkCorrelationService::class => function (ApiClient $apiClient) {
         return new VarkCorrelationService($apiClient);
+    },
+
+    ProfileService::class => function (ApiClient $apiClient) {
+        return new ProfileService($apiClient);
     },
 
     Router::class => function (ApiClient $apiClient, ContainerInterface $container) {

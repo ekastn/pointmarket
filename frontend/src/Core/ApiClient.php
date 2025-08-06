@@ -74,11 +74,6 @@ class ApiClient
         return $response;
     }
 
-    public function getUserProfile(): array
-    {
-        return $this->request('GET', '/api/v1/profile');
-    }
-
     public function analyzeText(string $text, string $contextType, ?int $assignmentId = null, ?int $quizId = null): array
     {
         return $this->request('POST', '/api/v1/nlp/analyze', [

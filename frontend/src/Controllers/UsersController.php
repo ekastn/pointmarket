@@ -3,81 +3,68 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\UserService;
 
 class UsersController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected UserService $userService;
+
+    public function __construct(ApiClient $apiClient, UserService $userService)
     {
         parent::__construct($apiClient);
+        $this->userService = $userService;
     }
 
     public function index(): void
     {
-        session_start();
-        $user = $_SESSION['user_data'] ?? null;
+        $usersData = $this->userService->getAllUsers();
 
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                // This case should ideally be handled by AuthMiddleware, but as a fallback
-                echo "Error fetching user profile: " . ($userProfileResponse['error'] ?? 'Unknown error');
-                return;
-            }
+        if ($usersData !== null) {
+            $users = $usersData;
+            $this->render('admin/users', ['users' => $users]);
+        } else {
+            $_SESSION['messages']['error'] = 'Failed to fetch users.';
+            $this->redirect('/dashboard'); 
         }
-
-        $response = $this->apiClient->getAllUsers();
-
-        if (!$response['success']) {
-            // Handle error, e.g., redirect to error page or show message
-            echo "Error fetching users: " . ($response['error'] ?? 'Unknown error');
-            return;
-        }
-
-        $users = $response['data'];
-
-        require_once __DIR__ . '/../Views/admin/users.php';
     }
 
-    public function updateUserRole(): void
+    public function updateUserRole(int $id): void
     {
-        session_start();
-        // The AuthMiddleware handles authentication and role checks
-        $this->apiClient->setJwtToken($_SESSION['jwt_token']);
-
         $input = json_decode(file_get_contents('php://input'), true);
-        $userId = $input['id'] ?? null;
         $role = $input['role'] ?? null;
 
-        if (!$userId || !$role) {
+        if (! $id || ! $role) {
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
+
             return;
         }
 
-        $response = $this->apiClient->updateUserRole($userId, $role);
+        $result = $this->userService->updateUserRole($id, $role);
 
-        echo json_encode($response);
+        if ($result !== null) {
+            echo json_encode(['success' => true, 'message' => 'User role updated successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update user role']);
+        }
     }
 
     public function deleteUser(): void
     {
-        session_start();
-        // The AuthMiddleware handles authentication and role checks
-        $this->apiClient->setJwtToken($_SESSION['jwt_token']);
-
         $input = json_decode(file_get_contents('php://input'), true);
         $userId = $input['id'] ?? null;
 
-        if (!$userId) {
+        if (! $userId) {
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
+
             return;
         }
 
-        $response = $this->apiClient->deleteUser($userId);
+        $result = $this->userService->deleteUser($userId);
 
-        echo json_encode($response);
+        if ($result !== null) {
+            echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete user']);
+        }
     }
 }

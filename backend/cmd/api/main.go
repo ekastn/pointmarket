@@ -116,7 +116,6 @@ func main() {
 		{
 			userRoutes.GET("", userHandler.GetAllUsers)
 			userRoutes.GET("/:id", userHandler.GetUserByID)
-			userRoutes.PUT("/:id", userHandler.GetUserByID)
 			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)
 		}

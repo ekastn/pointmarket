@@ -30,7 +30,7 @@ class ApiClient
         return $this->jwtToken;
     }
 
-    private function request(string $method, string $uri, array $options = []): array
+    public function request(string $method, string $uri, array $options = []): array
     {
         if ($this->jwtToken) {
             $options['headers']['Authorization'] = 'Bearer ' . $this->jwtToken;
@@ -309,21 +309,6 @@ class ApiClient
     public function updateProfile(array $data): array
     {
         return $this->request('PUT', '/api/v1/profile', ['json' => $data]);
-    }
-
-    public function getAllUsers(): array
-    {
-        return $this->request('GET', '/api/v1/admin/users');
-    }
-
-    public function updateUserRole(int $id, string $role): array
-    {
-        return $this->request('PUT', '/api/v1/admin/users/' . $id . '/role', ['json' => ['role' => $role]]);
-    }
-
-    public function deleteUser(int $id): array
-    {
-        return $this->request('DELETE', '/api/v1/admin/users/' . $id);
     }
 
     public function getDashboardData(): array

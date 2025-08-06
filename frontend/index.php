@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__.'/vendor/autoload.php';
 
 use App\Controllers\AIExplanationController;
 use App\Controllers\AIRecommendationsController;
@@ -15,25 +15,46 @@ use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
 use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\UsersController;
-
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
 use App\Core\ApiClient;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
+use App\Services\UserService; // <--- NEW: Import UserService
+use DI\ContainerBuilder; // <--- NEW: Import ContainerBuilder
+use Psr\Container\ContainerInterface; // <--- NEW: Import ContainerInterface
 
 // Load environment variables from .env file
-if (file_exists(__DIR__ . '/.env')) {
-    $env = parse_ini_file(__DIR__ . '/.env');
+if (file_exists(__DIR__.'/.env')) {
+    $env = parse_ini_file(__DIR__.'/.env');
     define('API_BASE_URL', $env['API_BASE_URL'] ?? 'http://localhost:8080');
 } else {
     define('API_BASE_URL', 'http://localhost:8080');
 }
 
-// Initialize API Client
-$apiClient = new ApiClient(API_BASE_URL);
+//$apiClient = new ApiClient(API_BASE_URL);
 
-$router = new Router($apiClient);
+// NEW: Build the DI Container
+$containerBuilder = new ContainerBuilder();
+$containerBuilder->addDefinitions([
+    // Define how to create ApiClient
+    ApiClient::class => function () {
+        return new ApiClient(API_BASE_URL);
+    },
+    // Define how to create UserService (it depends on ApiClient)
+    UserService::class => function (ApiClient $apiClient) { // PHP-DI can autowire ApiClient here
+        return new UserService($apiClient);
+    },
+    // Define how to create the Router (it depends on ApiClient and the Container itself)
+    Router::class => function (ApiClient $apiClient, ContainerInterface $container) { // PHP-DI can autowire
+        return new Router($apiClient, $container);
+    },
+    // Controllers will be autowired by PHP-DI based on their type hints
+    // No explicit definitions needed for controllers if their dependencies are defined
+]);
+$container = $containerBuilder->build();
+
+$router = $container->get(Router::class);
 
 // Public routes
 $router->get('/', [AuthController::class, 'showLoginForm']);
@@ -42,7 +63,7 @@ $router->post('/login', [AuthController::class, 'processLogin']);
 $router->get('/logout', [AuthController::class, 'logout']);
 
 // Authenticated routes group
-$router->group('/', function($router) {
+$router->group('/', function ($router) {
     $router->get('dashboard', [DashboardController::class, 'showDashboard']);
     $router->get('ai-explanation', [AIExplanationController::class, 'show']);
     $router->get('ai-recommendations', [AIRecommendationsController::class, 'show']);
@@ -51,12 +72,11 @@ $router->group('/', function($router) {
     $router->get('assignments', [AssignmentsController::class, 'index']);
     $router->get('quiz', [QuizController::class, 'index']);
     $router->get('questionnaire', [QuestionnaireController::class, 'index']);
-    
-    
+
     $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
     // Materials routes
-    $router->group('materials', function($router) {
+    $router->group('materials', function ($router) {
         $router->get('/', [MaterialsController::class, 'index']);
         $router->get('/create', [MaterialsController::class, 'create'], [[AuthMiddleware::class, 'requireTeacher']]);
         $router->post('/create', [MaterialsController::class, 'create'], [[AuthMiddleware::class, 'requireTeacher']]);
@@ -73,12 +93,10 @@ $router->group('/', function($router) {
     $router->post('profile', [ProfileController::class, 'updateProfile']);
 
     // Admin routes group
-    $router->group('admin', function($router) {
-        $router->group('/users', function($router) {
-            $router->get('/', [UsersController::class, 'index']);
-            $router->post('/update-role', [UsersController::class, 'updateUserRole']);
-            $router->post('/delete', [UsersController::class, 'deleteUser']);
-        });
+    $router->group('/users', function ($router) {
+        $router->get('/', [UsersController::class, 'index']);
+        $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);
+        $router->post('/delete', [UsersController::class, 'deleteUser']);
     }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
     // Teacher specific routes

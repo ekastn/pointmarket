@@ -11,6 +11,7 @@
         ]
     },
     "require": {
-        "guzzlehttp/guzzle": "^7.0"
+        "guzzlehttp/guzzle": "^7.0",
+        "php-di/php-di": "^7.0"
     }
 }

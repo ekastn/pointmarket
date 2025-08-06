@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\VarkCorrelationService;
 
 class VarkCorrelationAnalysisController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected VarkCorrelationService $varkCorrelationService;
+
+    public function __construct(ApiClient $apiClient, VarkCorrelationService $varkCorrelationService)
     {
         parent::__construct($apiClient);
+        $this->varkCorrelationService = $varkCorrelationService;
     }
 
     public function index(): void
@@ -36,17 +40,16 @@ class VarkCorrelationAnalysisController extends BaseController
         $ams_score = 'N/A';
         $correlation_results = null;
 
-        $correlationResponse = $this->apiClient->analyzeCorrelation();
+        $correlationResults = $this->varkCorrelationService->analyzeCorrelation();
 
-        if ($correlationResponse['success'] && isset($correlationResponse['data'])) {
-            $data = $correlationResponse['data'];
-            $vark_data = $data['vark_scores'] ?? [];
-            $dominant_style = $data['dominant_vark_style'] ?? 'N/A';
-            $mslq_score = $data['mslq_score'] ?? 'N/A';
-            $ams_score = $data['ams_score'] ?? 'N/A';
-            $correlation_results = $data;
+        if ($correlationResults !== null) {
+            $vark_data = $correlationResults['vark_scores'] ?? [];
+            $dominant_style = $correlationResults['dominant_vark_style'] ?? 'N/A';
+            $mslq_score = $correlationResults['mslq_score'] ?? 'N/A';
+            $ams_score = $correlationResults['ams_score'] ?? 'N/A';
+            $correlation_results = $correlationResults;
         } else {
-            $_SESSION['messages']['warning'] = $correlationResponse['error'] ?? 'Gagal memuat analisis korelasi.';
+            $_SESSION['messages']['warning'] = 'Failed to load correlation analysis.';
         }
 
         $this->render('siswa/vark-correlation-analysis', [

@@ -166,11 +166,6 @@ class ApiClient
         return $this->request('GET', '/api/v1/evaluations/weekly/student/pending');
     }
 
-    public function analyzeCorrelation(): array
-    {
-        return $this->request('GET', '/api/v1/correlation/analyze');
-    }
-
     public function updateProfile(array $data): array
     {
         return $this->request('PUT', '/api/v1/profile', ['json' => $data]);

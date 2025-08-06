@@ -24,6 +24,7 @@ use App\Services\UserService;
 use App\Services\DashboardService;
 use App\Services\QuestionnaireService;
 use App\Services\AssignmentService;
+use App\Services\QuizService;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 
@@ -57,6 +58,10 @@ $containerBuilder->addDefinitions([
 
     AssignmentService::class => function (ApiClient $apiClient) {
         return new AssignmentService($apiClient);
+    },
+
+    QuizService::class => function (ApiClient $apiClient) {
+        return new QuizService($apiClient);
     },
 
     Router::class => function (ApiClient $apiClient, ContainerInterface $container) {

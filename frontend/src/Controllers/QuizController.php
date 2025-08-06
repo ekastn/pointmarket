@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\QuizService;
 
 class QuizController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected QuizService $quizService;
+
+    public function __construct(ApiClient $apiClient, QuizService $quizService)
     {
         parent::__construct($apiClient);
+        $this->quizService = $quizService;
     }
 
     public function index(): void
@@ -34,12 +38,12 @@ class QuizController extends BaseController
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $quizzesResponse = $this->apiClient->getQuizzes();
+        $quizzesData = $this->quizService->getQuizzes();
 
-        if ($quizzesResponse['success']) {
-            $quizzes = $quizzesResponse['data']['quizzes'] ?? [];
+        if ($quizzesData !== null) {
+            $quizzes = $quizzesData['quizzes'] ?? [];
         } else {
-            $_SESSION['messages'] = ['error' => $quizzesResponse['error'] ?? 'Failed to fetch quizzes.'];
+            $_SESSION['messages'] = ['error' => 'Failed to fetch quizzes.'];
         }
 
         $this->render('siswa/quizzes', [

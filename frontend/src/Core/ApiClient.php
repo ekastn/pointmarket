@@ -79,31 +79,6 @@ class ApiClient
         return $this->request('GET', '/api/v1/profile');
     }
 
-    public function getQuizzes(?int $teacherId = null): array
-    {
-        $uri = '/api/v1/quizzes';
-        $options = [];
-        if ($teacherId !== null) {
-            $options['query']['teacher_id'] = $teacherId;
-        }
-        return $this->request('GET', $uri, $options);
-    }
-
-    public function createQuiz(array $data): array
-    {
-        return $this->request('POST', '/api/v1/quizzes', ['json' => $data]);
-    }
-
-    public function updateQuiz(int $id, array $data): array
-    {
-        return $this->request('PUT', '/api/v1/quizzes/' . $id, ['json' => $data]);
-    }
-
-    public function deleteQuiz(int $id): array
-    {
-        return $this->request('DELETE', '/api/v1/quizzes/' . $id);
-    }
-
     public function analyzeText(string $text, string $contextType, ?int $assignmentId = null, ?int $quizId = null): array
     {
         return $this->request('POST', '/api/v1/nlp/analyze', [

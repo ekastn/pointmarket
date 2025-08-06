@@ -325,4 +325,9 @@ class ApiClient
     {
         return $this->request('DELETE', '/api/v1/admin/users/' . $id);
     }
+
+    public function getDashboardData(): array
+    {
+        return $this->request('GET', '/api/v1/dashboard/all');
+    }
 }

@@ -1,10 +1,10 @@
 <?php
 // Data for the view will be passed from the DashboardController
-// $user, $studentStats, $questionnaireScores, $counts, $messages, $aiMetrics
+// $userProfile, $adminCounts, $messages
 
 // Ensure variables are defined to prevent PHP notices if not passed
-$user = $user ?? ['name' => 'Guest', 'role' => 'guest'];
-$counts = $counts ?? [];
+$userProfile = $userProfile ?? ['name' => 'Guest', 'role' => 'guest'];
+$adminCounts = $adminCounts ?? [];
 $messages = $messages ?? [];
 
 ?>
@@ -39,7 +39,7 @@ $messages = $messages ?? [];
 <div class="row mb-4">
     <div class="col-md-8">
         <h4 class="mb-2">
-            Selamat datang, <?php echo htmlspecialchars($user['name']); ?>!
+            Selamat datang, <?php echo htmlspecialchars($userProfile['name']); ?>!
         </h4>
     </div>
 </div>
@@ -55,7 +55,7 @@ $messages = $messages ?? [];
                             Total Users
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <?php echo htmlspecialchars($counts['total_users'] ?? 0); ?>
+                            <?php echo htmlspecialchars($adminCounts['total_users'] ?? 0); ?>
                         </div>
                     </div>
                     <div class="col-auto">
@@ -75,7 +75,7 @@ $messages = $messages ?? [];
                             Total Assignments
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <?php echo htmlspecialchars($counts['total_assignments'] ?? 0); ?>
+                            <?php echo htmlspecialchars($adminCounts['total_assignments'] ?? 0); ?>
                         </div>
                     </div>
                     <div class="col-auto">
@@ -95,7 +95,7 @@ $messages = $messages ?? [];
                             Total Materials
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <?php echo htmlspecialchars($counts['total_materials'] ?? 0); ?>
+                            <?php echo htmlspecialchars($adminCounts['total_materials'] ?? 0); ?>
                         </div>
                     </div>
                     <div class="col-auto">

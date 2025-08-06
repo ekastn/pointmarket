@@ -62,6 +62,16 @@ func main() {
 	materialHandler := handler.NewMaterialHandler(*materialService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
+	// Initialize DashboardService and DashboardHandler
+	dashboardService := services.NewDashboardService(
+		*userService,
+		*nlpService,
+		*varkService,
+		*questionnaireService,
+		*weeklyEvaluationService,
+	)
+	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
+
 	r := gin.Default()
 
 	// CORS middleware
@@ -160,11 +170,7 @@ func main() {
 		// Dashboard routes
 		dashboardRoutes := authRequired.Group("/dashboard")
 		{
-			dashboardRoutes.GET("/student/stats", userHandler.GetStudentDashboardStats)
-			dashboardRoutes.GET("/admin/counts", userHandler.GetAdminDashboardCounts)
-			dashboardRoutes.GET("/teacher/counts", userHandler.GetTeacherDashboardCounts)
-			dashboardRoutes.GET("/student/assignments/stats", userHandler.GetAssignmentStatsByStudentID)
-			dashboardRoutes.GET("/student/activity", userHandler.GetRecentActivityByUserID)
+			dashboardRoutes.GET("/all", dashboardHandler.GetComprehensiveDashboardData)
 		}
 
 		// Material routes

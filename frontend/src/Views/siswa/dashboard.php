@@ -1,18 +1,21 @@
 <?php
 // Data for the view will be passed from the DashboardController
-// $user, $studentStats, $questionnaireScores, $counts, $messages, $aiMetrics
+// $userProfile, $studentStats, $questionnaireStats, $latestVARKResult, $messages, $aiMetrics, $assignmentStats, $weeklyProgress, $recentActivities
 
 // Ensure variables are defined to prevent PHP notices if not passed
-$user = $user ?? ['name' => 'Guest', 'role' => 'guest'];
-$studentStats = $studentStats ?? ['total_points' => 0, 'completed_assignments' => 0, 'mslq_score' => null, 'ams_score' => null, 'vark_dominant_style' => null, 'vark_learning_preference' => null];
-$questionnaireScores = $questionnaireScores ?? ['mslq' => null, 'ams' => null, 'vark' => null];
-$counts = $counts ?? [];
+$userProfile = $userProfile ?? ['name' => 'Guest', 'role' => 'guest'];
+$studentStats = $studentStats ?? ['total_points' => 0, 'completed_assignments' => 0, 'mslq_score' => null, 'ams_score' => null];
+$questionnaireStats = $questionnaireStats ?? [];
+$latestVARKResult = $latestVARKResult ?? null;
 $messages = $messages ?? [];
 $aiMetrics = $aiMetrics ?? [
     'nlp' => ['accuracy' => 0, 'samples_processed' => 0, 'avg_score' => 0, 'improvement_rate' => 0],
     'rl' => ['accuracy' => 0, 'decisions_made' => 0, 'avg_reward' => 0, 'learning_rate' => 0],
     'cbf' => ['accuracy' => 0, 'recommendations' => 0, 'click_through_rate' => 0, 'user_satisfaction' => 0]
 ];
+$assignmentStats = $assignmentStats ?? ['total_assignments' => 0, 'avg_score' => 0, 'best_score' => 0];
+$weeklyProgress = $weeklyProgress ?? [];
+$recentActivities = $recentActivities ?? [];
 
 // Helper functions that were previously global in config.php
 // These should ideally be moved to a utility class or passed from the controller
@@ -59,7 +62,7 @@ use function App\Helpers\formatDate;
 <div class="row mb-4">
     <div class="col-md-8">
         <h4 class="mb-2">
-            Selamat datang, <?php echo htmlspecialchars($user['name']); ?>!
+            Selamat datang, <?php echo htmlspecialchars($userProfile['name']); ?>!
         </h4>
     </div>
 </div>
@@ -200,10 +203,10 @@ use function App\Helpers\formatDate;
                 </h6>
             </div>
             <div class="card-body">
-                <?php if ($studentStats && $studentStats['vark_dominant_style'] !== null): ?>
+                <?php if ($latestVARKResult && $latestVARKResult['dominant_style'] !== null): ?>
                     <?php 
-                    $varkDominantStyle = $studentStats['vark_dominant_style'];
-                    $varkLearningPreference = $studentStats['vark_learning_preference'];
+                    $varkDominantStyle = $latestVARKResult['dominant_style'];
+                    $varkLearningPreference = $latestVARKResult['learning_preference'];
                     $learningTips = \App\Helpers\getVARKLearningTips($varkDominantStyle); 
                     ?>
                     <div class="row">
@@ -222,12 +225,12 @@ use function App\Helpers\formatDate;
                                         <small class="text-muted">VARK Scores:</small>
                                         <div class="row mt-2">
                                             <div class="col-6">
-                                                <span class="badge bg-info">Visual: <?php echo htmlspecialchars($studentStats['visual_score'] ?? 'N/A'); ?></span>
-                                                <span class="badge bg-warning">Auditory: <?php echo htmlspecialchars($studentStats['auditory_score'] ?? 'N/A'); ?></span>
+                                                <span class="badge bg-info">Visual: <?php echo htmlspecialchars($latestVARKResult['visual_score'] ?? 'N/A'); ?></span>
+                                                <span class="badge bg-warning">Auditory: <?php echo htmlspecialchars($latestVARKResult['auditory_score'] ?? 'N/A'); ?></span>
                                             </div>
                                             <div class="col-6">
-                                                <span class="badge bg-success">Reading: <?php echo htmlspecialchars($studentStats['reading_score'] ?? 'N/A'); ?></span>
-                                                <span class="badge bg-danger">Kinesthetic: <?php echo htmlspecialchars($studentStats['kinesthetic_score'] ?? 'N/A'); ?></span>
+                                                <span class="badge bg-success">Reading: <?php echo htmlspecialchars($latestVARKResult['reading_score'] ?? 'N/A'); ?></span>
+                                                <span class="badge bg-danger">Kinesthetic: <?php echo htmlspecialchars($latestVARKResult['kinesthetic_score'] ?? 'N/A'); ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -320,22 +323,22 @@ use function App\Helpers\formatDate;
                 </h5>
             </div>
             <div class="card-body">
-                <?php if ($studentStats && $studentStats['total_assignments'] > 0): ?>
+                <?php if ($assignmentStats && $assignmentStats['total_assignments'] > 0): ?>
                     <div class="row text-center mb-3">
                         <div class="col-6">
-                            <h4 class="text-success"><?php echo htmlspecialchars(number_format($studentStats['best_score'], 1)); ?></h4>
+                            <h4 class="text-success"><?php echo htmlspecialchars(number_format($assignmentStats['best_score'], 1)); ?></h4>
                             <small class="text-muted">Best Score</small>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-info"><?php echo htmlspecialchars(number_format($studentStats['average_score'], 1)); ?></h4>
+                            <h4 class="text-info"><?php echo htmlspecialchars(number_format($assignmentStats['avg_score'], 1)); ?></h4>
                             <small class="text-muted">Average Score</small>
                         </div>
                     </div>
                     <div class="progress progress-custom mb-2">
-                        <div class="progress-bar bg-info" style="width: <?php echo htmlspecialchars(($studentStats['average_score'] / 100) * 100); ?>%"></div>
+                        <div class="progress-bar bg-info" style="width: <?php echo htmlspecialchars(($assignmentStats['avg_score'] / 100) * 100); ?>%"></div>
                     </div>
                     <p class="small text-muted">
-                        Based on <?php echo htmlspecialchars($studentStats['total_assignments']); ?> completed assignments
+                        Based on <?php echo htmlspecialchars($assignmentStats['total_assignments']); ?> completed assignments
                     </p>
                 <?php else: ?>
                     <div class="text-center">
@@ -472,12 +475,12 @@ use function App\Helpers\formatDate;
                 </h6>
             </div>
             <div class="card-body text-center">
-                <?php if ($varkResult): ?>
-                    <?php $learningTips = \App\Helpers\getVARKLearningTips($varkResult['dominant_style']); ?>
+                <?php if ($latestVARKResult): ?>
+                    <?php $learningTips = \App\Helpers\getVARKLearningTips($latestVARKResult['dominant_style']); ?>
                     <div class="mb-3">
                         <i class="<?php echo htmlspecialchars($learningTips['icon']); ?> fa-3x text-info mb-2"></i>
                     </div>
-                    <h6 class="text-info"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></h6>
+                    <h6 class="text-info"><?php echo htmlspecialchars($latestVARKResult['learning_preference']); ?></h6>
                     <p class="small text-muted"><?php echo htmlspecialchars($learningTips['description']); ?></p>
                     <a href="/vark-assessment" class="btn btn-sm btn-outline-info">
                         <i class="fas fa-eye me-1"></i>View Details

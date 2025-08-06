@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\WeeklyEvaluationService;
 
 class TeacherEvaluationMonitoringController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected WeeklyEvaluationService $weeklyEvaluationService;
+
+    public function __construct(ApiClient $apiClient, WeeklyEvaluationService $weeklyEvaluationService)
     {
         parent::__construct($apiClient);
+        $this->weeklyEvaluationService = $weeklyEvaluationService;
     }
 
     public function index(): void
@@ -36,19 +40,17 @@ class TeacherEvaluationMonitoringController extends BaseController
         unset($_SESSION['messages']);
 
         // Fetch student evaluation status
-        $studentStatusResponse = $this->apiClient->getStudentEvaluationStatus();
-        if ($studentStatusResponse['success']) {
-            $studentStatus = $studentStatusResponse['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $studentStatusResponse['error'] ?? 'Failed to fetch student statuses.'];
+        $studentStatus = $this->weeklyEvaluationService->getStudentEvaluationStatus();
+        if ($studentStatus === null) {
+            $_SESSION['messages'] = ['error' => 'Failed to fetch student statuses.'];
+            $studentStatus = [];
         }
 
         // Fetch weekly evaluation overview
-        $weeklyOverviewResponse = $this->apiClient->getWeeklyEvaluationOverview();
-        if ($weeklyOverviewResponse['success']) {
-            $weeklyOverview = $weeklyOverviewResponse['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $weeklyOverviewResponse['error'] ?? 'Failed to fetch weekly overview.'];
+        $weeklyOverview = $this->weeklyEvaluationService->getWeeklyEvaluationOverview();
+        if ($weeklyOverview === null) {
+            $_SESSION['messages'] = ['error' => 'Failed to fetch weekly overview.'];
+            $weeklyOverview = [];
         }
 
         $this->render('guru/teacher-evaluation-monitoring', [

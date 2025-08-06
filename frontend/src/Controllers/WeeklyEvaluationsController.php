@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\WeeklyEvaluationService;
 
 class WeeklyEvaluationsController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected WeeklyEvaluationService $weeklyEvaluationService;
+
+    public function __construct(ApiClient $apiClient, WeeklyEvaluationService $weeklyEvaluationService)
     {
         parent::__construct($apiClient);
+        $this->weeklyEvaluationService = $weeklyEvaluationService;
     }
 
     public function index(): void
@@ -23,16 +27,15 @@ class WeeklyEvaluationsController extends BaseController
         }
 
         $weeklyProgress = [];
-        $response = $this->apiClient->getWeeklyEvaluationProgressByStudentID();
-
-        if ($response['success']) {
-            $weeklyProgress = $response['data'] ?? [];
-        } else {
-            $_SESSION['messages'] = ['error' => $response['error'] ?? 'Gagal memuat progres evaluasi mingguan.'];
-        }
-
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
+
+        $weeklyProgress = $this->weeklyEvaluationService->getWeeklyEvaluationProgressByStudentID();
+
+        if ($weeklyProgress === null) {
+            $_SESSION['messages'] = ['error' => 'Failed to load weekly evaluation progress.'];
+            $weeklyProgress = [];
+        }
 
         $this->render('siswa/weekly-evaluations', [
             'user' => $user,

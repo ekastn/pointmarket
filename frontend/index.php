@@ -2,13 +2,10 @@
 
 require_once __DIR__.'/vendor/autoload.php';
 
-use App\Controllers\AIExplanationController;
-use App\Controllers\AIRecommendationsController;
 use App\Controllers\AssignmentsController;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\MaterialsController;
-use App\Controllers\NLPDemoController;
 use App\Controllers\ProfileController;
 use App\Controllers\ProgressController;
 use App\Controllers\QuestionnaireController;
@@ -27,6 +24,9 @@ use App\Services\AssignmentService;
 use App\Services\QuizService;
 use App\Services\VarkCorrelationService;
 use App\Services\ProfileService;
+use App\Services\MaterialService;
+use App\Services\WeeklyEvaluationService;
+use App\Controllers\DemoController;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 
@@ -74,8 +74,12 @@ $containerBuilder->addDefinitions([
         return new ProfileService($apiClient);
     },
 
-    Router::class => function (ApiClient $apiClient, ContainerInterface $container) {
-        return new Router($apiClient, $container);
+    MaterialService::class => function (ApiClient $apiClient) {
+        return new MaterialService($apiClient);
+    },
+
+    WeeklyEvaluationService::class => function (ApiClient $apiClient) {
+        return new WeeklyEvaluationService($apiClient);
     },
 
     // Controllers will be autowired by PHP-DI based on their type hints
@@ -94,10 +98,13 @@ $router->get('/logout', [AuthController::class, 'logout']);
 // Authenticated routes group
 $router->group('/', function ($router) {
     $router->get('dashboard', [DashboardController::class, 'showDashboard']);
-    $router->get('ai-explanation', [AIExplanationController::class, 'show']);
-    $router->get('ai-recommendations', [AIRecommendationsController::class, 'show']);
-    $router->get('nlp-demo', [NLPDemoController::class, 'show']);
-    $router->post('nlp-demo/analyze', [NLPDemoController::class, 'analyze']);
+    
+    // Consolidated Demo routes
+    $router->get('ai-explanation', [DemoController::class, 'showAIExplanation']);
+    $router->get('ai-recommendations', [DemoController::class, 'showAIRecommendations']);
+    $router->get('nlp-demo', [DemoController::class, 'showNLPDemo']);
+    $router->post('nlp-demo/analyze', [DemoController::class, 'analyzeNLP']);
+
     $router->get('assignments', [AssignmentsController::class, 'index']);
     $router->get('quiz', [QuizController::class, 'index']);
     $router->get('questionnaire', [QuestionnaireController::class, 'index']);

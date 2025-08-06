@@ -4,15 +4,18 @@ namespace App\Controllers;
 
 use App\Core\ApiClient;
 use App\Services\DashboardService;
+use App\Services\WeeklyEvaluationService;
 
 class DashboardController extends BaseController
 {
     protected DashboardService $dashboardService;
+    protected WeeklyEvaluationService $weeklyEvaluationService;
 
-    public function __construct(ApiClient $apiClient, DashboardService $dashboardService)
+    public function __construct(ApiClient $apiClient, DashboardService $dashboardService, WeeklyEvaluationService $weeklyEvaluationService)
     {
         parent::__construct($apiClient);
         $this->dashboardService = $dashboardService;
+        $this->weeklyEvaluationService = $weeklyEvaluationService;
     }
 
     public function showDashboard(): void
@@ -35,6 +38,14 @@ class DashboardController extends BaseController
             $recentActivities = $dashboardData['recent_activities'] ?? [];
             $assignmentStats = $dashboardData['assignment_stats'] ?? null;
             $weeklyProgress = $dashboardData['weekly_progress'] ?? null;
+
+            // Fetch pending weekly evaluations using the new service
+            $pendingEvaluations = $this->weeklyEvaluationService->getPendingWeeklyEvaluations();
+            if ($pendingEvaluations === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch pending evaluations.';
+                $pendingEvaluations = [];
+            }
+
 
             // AI Metrics (these were hardcoded, so keep them as is or fetch from backend if they become dynamic)
             $aiMetrics = [
@@ -59,6 +70,7 @@ class DashboardController extends BaseController
                 'varkResult' => $latestVARKResult,
                 'weeklyProgress' => $weeklyProgress,
                 'recentActivities' => $recentActivities,
+                'pendingEvaluations' => $pendingEvaluations, // NEW: Pass pending evaluations
             ]);
         } else {
             $_SESSION['messages']['error'] = 'Failed to load dashboard data.';

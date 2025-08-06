@@ -5,17 +5,20 @@ namespace App\Controllers;
 use App\Core\ApiClient;
 use App\Services\ProfileService;
 use App\Services\QuestionnaireService;
+use App\Services\WeeklyEvaluationService;
 
 class ProfileController extends BaseController
 {
     protected ProfileService $profileService;
     protected QuestionnaireService $questionnaireService;
+    protected WeeklyEvaluationService $weeklyEvaluationService;
 
-    public function __construct(ApiClient $apiClient, ProfileService $profileService, QuestionnaireService $questionnaireService)
+    public function __construct(ApiClient $apiClient, ProfileService $profileService, QuestionnaireService $questionnaireService, WeeklyEvaluationService $weeklyEvaluationService)
     {
         parent::__construct($apiClient);
         $this->profileService = $profileService;
         $this->questionnaireService = $questionnaireService;
+        $this->weeklyEvaluationService = $weeklyEvaluationService;
     }
 
     public function showProfile(): void
@@ -61,7 +64,7 @@ class ProfileController extends BaseController
                 $varkResult = null;
             }
 
-            $weeklyProgress = $this->profileService->getWeeklyEvaluationProgressByStudentID();
+            $weeklyProgress = $this->weeklyEvaluationService->getWeeklyEvaluationProgressByStudentID();
             if ($weeklyProgress === null) {
                 $_SESSION['messages']['error'] = 'Failed to fetch weekly progress.';
                 $weeklyProgress = [];
@@ -81,7 +84,7 @@ class ProfileController extends BaseController
 
         $this->render($viewName, [
             'title' => 'My Profile',
-            'user' => $user,
+            'user' => $userProfile,
             'assignmentStats' => $assignmentStats,
             'questionnaireStats' => $questionnaireStats,
             'nlpStats' => $nlpStats,

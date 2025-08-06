@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\ApiClient;
+use App\Services\MaterialService;
 
 class MaterialsController extends BaseController
 {
-    public function __construct(ApiClient $apiClient)
+    protected MaterialService $materialService;
+
+    public function __construct(ApiClient $apiClient, MaterialService $materialService)
     {
         parent::__construct($apiClient);
+        $this->materialService = $materialService;
     }
 
     public function index(): void
@@ -16,29 +20,15 @@ class MaterialsController extends BaseController
         session_start();
         $user = $_SESSION['user_data'] ?? null;
 
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
         $materials = [];
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
 
-        $materialsResponse = $this->apiClient->getAllMaterials();
-        if ($materialsResponse['success']) {
-            $materials = $materialsResponse['data'] ?? [];
+                $materialsData = $this->materialService->getAllMaterials();
+        if ($materialsData !== null) {
+            $materials = $materialsData ?? [];
         } else {
-            $_SESSION['messages'] = ['error' => $materialsResponse['error'] ?? 'Failed to fetch materials.'];
+            $_SESSION['messages'] = ['error' => 'Failed to fetch materials.'];
         }
 
         $this->render('guru/materials', [
@@ -54,20 +44,6 @@ class MaterialsController extends BaseController
         session_start();
         $user = $_SESSION['user_data'] ?? null;
 
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'title' => $_POST['title'] ?? '',
@@ -77,13 +53,13 @@ class MaterialsController extends BaseController
                 'file_type' => $_POST['file_type'] ?? '',
             ];
 
-            $response = $this->apiClient->createMaterial($data);
+                        $result = $this->materialService->createMaterial($data);
 
-            if ($response['success']) {
+            if ($result !== null) {
                 $_SESSION['messages'] = ['success' => 'Material created successfully!'];
                 $this->redirect('/materials');
             } else {
-                $_SESSION['messages'] = ['error' => $response['error'] ?? 'Failed to create material.'];
+                $_SESSION['messages']['error'] = 'Failed to create material.';
                 $this->redirect('/materials/create');
             }
         }
@@ -101,27 +77,13 @@ class MaterialsController extends BaseController
         session_start();
         $user = $_SESSION['user_data'] ?? null;
 
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
-        $materialResponse = $this->apiClient->getMaterialByID($id);
-        if (!$materialResponse['success']) {
-            $_SESSION['messages'] = ['error' => $materialResponse['error'] ?? 'Material not found.'];
+        $materialData = $this->materialService->getMaterialByID($id);
+        if ($materialData === null) {
+            $_SESSION['messages'] = ['error' => 'Material not found.'];
             $this->redirect('/materials');
             return;
         }
-        $material = $materialResponse['data'];
+        $material = $materialData;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
@@ -133,13 +95,13 @@ class MaterialsController extends BaseController
                 'status' => $_POST['status'] ?? 'active',
             ];
 
-            $response = $this->apiClient->updateMaterial($id, $data);
+            $result = $this->materialService->updateMaterial($id, $data);
 
-            if ($response['success']) {
+            if ($result !== null) {
                 $_SESSION['messages'] = ['success' => 'Material updated successfully!'];
                 $this->redirect('/materials');
             } else {
-                $_SESSION['messages'] = ['error' => $response['error'] ?? 'Failed to update material.'];
+                $_SESSION['messages'] = ['error' => 'Failed to update material.'];
                 $this->redirect('/materials/edit/' . $id);
             }
         }
@@ -164,12 +126,12 @@ class MaterialsController extends BaseController
 
         $this->apiClient->setJwtToken($_SESSION['jwt_token']);
 
-        $response = $this->apiClient->deleteMaterial($id);
+        $result = $this->materialService->deleteMaterial($id);
 
-        if ($response['success']) {
+        if ($result !== null) {
             $_SESSION['messages'] = ['success' => 'Material deleted successfully!'];
         } else {
-            $_SESSION['messages'] = ['error' => $response['error'] ?? 'Failed to delete material.'];
+            $_SESSION['messages']['error'] = 'Failed to delete material.';
         }
         $this->redirect('/materials');
     }

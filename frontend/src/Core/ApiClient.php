@@ -49,13 +49,11 @@ class ApiClient
         } catch (RequestException $e) {
             $statusCode = $e->getResponse() ? $e->getResponse()->getStatusCode() : 500;
             $errorMessage = $e->getMessage();
-            if ($e->hasResponse()) {
+            if (empty($errorMessage) && $e->hasResponse()) {
                 $responseBody = json_decode($e->getResponse()->getBody()->getContents(), true);
                 $errorMessage = $responseBody['message'] ?? $errorMessage;
             }
             return ['success' => false, 'error' => $errorMessage, 'status' => $statusCode];
-        } catch (\Exception $e) {
-            return ['success' => false, 'error' => 'Network error: ' . $e->getMessage(), 'status' => 500];
         }
     }
 
@@ -72,97 +70,5 @@ class ApiClient
             $this->setJwtToken($response['data']['token']);
         }
         return $response;
-    }
-
-    public function analyzeText(string $text, string $contextType, ?int $assignmentId = null, ?int $quizId = null): array
-    {
-        return $this->request('POST', '/api/v1/nlp/analyze', [
-            'json' => [
-                'text' => $text,
-                'context_type' => $contextType,
-                'assignment_id' => $assignmentId,
-                'quiz_id' => $quizId,
-            ],
-        ]);
-    }
-
-    public function getNLPStats(): array
-    {
-        return $this->request('GET', '/api/v1/nlp/stats');
-    }
-
-    public function getStudentEvaluationStatus(): array
-    {
-        return $this->request('GET', '/api/v1/evaluations/weekly/teacher/status');
-    }
-
-    public function getWeeklyEvaluationOverview(int $weeks = 4): array
-    {
-        return $this->request('GET', '/api/v1/evaluations/weekly/teacher/overview?weeks=' . $weeks);
-    }
-
-    public function getStudentDashboardStats(): array
-    {
-        return $this->request('GET', '/api/v1/dashboard/student/stats');
-    }
-
-    public function getAdminDashboardCounts(): array
-    {
-        return $this->request('GET', '/api/v1/dashboard/admin/counts');
-    }
-
-    public function getTeacherDashboardCounts(): array
-    {
-        return $this->request('GET', '/api/v1/dashboard/teacher/counts');
-    }
-
-    public function getAllMaterials(): array
-    {
-        return $this->request('GET', '/api/v1/materials');
-    }
-
-    public function getMaterialByID(int $id): array
-    {
-        return $this->request('GET', '/api/v1/materials/' . $id);
-    }
-
-    public function createMaterial(array $data): array
-    {
-        return $this->request('POST', '/api/v1/materials', ['json' => $data]);
-    }
-
-    public function updateMaterial(int $id, array $data): array
-    {
-        return $this->request('PUT', '/api/v1/materials/' . $id, ['json' => $data]);
-    }
-
-    public function deleteMaterial(int $id): array
-    {
-        return $this->request('DELETE', '/api/v1/materials/' . $id);
-    }
-
-    public function getAssignmentStatsByStudentID(): array
-    {
-        return $this->request('GET', '/api/v1/dashboard/student/assignments/stats');
-    }
-
-    public function getRecentActivityByUserID(int $limit = 10): array
-    {
-        return $this->request('GET', '/api/v1/dashboard/student/activity?limit=' . $limit);
-    }
-
-    public function getWeeklyEvaluationProgressByStudentID(int $weeks = 8): array
-    {
-        return $this->request('GET', '/api/v1/evaluations/weekly/student/progress?weeks=' . $weeks);
-    }
-
-    public function getPendingWeeklyEvaluations(): array
-    {
-        return $this->request('GET', '/api/v1/evaluations/weekly/student/pending');
-    }
-
-    public function updateProfile(array $data): array
-    {
-        return $this->request('PUT', '/api/v1/profile', ['json' => $data]);
     }
 }

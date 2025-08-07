@@ -65,6 +65,35 @@ func (s *UserStore) GetUserByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
+// SearchUsers retrieves users based on search term and role
+func (s *UserStore) SearchUsers(search, role string) ([]models.User, error) {
+	var users []models.User
+	query := "SELECT id, username, name, email, role, avatar, created_at, updated_at, last_login FROM users WHERE 1=1"
+	args := []interface{}{}
+
+	if search != "" {
+		query += " AND (username LIKE ? OR email LIKE ?)"
+		args = append(args, "%"+search+"%", "%"+search+"%")
+	}
+
+	if role != "" {
+		query += " AND role = ?"
+		args = append(args, role)
+	}
+
+	err := s.db.Select(&users, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// GetRoles returns a list of available user roles
+func (s *UserStore) GetRoles() []string {
+	// Roles are hardcoded based on the ENUM in the database schema
+	return []string{"admin", "teacher", "siswa", "guru"}
+}
+
 // GetStudentDashboardStats retrieves aggregated statistics for a student's dashboard
 func (s *UserStore) GetStudentDashboardStats(studentID int) (*models.StudentDashboardStats, error) {
 	var stats models.StudentDashboardStats

@@ -9,7 +9,6 @@
     <link href="/public/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
-    
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="container-fluid">

@@ -21,6 +21,25 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+// CreateUser handles creating a new user
+func (h *UserHandler) CreateUser(c *gin.Context) {
+	var req dtos.CreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := h.userService.CreateUser(req)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var userDTO dtos.UserDTO
+	userDTO.FromUser(*user)
+	response.Success(c, http.StatusCreated, "User created successfully", userDTO)
+}
+
 func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -57,9 +76,12 @@ func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
 }
 
-// GetAllUsers handles fetching all users (admin only)
+// GetAllUsers handles fetching all users (admin only), now with search and role filters
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
-	users, err := h.userService.GetAllUsers()
+	search := c.Query("search")
+	role := c.Query("role")
+
+	users, err := h.userService.SearchUsers(search, role)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
@@ -96,6 +118,12 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User retrieved successfully", userDTO)
 }
 
+// GetRoles handles fetching all available user roles
+func (h *UserHandler) GetRoles(c *gin.Context) {
+	roles := h.userService.GetRoles()
+	response.Success(c, http.StatusOK, "Roles retrieved successfully", roles)
+}
+
 // UpdateUserRole handles updating a user's role (admin only)
 func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	id, ok := utils.GetIDFromParam(c, "id")
@@ -123,7 +151,7 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User role updated successfully", nil)
 }
 
-// DeleteUser handles deleting a user (admin only)
+// DeleteUser handles deleting a user (sets role to 'inactive')
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, ok := utils.GetIDFromParam(c, "id")
 	if !ok {

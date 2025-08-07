@@ -53,7 +53,7 @@ func Auth(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 }
 
 // GetUserID retrieves the userID from the Gin context
-func GetUserID(c *gin.Context) (uint) {
+func GetUserID(c *gin.Context) uint {
 	userID, exists := c.Get("userID")
 	if !exists {
 		response.Error(c, http.StatusUnauthorized, "Unauthorized")
@@ -63,7 +63,7 @@ func GetUserID(c *gin.Context) (uint) {
 
 	uID, ok := userID.(uint)
 	if !ok {
-        response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusUnauthorized, "Unauthorized")
 		c.Abort()
 		return 0
 	}

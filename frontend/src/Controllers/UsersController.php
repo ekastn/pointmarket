@@ -17,15 +17,73 @@ class UsersController extends BaseController
 
     public function index(): void
     {
-        $usersData = $this->userService->getAllUsers();
+        $search = $_GET['search'] ?? '';
+        $role = $_GET['role'] ?? '';
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10; 
 
-        if ($usersData !== null) {
+        $usersData = $this->userService->getAllUsers($search, $role);
+        $rolesData = $this->userService->getRoles();
+
+        if ($usersData !== null && $rolesData !== null) {
             $users = $usersData;
-            $this->render('admin/users', ['users' => $users]);
+            $roles = $rolesData;
+
+            // Manual pagination logic for the view
+            $total_data = count($users);
+            $total_pages = ceil($total_data / $limit);
+            $offset = ($page - 1) * $limit;
+            $users_paginated = array_slice($users, $offset, $limit);
+
+            $start = $offset + 1;
+            $end = min($offset + $limit, $total_data);
+
+            $this->render('admin/users', [
+                'user' => $_SESSION['user_data'],
+                'title' => 'User',
+                'users' => $users_paginated,
+                'roles' => $roles,
+                'search' => $search,
+                'role' => $role,
+                'page' => $page,
+                'limit' => $limit,
+                'total_data' => $total_data,
+                'total_pages' => $total_pages,
+                'start' => $start,
+                'end' => $end,
+            ]);
         } else {
-            $_SESSION['messages']['error'] = 'Failed to fetch users.';
-            $this->redirect('/dashboard'); 
+            $_SESSION['messages']['error'] = 'Failed to fetch users or roles.';
+            $this->redirect('/dashboard');
         }
+    }
+
+    public function saveUser(): void
+    {
+        $username = $_POST['username'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $roleId = $_POST['role_id'] ?? '';
+
+        if (empty($username) || empty($email) || empty($roleId)) {
+            $_SESSION['messages']['error'] = 'All fields are required.';
+            $this->redirect('/admin/users');
+            return;
+        }
+
+        $userData = [
+            'username' => $username,
+            'email' => $email,
+            'role_id' => (int)$roleId,
+        ];
+
+        $result = $this->userService->createUser($userData);
+
+        if ($result !== null) {
+            $_SESSION['messages']['success'] = 'User created successfully!';
+        } else {
+            $_SESSION['messages']['error'] = 'Failed to create user.';
+        }
+        $this->redirect('/admin/users');
     }
 
     public function updateUserRole(int $id): void

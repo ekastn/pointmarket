@@ -115,10 +115,14 @@ func main() {
 		userRoutes := adminRoutes.Group("/users")
 		{
 			userRoutes.GET("", userHandler.GetAllUsers)
+			userRoutes.POST("", userHandler.CreateUser) 
 			userRoutes.GET("/:id", userHandler.GetUserByID)
 			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)
 		}
+
+		// New route for roles
+		authRequired.GET("/roles", userHandler.GetRoles)
 
 		// Assignment routes
 		assignmentRoutes := authRequired.Group("/assignments")
@@ -199,4 +203,3 @@ func main() {
 		panic(fmt.Sprintf("failed to start server: %v", err))
 	}
 }
-

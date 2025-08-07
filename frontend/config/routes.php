@@ -59,6 +59,7 @@ return function (Router $router) {
         // Admin routes group
         $router->group('/users', function (Router $router) {
             $router->get('/', [UsersController::class, 'index']);
+            $router->post('/save', [UsersController::class, 'saveUser']); // New route for saving users
             $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);
             $router->post('/delete', [UsersController::class, 'deleteUser']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);

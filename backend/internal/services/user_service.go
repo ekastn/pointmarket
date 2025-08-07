@@ -2,9 +2,12 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
@@ -21,6 +24,30 @@ func (s *UserService) GetUserByID(id uint) (models.User, error) {
 		return models.User{}, err
 	}
 	return *user, nil
+}
+
+// CreateUser creates a new user
+func (s *UserService) CreateUser(req dtos.CreateUserRequest) (*models.User, error) {
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	user := &models.User{
+		Username: req.Username,
+		Password: string(hashedPassword),
+		Name:     req.Username, // Assuming name is same as username for now
+		Email:    req.Email,
+		Role:     req.Role,
+	}
+
+	err = s.userStore.CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // UpdateUserProfile updates a user's profile information
@@ -40,7 +67,17 @@ func (s *UserService) UpdateUserProfile(userID uint, req dtos.UpdateProfileReque
 	return s.userStore.UpdateUser(user)
 }
 
-// GetAllUsers retrieves all users
+// SearchUsers retrieves users based on search term and role
+func (s *UserService) SearchUsers(search, role string) ([]models.User, error) {
+	return s.userStore.SearchUsers(search, role)
+}
+
+// GetRoles retrieves a list of available user roles
+func (s *UserService) GetRoles() []string {
+	return s.userStore.GetRoles()
+}
+
+// GetAllUsers retrieves all users (kept for existing functionality, but SearchUsers is preferred for filtering)
 func (s *UserService) GetAllUsers() ([]models.User, error) {
 	return s.userStore.GetAllUsers()
 }

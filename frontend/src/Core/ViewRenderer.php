@@ -25,6 +25,9 @@ class ViewRenderer
             throw new \Exception("Layout file not found: " . $layoutFile);
         }
 
+        // Make the renderer itself available in the view for partial includes
+        $data['renderer'] = $this;
+
         // Capture the view content
         ob_start();
         extract($data);
@@ -35,5 +38,17 @@ class ViewRenderer
         ob_start();
         require $layoutFile;
         return ob_get_clean();
+    }
+
+    public function includePartial(string $partialName, array $data = []): void
+    {
+        $partialFile = $this->viewsPath . $partialName . '.php';
+
+        if (!file_exists($partialFile)) {
+            throw new \Exception("Partial view file not found: " . $partialFile);
+        }
+
+        extract($data);
+        require $partialFile;
     }
 }

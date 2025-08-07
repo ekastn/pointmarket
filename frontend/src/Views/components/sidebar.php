@@ -10,7 +10,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
                     Dasbor
                 </a>
             </li>
-            
+
             <?php if (isset($user) && $user['role'] === 'siswa'): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentPath === '/assignments') ? 'active' : ''; ?>" href="/assignments">

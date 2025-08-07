@@ -86,7 +86,7 @@ class Router
 
             foreach ($middleware as $m) {
                 [$middlewareClass, $middlewareMethod] = $m;
-                $middlewareInstance = new $middlewareClass($this->apiClient);
+                $middlewareInstance = $this->container->get($middlewareClass);
                 if (! $middlewareInstance->$middlewareMethod()) {
                     return; // Middleware stopped the request
                 }
@@ -113,7 +113,7 @@ class Router
 
                 foreach ($middleware as $m) {
                     [$middlewareClass, $middlewareMethod] = $m;
-                    $middlewareInstance = new $middlewareClass($this->apiClient);
+                    $middlewareInstance = $this->container->get($middlewareClass);
                     if (! $middlewareInstance->$middlewareMethod()) {
                         return; // Middleware stopped the request
                     }
@@ -135,7 +135,7 @@ class Router
     protected function handleError(int $statusCode, string $message): void
     {
         http_response_code($statusCode);
-        $errorController = new ErrorController($this->apiClient);
+        $errorController = $this->container->get(ErrorController::class);
         if ($statusCode === 404) {
             $errorController->show404($message);
         } else {
@@ -143,4 +143,3 @@ class Router
         }
     }
 }
-

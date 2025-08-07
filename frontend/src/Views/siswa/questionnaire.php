@@ -565,7 +565,7 @@ $messages = $messages ?? [];
         `;
         
         // Submit data to backend API
-        fetch(API_BASE_URL + '/api/v1/questionnaires/submit', {
+        fetch(API_BASE_URL + '/api/v1/questionnaires', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -762,7 +762,7 @@ $messages = $messages ?? [];
         };
         
         // Submit data to backend API
-        fetch(API_BASE_URL + '/api/v1/vark/submit', { // Submit to the VARK endpoint
+        fetch(API_BASE_URL + '/api/v1/questionnaires/vark', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -896,7 +896,7 @@ $messages = $messages ?? [];
         `;
         
         // Submit data to backend API
-        fetch(API_BASE_URL + '/api/v1/questionnaires/submit', {
+        fetch(API_BASE_URL + '/api/v1/questionnaires', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

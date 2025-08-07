@@ -17,23 +17,6 @@ class VarkCorrelationAnalysisController extends BaseController
 
     public function index(): void
     {
-        session_start();
-        $user = $_SESSION['user_data'] ?? null;
-
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
         $vark_data = [];
         $dominant_style = 'N/A';
         $mslq_score = 'N/A';
@@ -41,6 +24,8 @@ class VarkCorrelationAnalysisController extends BaseController
         $correlation_results = null;
 
         $correlationResults = $this->varkCorrelationService->analyzeCorrelation();
+
+        $user = $_SESSION['user_data'] ?? null;
 
         if ($correlationResults !== null) {
             $vark_data = $correlationResults['vark_scores'] ?? [];

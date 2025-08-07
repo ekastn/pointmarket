@@ -142,23 +142,16 @@ func main() {
 			quizRoutes.DELETE("/:id", quizHandler.DeleteQuiz)
 		}
 
-		// Questionnaire routes
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{
 			questionnaireRoutes.GET("", questionnaireHandler.GetAllQuestionnaires)
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
-			questionnaireRoutes.POST("/submit", questionnaireHandler.SubmitQuestionnaire)
+			questionnaireRoutes.POST("", questionnaireHandler.SubmitQuestionnaire)
 			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory)
 			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)
 			questionnaireRoutes.GET("/latest-by-type", questionnaireHandler.GetLatestQuestionnaireResultByType)
-		}
-
-		// VARK routes
-		varkRoutes := authRequired.Group("/vark")
-		{
-
-			varkRoutes.POST("/submit", varkHandler.SubmitVARK)
-			varkRoutes.GET("/latest", varkHandler.GetLatestVARKResult)
+			questionnaireRoutes.POST("/vark", varkHandler.SubmitVARK)
+			questionnaireRoutes.GET("/vark", varkHandler.GetLatestVARKResult)
 		}
 
 		// NLP routes
@@ -206,3 +199,4 @@ func main() {
 		panic(fmt.Sprintf("failed to start server: %v", err))
 	}
 }
+

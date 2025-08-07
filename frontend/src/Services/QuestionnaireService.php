@@ -38,27 +38,9 @@ class QuestionnaireService
         return null;
     }
 
-    public function getVARKAssessment(): ?array
-    {
-        $response = $this->apiClient->request('GET', '/api/v1/vark');
-        if ($response['success']) {
-            return $response['data'];
-        }
-        return null;
-    }
-
     public function submitVARK(array $answers): ?array
     {
-        $response = $this->apiClient->request('POST', '/api/v1/vark/submit', ['json' => ['answers' => $answers]]);
-        if ($response['success']) {
-            return $response['data'];
-        }
-        return null;
-    }
-
-    public function getLatestQuestionnaireResultByType(string $type): ?array
-    {
-        $response = $this->apiClient->request('GET', "/api/v1/questionnaires/latest-by-type?type=" . urlencode($type));
+        $response = $this->apiClient->request('POST', '/api/v1/questionnaires/vark', ['json' => ['answers' => $answers]]);
         if ($response['success']) {
             return $response['data'];
         }
@@ -67,7 +49,7 @@ class QuestionnaireService
 
     public function getLatestVARKResult(): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/vark/latest');
+        $response = $this->apiClient->request('GET', '/api/v1/questionnaires/vark');
         if ($response['success']) {
             return $response['data'];
         }

@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 
@@ -37,8 +38,8 @@ func (h *VARKHandler) SubmitVARK(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("userID")
-	result, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, err := h.varkService.SubmitVARK(submitDTO, userID.(uint))
+	userID := middleware.GetUserID(c)
+	result, nlpLearningPreference, nlpKeywords, nlpKeySentences, nlpTextStats, grammarScore, readabilityScore, sentimentScore, structureScore, complexityScore, err := h.varkService.SubmitVARK(submitDTO, userID)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
@@ -79,8 +80,8 @@ func (h *VARKHandler) SubmitVARK(c *gin.Context) {
 }
 
 func (h *VARKHandler) GetLatestVARKResult(c *gin.Context) {
-	userID, _ := c.Get("userID")
-	result, err := h.varkService.GetLatestVARKResult(userID.(uint))
+	userID := middleware.GetUserID(c)
+	result, err := h.varkService.GetLatestVARKResult(userID)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return

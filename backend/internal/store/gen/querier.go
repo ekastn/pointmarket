@@ -13,6 +13,8 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	DeleteUser(ctx context.Context, id int64) error
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
+	GetProductByID(ctx context.Context, id int64) (Product, error)
+	GetProducts(ctx context.Context) ([]Product, error)
 	GetRoles(ctx context.Context) ([]UsersRole, error)
 	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)

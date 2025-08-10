@@ -48,6 +48,7 @@ func main() {
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
+	productService := services.NewProductService(querier) // <--- NEW: Initialize ProductService
 
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
@@ -61,6 +62,7 @@ func main() {
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
+	productHandler := handler.NewProductHandler(*productService) // <--- NEW: Initialize ProductHandler
 
 	r := gin.Default()
 
@@ -110,6 +112,12 @@ func main() {
 			userRoutes.GET("/:id", userHandler.GetUserByID)
 			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)
+		}
+
+		productRoutes := authRequired.Group("/products")
+		{
+			productRoutes.GET("", productHandler.GetProducts)
+			productRoutes.GET("/:id", productHandler.GetProductByID)
 		}
 
 		authRequired.GET("/roles", userHandler.GetRoles)

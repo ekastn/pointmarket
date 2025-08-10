@@ -37,42 +37,29 @@ func main() {
 	// Initialize gateways
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
 
-	// Initialize services
+	dashboardService := services.NewDashboardService(querier)
 	authService := services.NewAuthService(userStore, cfg, querier)
 	userService := services.NewUserService(userStore, querier)
 	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
-
-	// Initialize nlpService before varkService as varkService now depends on it
 	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
 	varkService := services.NewVARKService(varkStore, nlpService)
-
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
 
-	// Initialize handlers
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
 	assignmentHandler := handler.NewAssignmentHandler(*assignmentService)
 	quizHandler := handler.NewQuizHandler(*quizService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
-	// Pass nlpService to NewVARKHandler
 	varkHandler := handler.NewVARKHandler(*varkService, *nlpService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
 	materialHandler := handler.NewMaterialHandler(*materialService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
-	// Initialize DashboardService and DashboardHandler
-	dashboardService := services.NewDashboardService(
-		*userService,
-		*nlpService,
-		*varkService,
-		*questionnaireService,
-		*weeklyEvaluationService,
-	)
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
 
 	r := gin.Default()
@@ -114,6 +101,7 @@ func main() {
 	{
 		// authRequired.GET("/profile", userHandler.GetUserProfile)
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
+		authRequired.GET("/dashboard", dashboardHandler.GetDashboardData)
 
 		userRoutes := adminRoutes.Group("/users")
 		{
@@ -124,10 +112,8 @@ func main() {
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)
 		}
 
-		// New route for roles
 		authRequired.GET("/roles", userHandler.GetRoles)
 
-		// Assignment routes
 		assignmentRoutes := authRequired.Group("/assignments")
 		{
 			assignmentRoutes.GET("", assignmentHandler.GetAllAssignments)
@@ -139,7 +125,6 @@ func main() {
 			assignmentRoutes.POST("/:id/submit", assignmentHandler.SubmitAssignment)
 		}
 
-		// Quiz routes
 		quizRoutes := authRequired.Group("/quizzes")
 		{
 			quizRoutes.GET("", quizHandler.GetAllQuizzes)
@@ -161,7 +146,6 @@ func main() {
 			questionnaireRoutes.GET("/vark", varkHandler.GetLatestVARKResult)
 		}
 
-		// NLP routes
 		nlpRoutes := authRequired.Group("/nlp")
 		{
 			nlpRoutes.POST("/analyze", nlpHandler.AnalyzeText)
@@ -169,13 +153,6 @@ func main() {
 			nlpRoutes.GET("/latest-snapshot", nlpHandler.GetLatestTextAnalysisSnapshot)
 		}
 
-		// Dashboard routes
-		dashboardRoutes := authRequired.Group("/dashboard")
-		{
-			dashboardRoutes.GET("/all", dashboardHandler.GetComprehensiveDashboardData)
-		}
-
-		// Material routes
 		materialRoutes := authRequired.Group("/materials")
 		{
 			materialRoutes.GET("", materialHandler.GetAllMaterials)
@@ -185,7 +162,6 @@ func main() {
 			materialRoutes.DELETE("/:id", materialHandler.DeleteMaterial)
 		}
 
-		// Weekly Evaluation routes
 		weeklyEvaluationRoutes := authRequired.Group("/evaluations/weekly")
 		{
 			weeklyEvaluationRoutes.GET("/student/progress", weeklyEvaluationHandler.GetWeeklyEvaluationProgressByStudentID)
@@ -194,7 +170,6 @@ func main() {
 			weeklyEvaluationRoutes.GET("/teacher/status", weeklyEvaluationHandler.GetStudentEvaluationStatus)
 		}
 
-		// Correlation routes
 		correlationRoutes := authRequired.Group("/correlation")
 		{
 			correlationRoutes.GET("/analyze", correlationHandler.AnalyzeCorrelation)

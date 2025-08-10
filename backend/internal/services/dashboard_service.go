@@ -3,161 +3,118 @@ package services
 import (
 	"context"
 	"pointmarket/backend/internal/dtos"
-	// Removed unused import: "pointmarket/backend/internal/models"
+	"pointmarket/backend/internal/store/gen"
 )
 
 type DashboardService struct {
-	userService             UserService
-	nlpService              NLPService
-	varkService             VARKService
-	questionnaireService    QuestionnaireService
-	weeklyEvaluationService WeeklyEvaluationService
+	q gen.Querier
 }
 
-func NewDashboardService(
-	userService UserService,
-	nlpService NLPService,
-	varkService VARKService,
-	questionnaireService QuestionnaireService,
-	weeklyEvaluationService WeeklyEvaluationService,
-) *DashboardService {
+func NewDashboardService(q gen.Querier) *DashboardService {
 	return &DashboardService{
-		userService:             userService,
-		nlpService:              nlpService,
-		varkService:             varkService,
-		questionnaireService:    questionnaireService,
-		weeklyEvaluationService: weeklyEvaluationService,
+		q: q,
 	}
 }
 
-func (s *DashboardService) GetComprehensiveDashboardData(ctx context.Context, userID uint, userRole string) (dtos.ComprehensiveDashboardDTO, error) {
-	var dashboardData dtos.ComprehensiveDashboardDTO
+func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, userRole string) (dtos.DashboardDTO, error) {
+	var dashboardData dtos.DashboardDTO
 	var err error
 
-	// Fetch User Profile
-	userModel, err := s.userService.GetUserByID(ctx, int64(userID))
+	userModel, err := s.q.GetUserByID(ctx, userID)
 	if err != nil {
 		return dashboardData, err
 	}
-	userProfileDTO := dtos.UserDTO{
+
+	userDTO := dtos.UserDTO{
 		ID:       int(userModel.ID),
 		Email:    userModel.Email,
 		Username: userModel.Username,
+		Name:     userModel.DisplayName,
 		Role:     string(userModel.Role),
 	}
-	dashboardData.UserProfile = userProfileDTO
 
-	// Fetch NLP Stats
-	nlpProgressModel, err := s.nlpService.GetNLPStats(userID)
-	if err != nil {
-		return dashboardData, err
-	}
-	var nlpStatsDTO dtos.NLPStatsResponse
-	if nlpProgressModel != nil {
-		nlpStatsDTO.FromNLPStats(*nlpProgressModel)
-	}
-	dashboardData.NLPStats = nlpStatsDTO
-
-	// Fetch Latest VARK Result
-	varkResultModel, err := s.varkService.GetLatestVARKResult(userID)
-	if err != nil {
-		return dashboardData, err
-	}
-	var varkResultDTO dtos.VARKResultResponse
-	if varkResultModel != nil {
-		varkResultDTO.FromVARKResult(*varkResultModel)
-	}
-	dashboardData.LatestVARKResult = varkResultDTO
+	dashboardData.User = userDTO
 
 	// Fetch data based on role
 	switch userRole {
 	case "admin":
-		adminCountsModel, err := s.userService.GetAdminDashboardCounts()
+		stats, err := s.q.GetAdminStatistic(ctx)
 		if err != nil {
 			return dashboardData, err
 		}
-		var adminCountsDTO dtos.AdminDashboardCountsDTO
-		if adminCountsModel != nil {
-			adminCountsDTO.FromAdminDashboardCounts(adminCountsModel)
+		dashboardData.AdminStats = dtos.AdminDashboardStatsDTO{
+			TotalUsers:              stats.TotalUsers,
+			TotalTeachers:           stats.TotalTeachers,
+			TotalStudents:           stats.TotalStudents,
+			TotalCourses:            stats.TotalCourses,
+			TotalBadges:             stats.TotalBadges,
+			TotalPointsTransactions: stats.TotalPointsTransactions,
+			TotalProducts:           stats.TotalProducts,
+			TotalMissions:           stats.TotalMissions,
 		}
-		dashboardData.AdminCounts = adminCountsDTO
-	case "guru": // Teacher
-		teacherCountsModel, err := s.userService.GetTeacherDashboardCounts(userID)
+	case "guru":
+		stats, err := s.q.GetTeacherStatistic(ctx, gen.GetTeacherStatisticParams{TeacherID: userID})
 		if err != nil {
 			return dashboardData, err
 		}
-		var teacherCountsDTO dtos.TeacherDashboardCountsDTO
-		if teacherCountsModel != nil {
-			teacherCountsDTO.FromTeacherDashboardCounts(teacherCountsModel)
+		dashboardData.Teacherstats = dtos.TeacherDashboardStatsDTO{
+			TotalStudents:    stats.TotalStudents,
+			TotalCourses:     stats.TotalCourses,
+			TotalAssignments: stats.TotalAssignments,
+			TotalQuizzes:     stats.TotalQuizzes,
 		}
-		dashboardData.TeacherCounts = teacherCountsDTO
-	case "siswa": // Student
-		studentStatsModel, err := s.userService.GetStudentDashboardStats(userID)
+	case "siswa":
+		stats, err := s.q.GetStudentStatistic(ctx, userID)
 		if err != nil {
 			return dashboardData, err
 		}
-		var studentStatsDTO dtos.StudentDashboardStatsDTO
-		if studentStatsModel != nil {
-			studentStatsDTO.FromStudentDashboardStats(studentStatsModel)
+
+		learningStyle, err := s.q.GetStudentLearningStyle(ctx, userID)
+		if err != nil {
+			return dashboardData, err
 		}
+
+		const defaultScore = 0.0
+		scoreVisual := defaultScore
+		scoreAuditory := defaultScore
+		scoreReading := defaultScore
+		scoreKinesthetic := defaultScore
+
+		if learningStyle.ScoreVisual != nil {
+			scoreVisual = *learningStyle.ScoreVisual
+		}
+
+		if learningStyle.ScoreAuditory != nil {
+			scoreAuditory = *learningStyle.ScoreAuditory
+		}
+
+		if learningStyle.ScoreReading != nil {
+			scoreReading = *learningStyle.ScoreReading
+		}
+
+		if learningStyle.ScoreKinesthetic != nil {
+			scoreKinesthetic = *learningStyle.ScoreReading
+		}
+
+		studentStatsDTO := dtos.StudentDashboardStatsDTO{
+			TotalPoints:          stats.TotalPoints,
+			CompletedAssignments: stats.CompletedAssignments,
+			MSLQScore:            stats.MslqScore,
+			AMSScore:             stats.AmsScore,
+			LearningStyle: dtos.StudentLearningStyle{
+				Type:  string(learningStyle.Type),
+				Label: learningStyle.Label,
+				Scores: dtos.VARKScores{
+					Visual:      scoreVisual,
+					Aural:       scoreAuditory,
+					ReadWrite:   scoreReading,
+					Kinesthetic: scoreKinesthetic,
+				},
+			},
+		}
+
 		dashboardData.StudentStats = studentStatsDTO
-
-		assignmentStatsModel, err := s.userService.GetAssignmentStatsByStudentID(userID)
-		if err != nil {
-			return dashboardData, err
-		}
-		var assignmentStatsDTO dtos.AssignmentStatsDTO
-		if assignmentStatsModel != nil {
-			assignmentStatsDTO.FromAssignmentStats(assignmentStatsModel)
-		}
-		dashboardData.AssignmentStats = assignmentStatsDTO
-
-		recentActivitiesModels, err := s.userService.GetRecentActivityByUserID(userID, 10)
-		if err != nil {
-			return dashboardData, err
-		}
-		var recentActivitiesDTOs []dtos.RecentActivityDTO
-		for _, activityModel := range recentActivitiesModels {
-			var activityDTO dtos.RecentActivityDTO
-			activityDTO.FromActivityLog(&activityModel)
-			recentActivitiesDTOs = append(recentActivitiesDTOs, activityDTO)
-		}
-		dashboardData.RecentActivities = recentActivitiesDTOs
-
-		weeklyProgressModels, err := s.weeklyEvaluationService.GetWeeklyEvaluationProgressByStudentID(int(userID), 8)
-		if err != nil {
-			return dashboardData, err
-		}
-		var weeklyProgressDTOs []dtos.WeeklyEvaluationProgressDTO
-		for _, progressModel := range weeklyProgressModels {
-			var progressDTO dtos.WeeklyEvaluationProgressDTO
-			progressDTO.Year = progressModel.Year
-			progressDTO.WeekNumber = progressModel.WeekNumber
-			progressDTO.QuestionnaireName = progressModel.QuestionnaireName
-			progressDTO.MslqScore = progressModel.MSLQScore
-			progressDTO.AmsScore = progressModel.AMSScore
-			progressDTO.Status = progressModel.Status
-			if progressModel.DueDate != nil {
-				progressDTO.DueDate = *progressModel.DueDate
-			}
-			progressDTO.CompletedAt = progressModel.CompletedAt
-			weeklyProgressDTOs = append(weeklyProgressDTOs, progressDTO)
-		}
-		dashboardData.WeeklyProgress = weeklyProgressDTOs
 	}
-
-	// Fetch Questionnaire Stats (might be common for all roles or specific)
-	questionnaireStatsModels, err := s.questionnaireService.GetQuestionnaireStatsByStudentID(userID)
-	if err != nil {
-		return dashboardData, err
-	}
-	var questionnaireStatsDTOs []dtos.QuestionnaireStatsDTO
-	for _, statModel := range questionnaireStatsModels {
-		var statDTO dtos.QuestionnaireStatsDTO
-		statDTO.FromQuestionnaireStat(&statModel)
-		questionnaireStatsDTOs = append(questionnaireStatsDTOs, statDTO)
-	}
-	dashboardData.QuestionnaireStats = questionnaireStatsDTOs
 
 	return dashboardData, nil
 }

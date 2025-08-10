@@ -592,7 +592,7 @@ type StudentAssignment struct {
 	StudentID    int64                        `json:"student_id"`
 	AssignmentID int64                        `json:"assignment_id"`
 	Status       NullStudentAssignmentsStatus `json:"status"`
-	Score        sql.NullString               `json:"score"`
+	Score        *float64                     `json:"score"`
 	Submission   sql.NullString               `json:"submission"`
 	SubmittedAt  sql.NullTime                 `json:"submitted_at"`
 	GradedAt     sql.NullTime                 `json:"graded_at"`
@@ -605,7 +605,7 @@ type StudentQuestionnaireLikertResult struct {
 	StudentID       int64           `json:"student_id"`
 	QuestionnaireID int32           `json:"questionnaire_id"`
 	Answers         json.RawMessage `json:"answers"`
-	TotalScore      string          `json:"total_score"`
+	TotalScore      float64         `json:"total_score"`
 	SubscaleScores  json.RawMessage `json:"subscale_scores"`
 	CreatedAt       sql.NullTime    `json:"created_at"`
 }
@@ -614,10 +614,10 @@ type StudentQuestionnaireVarkResult struct {
 	ID               int64           `json:"id"`
 	StudentID        int64           `json:"student_id"`
 	QuestionnaireID  int32           `json:"questionnaire_id"`
-	ScoreVisual      string          `json:"score_visual"`
-	ScoreAuditory    string          `json:"score_auditory"`
-	ScoreReading     string          `json:"score_reading"`
-	ScoreKinesthetic string          `json:"score_kinesthetic"`
+	ScoreVisual      float64         `json:"score_visual"`
+	ScoreAuditory    float64         `json:"score_auditory"`
+	ScoreReading     float64         `json:"score_reading"`
+	ScoreKinesthetic float64         `json:"score_kinesthetic"`
 	Answers          json.RawMessage `json:"answers"`
 	CreatedAt        sql.NullTime    `json:"created_at"`
 }
@@ -674,10 +674,10 @@ type UserLearningStyle struct {
 	UserID           int64                  `json:"user_id"`
 	Type             UserLearningStylesType `json:"type"`
 	Label            string                 `json:"label"`
-	ScoreVisual      sql.NullString         `json:"score_visual"`
-	ScoreAuditory    sql.NullString         `json:"score_auditory"`
-	ScoreReading     sql.NullString         `json:"score_reading"`
-	ScoreKinesthetic sql.NullString         `json:"score_kinesthetic"`
+	ScoreVisual      *float64               `json:"score_visual"`
+	ScoreAuditory    *float64               `json:"score_auditory"`
+	ScoreReading     *float64               `json:"score_reading"`
+	ScoreKinesthetic *float64               `json:"score_kinesthetic"`
 	CreatedAt        time.Time              `json:"created_at"`
 }
 

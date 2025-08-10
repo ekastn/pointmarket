@@ -12,3 +12,12 @@ sql:
         emit_interface: true
         emit_exact_table_names: false
         emit_pointers_for_null_types: true
+        overrides:
+          - db_type: "decimal"
+            go_type: "float64"
+            nullable: false
+          - db_type: "decimal"
+            nullable: true
+            go_type: 
+              type: "float64"
+              pointer: true

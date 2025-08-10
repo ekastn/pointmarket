@@ -12,7 +12,11 @@ import (
 type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	DeleteUser(ctx context.Context, id int64) error
+	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
 	GetRoles(ctx context.Context) ([]UsersRole, error)
+	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
+	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)
+	GetTeacherStatistic(ctx context.Context, arg GetTeacherStatisticParams) (GetTeacherStatisticRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
@@ -104,29 +103,4 @@ func (s *UserService) UpdateUserRole(ctx context.Context, userID int64, role str
 // DeleteUser deletes a user (sets role to 'inactive')
 func (s *UserService) DeleteUser(ctx context.Context, userID int64) error {
 	return s.q.DeleteUser(ctx, userID)
-}
-
-// GetStudentDashboardStats retrieves aggregated statistics for a student's dashboard
-func (s *UserService) GetStudentDashboardStats(studentID uint) (*models.StudentDashboardStats, error) {
-	return s.userStore.GetStudentDashboardStats(int(studentID))
-}
-
-// GetAdminDashboardCounts retrieves counts for admin dashboard
-func (s *UserService) GetAdminDashboardCounts() (*models.AdminDashboardCounts, error) {
-	return s.userStore.GetAdminDashboardCounts()
-}
-
-// GetTeacherDashboardCounts retrieves counts for teacher dashboard
-func (s *UserService) GetTeacherDashboardCounts(teacherID uint) (*models.TeacherDashboardCounts, error) {
-	return s.userStore.GetTeacherDashboardCounts(int(teacherID))
-}
-
-// GetAssignmentStatsByStudentID retrieves assignment statistics for a student
-func (s *UserService) GetAssignmentStatsByStudentID(studentID uint) (*models.AssignmentStats, error) {
-	return s.userStore.GetAssignmentStatsByStudentID(int(studentID))
-}
-
-// GetRecentActivityByUserID retrieves recent activity for a user
-func (s *UserService) GetRecentActivityByUserID(userID uint, limit int) ([]models.ActivityLog, error) {
-	return s.userStore.GetRecentActivityByUserID(int(userID), limit)
 }

@@ -5,26 +5,20 @@ import (
 	"time"
 )
 
-// ==================
-//     Requests
-// ==================
-
-type UpdateProfileRequest struct {
-	Name   string  `json:"name" binding:"required"`
-	Email  string  `json:"email" binding:"required,email"`
-	Avatar *string `json:"avatar"`
+type UpdateUserRequest struct {
+	Name      string  `json:"name" binding:"required"`
+	Email     string  `json:"email" binding:"required,email"`
+	AvatarURL *string `json:"avatar_url"`
+	Bio       *string `json:"bio"`
 }
 
 type CreateUserRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Role     string `json:"role" binding:"required"`
 }
-
-// ==================
-//      Response
-// ==================
 
 type UserDTO struct {
 	ID        int        `json:"id"`
@@ -36,16 +30,6 @@ type UserDTO struct {
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	LastLogin *time.Time `json:"last_login"`
-}
-
-type PendingEvaluationDTO struct {
-	WeekNumber        int        `json:"week_number"`
-	Year              int        `json:"year"`
-	QuestionnaireType string     `json:"questionnaire_type"`
-	QuestionnaireName string     `json:"questionnaire_name"`
-	Status            string     `json:"status"`
-	DueDate           *time.Time `json:"due_date"`
-	CompletedAt       *time.Time `json:"completed_at"`
 }
 
 // FromUser converts a models.User to a UserDTO.

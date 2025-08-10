@@ -24,15 +24,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(registerDTO)
+	user, err := h.authService.Register(c.Request.Context(), registerDTO)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	var userDTO dtos.UserDTO
-	userDTO.FromUser(user)
-	response.Success(c, http.StatusCreated, "User registered successfully", userDTO)
+	response.Success(c, http.StatusCreated, "User registered successfully", user)
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -42,14 +40,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.authService.Login(loginDTO)
+	user, token, err := h.authService.Login(c.Request.Context(), loginDTO)
 	if err != nil {
 		response.Error(c, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
-	var userDTO dtos.UserDTO
-	userDTO.FromUser(user)
+	userDTO := dtos.UserDTO{
+		ID:       int(user.ID),
+		Email:    user.Email,
+		Username: user.Username,
+		Role:     string(user.Role),
+	}
 
 	loginResponse := dtos.LoginResponse{
 		Token: token,

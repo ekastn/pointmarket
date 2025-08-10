@@ -7,7 +7,6 @@ import (
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
-	"pointmarket/backend/internal/utils"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -23,34 +22,26 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 
 // CreateUser handles creating a new user
 func (h *UserHandler) CreateUser(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
 	var req dtos.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	user, err := h.userService.CreateUser(req)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	var userDTO dtos.UserDTO
-	userDTO.FromUser(*user)
-	response.Success(c, http.StatusCreated, "User created successfully", userDTO)
-}
-
-func (h *UserHandler) GetUserProfile(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-
-	user, err := h.userService.GetUserByID(userID)
+	user, err := h.userService.GetUserByID(c.Request.Context(), int64(userID))
 	if err != nil {
 		response.Error(c, http.StatusNotFound, "User not found")
 		return
 	}
 
-	var userDTO dtos.UserDTO
-	userDTO.FromUser(user)
+	userDTO := dtos.UserDTO{
+		ID:       int(user.ID),
+		Email:    user.Email,
+		Username: user.Username,
+		Role:     string(user.Role),
+	}
 	response.Success(c, http.StatusOK, "User profile retrieved successfully", userDTO)
 }
 
@@ -58,13 +49,13 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
-	var req dtos.UpdateProfileRequest
+	var req dtos.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err := h.userService.UpdateUserProfile(userID, req)
+	err := h.userService.UpdateUserProfile(c.Request.Context(), int64(userID), req)
 	if err == sql.ErrNoRows {
 		response.Error(c, http.StatusNotFound, "User not found")
 		return
@@ -81,28 +72,35 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	search := c.Query("search")
 	role := c.Query("role")
 
-	users, err := h.userService.SearchUsers(search, role)
+	users, err := h.userService.SearchUsers(c.Request.Context(), search, role)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	var userDTOs []dtos.UserDTO
 	for _, user := range users {
-		var userDTO dtos.UserDTO
-		userDTO.FromUser(user)
+		userDTO := dtos.UserDTO{
+			ID:       int(user.ID),
+			Email:    user.Email,
+			Username: user.Username,
+			Role:     string(user.Role),
+		}
 		userDTOs = append(userDTOs, userDTO)
 	}
+
 	response.Success(c, http.StatusOK, "Users retrieved successfully", userDTOs)
 }
 
 // GetUserByID handles fetching a user by ID
 func (h *UserHandler) GetUserByID(c *gin.Context) {
-	id, ok := utils.GetIDFromParam(c, "id")
-	if !ok {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
 
-	user, err := h.userService.GetUserByID(id)
+	user, err := h.userService.GetUserByID(c.Request.Context(), id)
 	if err == sql.ErrNoRows {
 		response.Error(c, http.StatusNotFound, "User not found")
 		return
@@ -112,9 +110,12 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	var userDTO dtos.UserDTO
-	userDTO.FromUser(user)
+	userDTO := dtos.UserDTO{
+		ID:       int(user.ID),
+		Email:    user.Email,
+		Username: user.Username,
+		Role:     string(user.Role),
+	}
 	response.Success(c, http.StatusOK, "User retrieved successfully", userDTO)
 }
 
@@ -126,9 +127,10 @@ func (h *UserHandler) GetRoles(c *gin.Context) {
 
 // UpdateUserRole handles updating a user's role (admin only)
 func (h *UserHandler) UpdateUserRole(c *gin.Context) {
-	id, ok := utils.GetIDFromParam(c, "id")
-	if !ok {
-		return // Error response already sent by helper
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
 	}
 
 	var req struct {
@@ -140,11 +142,12 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.UpdateUserRole(uint(id), req.Role); err != nil {
-		if err == sql.ErrNoRows {
-			response.Error(c, http.StatusNotFound, "User not found")
-			return
-		}
+	err = h.userService.UpdateUserRole(c.Request.Context(), id, req.Role)
+	if err == sql.ErrNoRows {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -153,83 +156,15 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 
 // DeleteUser handles deleting a user (sets role to 'inactive')
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	id, ok := utils.GetIDFromParam(c, "id")
-	if !ok {
-		return // Error response already sent by helper
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
 	}
-	err := h.userService.DeleteUser(uint(id))
+	err = h.userService.DeleteUser(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 	response.Success(c, http.StatusOK, "User deleted successfully", nil)
-}
-
-// GetStudentDashboardStats handles fetching aggregated statistics for a student's dashboard
-func (h *UserHandler) GetStudentDashboardStats(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-
-	stats, err := h.userService.GetStudentDashboardStats(userID)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Student dashboard statistics retrieved successfully", stats)
-}
-
-// GetAdminDashboardCounts handles fetching counts for admin dashboard
-func (h *UserHandler) GetAdminDashboardCounts(c *gin.Context) {
-	counts, err := h.userService.GetAdminDashboardCounts()
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	response.Success(c, http.StatusOK, "Admin dashboard counts retrieved successfully", counts)
-}
-
-// GetTeacherDashboardCounts handles fetching counts for teacher dashboard
-func (h *UserHandler) GetTeacherDashboardCounts(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-
-	counts, err := h.userService.GetTeacherDashboardCounts(userID)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Teacher dashboard counts retrieved successfully", counts)
-}
-
-// GetAssignmentStatsByStudentID handles fetching assignment statistics for a student
-func (h *UserHandler) GetAssignmentStatsByStudentID(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-
-	stats, err := h.userService.GetAssignmentStatsByStudentID(userID)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Assignment statistics retrieved successfully", stats)
-}
-
-// GetRecentActivityByUserID handles fetching recent activity for a user
-func (h *UserHandler) GetRecentActivityByUserID(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-
-	limitStr := c.DefaultQuery("limit", "10")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 0 {
-		response.Error(c, http.StatusBadRequest, "Invalid limit parameter")
-		return
-	}
-
-	activities, err := h.userService.GetRecentActivityByUserID(userID, limit)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response.Success(c, http.StatusOK, "Recent activity retrieved successfully", activities)
 }

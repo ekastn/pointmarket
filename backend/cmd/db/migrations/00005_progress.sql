@@ -35,5 +35,6 @@ CREATE TABLE text_analysis_snapshots (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS weekly_evaluations
+drop table if exists text_analysis_snapshots;
+DROP TABLE IF EXISTS weekly_evaluations;
 -- +goose StatementEnd

@@ -29,7 +29,7 @@ func (h *DashboardHandler) GetComprehensiveDashboardData(c *gin.Context) {
 		return
 	}
 
-	data, err := h.dashboardService.GetComprehensiveDashboardData(userID.(uint), userRole.(string))
+	data, err := h.dashboardService.GetComprehensiveDashboardData(c.Request.Context(), userID.(uint), userRole.(string))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to retrieve comprehensive dashboard data: "+err.Error())
 		return

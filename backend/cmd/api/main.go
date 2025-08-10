@@ -9,6 +9,7 @@ import (
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/services"
 	"pointmarket/backend/internal/store"
+	"pointmarket/backend/internal/store/gen"
 	"strings"
 	"time"
 
@@ -19,6 +20,8 @@ import (
 func main() {
 	cfg := config.Init()
 	db := database.Connect(cfg)
+
+	querier := gen.New(db)
 
 	// Initialize stores
 	userStore := store.NewUserStore(db)
@@ -35,8 +38,8 @@ func main() {
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
 
 	// Initialize services
-	authService := services.NewAuthService(userStore, cfg)
-	userService := services.NewUserService(userStore)
+	authService := services.NewAuthService(userStore, cfg, querier)
+	userService := services.NewUserService(userStore, querier)
 	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
@@ -109,13 +112,13 @@ func main() {
 	adminRoutes.Use(middleware.Authz("admin"))
 
 	{
-		authRequired.GET("/profile", userHandler.GetUserProfile)
+		// authRequired.GET("/profile", userHandler.GetUserProfile)
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
 
 		userRoutes := adminRoutes.Group("/users")
 		{
 			userRoutes.GET("", userHandler.GetAllUsers)
-			userRoutes.POST("", userHandler.CreateUser) 
+			userRoutes.POST("", userHandler.CreateUser)
 			userRoutes.GET("/:id", userHandler.GetUserByID)
 			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)

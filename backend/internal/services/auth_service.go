@@ -1,76 +1,72 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"pointmarket/backend/internal/auth"
 	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
+	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
 )
 
 // AuthService provides authentication related services
 type AuthService struct {
 	userStore *store.UserStore
+	q         gen.Querier
 	cfg       *config.Config
 }
 
 // NewAuthService creates a new AuthService
-func NewAuthService(userStore *store.UserStore, cfg *config.Config) *AuthService {
-	return &AuthService{userStore: userStore, cfg: cfg}
+func NewAuthService(userStore *store.UserStore, cfg *config.Config, q gen.Querier) *AuthService {
+	return &AuthService{userStore: userStore, cfg: cfg, q: q}
 }
 
 // Register creates a new user
-func (s *AuthService) Register(req dtos.RegisterRequest) (models.User, error) {
+func (s *AuthService) Register(ctx context.Context, req dtos.RegisterRequest) (gen.User, error) {
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return models.User{}, err
+		return gen.User{}, err
 	}
 
-	user := models.User{
-		Username: req.Username,
-		Password: hashedPassword,
-		Name:     req.Name,
-		Email:    req.Email,
-		Role:     req.Role,
+	data := gen.CreateUserParams{
+		Email:       req.Email,
+		Username:    req.Username,
+		Password:    hashedPassword,
+		DisplayName: req.Name,
+		Role:        gen.UsersRole(req.Role),
 	}
 
-	err = s.userStore.CreateUser(&user)
-	return user, err
+	res, err := s.q.CreateUser(ctx, data)
+	if err != nil {
+		return gen.User{}, err
+	}
+
+	userID, err := res.LastInsertId()
+	if err != nil {
+		return gen.User{}, err
+	}
+
+	return s.q.GetUserByID(ctx, userID)
 }
 
 // Login authenticates a user and returns a JWT token
-func (s *AuthService) Login(req dtos.LoginRequest) (models.User, string, error) {
-	user, err := s.userStore.GetUserByUsername(req.Username)
+func (s *AuthService) Login(ctx context.Context, req dtos.LoginRequest) (gen.User, string, error) {
+	user, err := s.q.GetUserByUsername(ctx, req.Username)
 	if err != nil {
-		return models.User{}, "", err
-	}
-	if user == nil {
-		return models.User{}, "", errors.New("invalid credentials")
+		return gen.User{}, "", err
 	}
 
 	err = utils.CheckPassword(req.Password, user.Password)
 	if err != nil {
-		return models.User{}, "", errors.New("invalid credentials")
+		return gen.User{}, "", errors.New("invalid credentials")
 	}
 
-	token, err := auth.GenerateJWT(user.Username, user.Role, s.cfg)
+	token, err := auth.GenerateJWT(user.Username, string(user.Role), s.cfg)
 	if err != nil {
-		return models.User{}, "", err
+		return gen.User{}, "", err
 	}
 
-	return *user, token, nil
-}
-
-// GetUserProfile retrieves a user's profile by username
-func (s *AuthService) GetUserProfile(username string) (*models.User, error) {
-	user, err := s.userStore.GetUserByUsername(username)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, errors.New("user not found")
-	}
-	return user, nil
+	return user, token, nil
 }

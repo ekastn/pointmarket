@@ -1,95 +1,109 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/models"
 	"pointmarket/backend/internal/store"
-
-	"golang.org/x/crypto/bcrypt"
+	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 )
 
 type UserService struct {
 	userStore *store.UserStore
+	q         gen.Querier
 }
 
-func NewUserService(userStore *store.UserStore) *UserService {
-	return &UserService{userStore: userStore}
+func NewUserService(userStore *store.UserStore, q gen.Querier) *UserService {
+	return &UserService{userStore: userStore, q: q}
 }
 
-func (s *UserService) GetUserByID(id uint) (models.User, error) {
-	user, err := s.userStore.GetUserByID(id)
-	if err != nil {
-		return models.User{}, err
-	}
-	return *user, nil
+func (s *UserService) GetUserByID(ctx context.Context, id int64) (gen.User, error) {
+	return s.q.GetUserByID(ctx, id)
 }
 
 // CreateUser creates a new user
-func (s *UserService) CreateUser(req dtos.CreateUserRequest) (*models.User, error) {
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+func (s *UserService) CreateUser(ctx context.Context, req dtos.CreateUserRequest) error {
+	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	user := &models.User{
-		Username: req.Username,
-		Password: string(hashedPassword),
-		Name:     req.Username, // Assuming name is same as username for now
-		Email:    req.Email,
-		Role:     req.Role,
+	data := gen.CreateUserParams{
+		Email:       req.Email,
+		Username:    req.Username,
+		Password:    hashedPassword,
+		DisplayName: req.Name,
+		Role:        gen.UsersRole(req.Role),
 	}
 
-	err = s.userStore.CreateUser(user)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-// UpdateUserProfile updates a user's profile information
-func (s *UserService) UpdateUserProfile(userID uint, req dtos.UpdateProfileRequest) error {
-	user, err := s.userStore.GetUserByID(userID)
+	_, err = s.q.CreateUser(ctx, data)
 	if err != nil {
 		return err
 	}
-	if user == nil {
-		return sql.ErrNoRows // User not found
+
+	return nil
+}
+
+// UpdateUserProfile updates a user's profile information
+func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, req dtos.UpdateUserRequest) error {
+	user, err := s.q.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
 	}
 
-	user.Name = req.Name
-	user.Email = req.Email
-	user.Avatar = req.Avatar
+	if user.ID == 0 {
+		return sql.ErrNoRows
+	}
 
-	return s.userStore.UpdateUser(user)
+	data := gen.UpdateUserProfileParams{
+		UserID: userID,
+		AvatarUrl: sql.NullString{
+			String: *req.AvatarURL,
+		},
+		Bio: sql.NullString{
+			String: *req.Bio,
+		},
+	}
+
+	return s.q.UpdateUserProfile(ctx, data)
 }
 
 // SearchUsers retrieves users based on search term and role
-func (s *UserService) SearchUsers(search, role string) ([]models.User, error) {
-	return s.userStore.SearchUsers(search, role)
+func (s *UserService) SearchUsers(ctx context.Context, search, role string) ([]gen.User, error) {
+	data := gen.SearchUsersParams{
+		DisplayName: search,
+		Username:    search,
+		Email:       search,
+		Role:        gen.UsersRole(role),
+	}
+	return s.q.SearchUsers(ctx, data)
 }
 
 // GetRoles retrieves a list of available user roles
 func (s *UserService) GetRoles() []string {
-	return s.userStore.GetRoles()
+	return []string{"siswa", "guru", "admin"}
 }
 
-// GetAllUsers retrieves all users (kept for existing functionality, but SearchUsers is preferred for filtering)
-func (s *UserService) GetAllUsers() ([]models.User, error) {
-	return s.userStore.GetAllUsers()
+// GetAllUsers retrieves all users
+func (s *UserService) GetAllUsers(ctx context.Context) ([]gen.User, error) {
+	return s.q.GetUsers(ctx)
 }
 
 // UpdateUserRole updates a user's role
-func (s *UserService) UpdateUserRole(userID uint, role string) error {
-	return s.userStore.UpdateUserRole(int(userID), role)
+func (s *UserService) UpdateUserRole(ctx context.Context, userID int64, role string) error {
+	data := gen.UpdateUserRoleParams{
+		ID:   userID,
+		Role: gen.UsersRole(role),
+	}
+	return s.q.UpdateUserRole(ctx, data)
 }
 
 // DeleteUser deletes a user (sets role to 'inactive')
-func (s *UserService) DeleteUser(userID uint) error {
-	return s.userStore.DeleteUser(int(userID))
+func (s *UserService) DeleteUser(ctx context.Context, userID int64) error {
+	return s.q.DeleteUser(ctx, userID)
 }
 
 // GetStudentDashboardStats retrieves aggregated statistics for a student's dashboard

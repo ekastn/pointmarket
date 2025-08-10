@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"pointmarket/backend/internal/dtos"
 	// Removed unused import: "pointmarket/backend/internal/models"
 )
@@ -29,17 +30,21 @@ func NewDashboardService(
 	}
 }
 
-func (s *DashboardService) GetComprehensiveDashboardData(userID uint, userRole string) (dtos.ComprehensiveDashboardDTO, error) {
+func (s *DashboardService) GetComprehensiveDashboardData(ctx context.Context, userID uint, userRole string) (dtos.ComprehensiveDashboardDTO, error) {
 	var dashboardData dtos.ComprehensiveDashboardDTO
 	var err error
 
 	// Fetch User Profile
-	userModel, err := s.userService.GetUserByID(userID)
+	userModel, err := s.userService.GetUserByID(ctx, int64(userID))
 	if err != nil {
 		return dashboardData, err
 	}
-	var userProfileDTO dtos.UserDTO
-	userProfileDTO.FromUser(userModel)
+	userProfileDTO := dtos.UserDTO{
+		ID:       int(userModel.ID),
+		Email:    userModel.Email,
+		Username: userModel.Username,
+		Role:     string(userModel.Role),
+	}
 	dashboardData.UserProfile = userProfileDTO
 
 	// Fetch NLP Stats

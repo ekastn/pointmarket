@@ -10,21 +10,42 @@ import (
 )
 
 type Querier interface {
+	// User Badges --
+	AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserParams) (sql.Result, error)
+	// Badges --
+	CreateBadge(ctx context.Context, arg CreateBadgeParams) (sql.Result, error)
+	// Missions --
+	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
+	// User Missions --
+	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
+	DeleteBadge(ctx context.Context, id int64) error
+	DeleteMission(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
+	DeleteUserMission(ctx context.Context, id int64) error
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
+	GetBadgeByID(ctx context.Context, id int64) (Badge, error)
+	GetBadges(ctx context.Context) ([]Badge, error)
+	GetMissionByID(ctx context.Context, id int64) (Mission, error)
+	GetMissions(ctx context.Context) ([]Mission, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProducts(ctx context.Context) ([]Product, error)
 	GetRoles(ctx context.Context) ([]UsersRole, error)
 	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)
 	GetTeacherStatistic(ctx context.Context, arg GetTeacherStatisticParams) (GetTeacherStatisticRow, error)
+	GetUserBadgesByUserID(ctx context.Context, userID int64) ([]GetUserBadgesByUserIDRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	GetUserMissionsByUserID(ctx context.Context, userID int64) ([]GetUserMissionsByUserIDRow, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)
+	UpdateBadge(ctx context.Context, arg UpdateBadgeParams) error
+	UpdateMission(ctx context.Context, arg UpdateMissionParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
+	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
 }

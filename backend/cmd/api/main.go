@@ -48,7 +48,9 @@ func main() {
 	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
-	productService := services.NewProductService(querier) // <--- NEW: Initialize ProductService
+	productService := services.NewProductService(querier)
+	badgeService := services.NewBadgeService(querier)
+	missionService := services.NewMissionService(querier)
 
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
@@ -62,7 +64,9 @@ func main() {
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
-	productHandler := handler.NewProductHandler(*productService) // <--- NEW: Initialize ProductHandler
+	productHandler := handler.NewProductHandler(*productService)
+	badgeHandler := handler.NewBadgeHandler(*badgeService)
+	missionHandler := handler.NewMissionHandler(*missionService)
 
 	r := gin.Default()
 
@@ -118,6 +122,29 @@ func main() {
 		{
 			productRoutes.GET("", productHandler.GetProducts)
 			productRoutes.GET("/:id", productHandler.GetProductByID)
+		}
+
+		badgesRoutes := authRequired.Group("/badges")
+		{
+			badgesRoutes.POST("", adminRoutes.Handlers[0], badgeHandler.CreateBadge) // Admin-only
+			badgesRoutes.GET("", badgeHandler.GetBadges)
+			badgesRoutes.GET("/:id", badgeHandler.GetBadgeByID)
+			badgesRoutes.PUT("/:id", adminRoutes.Handlers[0], badgeHandler.UpdateBadge)           // Admin-only
+			badgesRoutes.DELETE("/:id", adminRoutes.Handlers[0], badgeHandler.DeleteBadge)        // Admin-only
+			badgesRoutes.POST("/:id/award", adminRoutes.Handlers[0], badgeHandler.AwardBadge)     // Admin-only
+			badgesRoutes.DELETE("/:id/revoke", adminRoutes.Handlers[0], badgeHandler.RevokeBadge) // Admin-only
+		}
+
+		missionsRoutes := authRequired.Group("/missions")
+		{
+			missionsRoutes.POST("", adminRoutes.Handlers[0], missionHandler.CreateMission) // Admin-only
+			missionsRoutes.GET("", missionHandler.GetMissions)
+			missionsRoutes.GET("/:id", missionHandler.GetMissionByID)
+			missionsRoutes.PUT("/:id", adminRoutes.Handlers[0], missionHandler.UpdateMission)     // Admin-only
+			missionsRoutes.DELETE("/:id", adminRoutes.Handlers[0], missionHandler.DeleteMission)  // Admin-only
+			missionsRoutes.POST("/:id/start", missionHandler.StartMission)                        // Auth required
+			missionsRoutes.PUT("/:id/status", missionHandler.UpdateUserMissionStatus)             // Auth required
+			missionsRoutes.DELETE("/:id/end", adminRoutes.Handlers[0], missionHandler.EndMission) // Admin-only
 		}
 
 		authRequired.GET("/roles", userHandler.GetRoles)

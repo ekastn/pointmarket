@@ -14,23 +14,30 @@ type Querier interface {
 	AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserParams) (sql.Result, error)
 	// Badges --
 	CreateBadge(ctx context.Context, arg CreateBadgeParams) (sql.Result, error)
+	CreateCourse(ctx context.Context, arg CreateCourseParams) (sql.Result, error)
 	// Missions --
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	// User Missions --
 	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
 	DeleteBadge(ctx context.Context, id int64) error
+	DeleteCourse(ctx context.Context, id int64) error
 	DeleteMission(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserMission(ctx context.Context, id int64) error
+	// Student Enrollment --
+	EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error)
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
 	GetBadgeByID(ctx context.Context, id int64) (Badge, error)
 	GetBadges(ctx context.Context) ([]Badge, error)
+	GetCourseByID(ctx context.Context, id int64) (Course, error)
+	GetCourses(ctx context.Context) ([]Course, error)
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
 	GetMissions(ctx context.Context) ([]Mission, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProducts(ctx context.Context) ([]Product, error)
 	GetRoles(ctx context.Context) ([]UsersRole, error)
+	GetStudentCoursesByUserID(ctx context.Context, studentID int64) ([]GetStudentCoursesByUserIDRow, error)
 	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)
 	GetTeacherStatistic(ctx context.Context, arg GetTeacherStatisticParams) (GetTeacherStatisticRow, error)
@@ -42,7 +49,9 @@ type Querier interface {
 	GetUsers(ctx context.Context) ([]User, error)
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)
+	UnenrollStudentFromCourse(ctx context.Context, arg UnenrollStudentFromCourseParams) error
 	UpdateBadge(ctx context.Context, arg UpdateBadgeParams) error
+	UpdateCourse(ctx context.Context, arg UpdateCourseParams) error
 	UpdateMission(ctx context.Context, arg UpdateMissionParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error

@@ -49,6 +49,7 @@ func main() {
 	productService := services.NewProductService(querier)
 	badgeService := services.NewBadgeService(querier)
 	missionService := services.NewMissionService(querier)
+	courseService := services.NewCourseService(querier) // NEW
 
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
@@ -64,6 +65,7 @@ func main() {
 	productHandler := handler.NewProductHandler(*productService)
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
 	missionHandler := handler.NewMissionHandler(*missionService)
+	courseHandler := handler.NewCourseHandler(*courseService) // NEW
 
 	r := gin.Default()
 
@@ -142,6 +144,18 @@ func main() {
 			missionsRoutes.POST("/:id/start", missionHandler.StartMission)                        // Auth required
 			missionsRoutes.PUT("/:id/status", missionHandler.UpdateUserMissionStatus)             // Auth required
 			missionsRoutes.DELETE("/:id/end", adminRoutes.Handlers[0], missionHandler.EndMission) // Admin-only
+		}
+
+		// Courses routes
+		coursesRoutes := authRequired.Group("/courses")
+		{
+			coursesRoutes.POST("", adminRoutes.Handlers[0], courseHandler.CreateCourse) // Admin/Teacher-only
+			coursesRoutes.GET("", courseHandler.GetCourses)
+			coursesRoutes.GET("/:id", courseHandler.GetCourseByID)
+			coursesRoutes.PUT("/:id", adminRoutes.Handlers[0], courseHandler.UpdateCourse)    // Admin/Teacher-only, owner only
+			coursesRoutes.DELETE("/:id", adminRoutes.Handlers[0], courseHandler.DeleteCourse) // Admin/Teacher-only, owner only
+			coursesRoutes.POST("/:id/enroll", courseHandler.EnrollStudent)                    // Auth required
+			coursesRoutes.DELETE("/:id/unenroll", courseHandler.UnenrollStudent)              // Auth required
 		}
 
 		authRequired.GET("/roles", userHandler.GetRoles)

@@ -19,8 +19,14 @@ type Querier interface {
 	CreateCourse(ctx context.Context, arg CreateCourseParams) (sql.Result, error)
 	// Missions --
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
+	// Quizzes --
+	CreateQuiz(ctx context.Context, arg CreateQuizParams) (sql.Result, error)
+	// Quiz Questions --
+	CreateQuizQuestion(ctx context.Context, arg CreateQuizQuestionParams) (sql.Result, error)
 	// Student Assignments --
 	CreateStudentAssignment(ctx context.Context, arg CreateStudentAssignmentParams) (sql.Result, error)
+	// Student Quizzes --
+	CreateStudentQuiz(ctx context.Context, arg CreateStudentQuizParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	// User Missions --
 	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
@@ -28,7 +34,10 @@ type Querier interface {
 	DeleteBadge(ctx context.Context, id int64) error
 	DeleteCourse(ctx context.Context, id int64) error
 	DeleteMission(ctx context.Context, id int64) error
+	DeleteQuiz(ctx context.Context, id int64) error
+	DeleteQuizQuestion(ctx context.Context, id int64) error
 	DeleteStudentAssignment(ctx context.Context, id int64) error
+	DeleteStudentQuiz(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserMission(ctx context.Context, id int64) error
 	// Student Enrollment --
@@ -47,6 +56,12 @@ type Querier interface {
 	GetMissions(ctx context.Context) ([]Mission, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProducts(ctx context.Context) ([]Product, error)
+	GetQuizByID(ctx context.Context, id int64) (Quiz, error)
+	GetQuizQuestionByID(ctx context.Context, id int64) (QuizQuestion, error)
+	GetQuizQuestionsByQuizID(ctx context.Context, quizID int64) ([]QuizQuestion, error)
+	GetQuizzes(ctx context.Context) ([]Quiz, error)
+	GetQuizzesByCourseID(ctx context.Context, courseID int64) ([]Quiz, error)
+	GetQuizzesByOwnerID(ctx context.Context, ownerID int64) ([]Quiz, error)
 	GetRoles(ctx context.Context) ([]UsersRole, error)
 	GetStudentAssignmentByID(ctx context.Context, id int64) (StudentAssignment, error)
 	GetStudentAssignmentByIDs(ctx context.Context, arg GetStudentAssignmentByIDsParams) (StudentAssignment, error)
@@ -54,6 +69,10 @@ type Querier interface {
 	GetStudentAssignmentsByStudentID(ctx context.Context, studentID int64) ([]GetStudentAssignmentsByStudentIDRow, error)
 	GetStudentCoursesByUserID(ctx context.Context, studentID int64) ([]GetStudentCoursesByUserIDRow, error)
 	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
+	GetStudentQuizByID(ctx context.Context, id int64) (StudentQuiz, error)
+	GetStudentQuizByIDs(ctx context.Context, arg GetStudentQuizByIDsParams) (StudentQuiz, error)
+	GetStudentQuizzesByQuizID(ctx context.Context, quizID int64) ([]GetStudentQuizzesByQuizIDRow, error)
+	GetStudentQuizzesByStudentID(ctx context.Context, studentID int64) ([]GetStudentQuizzesByStudentIDRow, error)
 	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)
 	GetTeacherStatistic(ctx context.Context, arg GetTeacherStatisticParams) (GetTeacherStatisticRow, error)
 	GetUserBadgesByUserID(ctx context.Context, userID int64) ([]GetUserBadgesByUserIDRow, error)
@@ -69,7 +88,10 @@ type Querier interface {
 	UpdateBadge(ctx context.Context, arg UpdateBadgeParams) error
 	UpdateCourse(ctx context.Context, arg UpdateCourseParams) error
 	UpdateMission(ctx context.Context, arg UpdateMissionParams) error
+	UpdateQuiz(ctx context.Context, arg UpdateQuizParams) error
+	UpdateQuizQuestion(ctx context.Context, arg UpdateQuizQuestionParams) error
 	UpdateStudentAssignment(ctx context.Context, arg UpdateStudentAssignmentParams) error
+	UpdateStudentQuiz(ctx context.Context, arg UpdateStudentQuizParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error

@@ -45,7 +45,8 @@ func main() {
 	badgeService := services.NewBadgeService(querier)
 	missionService := services.NewMissionService(querier)
 	courseService := services.NewCourseService(querier)
-	assignmentService := services.NewAssignmentService(querier) // NEW: Assignment Service
+	assignmentService := services.NewAssignmentService(querier)
+	quizService := services.NewQuizService(querier)
 
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
@@ -60,7 +61,8 @@ func main() {
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
 	missionHandler := handler.NewMissionHandler(*missionService)
 	courseHandler := handler.NewCourseHandler(*courseService)
-	assignmentHandler := handler.NewAssignmentHandler(assignmentService) // NEW: Assignment Handler
+	assignmentHandler := handler.NewAssignmentHandler(assignmentService)
+	quizHandler := handler.NewQuizHandler(quizService)
 
 	r := gin.Default()
 
@@ -173,6 +175,33 @@ func main() {
 
 		// Specific student assignments list (e.g., for a student to see their own progress)
 		authRequired.GET("/students/:student_id/assignments", assignmentHandler.GetStudentAssignmentsList)
+
+		// NEW: Quizzes routes (general CRUD)
+		quizzesRoutes := authRequired.Group("/quizzes")
+		{
+			quizzesRoutes.POST("", adminRoutes.Handlers[0], quizHandler.CreateQuiz) // Admin/Teacher-only
+			quizzesRoutes.GET("", quizHandler.GetQuizzes)
+			quizzesRoutes.GET("/:id", quizHandler.GetQuizByID)
+			quizzesRoutes.PUT("/:id", adminRoutes.Handlers[0], quizHandler.UpdateQuiz)    // Admin/Teacher-only, owner only
+			quizzesRoutes.DELETE("/:id", adminRoutes.Handlers[0], quizHandler.DeleteQuiz) // Admin/Teacher-only, owner only
+
+			// Quiz Questions
+			quizzesRoutes.POST("/:id/questions", adminRoutes.Handlers[0], quizHandler.CreateQuizQuestion) // Admin/Teacher-only
+			quizzesRoutes.GET("/:id/questions", quizHandler.GetQuizQuestionsByQuizID)
+			quizzesRoutes.GET("/:id/questions/:question_id", quizHandler.GetQuizQuestionByID)
+			quizzesRoutes.PUT("/:id/questions/:question_id", adminRoutes.Handlers[0], quizHandler.UpdateQuizQuestion)    // Admin/Teacher-only
+			quizzesRoutes.DELETE("/:id/questions/:question_id", adminRoutes.Handlers[0], quizHandler.DeleteQuizQuestion) // Admin/Teacher-only
+
+			// Student-specific actions on quizzes
+			quizzesRoutes.POST("/:id/start", quizHandler.CreateStudentQuiz)                                                   // Auth required (student starts a quiz)
+			quizzesRoutes.POST("/:id/submit", quizHandler.UpdateStudentQuiz)                                                  // Auth required (student submits a quiz - updates status/score)
+			quizzesRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], quizHandler.GetStudentQuizzesByQuizID)             // Admin/Teacher-only (get all submissions for a quiz)
+			quizzesRoutes.PUT("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.UpdateStudentQuiz)    // Admin/Teacher-only (grade/update specific submission)
+			quizzesRoutes.DELETE("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.DeleteStudentQuiz) // Admin/Teacher-only
+		}
+
+		// Specific student quizzes list (e.g., for a student to see their own progress)
+		authRequired.GET("/students/:student_id/quizzes", quizHandler.GetStudentQuizzesList)
 
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{

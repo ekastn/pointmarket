@@ -24,8 +24,6 @@ func main() {
 	querier := gen.New(db)
 
 	// Initialize stores
-	userStore := store.NewUserStore(db)
-	quizStore := store.NewQuizStore(db)
 	questionnaireStore := store.NewQuestionnaireStore(db)
 	varkStore := store.NewVARKStore(db)
 	nlpStore := store.NewNLPStore(db)
@@ -36,9 +34,8 @@ func main() {
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
 
 	dashboardService := services.NewDashboardService(querier)
-	authService := services.NewAuthService(userStore, cfg, querier)
-	userService := services.NewUserService(userStore, querier)
-	quizService := services.NewQuizService(quizStore)
+	authService := services.NewAuthService(cfg, querier)
+	userService := services.NewUserService(querier)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
 	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
 	varkService := services.NewVARKService(varkStore, nlpService)
@@ -53,7 +50,6 @@ func main() {
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
-	quizHandler := handler.NewQuizHandler(*quizService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
 	varkHandler := handler.NewVARKHandler(*varkService, *nlpService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
@@ -106,6 +102,7 @@ func main() {
 		// authRequired.GET("/profile", userHandler.GetUserProfile)
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
 		authRequired.GET("/dashboard", dashboardHandler.GetDashboardData)
+		authRequired.GET("/roles", userHandler.GetRoles)
 
 		userRoutes := adminRoutes.Group("/users")
 		{
@@ -176,17 +173,6 @@ func main() {
 
 		// Specific student assignments list (e.g., for a student to see their own progress)
 		authRequired.GET("/students/:student_id/assignments", assignmentHandler.GetStudentAssignmentsList)
-
-		authRequired.GET("/roles", userHandler.GetRoles)
-
-		quizRoutes := authRequired.Group("/quizzes")
-		{
-			quizRoutes.GET("", quizHandler.GetAllQuizzes)
-			quizRoutes.POST("", quizHandler.CreateQuiz)
-			quizRoutes.GET("/:id", quizHandler.GetQuizByID)
-			quizRoutes.PUT("/:id", quizHandler.UpdateQuiz)
-			quizRoutes.DELETE("/:id", quizHandler.DeleteQuiz)
-		}
 
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{

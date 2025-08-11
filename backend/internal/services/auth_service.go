@@ -6,21 +6,19 @@ import (
 	"pointmarket/backend/internal/auth"
 	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
 )
 
 // AuthService provides authentication related services
 type AuthService struct {
-	userStore *store.UserStore
-	q         gen.Querier
-	cfg       *config.Config
+	q   gen.Querier
+	cfg *config.Config
 }
 
 // NewAuthService creates a new AuthService
-func NewAuthService(userStore *store.UserStore, cfg *config.Config, q gen.Querier) *AuthService {
-	return &AuthService{userStore: userStore, cfg: cfg, q: q}
+func NewAuthService(cfg *config.Config, q gen.Querier) *AuthService {
+	return &AuthService{cfg: cfg, q: q}
 }
 
 // Register creates a new user

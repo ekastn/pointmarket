@@ -5,18 +5,16 @@ import (
 	"database/sql"
 	"fmt"
 	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
 )
 
 type UserService struct {
-	userStore *store.UserStore
-	q         gen.Querier
+	q gen.Querier
 }
 
-func NewUserService(userStore *store.UserStore, q gen.Querier) *UserService {
-	return &UserService{userStore: userStore, q: q}
+func NewUserService(q gen.Querier) *UserService {
+	return &UserService{q: q}
 }
 
 func (s *UserService) GetUserByID(ctx context.Context, id int64) (gen.User, error) {

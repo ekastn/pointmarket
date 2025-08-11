@@ -12,22 +12,33 @@ import (
 type Querier interface {
 	// User Badges --
 	AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserParams) (sql.Result, error)
+	// Assignments --
+	CreateAssignment(ctx context.Context, arg CreateAssignmentParams) (sql.Result, error)
 	// Badges --
 	CreateBadge(ctx context.Context, arg CreateBadgeParams) (sql.Result, error)
 	CreateCourse(ctx context.Context, arg CreateCourseParams) (sql.Result, error)
 	// Missions --
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
+	// Student Assignments --
+	CreateStudentAssignment(ctx context.Context, arg CreateStudentAssignmentParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	// User Missions --
 	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
+	DeleteAssignment(ctx context.Context, id int64) error
 	DeleteBadge(ctx context.Context, id int64) error
 	DeleteCourse(ctx context.Context, id int64) error
 	DeleteMission(ctx context.Context, id int64) error
+	DeleteStudentAssignment(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserMission(ctx context.Context, id int64) error
 	// Student Enrollment --
 	EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error)
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
+	GetAssignmentByCourseIDAndOwnerID(ctx context.Context, arg GetAssignmentByCourseIDAndOwnerIDParams) (Assignment, error)
+	GetAssignmentByID(ctx context.Context, id int64) (Assignment, error)
+	GetAssignments(ctx context.Context) ([]Assignment, error)
+	GetAssignmentsByCourseID(ctx context.Context, courseID int64) ([]Assignment, error)
+	GetAssignmentsByOwnerID(ctx context.Context, ownerID int64) ([]Assignment, error)
 	GetBadgeByID(ctx context.Context, id int64) (Badge, error)
 	GetBadges(ctx context.Context) ([]Badge, error)
 	GetCourseByID(ctx context.Context, id int64) (Course, error)
@@ -37,6 +48,10 @@ type Querier interface {
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProducts(ctx context.Context) ([]Product, error)
 	GetRoles(ctx context.Context) ([]UsersRole, error)
+	GetStudentAssignmentByID(ctx context.Context, id int64) (StudentAssignment, error)
+	GetStudentAssignmentByIDs(ctx context.Context, arg GetStudentAssignmentByIDsParams) (StudentAssignment, error)
+	GetStudentAssignmentsByAssignmentID(ctx context.Context, assignmentID int64) ([]GetStudentAssignmentsByAssignmentIDRow, error)
+	GetStudentAssignmentsByStudentID(ctx context.Context, studentID int64) ([]GetStudentAssignmentsByStudentIDRow, error)
 	GetStudentCoursesByUserID(ctx context.Context, studentID int64) ([]GetStudentCoursesByUserIDRow, error)
 	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)
@@ -50,9 +65,11 @@ type Querier interface {
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)
 	UnenrollStudentFromCourse(ctx context.Context, arg UnenrollStudentFromCourseParams) error
+	UpdateAssignment(ctx context.Context, arg UpdateAssignmentParams) error
 	UpdateBadge(ctx context.Context, arg UpdateBadgeParams) error
 	UpdateCourse(ctx context.Context, arg UpdateCourseParams) error
 	UpdateMission(ctx context.Context, arg UpdateMissionParams) error
+	UpdateStudentAssignment(ctx context.Context, arg UpdateStudentAssignmentParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error

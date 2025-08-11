@@ -25,7 +25,6 @@ func main() {
 
 	// Initialize stores
 	userStore := store.NewUserStore(db)
-	assignmentStore := store.NewAssignmentStore(db)
 	quizStore := store.NewQuizStore(db)
 	questionnaireStore := store.NewQuestionnaireStore(db)
 	varkStore := store.NewVARKStore(db)
@@ -39,7 +38,6 @@ func main() {
 	dashboardService := services.NewDashboardService(querier)
 	authService := services.NewAuthService(userStore, cfg, querier)
 	userService := services.NewUserService(userStore, querier)
-	assignmentService := services.NewAssignmentService(assignmentStore, userStore)
 	quizService := services.NewQuizService(quizStore)
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
 	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
@@ -49,12 +47,12 @@ func main() {
 	productService := services.NewProductService(querier)
 	badgeService := services.NewBadgeService(querier)
 	missionService := services.NewMissionService(querier)
-	courseService := services.NewCourseService(querier) // NEW
+	courseService := services.NewCourseService(querier)
+	assignmentService := services.NewAssignmentService(querier) // NEW: Assignment Service
 
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
-	assignmentHandler := handler.NewAssignmentHandler(*assignmentService)
 	quizHandler := handler.NewQuizHandler(*quizService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
 	varkHandler := handler.NewVARKHandler(*varkService, *nlpService)
@@ -65,7 +63,8 @@ func main() {
 	productHandler := handler.NewProductHandler(*productService)
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
 	missionHandler := handler.NewMissionHandler(*missionService)
-	courseHandler := handler.NewCourseHandler(*courseService) // NEW
+	courseHandler := handler.NewCourseHandler(*courseService)
+	assignmentHandler := handler.NewAssignmentHandler(assignmentService) // NEW: Assignment Handler
 
 	r := gin.Default()
 
@@ -158,18 +157,27 @@ func main() {
 			coursesRoutes.DELETE("/:id/unenroll", courseHandler.UnenrollStudent)              // Auth required
 		}
 
-		authRequired.GET("/roles", userHandler.GetRoles)
-
-		assignmentRoutes := authRequired.Group("/assignments")
+		// Assignments routes (general CRUD)
+		assignmentsRoutes := authRequired.Group("/assignments")
 		{
-			assignmentRoutes.GET("", assignmentHandler.GetAllAssignments)
-			assignmentRoutes.POST("", assignmentHandler.CreateAssignment)
-			assignmentRoutes.GET("/:id", assignmentHandler.GetAssignmentByID)
-			assignmentRoutes.PUT("/:id", assignmentHandler.UpdateAssignment)
-			assignmentRoutes.DELETE("/:id", assignmentHandler.DeleteAssignment)
-			assignmentRoutes.POST("/:id/start", assignmentHandler.StartAssignment)
-			assignmentRoutes.POST("/:id/submit", assignmentHandler.SubmitAssignment)
+			assignmentsRoutes.POST("", adminRoutes.Handlers[0], assignmentHandler.CreateAssignment) // Admin/Teacher-only
+			assignmentsRoutes.GET("", assignmentHandler.GetAssignments)
+			assignmentsRoutes.GET("/:id", assignmentHandler.GetAssignmentByID)
+			assignmentsRoutes.PUT("/:id", adminRoutes.Handlers[0], assignmentHandler.UpdateAssignment)    // Admin/Teacher-only, owner only
+			assignmentsRoutes.DELETE("/:id", adminRoutes.Handlers[0], assignmentHandler.DeleteAssignment) // Admin/Teacher-only, owner only
+
+			// Student-specific actions on assignments
+			assignmentsRoutes.POST("/:id/start", assignmentHandler.CreateStudentAssignment)                                                         // Auth required (student starts an assignment)
+			assignmentsRoutes.POST("/:id/submit", assignmentHandler.UpdateStudentAssignment)                                                        // Auth required (student submits an assignment - updates status/submission)
+			assignmentsRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], assignmentHandler.GetStudentAssignmentsByAssignmentID)               // Admin/Teacher-only
+			assignmentsRoutes.PUT("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.UpdateStudentAssignment)    // Admin/Teacher-only (grade/update specific submission)
+			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin/Teacher-only
 		}
+
+		// Specific student assignments list (e.g., for a student to see their own progress)
+		authRequired.GET("/students/:student_id/assignments", assignmentHandler.GetStudentAssignmentsList)
+
+		authRequired.GET("/roles", userHandler.GetRoles)
 
 		quizRoutes := authRequired.Group("/quizzes")
 		{

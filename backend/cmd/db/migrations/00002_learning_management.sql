@@ -63,7 +63,7 @@ CREATE TABLE assignments (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     course_id BIGINT NOT NULL,
-    reward_kpoints INT NOT NULL,
+    reward_points INT NOT NULL,
     due_date DATETIME,
     status ENUM('draft', 'published', 'archived') DEFAULT 'draft',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -1,141 +1,264 @@
 package dtos
 
 import (
-	"pointmarket/backend/internal/models"
 	"time"
+
+	"pointmarket/backend/internal/store/gen" // Import the sqlc generated models
 )
 
-// ==================
-//     Requests
-// ==================
+// --- Assignment DTOs ---
 
-type CreateAssignmentRequest struct {
-	Title       string    `json:"title" binding:"required"`
-	Description string    `json:"description" binding:"required"`
-	DueDate     time.Time `json:"due_date" binding:"required"`
-	Subject     string    `json:"subject" binding:"required"`
-	Points      int       `json:"points" binding:"required"`
-	TeacherID   int       `json:"teacher_id" binding:"required"`
+// AssignmentDTO represents an assignment for API responses
+type AssignmentDTO struct {
+	ID           int64      `json:"id"`
+	Title        string     `json:"title"`
+	Description  *string    `json:"description"` // Use pointer for nullable
+	CourseID     int64      `json:"course_id"`
+	RewardPoints int32      `json:"reward_points"`
+	DueDate      *time.Time `json:"due_date"` // Use pointer for nullable
+	Status       string     `json:"status"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
-type UpdateAssignmentRequest struct {
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	DueDate     time.Time `json:"due_date"`
-	Subject     string    `json:"subject"`
-	Points      int       `json:"points"`
+// FromAssignmentModel converts a gen.Assignment model to an AssignmentDTO
+func (dto *AssignmentDTO) FromAssignmentModel(m gen.Assignment) {
+	dto.ID = m.ID
+	dto.Title = m.Title
+	if m.Description.Valid {
+		dto.Description = &m.Description.String
+	} else {
+		dto.Description = nil
+	}
+	dto.CourseID = m.CourseID
+	dto.RewardPoints = m.RewardPoints
+	if m.DueDate.Valid {
+		dto.DueDate = &m.DueDate.Time
+	} else {
+		dto.DueDate = nil
+	}
+	// Handle NullAssignmentsStatus
+	if m.Status.Valid {
+		dto.Status = string(m.Status.AssignmentsStatus)
+	} else {
+		dto.Status = "" // Or a default status string
+	}
+	dto.CreatedAt = m.CreatedAt // Assuming CreatedAt is NOT nullable in DB
+	dto.UpdatedAt = m.UpdatedAt // Assuming UpdatedAt is NOT nullable in DB
 }
 
-// ==================
-//     Responses
-// ==================
-
-type AssignmentResponse struct {
-	ID          int        `json:"id"`
-	Title       string     `json:"title"`
-	Description *string    `json:"description"`
-	DueDate     *time.Time `json:"due_date"`
-	TeacherID   int        `json:"teacher_id"`
-	Subject     string     `json:"subject"`
-	Points      int        `json:"points"`
-	Status      string     `json:"status"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+// CreateAssignmentRequestDTO for creating a new assignment
+type CreateAssignmentRequestDTO struct {
+	Title        string     `json:"title" binding:"required"`
+	Description  *string    `json:"description"`
+	CourseID     int64      `json:"course_id" binding:"required"`
+	RewardPoints int32      `json:"reward_points" binding:"required"`
+	DueDate      *time.Time `json:"due_date"`
+	Status       string     `json:"status"` // e.g., "draft", "published"
 }
 
-// StudentAssignmentResponse represents a student's specific assignment record for API responses
-type StudentAssignmentResponse struct {
-	Status      string     `json:"student_status"`
+// UpdateAssignmentRequestDTO for updating an existing assignment
+type UpdateAssignmentRequestDTO struct {
+	Title        *string    `json:"title"`
+	Description  *string    `json:"description"`
+	CourseID     *int64     `json:"course_id"`
+	RewardPoints *int32     `json:"reward_points"`
+	DueDate      *time.Time `json:"due_date"`
+	Status       *string    `json:"status"`
+}
+
+// ListAssignmentsResponseDTO contains a list of AssignmentDTOs
+type ListAssignmentsResponseDTO struct {
+	Assignments []AssignmentDTO `json:"assignments"`
+	Total       int             `json:"total"`
+}
+
+// --- Student Assignment DTOs ---
+
+// StudentAssignmentDTO represents a student's assignment record for API responses
+type StudentAssignmentDTO struct {
+	ID           int64      `json:"id"`
+	StudentID    int64      `json:"student_id"`
+	AssignmentID int64      `json:"assignment_id"`
+	Status       string     `json:"status"`
+	Score        *float64   `json:"score"`        // Use pointer for nullable
+	Submission   *string    `json:"submission"`   // Use pointer for nullable
+	SubmittedAt  *time.Time `json:"submitted_at"` // Use pointer for nullable
+	GradedAt     *time.Time `json:"graded_at"`    // Use pointer for nullable
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+
+	// Joined assignment details
+	AssignmentTitle        string     `json:"assignment_title"`
+	AssignmentDescription  *string    `json:"assignment_description"`
+	AssignmentCourseID     int64      `json:"assignment_course_id"`
+	AssignmentRewardPoints int32      `json:"assignment_reward_points"`
+	AssignmentDueDate      *time.Time `json:"assignment_due_date"`
+
+	// Joined student details (for GetStudentAssignmentsByAssignmentID)
+	StudentName  *string `json:"student_name"`
+	StudentEmail *string `json:"student_email"`
+}
+
+// FromStudentAssignmentModel converts a gen.StudentAssignment model to a StudentAssignmentDTO
+// This is for basic StudentAssignment without joins
+func (dto *StudentAssignmentDTO) FromStudentAssignmentModel(m gen.StudentAssignment) {
+	dto.ID = m.ID
+	dto.StudentID = m.StudentID
+	dto.AssignmentID = m.AssignmentID
+	// Handle NullStudentAssignmentsStatus
+	if m.Status.Valid {
+		dto.Status = string(m.Status.StudentAssignmentsStatus)
+	} else {
+		dto.Status = "" // Or a default status string
+	}
+	dto.Score = m.Score
+	if m.Submission.Valid {
+		dto.Submission = &m.Submission.String
+	} else {
+		dto.Submission = nil
+	}
+	if m.SubmittedAt.Valid {
+		dto.SubmittedAt = &m.SubmittedAt.Time
+	} else {
+		dto.SubmittedAt = nil
+	}
+	if m.GradedAt.Valid {
+		dto.GradedAt = &m.GradedAt.Time
+	} else {
+		dto.GradedAt = nil
+	}
+	// Handle sql.NullTime for CreatedAt and UpdatedAt
+	if m.CreatedAt.Valid {
+		dto.CreatedAt = m.CreatedAt.Time
+	} else {
+		dto.CreatedAt = time.Time{} // Default zero value
+	}
+	if m.UpdatedAt.Valid {
+		dto.UpdatedAt = m.UpdatedAt.Time
+	} else {
+		dto.UpdatedAt = time.Time{} // Default zero value
+	}
+}
+
+// FromGetStudentAssignmentsByStudentIDRow converts a gen.GetStudentAssignmentsByStudentIDRow to a StudentAssignmentDTO
+func (dto *StudentAssignmentDTO) FromGetStudentAssignmentsByStudentIDRow(m gen.GetStudentAssignmentsByStudentIDRow) {
+	dto.ID = m.ID
+	dto.StudentID = m.StudentID
+	dto.AssignmentID = m.AssignmentID
+	// Handle NullStudentAssignmentsStatus
+	if m.Status.Valid {
+		dto.Status = string(m.Status.StudentAssignmentsStatus)
+	} else {
+		dto.Status = "" // Or a default status string
+	}
+	dto.Score = m.Score
+	if m.Submission.Valid {
+		dto.Submission = &m.Submission.String
+	} else {
+		dto.Submission = nil
+	}
+	if m.SubmittedAt.Valid {
+		dto.SubmittedAt = &m.SubmittedAt.Time
+	} else {
+		dto.SubmittedAt = nil
+	}
+	if m.GradedAt.Valid {
+		dto.GradedAt = &m.GradedAt.Time
+	} else {
+		dto.GradedAt = nil
+	}
+	// Handle sql.NullTime for CreatedAt and UpdatedAt
+	if m.CreatedAt.Valid {
+		dto.CreatedAt = m.CreatedAt.Time
+	} else {
+		dto.CreatedAt = time.Time{} // Default zero value
+	}
+	if m.UpdatedAt.Valid {
+		dto.UpdatedAt = m.UpdatedAt.Time
+	} else {
+		dto.UpdatedAt = time.Time{} // Default zero value
+	}
+
+	// Joined assignment details
+	dto.AssignmentTitle = m.AssignmentTitle
+	if m.AssignmentDescription.Valid {
+		dto.AssignmentDescription = &m.AssignmentDescription.String
+	} else {
+		dto.AssignmentDescription = nil
+	}
+	dto.AssignmentCourseID = m.AssignmentCourseID
+	dto.AssignmentRewardPoints = m.AssignmentRewardPoints
+	if m.AssignmentDueDate.Valid {
+		dto.AssignmentDueDate = &m.AssignmentDueDate.Time
+	} else {
+		dto.AssignmentDueDate = nil
+	}
+}
+
+// FromGetStudentAssignmentsByAssignmentIDRow converts a gen.GetStudentAssignmentsByAssignmentIDRow to a StudentAssignmentDTO
+func (dto *StudentAssignmentDTO) FromGetStudentAssignmentsByAssignmentIDRow(m gen.GetStudentAssignmentsByAssignmentIDRow) {
+	dto.ID = m.ID
+	dto.StudentID = m.StudentID
+	dto.AssignmentID = m.AssignmentID
+	// Handle NullStudentAssignmentsStatus
+	if m.Status.Valid {
+		dto.Status = string(m.Status.StudentAssignmentsStatus)
+	} else {
+		dto.Status = "" // Or a default status string
+	}
+	dto.Score = m.Score
+	if m.Submission.Valid {
+		dto.Submission = &m.Submission.String
+	} else {
+		dto.Submission = nil
+	}
+	if m.SubmittedAt.Valid {
+		dto.SubmittedAt = &m.SubmittedAt.Time
+	} else {
+		dto.SubmittedAt = nil
+	}
+	if m.GradedAt.Valid {
+		dto.GradedAt = &m.GradedAt.Time
+	} else {
+		dto.GradedAt = nil
+	}
+	// Handle sql.NullTime for CreatedAt and UpdatedAt
+	if m.CreatedAt.Valid {
+		dto.CreatedAt = m.CreatedAt.Time
+	} else {
+		dto.CreatedAt = time.Time{} // Default zero value
+	}
+	if m.UpdatedAt.Valid {
+		dto.UpdatedAt = m.UpdatedAt.Time
+	} else {
+		dto.UpdatedAt = time.Time{} // Default zero value
+	}
+
+	// Joined student details
+	dto.StudentName = &m.StudentName   // Directly assign address of string
+	dto.StudentEmail = &m.StudentEmail // Directly assign address of string
+}
+
+// CreateStudentAssignmentRequestDTO for creating a new student assignment record (e.g., when starting)
+type CreateStudentAssignmentRequestDTO struct {
+	StudentID    int64   `json:"student_id" binding:"required"`
+	AssignmentID int64   `json:"assignment_id" binding:"required"`
+	Status       string  `json:"status"` // e.g., "not_started", "in_progress"
+	Submission   *string `json:"submission"`
+}
+
+// UpdateStudentAssignmentRequestDTO for updating a student assignment record (e.g., submission, score)
+type UpdateStudentAssignmentRequestDTO struct {
+	Status      *string    `json:"status"` // e.g., "in_progress", "completed"
 	Score       *float64   `json:"score"`
+	Submission  *string    `json:"submission"`
 	SubmittedAt *time.Time `json:"submitted_at"`
 	GradedAt    *time.Time `json:"graded_at"`
 }
 
-// AssignmentDetailResponse combines Assignment and StudentAssignment data for a comprehensive view
-type AssignmentDetailResponse struct {
-	ID            int        `json:"id"`
-	Title         string     `json:"title"`
-	Description   *string    `json:"description"`
-	Subject       string     `json:"subject"`
-	TeacherID     int        `json:"teacher_id"`
-	Points        int        `json:"points"`
-	DueDate       *time.Time `json:"due_date"`
-	Status        string     `json:"status"` // Assignment status (e.g., Published)
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
-	StudentStatus string     `json:"student_status"` // Student's status for this assignment
-	Score         *float64   `json:"score"`
-	SubmittedAt   *time.Time `json:"submitted_at"`
-	GradedAt      *time.Time `json:"graded_at"`
-	TeacherName   string     `json:"teacher_name"`
-	UrgencyStatus string     `json:"urgency_status"`
-	DaysRemaining int        `json:"days_remaining"`
-}
-
-type AssignmentListResponse struct {
-	Assignments []AssignmentResponse `json:"assignments"`
-}
-
-// FromAssignment converts a models.Assignment to a AssignmentResponse DTO.
-func (dto *AssignmentResponse) FromAssignment(assignment models.Assignment) {
-	dto.ID = assignment.ID
-	dto.Title = assignment.Title
-	dto.Description = assignment.Description
-	dto.DueDate = assignment.DueDate
-	dto.TeacherID = assignment.TeacherID
-	dto.Subject = assignment.Subject
-	dto.Points = assignment.Points
-	dto.Status = assignment.Status
-	dto.CreatedAt = assignment.CreatedAt
-	dto.UpdatedAt = assignment.UpdatedAt
-}
-
-// FromAssignmentAndStudentAssignment converts models.Assignment and models.StudentAssignment to AssignmentDetailResponse
-func (dto *AssignmentDetailResponse) FromAssignmentAndStudentAssignment(assignment models.Assignment, studentAssignment *models.StudentAssignment, teacherName string) {
-	dto.ID = assignment.ID
-	dto.Title = assignment.Title
-	dto.Description = assignment.Description
-	dto.Subject = assignment.Subject
-	dto.TeacherID = assignment.TeacherID
-	dto.Points = assignment.Points
-	dto.DueDate = assignment.DueDate
-	dto.Status = assignment.Status
-	dto.CreatedAt = assignment.CreatedAt
-	dto.UpdatedAt = assignment.UpdatedAt
-	dto.TeacherName = teacherName
-
-	if studentAssignment != nil {
-		dto.StudentStatus = studentAssignment.Status
-		dto.Score = studentAssignment.Score
-		dto.SubmittedAt = studentAssignment.SubmittedAt
-		dto.GradedAt = studentAssignment.GradedAt
-	} else {
-		dto.StudentStatus = "not_started"
-	}
-
-	// Calculate urgency status and days remaining
-	if assignment.DueDate != nil {
-		daysRemaining := int(assignment.DueDate.Sub(time.Now()).Hours() / 24)
-		dto.DaysRemaining = daysRemaining
-		if daysRemaining < 0 && dto.StudentStatus != "completed" {
-			dto.UrgencyStatus = "overdue"
-		} else if daysRemaining <= 2 && dto.StudentStatus == "not_started" {
-			dto.UrgencyStatus = "due_soon"
-		} else {
-			dto.UrgencyStatus = "normal"
-		}
-	} else {
-		dto.UrgencyStatus = "normal"
-		dto.DaysRemaining = 0
-	}
-}
-
-// FromAssignments converts a slice of models.Assignment to a slice of AssignmentResponse DTOs.
-func (dto *AssignmentListResponse) FromAssignments(assignments []models.Assignment) {
-	dto.Assignments = make([]AssignmentResponse, len(assignments))
-	for i, a := range assignments {
-		var assignmentDTO AssignmentResponse
-		assignmentDTO.FromAssignment(a)
-		dto.Assignments[i] = assignmentDTO
-	}
+// ListStudentAssignmentsResponseDTO contains a list of StudentAssignmentDTOs
+type ListStudentAssignmentsResponseDTO struct {
+	StudentAssignments []StudentAssignmentDTO `json:"student_assignments"`
+	Total              int                    `json:"total"`
 }

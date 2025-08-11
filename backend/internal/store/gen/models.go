@@ -442,15 +442,15 @@ func (ns NullWeeklyEvaluationsStatus) Value() (driver.Value, error) {
 }
 
 type Assignment struct {
-	ID            int64                 `json:"id"`
-	Title         string                `json:"title"`
-	Description   sql.NullString        `json:"description"`
-	CourseID      int64                 `json:"course_id"`
-	RewardKpoints int32                 `json:"reward_kpoints"`
-	DueDate       sql.NullTime          `json:"due_date"`
-	Status        NullAssignmentsStatus `json:"status"`
-	CreatedAt     time.Time             `json:"created_at"`
-	UpdatedAt     time.Time             `json:"updated_at"`
+	ID           int64                 `json:"id"`
+	Title        string                `json:"title"`
+	Description  sql.NullString        `json:"description"`
+	CourseID     int64                 `json:"course_id"`
+	RewardPoints int32                 `json:"reward_points"`
+	DueDate      sql.NullTime          `json:"due_date"`
+	Status       NullAssignmentsStatus `json:"status"`
+	CreatedAt    time.Time             `json:"created_at"`
+	UpdatedAt    time.Time             `json:"updated_at"`
 }
 
 type Badge struct {

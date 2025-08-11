@@ -30,7 +30,6 @@ func main() {
 	questionnaireStore := store.NewQuestionnaireStore(db)
 	varkStore := store.NewVARKStore(db)
 	nlpStore := store.NewNLPStore(db)
-	materialStore := store.NewMaterialStore(db)
 	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
 	textAnalysisSnapshotStore := store.NewTextAnalysisSnapshotStore(db)
 
@@ -45,7 +44,6 @@ func main() {
 	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
 	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
 	varkService := services.NewVARKService(varkStore, nlpService)
-	materialService := services.NewMaterialService(materialStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
 	productService := services.NewProductService(querier)
@@ -60,7 +58,6 @@ func main() {
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
 	varkHandler := handler.NewVARKHandler(*varkService, *nlpService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
-	materialHandler := handler.NewMaterialHandler(*materialService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
@@ -186,15 +183,6 @@ func main() {
 			nlpRoutes.POST("/analyze", nlpHandler.AnalyzeText)
 			nlpRoutes.GET("/stats", nlpHandler.GetNLPStats)
 			nlpRoutes.GET("/latest-snapshot", nlpHandler.GetLatestTextAnalysisSnapshot)
-		}
-
-		materialRoutes := authRequired.Group("/materials")
-		{
-			materialRoutes.GET("", materialHandler.GetAllMaterials)
-			materialRoutes.POST("", materialHandler.CreateMaterial)
-			materialRoutes.GET("/:id", materialHandler.GetMaterialByID)
-			materialRoutes.PUT("/:id", materialHandler.UpdateMaterial)
-			materialRoutes.DELETE("/:id", materialHandler.DeleteMaterial)
 		}
 
 		weeklyEvaluationRoutes := authRequired.Group("/evaluations/weekly")

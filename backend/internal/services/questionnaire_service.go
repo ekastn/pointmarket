@@ -1,126 +1,102 @@
 package services
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/models"
-	"pointmarket/backend/internal/store"
+	"pointmarket/backend/internal/store/gen"
 	"strconv"
-	"time"
+	"strings"
 )
 
 // QuestionnaireService provides business logic for questionnaires
 type QuestionnaireService struct {
-	questionnaireStore    *store.QuestionnaireStore
-	varkStore             *store.VARKStore
-	weeklyEvaluationStore *store.WeeklyEvaluationStore // Added for weekly evaluation updates
+	q gen.Querier
 }
 
-// NewQuestionnaireService creates a new QuestionnaireService
-func NewQuestionnaireService(questionnaireStore *store.QuestionnaireStore, varkStore *store.VARKStore, weeklyEvaluationStore *store.WeeklyEvaluationStore) *QuestionnaireService {
-	return &QuestionnaireService{questionnaireStore: questionnaireStore, varkStore: varkStore, weeklyEvaluationStore: weeklyEvaluationStore}
+// NewQuestionnaireService creates a new instance of QuestionnaireService
+func NewQuestionnaireService(q gen.Querier) *QuestionnaireService {
+	return &QuestionnaireService{q: q}
 }
 
-// GetAllQuestionnaires retrieves all active questionnaires
-func (s *QuestionnaireService) GetAllQuestionnaires() ([]models.Questionnaire, error) {
-	return s.questionnaireStore.GetAllQuestionnaires()
+// GetQuestionnaires retrieves all questionnaires
+func (s *QuestionnaireService) GetQuestionnaires(ctx context.Context) ([]gen.Questionnaire, error) {
+	return s.q.GetQuestionnaires(ctx)
 }
 
-// GetQuestionnaireByID retrieves a questionnaire by ID with its questions and optionally the latest result for a student
-func (s *QuestionnaireService) GetQuestionnaireByID(id uint, studentID uint) (models.Questionnaire, []dtos.QuestionResponse, *dtos.QuestionnaireResultResponse, error) {
-	q, err := s.questionnaireStore.GetQuestionnaireByID(int(id))
+// GetActiveQuestionnaires retrieves all active questionnaires
+func (s *QuestionnaireService) GetActiveQuestionnaires(ctx context.Context) ([]gen.Questionnaire, error) {
+	return s.q.GetActiveQuestionnaires(ctx)
+}
+
+// GetQuestionnaireByID retrieves a questionnaire by ID
+func (s *QuestionnaireService) GetQuestionnaireByID(ctx context.Context, id int32) (gen.Questionnaire, error) {
+	row, err := s.q.GetQuestionnaireByID(ctx, id)
 	if err != nil {
-		return models.Questionnaire{}, nil, nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return gen.Questionnaire{}, nil
+		}
+		return gen.Questionnaire{}, err
 	}
-
-	questions, err := s.questionnaireStore.GetQuestionsByQuestionnaireID(int(id))
-	if err != nil {
-		return models.Questionnaire{}, nil, nil, err
-	}
-
-	var questionDTOs []dtos.QuestionResponse
-	if q.Type == "vark" {
-		options, err := s.varkStore.GetVARKAnswerOptionsByQuestionnaireID(q.ID)
-		if err != nil {
-			return models.Questionnaire{}, nil, nil, err
-		}
-
-		// Map options to questions
-		questionOptionsMap := make(map[int][]dtos.VARKAnswerOptionDTO)
-		for _, opt := range options {
-			var optDTO dtos.VARKAnswerOptionDTO
-			optDTO.FromVARKAnswerOption(opt)
-			questionOptionsMap[opt.QuestionID] = append(questionOptionsMap[opt.QuestionID], optDTO)
-		}
-
-		for _, question := range questions {
-			var questionDTO dtos.QuestionResponse
-			questionDTO.FromQuestion(question)
-			questionDTO.Options = questionOptionsMap[question.ID]
-			questionDTOs = append(questionDTOs, questionDTO)
-		}
-	} else {
-		for _, question := range questions {
-			var questionDTO dtos.QuestionResponse
-			questionDTO.FromQuestion(question)
-			questionDTOs = append(questionDTOs, questionDTO)
-		}
-	}
-
-	var recentResultDTO *dtos.QuestionnaireResultResponse
-	if studentID != 0 {
-		latestResult, err := s.questionnaireStore.GetLatestQuestionnaireResultByQuestionnaireIDAndStudentID(int(studentID), int(id))
-		if err != nil {
-			fmt.Printf("Error fetching latest questionnaire result for student %d, questionnaire %d: %v\n", studentID, id, err)
-		} else if latestResult != nil {
-			recentResultDTO = &dtos.QuestionnaireResultResponse{}
-			recentResultDTO.FromQuestionnaireResult(*latestResult)
-		}
-	}
-
-	return *q, questionDTOs, recentResultDTO, nil
+	return row, nil
 }
 
-// SubmitQuestionnaire saves a student's questionnaire answers and calculates scores
-func (s *QuestionnaireService) SubmitQuestionnaire(req dtos.SubmitQuestionnaireRequest, studentID uint) (models.QuestionnaireResult, error) {
-	// Fetch questionnaire questions to calculate scores
-	questions, err := s.questionnaireStore.GetQuestionsByQuestionnaireID(req.QuestionnaireID)
+// GetQuestionsByQuestionnaireID retrieves all questions for a given questionnaire ID
+func (s *QuestionnaireService) GetQuestionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]gen.QuestionnaireQuestion, error) {
+	return s.q.GetQuestionsByQuestionnaireID(ctx, questionnaireID)
+}
+
+// SubmitLikert saves a student's Likert answers
+func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64, questionnaireID int32, answers map[string]string) (*float64, error) {
+	qMeta, err := s.GetQuestionnaireByID(ctx, questionnaireID)
 	if err != nil {
-		return models.QuestionnaireResult{}, fmt.Errorf("failed to get questionnaire questions: %w", err)
+		return nil, err
+	}
+	if qMeta.Type != "MSLQ" && qMeta.Type != "AMS" {
+		return nil, fmt.Errorf("questionnaire type %s not likert", qMeta.Type)
 	}
 
-	// Calculate total score and subscale scores
+	questions, err := s.GetQuestionsByQuestionnaireID(ctx, questionnaireID)
+	if err != nil {
+		return nil, err
+	}
+	if len(questions) == 0 {
+		return nil, errors.New("no questions defined")
+	}
+	if len(answers) != len(questions) {
+		return nil, fmt.Errorf("answer length %d mismatch questions %d", len(answers), len(questions))
+	}
+
 	totalScore := 0.0
 	subscaleScores := make(map[string]float64)
 	subscaleCounts := make(map[string]int)
 
 	for _, q := range questions {
-		answerStr, ok := req.Answers[fmt.Sprintf("%d", q.ID)]
+		answerStr, ok := answers[fmt.Sprintf("%d", q.ID)]
 		if !ok {
 			continue
 		}
 		answer, err := strconv.ParseFloat(answerStr, 64)
 		if err != nil {
-			return models.QuestionnaireResult{}, fmt.Errorf("invalid answer format for question %d: %w", q.ID, err)
+			return nil, fmt.Errorf("invalid answer format for question %d: %w", q.ID, err)
 		}
 
-		if q.ReverseScored {
-			answer = 8 - answer
-		}
+		// reverse scoring
+		// if q.ReverseScored {
+		// 	answer = 8 - answer
+		// }
 
 		totalScore += answer
 
-		if q.Subscale != nil && *q.Subscale != "" {
-			subscaleScores[*q.Subscale] += answer
-			subscaleCounts[*q.Subscale]++
+		if q.Subscale.Valid {
+			subscaleScores[q.Subscale.String] += answer
+			subscaleCounts[q.Subscale.String]++
 		}
 	}
 
-	avgTotalScore := 0.0
-	if len(questions) > 0 {
-		avgTotalScore = totalScore / float64(len(questions))
-	}
+	avgTotalScore := totalScore / float64(len(questions))
 
 	for subscale, sum := range subscaleScores {
 		if subscaleCounts[subscale] > 0 {
@@ -130,156 +106,138 @@ func (s *QuestionnaireService) SubmitQuestionnaire(req dtos.SubmitQuestionnaireR
 
 	subscaleScoresJSON, err := json.Marshal(subscaleScores)
 	if err != nil {
-		return models.QuestionnaireResult{}, fmt.Errorf("failed to marshal subscale scores: %w", err)
+		return nil, fmt.Errorf("failed to marshal subscale scores: %w", err)
 	}
-	subscaleScoresStr := string(subscaleScoresJSON)
 
-	answersJSON, err := json.Marshal(req.Answers)
+	answersJSON, err := json.Marshal(answers)
 	if err != nil {
-		return models.QuestionnaireResult{}, err
+		return nil, fmt.Errorf("failed to marshal answers: %w", err)
 	}
 
-	result := models.QuestionnaireResult{
-		StudentID:       int(studentID),
-		QuestionnaireID: req.QuestionnaireID,
-		Answers:         string(answersJSON),
-		TotalScore:      &avgTotalScore,
-		SubscaleScores:  &subscaleScoresStr,
-		CompletedAt:     time.Now(),
-		WeekNumber:      req.WeekNumber,
-		Year:            req.Year,
+	data := gen.CreateLikertResultParams{
+		StudentID:       studentID,
+		QuestionnaireID: questionnaireID,
+		Answers:         answersJSON,
+		TotalScore:      avgTotalScore,
+		SubscaleScores:  subscaleScoresJSON,
 	}
 
-	err = s.questionnaireStore.CreateQuestionnaireResult(&result)
-	if err != nil {
-		return models.QuestionnaireResult{}, fmt.Errorf("failed to create questionnaire result: %w", err)
-	}
-
-	// After successfully saving the questionnaire result, update the weekly_evaluations status
-	if req.WeekNumber != 0 && req.Year != 0 {
-		err = s.weeklyEvaluationStore.UpdateWeeklyEvaluationStatusByStudentWeekYearAndQuestionnaire(
-			int(studentID), req.WeekNumber, req.Year, req.QuestionnaireID, "completed")
-		if err != nil {
-			// Log the error but don't return it, as the questionnaire result was already saved.
-			fmt.Printf("Warning: Failed to update weekly evaluation status for student %d, week %d, year %d, questionnaire %d: %v\n",
-				studentID, req.WeekNumber, req.Year, req.QuestionnaireID, err)
-		}
-	}
-
-	return result, nil
-}
-
-// GetQuestionnaireHistoryByStudentID retrieves all questionnaire results for a given student
-func (s *QuestionnaireService) GetQuestionnaireHistoryByStudentID(studentID uint) ([]models.QuestionnaireResult, error) {
-	return s.questionnaireStore.GetQuestionnaireResultsByStudentID(int(studentID))
-}
-
-// GetQuestionnaireStatsByStudentID retrieves statistics for questionnaires for a given student
-func (s *QuestionnaireService) GetQuestionnaireStatsByStudentID(studentID uint) ([]models.QuestionnaireStat, error) {
-	// Get MSLQ and AMS stats
-	stats, err := s.questionnaireStore.GetQuestionnaireStatsByStudentID(int(studentID))
+	err = s.q.CreateLikertResult(ctx, data)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get VARK stats separately
-	varkResult, err := s.varkStore.GetLatestVARKResult(int(studentID))
-	if err != nil {
-		// Log error but don't fail if VARK stats can't be fetched
-		fmt.Printf("Error fetching VARK result for student %d: %v\n", studentID, err)
-	} else {
-		// Add VARK stats if available
-		var varkTotalCompleted int
-		var varkLastCompleted *time.Time
-		if varkResult != nil {
-			varkTotalCompleted = 1 // Assuming one entry means completed
-			varkLastCompleted = &varkResult.CompletedAt
-		}
-
-		// Check if VARK stat already exists in the slice (e.g., if it was added by a previous query)
-		varkStatExists := false
-		for i, stat := range stats {
-			if stat.Type == "vark" {
-				stats[i].TotalCompleted = varkTotalCompleted
-				stats[i].LastCompleted = varkLastCompleted
-				varkStatExists = true
-				break
-			}
-		}
-
-		if !varkStatExists {
-			stats = append(stats, models.QuestionnaireStat{
-				Type:           "vark",
-				Name:           "VARK Learning Style Assessment",
-				TotalCompleted: varkTotalCompleted,
-				AverageScore:   nil, // VARK doesn't have traditional scoring
-				BestScore:      nil,
-				LowestScore:    nil,
-				LastCompleted:  varkLastCompleted,
-			})
-		}
-	}
-
-	return stats, nil
+	return &avgTotalScore, nil
 }
 
-// GetLatestQuestionnaireResultByType retrieves the latest questionnaire result for a student by questionnaire type.
-func (s *QuestionnaireService) GetLatestQuestionnaireResultByType(studentID uint, qType string) (*dtos.LatestQuestionnaireResultResponse, error) {
-	var latestResultDTO dtos.LatestQuestionnaireResultResponse
-
-	switch qType {
-	case "vark":
-		varkResult, err := s.varkStore.GetLatestVARKResult(int(studentID))
-		if err != nil {
-			return nil, err
-		}
-		if varkResult == nil {
-			return nil, nil // No VARK result found
-		}
-
-		latestResultDTO = dtos.LatestQuestionnaireResultResponse{
-			ID:                varkResult.ID,
-			QuestionnaireType: "vark",
-			QuestionnaireName: "VARK Learning Style Assessment",
-			VisualScore:       &varkResult.VisualScore,
-			AuditoryScore:     &varkResult.AuditoryScore,
-			ReadingScore:      &varkResult.ReadingScore,
-			KinestheticScore:  &varkResult.KinestheticScore,
-			DominantStyle:     &varkResult.DominantStyle,
-			CompletedAt:       varkResult.CompletedAt,
-			WeekNumber:        varkResult.WeekNumber,
-			Year:              varkResult.Year,
-		}
-	case "mslq", "ams":
-		questionnaireResult, err := s.questionnaireStore.GetLatestQuestionnaireResult(int(studentID), qType)
-		if err != nil {
-			return nil, err
-		}
-		if questionnaireResult == nil {
-			return nil, nil // No result found for this type
-		}
-
-		var subscaleScores map[string]float64
-		if questionnaireResult.SubscaleScores != nil && *questionnaireResult.SubscaleScores != "" {
-			err = json.Unmarshal([]byte(*questionnaireResult.SubscaleScores), &subscaleScores)
-			if err != nil {
-				return nil, fmt.Errorf("failed to unmarshal subscale scores: %w", err)
-			}
-		}
-
-		latestResultDTO = dtos.LatestQuestionnaireResultResponse{
-			ID:                questionnaireResult.ID,
-			QuestionnaireType: questionnaireResult.QuestionnaireType,
-			QuestionnaireName: questionnaireResult.QuestionnaireName,
-			TotalScore:        questionnaireResult.TotalScore,
-			SubscaleScores:    subscaleScores,
-			CompletedAt:       questionnaireResult.CompletedAt,
-			WeekNumber:        &questionnaireResult.WeekNumber,
-			Year:              &questionnaireResult.Year,
-		}
-	default:
-		return nil, fmt.Errorf("unsupported questionnaire type: %s", qType)
+// SubmitVARK calculates and saves a student's VARK assessment result
+func (s *QuestionnaireService) SubmitVARK(ctx context.Context, studentID int64, questionnaireID int32, answers map[string]string) error {
+	options, err := s.q.GetVarkOptionsByQuestionnaireID(ctx, questionnaireID)
+	if err != nil {
+		return err
 	}
 
-	return &latestResultDTO, nil
+	// Create a map for quick lookup: questionID -> optionLetter -> learningStyle
+	optionMap := make(map[int32]map[string]string)
+	for _, opt := range options {
+		if _, ok := optionMap[opt.QuestionID]; !ok {
+			optionMap[opt.QuestionID] = make(map[string]string)
+		}
+		optionMap[opt.QuestionID][opt.OptionLetter] = string(opt.LearningStyle)
+	}
+
+	scores := map[string]int32{
+		"Visual":      0,
+		"Auditory":    0,
+		"Reading":     0,
+		"Kinesthetic": 0,
+	}
+
+	for questionIDStr, answerLetter := range answers {
+		questionID := 0
+		fmt.Sscanf(questionIDStr, "%d", &questionID) // Convert string key to int
+
+		if qOptions, ok := optionMap[int32(questionID)]; ok {
+			if learningStyle, ok := qOptions[answerLetter]; ok {
+				scores[learningStyle]++
+			}
+		}
+	}
+
+	answersJSON, err := json.Marshal(answers)
+	if err != nil {
+		return err
+	}
+
+	styleType := "dominant"
+	dominantStyle := ""
+	var maxScore int32 = -1
+	var dominantStyles []string
+
+	// Find max score and all dominant styles
+	for style, score := range scores {
+		if score > maxScore {
+			maxScore = score
+			dominantStyles = []string{style} // Start new list of dominant styles
+		} else if score == maxScore && maxScore != -1 {
+			dominantStyles = append(dominantStyles, style) // Add to existing dominant styles
+		}
+	}
+
+	// Determine dominant style string
+	if len(dominantStyles) == 1 {
+		dominantStyle = dominantStyles[0]
+	} else if len(dominantStyles) > 1 {
+		// Handle multi-modal styles (e.g., VARK types like "VR", "ARK")
+		// Sort styles alphabetically for consistent multi-modal naming
+		// For simplicity, just join them for now.
+		styleType = "multimodal"
+		dominantStyle = strings.Join(dominantStyles, "/")
+	}
+
+	varkResult := gen.CreateVarkResultParams{
+		StudentID:        studentID,
+		QuestionnaireID:  questionnaireID,
+		VarkType:         gen.StudentQuestionnaireVarkResultsVarkType(styleType),
+		VarkLabel:        dominantStyle,
+		ScoreVisual:      scores["Visual"],
+		ScoreAuditory:    scores["Auditory"],
+		ScoreReading:     scores["Reading"],
+		ScoreKinesthetic: scores["Kinesthetic"],
+		Answers:          answersJSON,
+	}
+
+	return s.q.CreateVarkResult(ctx, varkResult)
+}
+
+func (s *QuestionnaireService) GetLatestLikertByType(ctx context.Context, studentID int64, qType string) (gen.StudentQuestionnaireLikertResult, error) {
+	row, err := s.q.GetLatestLikertResultByType(
+		ctx,
+		gen.GetLatestLikertResultByTypeParams{
+			StudentID: studentID,
+			Type:      gen.QuestionnairesType(qType),
+		},
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return gen.StudentQuestionnaireLikertResult{}, nil
+		}
+		return gen.StudentQuestionnaireLikertResult{}, err
+	}
+	return row, nil
+}
+
+func (s *QuestionnaireService) GetLatestVark(ctx context.Context, studentID int64) (gen.GetLatestVarkResultRow, error) {
+	row, err := s.q.GetLatestVarkResult(ctx, studentID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return gen.GetLatestVarkResultRow{}, nil
+		}
+		return gen.GetLatestVarkResultRow{}, err
+	}
+	return row, nil
+}
+
+func (s *QuestionnaireService) GetLikertStats(ctx context.Context, studentID int64) ([]gen.GetLikertStatsByStudentRow, error) {
+	return s.q.GetLikertStatsByStudent(ctx, studentID)
 }

@@ -270,6 +270,48 @@ func (ns NullStudentAssignmentsStatus) Value() (driver.Value, error) {
 	return string(ns.StudentAssignmentsStatus), nil
 }
 
+type StudentQuestionnaireVarkResultsVarkType string
+
+const (
+	StudentQuestionnaireVarkResultsVarkTypeDominant   StudentQuestionnaireVarkResultsVarkType = "dominant"
+	StudentQuestionnaireVarkResultsVarkTypeMultimodal StudentQuestionnaireVarkResultsVarkType = "multimodal"
+)
+
+func (e *StudentQuestionnaireVarkResultsVarkType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentQuestionnaireVarkResultsVarkType(s)
+	case string:
+		*e = StudentQuestionnaireVarkResultsVarkType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentQuestionnaireVarkResultsVarkType: %T", src)
+	}
+	return nil
+}
+
+type NullStudentQuestionnaireVarkResultsVarkType struct {
+	StudentQuestionnaireVarkResultsVarkType StudentQuestionnaireVarkResultsVarkType `json:"student_questionnaire_vark_results_vark_type"`
+	Valid                                   bool                                    `json:"valid"` // Valid is true if StudentQuestionnaireVarkResultsVarkType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentQuestionnaireVarkResultsVarkType) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentQuestionnaireVarkResultsVarkType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentQuestionnaireVarkResultsVarkType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentQuestionnaireVarkResultsVarkType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentQuestionnaireVarkResultsVarkType), nil
+}
+
 type StudentQuizzesStatus string
 
 const (
@@ -561,6 +603,7 @@ type QuestionnaireVarkOption struct {
 	ID            int32                                 `json:"id"`
 	QuestionID    int32                                 `json:"question_id"`
 	OptionText    string                                `json:"option_text"`
+	OptionLetter  string                                `json:"option_letter"`
 	LearningStyle QuestionnaireVarkOptionsLearningStyle `json:"learning_style"`
 	CreatedAt     sql.NullTime                          `json:"created_at"`
 	UpdatedAt     sql.NullTime                          `json:"updated_at"`
@@ -617,15 +660,17 @@ type StudentQuestionnaireLikertResult struct {
 }
 
 type StudentQuestionnaireVarkResult struct {
-	ID               int64           `json:"id"`
-	StudentID        int64           `json:"student_id"`
-	QuestionnaireID  int32           `json:"questionnaire_id"`
-	ScoreVisual      float64         `json:"score_visual"`
-	ScoreAuditory    float64         `json:"score_auditory"`
-	ScoreReading     float64         `json:"score_reading"`
-	ScoreKinesthetic float64         `json:"score_kinesthetic"`
-	Answers          json.RawMessage `json:"answers"`
-	CreatedAt        sql.NullTime    `json:"created_at"`
+	ID               int64                                   `json:"id"`
+	StudentID        int64                                   `json:"student_id"`
+	QuestionnaireID  int32                                   `json:"questionnaire_id"`
+	VarkType         StudentQuestionnaireVarkResultsVarkType `json:"vark_type"`
+	VarkLabel        string                                  `json:"vark_label"`
+	ScoreVisual      int32                                   `json:"score_visual"`
+	ScoreAuditory    int32                                   `json:"score_auditory"`
+	ScoreReading     int32                                   `json:"score_reading"`
+	ScoreKinesthetic int32                                   `json:"score_kinesthetic"`
+	Answers          json.RawMessage                         `json:"answers"`
+	CreatedAt        sql.NullTime                            `json:"created_at"`
 }
 
 type StudentQuiz struct {

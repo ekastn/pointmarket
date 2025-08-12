@@ -36,6 +36,35 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 	)
 }
 
+const createUserLearningStyle = `-- name: CreateUserLearningStyle :exec
+INSERT INTO user_learning_styles
+  (user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+`
+
+type CreateUserLearningStyleParams struct {
+	UserID           int64                  `json:"user_id"`
+	Type             UserLearningStylesType `json:"type"`
+	Label            string                 `json:"label"`
+	ScoreVisual      *float64               `json:"score_visual"`
+	ScoreAuditory    *float64               `json:"score_auditory"`
+	ScoreReading     *float64               `json:"score_reading"`
+	ScoreKinesthetic *float64               `json:"score_kinesthetic"`
+}
+
+func (q *Queries) CreateUserLearningStyle(ctx context.Context, arg CreateUserLearningStyleParams) error {
+	_, err := q.db.ExecContext(ctx, createUserLearningStyle,
+		arg.UserID,
+		arg.Type,
+		arg.Label,
+		arg.ScoreVisual,
+		arg.ScoreAuditory,
+		arg.ScoreReading,
+		arg.ScoreKinesthetic,
+	)
+	return err
+}
+
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = ?
@@ -171,6 +200,31 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const latestUserLearningStyle = `-- name: LatestUserLearningStyle :one
+SELECT id, user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic, created_at
+FROM user_learning_styles
+WHERE user_id = ?
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) LatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error) {
+	row := q.db.QueryRowContext(ctx, latestUserLearningStyle, userID)
+	var i UserLearningStyle
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Label,
+		&i.ScoreVisual,
+		&i.ScoreAuditory,
+		&i.ScoreReading,
+		&i.ScoreKinesthetic,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const searchUsers = `-- name: SearchUsers :many

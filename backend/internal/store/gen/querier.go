@@ -17,6 +17,7 @@ type Querier interface {
 	// Badges --
 	CreateBadge(ctx context.Context, arg CreateBadgeParams) (sql.Result, error)
 	CreateCourse(ctx context.Context, arg CreateCourseParams) (sql.Result, error)
+	CreateLikertResult(ctx context.Context, arg CreateLikertResultParams) error
 	// Missions --
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
 	// Quizzes --
@@ -28,8 +29,10 @@ type Querier interface {
 	// Student Quizzes --
 	CreateStudentQuiz(ctx context.Context, arg CreateStudentQuizParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
+	CreateUserLearningStyle(ctx context.Context, arg CreateUserLearningStyleParams) error
 	// User Missions --
 	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
+	CreateVarkResult(ctx context.Context, arg CreateVarkResultParams) error
 	DeleteAssignment(ctx context.Context, id int64) error
 	DeleteBadge(ctx context.Context, id int64) error
 	DeleteCourse(ctx context.Context, id int64) error
@@ -42,6 +45,7 @@ type Querier interface {
 	DeleteUserMission(ctx context.Context, id int64) error
 	// Student Enrollment --
 	EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error)
+	GetActiveQuestionnaires(ctx context.Context) ([]Questionnaire, error)
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
 	GetAssignmentByCourseIDAndOwnerID(ctx context.Context, arg GetAssignmentByCourseIDAndOwnerIDParams) (Assignment, error)
 	GetAssignmentByID(ctx context.Context, id int64) (Assignment, error)
@@ -52,10 +56,16 @@ type Querier interface {
 	GetBadges(ctx context.Context) ([]Badge, error)
 	GetCourseByID(ctx context.Context, id int64) (Course, error)
 	GetCourses(ctx context.Context) ([]Course, error)
+	GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error)
+	GetLatestVarkResult(ctx context.Context, studentID int64) (GetLatestVarkResultRow, error)
+	GetLikertStatsByStudent(ctx context.Context, studentID int64) ([]GetLikertStatsByStudentRow, error)
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
 	GetMissions(ctx context.Context) ([]Mission, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProducts(ctx context.Context) ([]Product, error)
+	GetQuestionnaireByID(ctx context.Context, id int32) (Questionnaire, error)
+	GetQuestionnaires(ctx context.Context) ([]Questionnaire, error)
+	GetQuestionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireQuestion, error)
 	GetQuizByID(ctx context.Context, id int64) (Quiz, error)
 	GetQuizQuestionByID(ctx context.Context, id int64) (QuizQuestion, error)
 	GetQuizQuestionsByQuizID(ctx context.Context, quizID int64) ([]QuizQuestion, error)
@@ -81,6 +91,8 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserMissionsByUserID(ctx context.Context, userID int64) ([]GetUserMissionsByUserIDRow, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	GetVarkOptionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireVarkOption, error)
+	LatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)
 	UnenrollStudentFromCourse(ctx context.Context, arg UnenrollStudentFromCourseParams) error

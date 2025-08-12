@@ -55,3 +55,15 @@ ORDER BY created_at DESC;
 
 -- name: GetRoles :many
 SELECT role FROM users;
+
+-- name: CreateUserLearningStyle :exec
+INSERT INTO user_learning_styles
+  (user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- name: LatestUserLearningStyle :one
+SELECT *
+FROM user_learning_styles
+WHERE user_id = ?
+ORDER BY created_at DESC
+LIMIT 1;

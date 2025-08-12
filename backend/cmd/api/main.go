@@ -36,9 +36,8 @@ func main() {
 	dashboardService := services.NewDashboardService(querier)
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
-	questionnaireService := services.NewQuestionnaireService(questionnaireStore, varkStore, weeklyEvaluationStore)
+	questionnaireService := services.NewQuestionnaireService(querier)
 	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
-	varkService := services.NewVARKService(varkStore, nlpService)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
 	productService := services.NewProductService(querier)
@@ -52,7 +51,6 @@ func main() {
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
-	varkHandler := handler.NewVARKHandler(*varkService, *nlpService)
 	nlpHandler := handler.NewNLPHandler(*nlpService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
@@ -205,14 +203,10 @@ func main() {
 
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{
-			questionnaireRoutes.GET("", questionnaireHandler.GetAllQuestionnaires)
+			questionnaireRoutes.POST("", questionnaireHandler.SubmitLikert)
+			questionnaireRoutes.GET("", questionnaireHandler.GetQuestionnaires)
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
-			questionnaireRoutes.POST("", questionnaireHandler.SubmitQuestionnaire)
-			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory)
-			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)
-			questionnaireRoutes.GET("/latest-by-type", questionnaireHandler.GetLatestQuestionnaireResultByType)
-			questionnaireRoutes.POST("/vark", varkHandler.SubmitVARK)
-			questionnaireRoutes.GET("/vark", varkHandler.GetLatestVARKResult)
+			questionnaireRoutes.POST("/vark", questionnaireHandler.SubmitVark)
 		}
 
 		nlpRoutes := authRequired.Group("/nlp")

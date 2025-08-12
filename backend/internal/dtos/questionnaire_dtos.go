@@ -39,13 +39,6 @@ type VarkSubmissionRequestDTO struct {
 	Text            string            `json:"text"`
 }
 
-type VarkScoresDTO struct {
-	Visual      float64 `json:"visual"`
-	Auditory    float64 `json:"auditory"`
-	Reading     float64 `json:"reading"`
-	Kinesthetic float64 `json:"kinesthetic"`
-}
-
 type VarkAnswerDetailDTO struct {
 	QuestionID int64  `json:"question_id"`
 	Answer     string `json:"answer"`
@@ -55,14 +48,14 @@ type VarkAnswerDetailDTO struct {
 type LearningStyleDTO struct {
 	Type      string        `json:"type"` // dominant | multimodal
 	Label     string        `json:"label"`
-	Scores    VarkScoresDTO `json:"scores"`
+	Scores    VARKScores `json:"scores"`
 	CreatedAt *time.Time    `json:"created_at,omitempty"`
 }
 
 type VarkSubmissionResponseDTO struct {
 	QuestionnaireID int64                 `json:"questionnaire_id"`
 	StudentID       int64                 `json:"student_id"`
-	Scores          VarkScoresDTO         `json:"scores"`
+	Scores          VARKScores         `json:"scores"`
 	Style           LearningStyleDTO      `json:"style"`
 	RawAnswers      []VarkAnswerDetailDTO `json:"raw_answers"`
 	CreatedAt       time.Time             `json:"created_at"`
@@ -82,7 +75,7 @@ type VarkResultDTO struct {
 	ID              int64                 `json:"id"`
 	QuestionnaireID int64                 `json:"questionnaire_id"`
 	StudentID       int64                 `json:"student_id"`
-	Scores          VarkScoresDTO         `json:"scores"`
+	Scores          VARKScores         `json:"scores"`
 	Answers         []VarkAnswerDetailDTO `json:"answers"`
 	CreatedAt       time.Time             `json:"created_at"`
 }

@@ -26,9 +26,7 @@ func main() {
 	// Initialize stores
 	questionnaireStore := store.NewQuestionnaireStore(db)
 	varkStore := store.NewVARKStore(db)
-	nlpStore := store.NewNLPStore(db)
 	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
-	textAnalysisSnapshotStore := store.NewTextAnalysisSnapshotStore(db)
 
 	// Initialize gateways
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
@@ -37,7 +35,6 @@ func main() {
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
 	questionnaireService := services.NewQuestionnaireService(querier)
-	nlpService := services.NewNLPService(nlpStore, varkStore, aiServiceGateway, textAnalysisSnapshotStore)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
 	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
 	productService := services.NewProductService(querier)
@@ -46,12 +43,12 @@ func main() {
 	courseService := services.NewCourseService(querier)
 	assignmentService := services.NewAssignmentService(querier)
 	quizService := services.NewQuizService(querier)
+	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
 
 	authHandler := handler.NewAuthHandler(*authService)
 	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
-	questionnaireHandler := handler.NewQuestionnaireHandler(*questionnaireService)
-	nlpHandler := handler.NewNLPHandler(*nlpService)
+	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
@@ -207,13 +204,6 @@ func main() {
 			questionnaireRoutes.GET("", questionnaireHandler.GetQuestionnaires)
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
 			questionnaireRoutes.POST("/vark", questionnaireHandler.SubmitVark)
-		}
-
-		nlpRoutes := authRequired.Group("/nlp")
-		{
-			nlpRoutes.POST("/analyze", nlpHandler.AnalyzeText)
-			nlpRoutes.GET("/stats", nlpHandler.GetNLPStats)
-			nlpRoutes.GET("/latest-snapshot", nlpHandler.GetLatestTextAnalysisSnapshot)
 		}
 
 		weeklyEvaluationRoutes := authRequired.Group("/evaluations/weekly")

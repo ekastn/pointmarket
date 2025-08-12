@@ -689,6 +689,8 @@ type TextAnalysisSnapshot struct {
 	ID                             int64           `json:"id"`
 	StudentID                      int64           `json:"student_id"`
 	OriginalText                   string          `json:"original_text"`
+	AverageWordLength              float64         `json:"average_word_length"`
+	ReadingTime                    int32           `json:"reading_time"`
 	CountWords                     int32           `json:"count_words"`
 	CountSentences                 int32           `json:"count_sentences"`
 	ScoreTotal                     float64         `json:"score_total"`

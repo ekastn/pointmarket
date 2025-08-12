@@ -28,6 +28,7 @@ type Querier interface {
 	CreateStudentAssignment(ctx context.Context, arg CreateStudentAssignmentParams) (sql.Result, error)
 	// Student Quizzes --
 	CreateStudentQuiz(ctx context.Context, arg CreateStudentQuizParams) (sql.Result, error)
+	CreateTextAnalysisSnapshot(ctx context.Context, arg CreateTextAnalysisSnapshotParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	CreateUserLearningStyle(ctx context.Context, arg CreateUserLearningStyleParams) error
 	// User Missions --

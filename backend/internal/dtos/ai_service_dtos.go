@@ -1,12 +1,12 @@
 package dtos
 
-// NLPAnalysisRequest represents the request sent to the AI service for NLP analysis.
-type NLPAnalysisRequest struct {
+// TextAnalysisRequest represents the request sent to the AI service for NLP analysis.
+type TextAnalysisRequest struct {
 	Text string `json:"text"`
 }
 
-// NLPAnalysisResponse represents the enhanced response received from the AI service.
-type NLPAnalysisResponse struct {
+// TextAnalysisResponse represents the enhanced response received from the AI service.
+type TextAnalysisResponse struct {
 	Scores           VARKScores `json:"scores"`
 	StrategyUsed     string     `json:"strategy_used"`
 	WordCount        int        `json:"word_count"`
@@ -18,4 +18,11 @@ type NLPAnalysisResponse struct {
 	SentimentScore   float64    `json:"sentiment_score"`
 	StructureScore   float64    `json:"structure_score"`
 	ComplexityScore  float64    `json:"complexity_score"`
+}
+
+type TextStats struct {
+	WordCount     int     `json:"wordCount"`
+	SentenceCount int     `json:"sentenceCount"`
+	AvgWordLength float64 `json:"avgWordLength"`
+	ReadingTime   int     `json:"readingTime"`
 }

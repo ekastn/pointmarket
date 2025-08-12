@@ -12,11 +12,18 @@ import (
 )
 
 type QuestionnaireHandler struct {
-	questionnaireService services.QuestionnaireService
+	questionnaireService *services.QuestionnaireService
+	textAnalyzerService  *services.TextAnalyzerService
 }
 
-func NewQuestionnaireHandler(questionnaireService services.QuestionnaireService) *QuestionnaireHandler {
-	return &QuestionnaireHandler{questionnaireService: questionnaireService}
+func NewQuestionnaireHandler(
+	questionnaireService *services.QuestionnaireService,
+	textAnalyzerService *services.TextAnalyzerService,
+) *QuestionnaireHandler {
+	return &QuestionnaireHandler{
+		questionnaireService: questionnaireService,
+		textAnalyzerService:  textAnalyzerService,
+	}
 }
 
 func (h *QuestionnaireHandler) GetQuestionnaires(c *gin.Context) {
@@ -109,22 +116,56 @@ func (h *QuestionnaireHandler) SubmitLikert(c *gin.Context) {
 }
 
 func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
-    var req dtos.VarkSubmissionRequestDTO
-    if err := c.ShouldBindJSON(&req); err != nil {
-        response.Error(c, http.StatusBadRequest, err.Error())
-        return
-    }
+	var req dtos.VarkSubmissionRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
 
-    userID, _ := c.Get("userID")
-    err := h.questionnaireService.SubmitVARK(
-        c.Request.Context(),
-        int64(userID.(uint)),
-        req.QuestionnaireID,
-        req.Answers,
-    )
+	userID, _ := c.Get("userID")
 
-    if err != nil {
-        response.Error(c, http.StatusInternalServerError, err.Error())
-        return
-    }
+	scores, err := h.questionnaireService.SubmitVARK(
+		c.Request.Context(),
+		int64(userID.(uint)),
+		req.QuestionnaireID,
+		req.Answers,
+	)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	row, fusedScores, keywords, sentences, err := h.textAnalyzerService.Predict(
+		c.Request.Context(),
+		req.Text,
+		int64(userID.(uint)),
+		scores,
+	)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := gin.H{
+		"keywords":      keywords,
+		"key_sentences": sentences,
+		"learning_style": dtos.StudentLearningStyle{
+			Type:   row.LearningPreferenceType,
+			Label:  row.LearningPreferenceLabel,
+			Scores: *fusedScores,
+		},
+		"text_stats": gin.H{
+            "word_count": row.CountWords,
+            "sentence_count": row.CountSentences,
+            "average_word_length": row.AverageWordLength,
+            "reading_time": row.ReadingTime,
+			"grammar_score": row.ScoreGrammar,
+            "readability_score": row.ScoreReadability,
+            "sentiment_score": row.ScoreSentiment,
+            "structure_score": row.ScoreSentiment,
+            "complexity_score": row.ScoreComplexity,
+		},
+	}
+
+    response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", resp)
 }

@@ -44,3 +44,16 @@ func (dto *UserDTO) FromUser(user models.User) {
 	dto.UpdatedAt = user.UpdatedAt
 	dto.LastLogin = user.LastLogin
 }
+
+type VARKScores struct {
+	Visual      float64 `json:"visual"`
+	Auditory    float64 `json:"auditory"`
+	Reading     float64 `json:"reading"`
+	Kinesthetic float64 `json:"kinesthetic"`
+}
+
+type StudentLearningStyle struct {
+	Type   string     `json:"type"`
+	Label  string     `json:"label"`
+	Scores VARKScores `json:"scores"`
+}

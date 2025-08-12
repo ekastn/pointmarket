@@ -29,12 +29,6 @@ type StudentDashboardStatsDTO struct {
 	LearningStyle        StudentLearningStyle `json:"learning_style"`
 }
 
-type StudentLearningStyle struct {
-	Type   string     `json:"type"`
-	Label  string     `json:"label"`
-	Scores VARKScores `json:"scores"`
-}
-
 // TeacherDashboardStatsDTO holds counts for the teacher dashboard.
 type TeacherDashboardStatsDTO struct {
 	TotalStudents    int64 `json:"total_students"`

@@ -106,8 +106,8 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 				Label: learningStyle.Label,
 				Scores: dtos.VARKScores{
 					Visual:      scoreVisual,
-					Aural:       scoreAuditory,
-					ReadWrite:   scoreReading,
+					Auditory:       scoreAuditory,
+					Reading:   scoreReading,
 					Kinesthetic: scoreKinesthetic,
 				},
 			},

@@ -17,6 +17,8 @@ CREATE TABLE text_analysis_snapshots (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     student_id BIGINT NOT NULL,
     original_text TEXT NOT NULL,
+	average_word_length DOUBLE NOT NULL,
+	reading_time INT NOT NULL,
 	count_words INT NOT NULL,
 	count_sentences INT NOT NULL,
 	score_total DOUBLE NOT NULL,

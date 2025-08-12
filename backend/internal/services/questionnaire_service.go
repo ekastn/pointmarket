@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"strconv"
 	"strings"
@@ -131,10 +132,15 @@ func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64
 }
 
 // SubmitVARK calculates and saves a student's VARK assessment result
-func (s *QuestionnaireService) SubmitVARK(ctx context.Context, studentID int64, questionnaireID int32, answers map[string]string) error {
+func (s *QuestionnaireService) SubmitVARK(
+	ctx context.Context,
+	studentID int64,
+	questionnaireID int32,
+	answers map[string]string,
+) (dtos.VARKScores, error) {
 	options, err := s.q.GetVarkOptionsByQuestionnaireID(ctx, questionnaireID)
 	if err != nil {
-		return err
+		return dtos.VARKScores{}, err
 	}
 
 	// Create a map for quick lookup: questionID -> optionLetter -> learningStyle
@@ -166,7 +172,7 @@ func (s *QuestionnaireService) SubmitVARK(ctx context.Context, studentID int64, 
 
 	answersJSON, err := json.Marshal(answers)
 	if err != nil {
-		return err
+		return dtos.VARKScores{}, err
 	}
 
 	styleType := "dominant"
@@ -207,7 +213,16 @@ func (s *QuestionnaireService) SubmitVARK(ctx context.Context, studentID int64, 
 		Answers:          answersJSON,
 	}
 
-	return s.q.CreateVarkResult(ctx, varkResult)
+	if err := s.q.CreateVarkResult(ctx, varkResult); err != nil {
+		return dtos.VARKScores{}, err
+	}
+
+	return dtos.VARKScores{
+		Visual:      float64(scores["Visual"]),
+		Auditory:    float64(scores["Auditory"]),
+		Reading:     float64(scores["Reading"]),
+		Kinesthetic: float64(scores["Kinesthetic"]),
+	}, nil
 }
 
 func (s *QuestionnaireService) GetLatestLikertByType(ctx context.Context, studentID int64, qType string) (gen.StudentQuestionnaireLikertResult, error) {

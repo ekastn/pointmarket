@@ -27,7 +27,7 @@ func NewAIServiceGateway(baseURL string) *AIServiceGateway {
 }
 
 // GetNLPScores calls the external AI service to get NLP scores for the given text.
-func (g *AIServiceGateway) GetNLPScores(req dtos.NLPAnalysisRequest) (*dtos.NLPAnalysisResponse, error) {
+func (g *AIServiceGateway) GetNLPScores(req dtos.TextAnalysisRequest) (*dtos.TextAnalysisResponse, error) {
 	// Marshal the request body
 	requestBody, err := json.Marshal(req)
 	if err != nil {
@@ -54,7 +54,7 @@ func (g *AIServiceGateway) GetNLPScores(req dtos.NLPAnalysisRequest) (*dtos.NLPA
 	}
 
 	// Decode the response body
-	var resp dtos.NLPAnalysisResponse
+	var resp dtos.TextAnalysisResponse
 	if err := json.NewDecoder(httpResp.Body).Decode(&resp); err != nil {
 		return nil, fmt.Errorf("failed to decode response body: %w", err)
 	}

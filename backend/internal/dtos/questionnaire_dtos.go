@@ -46,16 +46,16 @@ type VarkAnswerDetailDTO struct {
 }
 
 type LearningStyleDTO struct {
-	Type      string        `json:"type"` // dominant | multimodal
-	Label     string        `json:"label"`
+	Type      string     `json:"type"` // dominant | multimodal
+	Label     string     `json:"label"`
 	Scores    VARKScores `json:"scores"`
-	CreatedAt *time.Time    `json:"created_at,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 }
 
 type VarkSubmissionResponseDTO struct {
 	QuestionnaireID int64                 `json:"questionnaire_id"`
 	StudentID       int64                 `json:"student_id"`
-	Scores          VARKScores         `json:"scores"`
+	Scores          VARKScores            `json:"scores"`
 	Style           LearningStyleDTO      `json:"style"`
 	RawAnswers      []VarkAnswerDetailDTO `json:"raw_answers"`
 	CreatedAt       time.Time             `json:"created_at"`
@@ -75,7 +75,7 @@ type VarkResultDTO struct {
 	ID              int64                 `json:"id"`
 	QuestionnaireID int64                 `json:"questionnaire_id"`
 	StudentID       int64                 `json:"student_id"`
-	Scores          VARKScores         `json:"scores"`
+	Scores          VARKScores            `json:"scores"`
 	Answers         []VarkAnswerDetailDTO `json:"answers"`
 	CreatedAt       time.Time             `json:"created_at"`
 }

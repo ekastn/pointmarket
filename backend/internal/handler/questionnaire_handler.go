@@ -14,15 +14,18 @@ import (
 type QuestionnaireHandler struct {
 	questionnaireService *services.QuestionnaireService
 	textAnalyzerService  *services.TextAnalyzerService
+	correlationService   *services.CorrelationService
 }
 
 func NewQuestionnaireHandler(
 	questionnaireService *services.QuestionnaireService,
 	textAnalyzerService *services.TextAnalyzerService,
+	correlationService *services.CorrelationService,
 ) *QuestionnaireHandler {
 	return &QuestionnaireHandler{
 		questionnaireService: questionnaireService,
 		textAnalyzerService:  textAnalyzerService,
+		correlationService:   correlationService,
 	}
 }
 
@@ -155,17 +158,33 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 			Scores: *fusedScores,
 		},
 		"text_stats": gin.H{
-            "word_count": row.CountWords,
-            "sentence_count": row.CountSentences,
-            "average_word_length": row.AverageWordLength,
-            "reading_time": row.ReadingTime,
-			"grammar_score": row.ScoreGrammar,
-            "readability_score": row.ScoreReadability,
-            "sentiment_score": row.ScoreSentiment,
-            "structure_score": row.ScoreSentiment,
-            "complexity_score": row.ScoreComplexity,
+			"word_count":          row.CountWords,
+			"sentence_count":      row.CountSentences,
+			"average_word_length": row.AverageWordLength,
+			"reading_time":        row.ReadingTime,
+			"grammar_score":       row.ScoreGrammar,
+			"readability_score":   row.ScoreReadability,
+			"sentiment_score":     row.ScoreSentiment,
+			"structure_score":     row.ScoreSentiment,
+			"complexity_score":    row.ScoreComplexity,
 		},
 	}
 
-    response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", resp)
+	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", resp)
+}
+
+func (h *QuestionnaireHandler) GetCorrelation(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	analysisResult, err := h.correlationService.GetCorrelationAnalysisForStudent(c.Request.Context(), int64(userID.(uint)))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Correlation analysis successful", analysisResult)
 }

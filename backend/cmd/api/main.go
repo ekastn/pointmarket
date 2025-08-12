@@ -23,9 +23,6 @@ func main() {
 
 	querier := gen.New(db)
 
-	// Initialize stores
-	questionnaireStore := store.NewQuestionnaireStore(db)
-	varkStore := store.NewVARKStore(db)
 	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
 
 	// Initialize gateways
@@ -36,7 +33,7 @@ func main() {
 	userService := services.NewUserService(querier)
 	questionnaireService := services.NewQuestionnaireService(querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
-	correlationService := services.NewCorrelationService(varkStore, questionnaireStore)
+	correlationService := services.NewCorrelationService(querier)
 	productService := services.NewProductService(querier)
 	badgeService := services.NewBadgeService(querier)
 	missionService := services.NewMissionService(querier)
@@ -46,9 +43,8 @@ func main() {
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
 
 	authHandler := handler.NewAuthHandler(*authService)
-	correlationHandler := handler.NewCorrelationHandler(*correlationService)
 	userHandler := handler.NewUserHandler(*userService)
-	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService)
+	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
@@ -204,6 +200,7 @@ func main() {
 			questionnaireRoutes.GET("", questionnaireHandler.GetQuestionnaires)
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
 			questionnaireRoutes.POST("/vark", questionnaireHandler.SubmitVark)
+			questionnaireRoutes.GET("/correlations", questionnaireHandler.GetCorrelation)
 		}
 
 		weeklyEvaluationRoutes := authRequired.Group("/evaluations/weekly")
@@ -212,11 +209,6 @@ func main() {
 			weeklyEvaluationRoutes.GET("/student/pending", weeklyEvaluationHandler.GetPendingWeeklyEvaluationsByStudentID)
 			weeklyEvaluationRoutes.GET("/teacher/overview", weeklyEvaluationHandler.GetWeeklyEvaluationOverview)
 			weeklyEvaluationRoutes.GET("/teacher/status", weeklyEvaluationHandler.GetStudentEvaluationStatus)
-		}
-
-		correlationRoutes := authRequired.Group("/correlation")
-		{
-			correlationRoutes.GET("/analyze", correlationHandler.AnalyzeCorrelation)
 		}
 	}
 

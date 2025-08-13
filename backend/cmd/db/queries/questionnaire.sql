@@ -30,8 +30,8 @@ WHERE question_id IN (
 
 -- name: CreateLikertResult :exec
 INSERT INTO student_questionnaire_likert_results
-  (student_id, questionnaire_id, answers, total_score, subscale_scores)
-VALUES (?, ?, ?, ?, ?);
+  (student_id, questionnaire_id, answers, total_score, subscale_scores, weekly_evaluation_id)
+VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: CreateVarkResult :exec
 INSERT INTO student_questionnaire_vark_results
@@ -39,7 +39,7 @@ INSERT INTO student_questionnaire_vark_results
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: GetLatestLikertResultByType :one
-SELECT r.id, r.student_id, r.questionnaire_id, r.answers, r.total_score, r.subscale_scores, r.created_at
+SELECT r.id, r.student_id, r.questionnaire_id, r.answers, r.total_score, r.subscale_scores, r.created_at, r.weekly_evaluation_id
 FROM student_questionnaire_likert_results r
 JOIN questionnaires q ON r.questionnaire_id = q.id
 WHERE r.student_id = ? AND q.type = ?
@@ -65,3 +65,7 @@ LEFT JOIN student_questionnaire_likert_results r
 WHERE q.type IN ('MSLQ','AMS') AND q.status='active'
 GROUP BY q.id, q.type, q.name
 ORDER BY q.type;
+
+-- name: GetQuestionnaireByType :one
+SELECT id, name FROM questionnaires
+WHERE type = ? AND status = 'active';

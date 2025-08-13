@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"strconv"
@@ -10,96 +9,95 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// WeeklyEvaluationHandler handles requests related to weekly evaluations
 type WeeklyEvaluationHandler struct {
-	service *services.WeeklyEvaluationService
+	weeklyEvaluationService *services.WeeklyEvaluationService
 }
 
-func NewWeeklyEvaluationHandler(service *services.WeeklyEvaluationService) *WeeklyEvaluationHandler {
-	return &WeeklyEvaluationHandler{service: service}
+// NewWeeklyEvaluationHandler creates a new instance of WeeklyEvaluationHandler
+func NewWeeklyEvaluationHandler(weeklyEvaluationService *services.WeeklyEvaluationService) *WeeklyEvaluationHandler {
+	return &WeeklyEvaluationHandler{weeklyEvaluationService: weeklyEvaluationService}
 }
 
-func (h *WeeklyEvaluationHandler) GetStudentEvaluationStatus(c *gin.Context) {
-	statuses, err := h.service.GetStudentEvaluationStatus()
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	var statusDTOs []dtos.StudentEvaluationStatusDTO
-	for _, s := range statuses {
-		statusDTOs = append(statusDTOs, dtos.ToStudentEvaluationStatusDTO(s))
-	}
-
-	response.Success(c, http.StatusOK, "Student evaluation statuses retrieved successfully", statusDTOs)
-}
-
-func (h *WeeklyEvaluationHandler) GetWeeklyEvaluationOverview(c *gin.Context) {
-	weeksStr := c.DefaultQuery("weeks", "4")
-	weeks, err := strconv.Atoi(weeksStr)
-	if err != nil || weeks <= 0 {
-		response.Error(c, http.StatusBadRequest, "Invalid weeks parameter")
-		return
-	}
-
-	overviews, err := h.service.GetWeeklyEvaluationOverview(weeks)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	var overviewDTOs []dtos.WeeklyEvaluationOverviewDTO
-	for _, o := range overviews {
-		overviewDTOs = append(overviewDTOs, dtos.ToWeeklyEvaluationOverviewDTO(o))
-	}
-
-	response.Success(c, http.StatusOK, "Weekly evaluation overview retrieved successfully", overviewDTOs)
-}
-
-func (h *WeeklyEvaluationHandler) GetWeeklyEvaluationProgressByStudentID(c *gin.Context) {
+// GetWeeklyEvaluations handles fetching weekly evaluations for students or teachers
+func (h *WeeklyEvaluationHandler) GetWeeklyEvaluations(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User not found in context")
+		response.Error(c, http.StatusUnauthorized, "User not authenticated")
 		return
 	}
 
-	weeksStr := c.DefaultQuery("weeks", "8")
-	weeks, err := strconv.Atoi(weeksStr)
-	if err != nil || weeks <= 0 {
-		response.Error(c, http.StatusBadRequest, "Invalid weeks parameter")
+	role, exists := c.Get("role")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User role not found")
 		return
 	}
 
-	progress, err := h.service.GetWeeklyEvaluationProgressByStudentID(int(userID.(uint)), weeks)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+	view := c.Query("view")
+	studentIDParam := c.Query("student_id")
+	weeksParam := c.DefaultQuery("weeks", "8")
+
+	parsedWeeks, err := strconv.ParseInt(weeksParam, 10, 32)
+	if err != nil || parsedWeeks <= 0 {
+		response.Error(c, http.StatusBadRequest, "Invalid 'weeks' parameter. Must be a positive integer.")
 		return
 	}
 
-	var progressDTOs []dtos.WeeklyEvaluationProgressDTO
-	for _, p := range progress {
-		progressDTOs = append(progressDTOs, dtos.ToWeeklyEvaluationProgressDTO(p))
-	}
+	numberOfWeeks := int32(parsedWeeks)
 
-	response.Success(c, http.StatusOK, "Weekly evaluation progress retrieved successfully", progressDTOs)
+	if role == "siswa" {
+		evaluations, err := h.weeklyEvaluationService.GetWeeklyEvaluationsByStudentID(
+			c.Request.Context(),
+			int64(userID.(uint)),
+			numberOfWeeks,
+		)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		response.Success(c, http.StatusOK, "Weekly evaluations retrieved successfully", evaluations)
+	} else if role == "guru" {
+		if view == "monitoring" {
+			dashboardData, err := h.weeklyEvaluationService.GetWeeklyEvaluationsForTeacherDashboard(
+				c.Request.Context(),
+				numberOfWeeks,
+			)
+			if err != nil {
+				response.Error(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+			response.Success(c, http.StatusOK, "Teacher monitoring dashboard data retrieved successfully", dashboardData)
+		} else if studentIDParam != "" {
+			// Teacher viewing specific student's history
+			targetStudentID, err := strconv.ParseInt(studentIDParam, 10, 64)
+			if err != nil {
+				response.Error(c, http.StatusBadRequest, "Invalid student ID")
+				return
+			}
+			evaluations, err := h.weeklyEvaluationService.GetWeeklyEvaluationsByStudentID(
+				c.Request.Context(),
+				targetStudentID,
+				numberOfWeeks,
+			)
+			if err != nil {
+				response.Error(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+			response.Success(c, http.StatusOK, "Student weekly evaluations retrieved successfully", evaluations)
+		} else {
+			response.Error(c, http.StatusBadRequest, "Invalid teacher view or missing student_id")
+		}
+	} else {
+		response.Error(c, http.StatusForbidden, "Access denied")
+	}
 }
 
-func (h *WeeklyEvaluationHandler) GetPendingWeeklyEvaluationsByStudentID(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User not found in context")
-		return
-	}
-
-	pendingEvaluations, err := h.service.GetPendingWeeklyEvaluationsByStudentID(int(userID.(uint)))
+// InitializeWeeklyEvaluations handles the one-time initialization of weekly evaluations
+func (h *WeeklyEvaluationHandler) InitializeWeeklyEvaluations(c *gin.Context) {
+	err := h.weeklyEvaluationService.InitializeWeeklyEvaluations(c.Request.Context())
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	var pendingDTOs []dtos.PendingWeeklyEvaluationDTO
-	for _, p := range pendingEvaluations {
-		pendingDTOs = append(pendingDTOs, dtos.ToPendingWeeklyEvaluationDTO(p))
-	}
-
-	response.Success(c, http.StatusOK, "Pending weekly evaluations retrieved successfully", pendingDTOs)
+	response.Success(c, http.StatusOK, "Weekly evaluations initialized successfully", nil)
 }

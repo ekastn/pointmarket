@@ -67,3 +67,7 @@ FROM user_learning_styles
 WHERE user_id = ?
 ORDER BY created_at DESC
 LIMIT 1;
+
+-- name: GetActiveStudents :many
+SELECT id, email, username, display_name FROM users
+WHERE role = 'siswa';

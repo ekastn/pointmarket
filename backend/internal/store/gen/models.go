@@ -650,13 +650,14 @@ type StudentCourse struct {
 }
 
 type StudentQuestionnaireLikertResult struct {
-	ID              int64           `json:"id"`
-	StudentID       int64           `json:"student_id"`
-	QuestionnaireID int32           `json:"questionnaire_id"`
-	Answers         json.RawMessage `json:"answers"`
-	TotalScore      float64         `json:"total_score"`
-	SubscaleScores  json.RawMessage `json:"subscale_scores"`
-	CreatedAt       sql.NullTime    `json:"created_at"`
+	ID                 int64           `json:"id"`
+	StudentID          int64           `json:"student_id"`
+	QuestionnaireID    int32           `json:"questionnaire_id"`
+	Answers            json.RawMessage `json:"answers"`
+	TotalScore         float64         `json:"total_score"`
+	SubscaleScores     json.RawMessage `json:"subscale_scores"`
+	CreatedAt          sql.NullTime    `json:"created_at"`
+	WeeklyEvaluationID sql.NullInt64   `json:"weekly_evaluation_id"`
 }
 
 type StudentQuestionnaireVarkResult struct {

@@ -34,6 +34,7 @@ type Querier interface {
 	// User Missions --
 	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
 	CreateVarkResult(ctx context.Context, arg CreateVarkResultParams) error
+	CreateWeeklyEvaluation(ctx context.Context, arg CreateWeeklyEvaluationParams) error
 	DeleteAssignment(ctx context.Context, id int64) error
 	DeleteBadge(ctx context.Context, id int64) error
 	DeleteCourse(ctx context.Context, id int64) error
@@ -47,6 +48,7 @@ type Querier interface {
 	// Student Enrollment --
 	EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error)
 	GetActiveQuestionnaires(ctx context.Context) ([]Questionnaire, error)
+	GetActiveStudents(ctx context.Context) ([]GetActiveStudentsRow, error)
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
 	GetAssignmentByCourseIDAndOwnerID(ctx context.Context, arg GetAssignmentByCourseIDAndOwnerIDParams) (Assignment, error)
 	GetAssignmentByID(ctx context.Context, id int64) (Assignment, error)
@@ -65,6 +67,7 @@ type Querier interface {
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProducts(ctx context.Context) ([]Product, error)
 	GetQuestionnaireByID(ctx context.Context, id int32) (Questionnaire, error)
+	GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (GetQuestionnaireByTypeRow, error)
 	GetQuestionnaires(ctx context.Context) ([]Questionnaire, error)
 	GetQuestionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireQuestion, error)
 	GetQuizByID(ctx context.Context, id int64) (Quiz, error)
@@ -93,7 +96,11 @@ type Querier interface {
 	GetUserMissionsByUserID(ctx context.Context, userID int64) ([]GetUserMissionsByUserIDRow, error)
 	GetUsers(ctx context.Context) ([]User, error)
 	GetVarkOptionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireVarkOption, error)
+	GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx context.Context, arg GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams) (int64, error)
+	GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]WeeklyEvaluation, error)
+	GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error)
 	LatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
+	MarkOverdueWeeklyEvaluations(ctx context.Context) error
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)
 	UnenrollStudentFromCourse(ctx context.Context, arg UnenrollStudentFromCourseParams) error
@@ -109,6 +116,7 @@ type Querier interface {
 	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
+	UpdateWeeklyEvaluationStatus(ctx context.Context, arg UpdateWeeklyEvaluationStatusParams) error
 }
 
 var _ Querier = (*Queries)(nil)

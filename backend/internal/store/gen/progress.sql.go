@@ -7,7 +7,9 @@ package gen
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"time"
 )
 
 const createTextAnalysisSnapshot = `-- name: CreateTextAnalysisSnapshot :exec
@@ -66,5 +68,168 @@ func (q *Queries) CreateTextAnalysisSnapshot(ctx context.Context, arg CreateText
 		arg.LearningPreferenceLabel,
 		arg.LearningPreferenceCombinedVark,
 	)
+	return err
+}
+
+const createWeeklyEvaluation = `-- name: CreateWeeklyEvaluation :exec
+INSERT INTO weekly_evaluations
+  (student_id, questionnaire_id, status, due_date)
+VALUES (?, ?, ?, ?)
+`
+
+type CreateWeeklyEvaluationParams struct {
+	StudentID       int64                   `json:"student_id"`
+	QuestionnaireID int32                   `json:"questionnaire_id"`
+	Status          WeeklyEvaluationsStatus `json:"status"`
+	DueDate         time.Time               `json:"due_date"`
+}
+
+func (q *Queries) CreateWeeklyEvaluation(ctx context.Context, arg CreateWeeklyEvaluationParams) error {
+	_, err := q.db.ExecContext(ctx, createWeeklyEvaluation,
+		arg.StudentID,
+		arg.QuestionnaireID,
+		arg.Status,
+		arg.DueDate,
+	)
+	return err
+}
+
+const getWeeklyEvaluationByStudentAndQuestionnaireAndDueDate = `-- name: GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate :one
+SELECT id FROM weekly_evaluations
+WHERE student_id = ? AND questionnaire_id = ? AND due_date = ?
+`
+
+type GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams struct {
+	StudentID       int64     `json:"student_id"`
+	QuestionnaireID int32     `json:"questionnaire_id"`
+	DueDate         time.Time `json:"due_date"`
+}
+
+func (q *Queries) GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx context.Context, arg GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getWeeklyEvaluationByStudentAndQuestionnaireAndDueDate, arg.StudentID, arg.QuestionnaireID, arg.DueDate)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getWeeklyEvaluationsByStudentID = `-- name: GetWeeklyEvaluationsByStudentID :many
+SELECT id, student_id, questionnaire_id, status, due_date, completed_at, created_at, updated_at FROM weekly_evaluations
+WHERE student_id = ? AND due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK) AND due_date <= CURDATE()
+ORDER BY due_date DESC
+`
+
+type GetWeeklyEvaluationsByStudentIDParams struct {
+	StudentID int64       `json:"student_id"`
+	DATESUB   interface{} `json:"DATE_SUB"`
+}
+
+func (q *Queries) GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]WeeklyEvaluation, error) {
+	rows, err := q.db.QueryContext(ctx, getWeeklyEvaluationsByStudentID, arg.StudentID, arg.DATESUB)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []WeeklyEvaluation
+	for rows.Next() {
+		var i WeeklyEvaluation
+		if err := rows.Scan(
+			&i.ID,
+			&i.StudentID,
+			&i.QuestionnaireID,
+			&i.Status,
+			&i.DueDate,
+			&i.CompletedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getWeeklyEvaluationsForTeacherDashboard = `-- name: GetWeeklyEvaluationsForTeacherDashboard :many
+SELECT
+    we.id,
+    we.status,
+    we.due_date,
+    we.completed_at,
+    u.id as student_id,
+    u.display_name as student_name
+FROM weekly_evaluations we
+JOIN users u ON we.student_id = u.id
+WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK) AND we.due_date <= CURDATE()
+`
+
+type GetWeeklyEvaluationsForTeacherDashboardRow struct {
+	ID          int64                   `json:"id"`
+	Status      WeeklyEvaluationsStatus `json:"status"`
+	DueDate     time.Time               `json:"due_date"`
+	CompletedAt sql.NullTime            `json:"completed_at"`
+	StudentID   int64                   `json:"student_id"`
+	StudentName string                  `json:"student_name"`
+}
+
+func (q *Queries) GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error) {
+	rows, err := q.db.QueryContext(ctx, getWeeklyEvaluationsForTeacherDashboard, dateSUB)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetWeeklyEvaluationsForTeacherDashboardRow
+	for rows.Next() {
+		var i GetWeeklyEvaluationsForTeacherDashboardRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Status,
+			&i.DueDate,
+			&i.CompletedAt,
+			&i.StudentID,
+			&i.StudentName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markOverdueWeeklyEvaluations = `-- name: MarkOverdueWeeklyEvaluations :exec
+UPDATE weekly_evaluations
+SET status = 'overdue'
+WHERE status = 'pending' AND due_date < NOW()
+`
+
+func (q *Queries) MarkOverdueWeeklyEvaluations(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, markOverdueWeeklyEvaluations)
+	return err
+}
+
+const updateWeeklyEvaluationStatus = `-- name: UpdateWeeklyEvaluationStatus :exec
+UPDATE weekly_evaluations
+SET status = 'completed', completed_at = NOW()
+WHERE id = ? AND student_id = ?
+`
+
+type UpdateWeeklyEvaluationStatusParams struct {
+	ID        int64 `json:"id"`
+	StudentID int64 `json:"student_id"`
+}
+
+func (q *Queries) UpdateWeeklyEvaluationStatus(ctx context.Context, arg UpdateWeeklyEvaluationStatusParams) error {
+	_, err := q.db.ExecContext(ctx, updateWeeklyEvaluationStatus, arg.ID, arg.StudentID)
 	return err
 }

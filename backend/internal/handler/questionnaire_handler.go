@@ -108,6 +108,7 @@ func (h *QuestionnaireHandler) SubmitLikert(c *gin.Context) {
 		c.Request.Context(),
 		int64(userID.(uint)),
 		req.QuestionnaireID,
+		req.WeeklyEvaluationID,
 		req.Answers,
 	)
 	if err != nil {

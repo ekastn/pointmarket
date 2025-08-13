@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/database"
 	"pointmarket/backend/internal/services"
-	"pointmarket/backend/internal/store"
+	"pointmarket/backend/internal/store/gen"
 	"time"
 )
 
@@ -13,8 +14,11 @@ func main() {
 	cfg := config.Init()
 	db := database.Connect(cfg)
 
-	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
-	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
+	querier := gen.New(db)
+	userService := services.NewUserService(querier)
+	questionnaireService := services.NewQuestionnaireService(querier)
+
+	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 
 	log.Println("Weekly evaluation scheduler started. Waiting for tasks...")
 
@@ -48,7 +52,7 @@ func main() {
 		time.Sleep(durationUntilNextRun)
 
 		log.Println("Running weekly evaluation generation and overdue update...")
-		err := weeklyEvaluationService.GenerateAndOverdueWeeklyEvaluations()
+		err := weeklyEvaluationService.GenerateAndOverdueWeeklyEvaluations(context.Background())
 		if err != nil {
 			log.Printf("Error running weekly evaluation task: %v", err)
 		} else {

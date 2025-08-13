@@ -13,16 +13,17 @@ import (
 
 const createLikertResult = `-- name: CreateLikertResult :exec
 INSERT INTO student_questionnaire_likert_results
-  (student_id, questionnaire_id, answers, total_score, subscale_scores)
-VALUES (?, ?, ?, ?, ?)
+  (student_id, questionnaire_id, answers, total_score, subscale_scores, weekly_evaluation_id)
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateLikertResultParams struct {
-	StudentID       int64           `json:"student_id"`
-	QuestionnaireID int32           `json:"questionnaire_id"`
-	Answers         json.RawMessage `json:"answers"`
-	TotalScore      float64         `json:"total_score"`
-	SubscaleScores  json.RawMessage `json:"subscale_scores"`
+	StudentID          int64           `json:"student_id"`
+	QuestionnaireID    int32           `json:"questionnaire_id"`
+	Answers            json.RawMessage `json:"answers"`
+	TotalScore         float64         `json:"total_score"`
+	SubscaleScores     json.RawMessage `json:"subscale_scores"`
+	WeeklyEvaluationID sql.NullInt64   `json:"weekly_evaluation_id"`
 }
 
 func (q *Queries) CreateLikertResult(ctx context.Context, arg CreateLikertResultParams) error {
@@ -32,6 +33,7 @@ func (q *Queries) CreateLikertResult(ctx context.Context, arg CreateLikertResult
 		arg.Answers,
 		arg.TotalScore,
 		arg.SubscaleScores,
+		arg.WeeklyEvaluationID,
 	)
 	return err
 }
@@ -109,7 +111,7 @@ func (q *Queries) GetActiveQuestionnaires(ctx context.Context) ([]Questionnaire,
 }
 
 const getLatestLikertResultByType = `-- name: GetLatestLikertResultByType :one
-SELECT r.id, r.student_id, r.questionnaire_id, r.answers, r.total_score, r.subscale_scores, r.created_at
+SELECT r.id, r.student_id, r.questionnaire_id, r.answers, r.total_score, r.subscale_scores, r.created_at, r.weekly_evaluation_id
 FROM student_questionnaire_likert_results r
 JOIN questionnaires q ON r.questionnaire_id = q.id
 WHERE r.student_id = ? AND q.type = ?
@@ -133,6 +135,7 @@ func (q *Queries) GetLatestLikertResultByType(ctx context.Context, arg GetLatest
 		&i.TotalScore,
 		&i.SubscaleScores,
 		&i.CreatedAt,
+		&i.WeeklyEvaluationID,
 	)
 	return i, err
 }
@@ -248,6 +251,23 @@ func (q *Queries) GetQuestionnaireByID(ctx context.Context, id int32) (Questionn
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
+	return i, err
+}
+
+const getQuestionnaireByType = `-- name: GetQuestionnaireByType :one
+SELECT id, name FROM questionnaires
+WHERE type = ? AND status = 'active'
+`
+
+type GetQuestionnaireByTypeRow struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (GetQuestionnaireByTypeRow, error) {
+	row := q.db.QueryRowContext(ctx, getQuestionnaireByType, type_)
+	var i GetQuestionnaireByTypeRow
+	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
 

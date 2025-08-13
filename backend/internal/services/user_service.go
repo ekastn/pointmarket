@@ -102,3 +102,8 @@ func (s *UserService) UpdateUserRole(ctx context.Context, userID int64, role str
 func (s *UserService) DeleteUser(ctx context.Context, userID int64) error {
 	return s.q.DeleteUser(ctx, userID)
 }
+
+// GetAllActiveStudents retrieves all active students (role 'siswa')
+func (s *UserService) GetActiveStudents(ctx context.Context) ([]gen.GetActiveStudentsRow, error) {
+	return s.q.GetActiveStudents(ctx)
+}

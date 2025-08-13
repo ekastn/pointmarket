@@ -13,6 +13,12 @@ CREATE TABLE weekly_evaluations (
     FOREIGN KEY (questionnaire_id) REFERENCES questionnaires(id) ON DELETE CASCADE
 );
 
+-- Link the weekly evaluation to the results table
+ALTER TABLE student_questionnaire_likert_results
+ADD COLUMN weekly_evaluation_id BIGINT NULL AFTER subscale_scores,
+ADD CONSTRAINT fk_sq_likert_results_weekly_eval
+FOREIGN KEY (weekly_evaluation_id) REFERENCES weekly_evaluations(id) ON DELETE SET NULL;
+
 CREATE TABLE text_analysis_snapshots (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     student_id BIGINT NOT NULL,
@@ -38,5 +44,10 @@ CREATE TABLE text_analysis_snapshots (
 -- +goose Down
 -- +goose StatementBegin
 drop table if exists text_analysis_snapshots;
+
+ALTER TABLE student_questionnaire_likert_results
+DROP FOREIGN KEY fk_sq_likert_results_weekly_eval,
+DROP COLUMN weekly_evaluation_id;
+
 DROP TABLE IF EXISTS weekly_evaluations;
 -- +goose StatementEnd

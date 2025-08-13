@@ -50,7 +50,7 @@ func (s *QuestionnaireService) GetQuestionsByQuestionnaireID(ctx context.Context
 }
 
 // SubmitLikert saves a student's Likert answers
-func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64, questionnaireID int32, answers map[string]string) (*float64, error) {
+func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64, questionnaireID int32, weeklyEvaluationID *int64, answers map[string]string) (*float64, error) {
 	qMeta, err := s.GetQuestionnaireByID(ctx, questionnaireID)
 	if err != nil {
 		return nil, err
@@ -123,9 +123,27 @@ func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64
 		SubscaleScores:  subscaleScoresJSON,
 	}
 
+	if weeklyEvaluationID != nil {
+		data.WeeklyEvaluationID = sql.NullInt64{Int64: *weeklyEvaluationID, Valid: true}
+	}
+
 	err = s.q.CreateLikertResult(ctx, data)
 	if err != nil {
 		return nil, err
+	}
+
+	// If the submission is for a weekly evaluation, update its status
+	if weeklyEvaluationID != nil {
+		err = s.q.UpdateWeeklyEvaluationStatus(ctx, gen.UpdateWeeklyEvaluationStatusParams{
+			ID:        *weeklyEvaluationID,
+			StudentID: studentID,
+		})
+		if err != nil {
+			// Log the error but don't fail the whole transaction,
+			// as the main result was already saved.
+			// Or handle this in a transaction. For now, just log.
+			fmt.Printf("Warning: failed to update weekly evaluation status for id %d: %v\n", *weeklyEvaluationID, err)
+		}
 	}
 
 	return &avgTotalScore, nil
@@ -255,4 +273,16 @@ func (s *QuestionnaireService) GetLatestVark(ctx context.Context, studentID int6
 
 func (s *QuestionnaireService) GetLikertStats(ctx context.Context, studentID int64) ([]gen.GetLikertStatsByStudentRow, error) {
 	return s.q.GetLikertStatsByStudent(ctx, studentID)
+}
+
+// GetQuestionnaireByType retrieves a questionnaire by its type
+func (s *QuestionnaireService) GetQuestionnaireByType(ctx context.Context, qType gen.QuestionnairesType) (gen.GetQuestionnaireByTypeRow, error) {
+	row, err := s.q.GetQuestionnaireByType(ctx, qType)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return gen.GetQuestionnaireByTypeRow{}, fmt.Errorf("questionnaire of type %s not found", qType)
+		}
+		return gen.GetQuestionnaireByTypeRow{}, fmt.Errorf("failed to get questionnaire by type %s: %w", qType, err)
+	}
+	return row, nil
 }

@@ -75,6 +75,46 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const getActiveStudents = `-- name: GetActiveStudents :many
+SELECT id, email, username, display_name FROM users
+WHERE role = 'siswa'
+`
+
+type GetActiveStudentsRow struct {
+	ID          int64  `json:"id"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	DisplayName string `json:"display_name"`
+}
+
+func (q *Queries) GetActiveStudents(ctx context.Context) ([]GetActiveStudentsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getActiveStudents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetActiveStudentsRow
+	for rows.Next() {
+		var i GetActiveStudentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Username,
+			&i.DisplayName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRoles = `-- name: GetRoles :many
 SELECT role FROM users
 `

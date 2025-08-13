@@ -25,8 +25,9 @@ type QuestionnaireQuestionDTO struct {
 }
 
 type LikertSubmissionRequestDTO struct {
-	QuestionnaireID int32             `json:"questionnaire_id"`
-	Answers         map[string]string `json:"answers"`
+	QuestionnaireID    int32             `json:"questionnaire_id"`
+	Answers            map[string]string `json:"answers"`
+	WeeklyEvaluationID *int64            `json:"weekly_evaluation_id,omitempty"`
 }
 
 type LikertSubmissionResponseDTO struct {

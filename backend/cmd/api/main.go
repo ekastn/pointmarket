@@ -8,7 +8,6 @@ import (
 	"pointmarket/backend/internal/handler"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/services"
-	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/store/gen"
 	"strings"
 	"time"
@@ -23,16 +22,13 @@ func main() {
 
 	querier := gen.New(db)
 
-	weeklyEvaluationStore := store.NewWeeklyEvaluationStore(db)
-
-	// Initialize gateways
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
 
 	dashboardService := services.NewDashboardService(querier)
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
 	questionnaireService := services.NewQuestionnaireService(querier)
-	weeklyEvaluationService := services.NewWeeklyEvaluationService(weeklyEvaluationStore)
+	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 	correlationService := services.NewCorrelationService(querier)
 	productService := services.NewProductService(querier)
 	badgeService := services.NewBadgeService(querier)
@@ -57,7 +53,6 @@ func main() {
 
 	r := gin.Default()
 
-	// CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     strings.Split(cfg.AllowedOrigins, ","),
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -68,9 +63,9 @@ func main() {
 	}))
 
 	// Health check endpoint
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "pong",
+			"status": "ok",
 		})
 	})
 
@@ -161,7 +156,7 @@ func main() {
 			assignmentsRoutes.POST("/:id/submit", assignmentHandler.UpdateStudentAssignment)                                                        // Auth required (student submits an assignment - updates status/submission)
 			assignmentsRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], assignmentHandler.GetStudentAssignmentsByAssignmentID)               // Admin/Teacher-only
 			assignmentsRoutes.PUT("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.UpdateStudentAssignment)    // Admin/Teacher-only (grade/update specific submission)
-			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin/Teacher-only
+			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin-only
 		}
 
 		// Specific student assignments list (e.g., for a student to see their own progress)
@@ -181,14 +176,14 @@ func main() {
 			quizzesRoutes.GET("/:id/questions", quizHandler.GetQuizQuestionsByQuizID)
 			quizzesRoutes.GET("/:id/questions/:question_id", quizHandler.GetQuizQuestionByID)
 			quizzesRoutes.PUT("/:id/questions/:question_id", adminRoutes.Handlers[0], quizHandler.UpdateQuizQuestion)    // Admin/Teacher-only
-			quizzesRoutes.DELETE("/:id/questions/:question_id", adminRoutes.Handlers[0], quizHandler.DeleteQuizQuestion) // Admin/Teacher-only
+			quizzesRoutes.DELETE("/:id/questions/:question_id", adminRoutes.Handlers[0], quizHandler.DeleteQuizQuestion) // Admin-only
 
 			// Student-specific actions on quizzes
 			quizzesRoutes.POST("/:id/start", quizHandler.CreateStudentQuiz)                                                   // Auth required (student starts a quiz)
 			quizzesRoutes.POST("/:id/submit", quizHandler.UpdateStudentQuiz)                                                  // Auth required (student submits a quiz - updates status/score)
 			quizzesRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], quizHandler.GetStudentQuizzesByQuizID)             // Admin/Teacher-only (get all submissions for a quiz)
 			quizzesRoutes.PUT("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.UpdateStudentQuiz)    // Admin/Teacher-only (grade/update specific submission)
-			quizzesRoutes.DELETE("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.DeleteStudentQuiz) // Admin/Teacher-only
+			quizzesRoutes.DELETE("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.DeleteStudentQuiz) // Admin-only
 		}
 
 		// Specific student quizzes list (e.g., for a student to see their own progress)
@@ -203,12 +198,11 @@ func main() {
 			questionnaireRoutes.GET("/correlations", questionnaireHandler.GetCorrelation)
 		}
 
-		weeklyEvaluationRoutes := authRequired.Group("/evaluations/weekly")
+		// NEW: Weekly Evaluations routes
+		weeklyEvaluationRoutes := authRequired.Group("/weekly-evaluations")
 		{
-			weeklyEvaluationRoutes.GET("/student/progress", weeklyEvaluationHandler.GetWeeklyEvaluationProgressByStudentID)
-			weeklyEvaluationRoutes.GET("/student/pending", weeklyEvaluationHandler.GetPendingWeeklyEvaluationsByStudentID)
-			weeklyEvaluationRoutes.GET("/teacher/overview", weeklyEvaluationHandler.GetWeeklyEvaluationOverview)
-			weeklyEvaluationRoutes.GET("/teacher/status", weeklyEvaluationHandler.GetStudentEvaluationStatus)
+			weeklyEvaluationRoutes.GET("", weeklyEvaluationHandler.GetWeeklyEvaluations)
+			weeklyEvaluationRoutes.POST("/initialize", adminRoutes.Handlers[0], weeklyEvaluationHandler.InitializeWeeklyEvaluations) // Admin-only
 		}
 	}
 

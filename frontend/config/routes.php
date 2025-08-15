@@ -39,16 +39,6 @@ return function (Router $router) {
 
         $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
-        // Materials routes
-        $router->group('materials', function (Router $router) {
-            $router->get('/', [MaterialsController::class, 'index']);
-            $router->get('/create', [MaterialsController::class, 'create'], [[AuthMiddleware::class, 'requireTeacher']]);
-            $router->post('/create', [MaterialsController::class, 'create'], [[AuthMiddleware::class, 'requireTeacher']]);
-            $router->get('/edit/{id}', [MaterialsController::class, 'edit'], [[AuthMiddleware::class, 'requireTeacher']]);
-            $router->post('/edit/{id}', [MaterialsController::class, 'edit'], [[AuthMiddleware::class, 'requireTeacher']]);
-            $router->post('/delete/{id}', [MaterialsController::class, 'delete'], [[AuthMiddleware::class, 'requireTeacher']]);
-        }, [[AuthMiddleware::class, 'requireLogin']]);
-
         // Progress/Analytics routes
         $router->get('progress', [ProgressController::class, 'index']);
 

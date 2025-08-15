@@ -9,7 +9,6 @@ use App\Services\AssignmentService;
 use App\Services\QuizService;
 use App\Services\VarkCorrelationService;
 use App\Services\ProfileService;
-use App\Services\MaterialService;
 use App\Services\WeeklyEvaluationService;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\ErrorController;
@@ -45,10 +44,6 @@ return [
 
     ProfileService::class => function (ApiClient $apiClient) {
         return new ProfileService($apiClient);
-    },
-
-    MaterialService::class => function (ApiClient $apiClient) {
-        return new MaterialService($apiClient);
     },
 
     WeeklyEvaluationService::class => function (ApiClient $apiClient) {

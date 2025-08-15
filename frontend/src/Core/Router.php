@@ -4,6 +4,7 @@ namespace App\Core;
 
 use App\Controllers\ErrorController;
 use Psr\Container\ContainerInterface;
+use Throwable;
 
 class Router
 {
@@ -78,38 +79,12 @@ class Router
             $path = rtrim($path, '/');
         }
 
-        // Try direct match
-        if (isset($this->routes[$method][$path])) {
-            $route = $this->routes[$method][$path];
-            $handler = $route['handler'];
-            $middleware = $route['middleware'];
-
-            foreach ($middleware as $m) {
-                [$middlewareClass, $middlewareMethod] = $m;
-                $middlewareInstance = $this->container->get($middlewareClass);
-                if (! $middlewareInstance->$middlewareMethod()) {
-                    return; // Middleware stopped the request
-                }
-            }
-
-            [$controllerClass, $methodName] = $handler;
-            $controller = $this->container->get($controllerClass);
-            $controller->$methodName();
-
-            return;
-        }
-
-        // Try dynamic routes
-        foreach ($this->routes[$method] as $routePath => $route) {
-            $handler = $route['handler'];
-            $middleware = $route['middleware'];
-
-            // Convert route path to a regex pattern
-            $pattern = preg_replace('#\{([a-zA-Z0-9_]+)\}#', '([a-zA-Z0-9_]+)', preg_quote($routePath, '#'));
-            $pattern = '#^'.$pattern.'$#';
-
-            if (preg_match($pattern, $path, $matches)) {
-                array_shift($matches); // Remove the full match
+        try {
+            // Try direct match
+            if (isset($this->routes[$method][$path])) {
+                $route = $this->routes[$method][$path];
+                $handler = $route['handler'];
+                $middleware = $route['middleware'];
 
                 foreach ($middleware as $m) {
                     [$middlewareClass, $middlewareMethod] = $m;
@@ -121,15 +96,46 @@ class Router
 
                 [$controllerClass, $methodName] = $handler;
                 $controller = $this->container->get($controllerClass);
-
-                // Call the method with captured parameters
-                call_user_func_array([$controller, $methodName], $matches);
+                $controller->$methodName();
 
                 return;
             }
-        }
 
-        $this->handleError(404, "No route found for {$method} {$path}");
+            // Try dynamic routes
+            foreach ($this->routes[$method] as $routePath => $route) {
+                $handler = $route['handler'];
+                $middleware = $route['middleware'];
+
+                // Convert route path to a regex pattern
+                $pattern = preg_replace('#\{([a-zA-Z0-9_]+)\}#', '([a-zA-Z0-9_]+)', preg_quote($routePath, '#'));
+                $pattern = '#^'.$pattern.'$#';
+
+                if (preg_match($pattern, $path, $matches)) {
+                    array_shift($matches); // Remove the full match
+
+                    foreach ($middleware as $m) {
+                        [$middlewareClass, $middlewareMethod] = $m;
+                        $middlewareInstance = $this->container->get($middlewareClass);
+                        if (! $middlewareInstance->$middlewareMethod()) {
+                            return; // Middleware stopped the request
+                        }
+                    }
+
+                    [$controllerClass, $methodName] = $handler;
+                    $controller = $this->container->get($controllerClass);
+
+                    // Call the method with captured parameters
+                    call_user_func_array([$controller, $methodName], $matches);
+
+                    return;
+                }
+            }
+
+            $this->handleError(404, "No route found for {$method} {$path}");
+        } catch (Throwable $e) {
+            error_log($e);
+            $this->handleError(500, 'An unexpected error occurred.'. $e->getMessage());
+        }
     }
 
     protected function handleError(int $statusCode, string $message): void

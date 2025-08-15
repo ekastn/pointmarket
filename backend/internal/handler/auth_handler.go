@@ -51,6 +51,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Email:    user.Email,
 		Username: user.Username,
 		Role:     string(user.Role),
+		Name:     user.DisplayName,
 	}
 
 	loginResponse := dtos.LoginResponse{

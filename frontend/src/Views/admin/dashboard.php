@@ -3,16 +3,48 @@
 // $userProfile, $adminCounts, $messages
 
 // Ensure variables are defined to prevent PHP notices if not passed
-$userProfile = $userProfile ?? ['name' => 'Guest', 'role' => 'guest'];
-$adminCounts = $adminCounts ?? [];
-$messages = $messages ?? [];
+$userProfile = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
+
+// // AdminDashboardStatsDTO holds counts for the admin dashboard.
+// type AdminDashboardStatsDTO struct {
+// 	TotalUsers              int64 `json:"total_users"`
+// 	TotalTeachers           int64 `json:"total_teachers"`
+// 	TotalStudents           int64 `json:"total_students"`
+// 	TotalCourses            int64 `json:"total_courses"`
+// 	TotalPointsTransactions int64 `json:"total_points_transaction"`
+// 	TotalProducts           int64 `json:"total_products"`
+// 	TotalMissions           int64 `json:"total_missions"`
+// 	TotalBadges             int64 `json:"total_badges"`
+// }
+//
+$adminStats = $adminStats ?? [
+    'total_users' => 0,
+    'total_teachers' => 0,
+    'total_students' => 0,
+    'total_courses' => 0,
+    'total_points_transaction' => 0,
+    'total_products' => 0,
+    'total_missions' => 0,
+    'total_badges' => 0
+];
+
+$statsItems = [
+    [ 'title' => 'Users', 'value' => $adminStats['total_users'], 'icon' => 'fas fa-users' ],
+    [ 'title' => 'Teachers', 'value' => $adminStats['total_teachers'], 'icon' => 'fas fa-chalkboard-teacher' ],
+    [ 'title' => 'Students', 'value' => $adminStats['total_students'], 'icon' => 'fas fa-user-graduate' ],
+    [ 'title' => 'Courses', 'value' => $adminStats['total_courses'], 'icon' => 'fas fa-graduation-cap' ],
+    [ 'title' => 'Points Transactions', 'value' => $adminStats['total_points_transaction'], 'icon' => 'fas fa-coins' ],
+    [ 'title' => 'Products', 'value' => $adminStats['total_products'], 'icon' => 'fas fa-box-open' ],
+    [ 'title' => 'Missions', 'value' => $adminStats['total_missions'], 'icon' => 'fas fa-trophy' ],
+    [ 'title' => 'Badges', 'value' => $adminStats['total_badges'], 'icon' => 'fas fa-medal' ],
+]
 
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="fas fa-tachometer-alt me-2"></i>
-        Dasbor
+        Dashboard
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
@@ -46,65 +78,11 @@ $messages = $messages ?? [];
 
 <!-- Admin Stats -->
 <div class="row mb-4">
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Users
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <?php echo htmlspecialchars($adminCounts['total_users'] ?? 0); ?>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
+    <?php foreach ($statsItems as $item): ?>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <?php $renderer->includePartial('components/partials/card_stats', $item); ?>
         </div>
-    </div>
-    
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Total Assignments
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <?php echo htmlspecialchars($adminCounts['total_assignments'] ?? 0); ?>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-tasks fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Total Materials
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <?php echo htmlspecialchars($adminCounts['total_materials'] ?? 0); ?>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-book fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
 <!-- Quick Actions -->

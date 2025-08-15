@@ -124,14 +124,19 @@ func (q *Queries) GetStudentLearningStyle(ctx context.Context, userID int64) (Us
 
 const getStudentStatistic = `-- name: GetStudentStatistic :one
 SELECT
-    (
-        SELECT
-            us.total_points
-        FROM
-            user_stats us
-        WHERE
-            us.user_id = u.id
-    ) AS total_points,
+	CAST(
+        COALESCE(
+            (
+				SELECT
+					us.total_points
+				FROM
+					user_stats us
+				WHERE
+					us.user_id = u.id
+            ),
+			0
+        ) AS SIGNED	
+	) AS total_points,
     CAST(
         COALESCE(
             (
@@ -142,45 +147,47 @@ SELECT
                 WHERE
                     sa.student_id = u.id
                     AND sa.status = 'completed'
-            ) + (
-                SELECT
-                    COUNT(*)
-                FROM
-                    student_quizzes sq
-                WHERE
-                    sq.student_id = u.id
-                    AND sq.status = 'completed'
             ),
             0
         ) AS SIGNED
     ) AS completed_assignments,
-    (
-        SELECT
-            sqr.total_score
-        FROM
-            student_questionnaire_likert_results sqr
-            JOIN questionnaires q ON sqr.questionnaire_id = q.id
-        WHERE
-            sqr.student_id = u.id
-            AND q.type = 'MSLQ'
-        ORDER BY
-            sqr.created_at DESC
-        LIMIT
-            1
+	CAST(
+        COALESCE(
+            (
+				SELECT
+					sqr.total_score
+				FROM
+					student_questionnaire_likert_results sqr
+					JOIN questionnaires q ON sqr.questionnaire_id = q.id
+				WHERE
+					sqr.student_id = u.id
+					AND q.type = 'MSLQ'
+				ORDER BY
+					sqr.created_at DESC
+				LIMIT
+					1
+            ),
+            0
+        ) AS FLOAT
     ) AS mslq_score,
-    (
-        SELECT
-            sqr.total_score
-        FROM
-            student_questionnaire_likert_results sqr
-            JOIN questionnaires q ON sqr.questionnaire_id = q.id
-        WHERE
-            sqr.student_id = u.id
-            AND q.type = 'AMS'
-        ORDER BY
-            sqr.created_at DESC
-        LIMIT
-            1
+	CAST(
+        COALESCE(
+            (
+				SELECT
+					sqr.total_score
+				FROM
+					student_questionnaire_likert_results sqr
+					JOIN questionnaires q ON sqr.questionnaire_id = q.id
+				WHERE
+					sqr.student_id = u.id
+					AND q.type = 'AMS'
+				ORDER BY
+					sqr.created_at DESC
+				LIMIT
+					1
+            ),
+            0
+        ) AS FLOAT
     ) AS ams_score
 FROM
     users u

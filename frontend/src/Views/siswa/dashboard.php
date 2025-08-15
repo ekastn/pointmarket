@@ -3,7 +3,7 @@
 // $userProfile, $studentStats, $questionnaireStats, $latestVARKResult, $messages, $aiMetrics, $assignmentStats, $weeklyProgress, $recentActivities
 
 // Ensure variables are defined to prevent PHP notices if not passed
-$userProfile = $userProfile ?? ['name' => 'Guest', 'role' => 'guest'];
+$userProfile = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
 $studentStats = $studentStats ?? ['total_points' => 0, 'completed_assignments' => 0, 'mslq_score' => null, 'ams_score' => null];
 $questionnaireStats = $questionnaireStats ?? [];
 $latestVARKResult = $latestVARKResult ?? null;
@@ -16,6 +16,8 @@ $aiMetrics = $aiMetrics ?? [
 $assignmentStats = $assignmentStats ?? ['total_assignments' => 0, 'avg_score' => 0, 'best_score' => 0];
 $weeklyProgress = $weeklyProgress ?? [];
 $recentActivities = $recentActivities ?? [];
+
+$learningStyle = $studentStats['learning_style'] ?? null;
 
 // Helper functions that were previously global in config.php
 // These should ideally be moved to a utility class or passed from the controller
@@ -35,7 +37,7 @@ use function App\Helpers\formatDate;
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="fas fa-tachometer-alt me-2"></i>
-        Dasbor
+        Dashboard
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">

@@ -2,10 +2,10 @@ package dtos
 
 // DashboardDTO holds all data required for the dashboard.
 type DashboardDTO struct {
-	User         UserDTO                  `json:"user"`
-	AdminStats   AdminDashboardStatsDTO   `json:"admin_stats"`
-	StudentStats StudentDashboardStatsDTO `json:"student_stats"`
-	Teacherstats TeacherDashboardStatsDTO `json:"teacher_stats"`
+	User         UserDTO                   `json:"user"`
+	AdminStats   *AdminDashboardStatsDTO   `json:"admin_stats"`
+	StudentStats *StudentDashboardStatsDTO `json:"student_stats"`
+	Teacherstats *TeacherDashboardStatsDTO `json:"teacher_stats"`
 }
 
 // AdminDashboardStatsDTO holds counts for the admin dashboard.

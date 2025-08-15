@@ -19,7 +19,7 @@ class DashboardService
      */
     public function getDashboardData(): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/dashboard/all');
+        $response = $this->apiClient->request('GET', '/api/v1/dashboard');
 
         if ($response['success']) {
             return $response['data'];

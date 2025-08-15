@@ -41,6 +41,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		Email:    user.Email,
 		Username: user.Username,
 		Role:     string(user.Role),
+		Name:     user.DisplayName,
 	}
 	response.Success(c, http.StatusOK, "User profile retrieved successfully", userDTO)
 }
@@ -85,6 +86,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 			Email:    user.Email,
 			Username: user.Username,
 			Role:     string(user.Role),
+            Name:     user.DisplayName,
 		}
 		userDTOs = append(userDTOs, userDTO)
 	}
@@ -115,6 +117,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		Email:    user.Email,
 		Username: user.Username,
 		Role:     string(user.Role),
+        Name:     user.DisplayName,
 	}
 	response.Success(c, http.StatusOK, "User retrieved successfully", userDTO)
 }

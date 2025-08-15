@@ -21,8 +21,28 @@ func (s *UserService) GetUserByID(ctx context.Context, id int64) (gen.User, erro
 	return s.q.GetUserByID(ctx, id)
 }
 
+var ErrUserAlreadyExists = fmt.Errorf("user with this username or email already exists")
+
 // CreateUser creates a new user
 func (s *UserService) CreateUser(ctx context.Context, req dtos.CreateUserRequest) error {
+	// Check if user with this email already exists
+	_, err := s.q.GetUserByEmail(ctx, req.Email)
+	if err == nil {
+		return ErrUserAlreadyExists
+	}
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check existing email: %w", err)
+	}
+
+	// Check if user with this username already exists
+	_, err = s.q.GetUserByUsername(ctx, req.Username)
+	if err == nil {
+		return ErrUserAlreadyExists
+	}
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check existing username: %w", err)
+	}
+
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
@@ -68,15 +88,42 @@ func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, req d
 	return s.q.UpdateUserProfile(ctx, data)
 }
 
-// SearchUsers retrieves users based on search term and role
-func (s *UserService) SearchUsers(ctx context.Context, search, role string) ([]gen.User, error) {
-	data := gen.SearchUsersParams{
-		DisplayName: search,
-		Username:    search,
-		Email:       search,
-		Role:        gen.UsersRole(role),
+// SearchUsers retrieves users based on search term and role with pagination
+func (s *UserService) SearchUsers(ctx context.Context, search, role string, page, limit int) ([]gen.User, int64, error) {
+	if page <= 0 {
+		page = 1
 	}
-	return s.q.SearchUsers(ctx, data)
+	if limit <= 0 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	// Parameters for both searching and counting
+	searchParams := gen.SearchUsersParams{
+		Search: search,
+		Role:   gen.UsersRole(role),
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	}
+
+	countParams := gen.CountSearchedUsersParams{
+		Search: search,
+		Role:   gen.UsersRole(role),
+	}
+
+	// Get total count of users matching the filter
+	totalUsers, err := s.q.CountSearchedUsers(ctx, countParams)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	// Get the paginated list of users
+	users, err := s.q.SearchUsers(ctx, searchParams)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search users: %w", err)
+	}
+
+	return users, totalUsers, nil
 }
 
 // GetRoles retrieves a list of available user roles
@@ -101,6 +148,18 @@ func (s *UserService) UpdateUserRole(ctx context.Context, userID int64, role str
 // DeleteUser deletes a user (sets role to 'inactive')
 func (s *UserService) DeleteUser(ctx context.Context, userID int64) error {
 	return s.q.DeleteUser(ctx, userID)
+}
+
+// UpdateUser updates a user's information
+func (s *UserService) UpdateUser(ctx context.Context, userID int64, req dtos.UpdateUserRequest) error {
+	data := gen.UpdateUserParams{
+		ID:          userID,
+		Username:    req.Username,
+		DisplayName: req.Name,
+		Email:       req.Email,
+		Role:        gen.UsersRole(req.Role),
+	}
+	return s.q.UpdateUser(ctx, data)
 }
 
 // GetAllActiveStudents retrieves all active students (role 'siswa')

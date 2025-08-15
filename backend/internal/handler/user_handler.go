@@ -22,28 +22,23 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 
 // CreateUser handles creating a new user
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	userID := middleware.GetUserID(c)
-
 	var req dtos.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	user, err := h.userService.GetUserByID(c.Request.Context(), int64(userID))
+	err := h.userService.CreateUser(c.Request.Context(), req)
+	if err == services.ErrUserAlreadyExists {
+		response.Error(c, http.StatusConflict, err.Error())
+		return
+	}
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "User not found")
+		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	userDTO := dtos.UserDTO{
-		ID:       int(user.ID),
-		Email:    user.Email,
-		Username: user.Username,
-		Role:     string(user.Role),
-		Name:     user.DisplayName,
-	}
-	response.Success(c, http.StatusOK, "User profile retrieved successfully", userDTO)
+	response.Success(c, http.StatusCreated, "User created successfully", nil)
 }
 
 // UpdateUserProfile handles updating a user's profile information
@@ -68,12 +63,14 @@ func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
 }
 
-// GetAllUsers handles fetching all users (admin only), now with search and role filters
+// GetAllUsers handles fetching all users with pagination, search, and role filters
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	search := c.Query("search")
 	role := c.Query("role")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	users, err := h.userService.SearchUsers(c.Request.Context(), search, role)
+	users, totalRecords, err := h.userService.SearchUsers(c.Request.Context(), search, role, page, limit)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
@@ -82,16 +79,18 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	var userDTOs []dtos.UserDTO
 	for _, user := range users {
 		userDTO := dtos.UserDTO{
-			ID:       int(user.ID),
-			Email:    user.Email,
-			Username: user.Username,
-			Role:     string(user.Role),
-            Name:     user.DisplayName,
+			ID:        int(user.ID),
+			Email:     user.Email,
+			Username:  user.Username,
+			Role:      string(user.Role),
+			Name:      user.DisplayName,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
 		}
 		userDTOs = append(userDTOs, userDTO)
 	}
 
-	response.Success(c, http.StatusOK, "Users retrieved successfully", userDTOs)
+	response.Paginated(c, http.StatusOK, "Users retrieved successfully", userDTOs, totalRecords, page, limit)
 }
 
 // GetUserByID handles fetching a user by ID
@@ -117,7 +116,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		Email:    user.Email,
 		Username: user.Username,
 		Role:     string(user.Role),
-        Name:     user.DisplayName,
+		Name:     user.DisplayName,
 	}
 	response.Success(c, http.StatusOK, "User retrieved successfully", userDTO)
 }
@@ -170,4 +169,30 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusOK, "User deleted successfully", nil)
+}
+
+// UpdateUser handles updating a user's information (admin only)
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	var req dtos.UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.userService.UpdateUser(c.Request.Context(), id, req)
+	if err == sql.ErrNoRows {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "User updated successfully", nil)
 }

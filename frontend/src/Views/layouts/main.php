@@ -33,6 +33,5 @@
         const JWT_TOKEN = "<?php echo $_SESSION['jwt_token'] ?? ''; ?>";
     </script>
     <script src="/public/assets/js/dashboard.js"></script>
-    <script src="/public/assets/js/nlp-analyzer.js"></script>
 </body>
 </html>

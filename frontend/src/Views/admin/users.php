@@ -14,9 +14,9 @@
 
     <div class="row mb-3">
         <div class="col-12 col-md-6">
-            <?php if (isset($_SESSION['user_groups']) && in_array('superadmin', $_SESSION['user_groups'])) : ?>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahUser"><i class="fas fa-plus"></i> Input</button>
-            <?php endif ?>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahUser">
+                <i class="fas fa-plus"></i> Input
+            </button>
         </div>
         <div class="col-12 col-md-3">
             <form method="GET" class="d-flex">
@@ -57,25 +57,28 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="/admin/users/save" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="id">
+                <form action="/users" method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required oninvalid="this.setCustomValidity('Data Tidak Boleh Kosong')" oninput="setCustomValidity('')">
+                        <input type="text" class="form-control" id="username" name="username" required>
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required oninvalid="this.setCustomValidity('Data Tidak Boleh Kosong')" oninput="setCustomValidity('')">
+                        <input type="email" class="form-control" id="email" name="email" required>
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required oninvalid="this.setCustomValidity('Data Tidak Boleh Kosong')" oninput="setCustomValidity('')">
+                        <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" name="role" required>
-                            <option value="">Pilih Role</option>
-                            <?php foreach ($roles as $role): ?>
+                            <option value="" disabled selected>Pilih Role</option>
+                            <?php foreach ($roles as $role) : ?>
                                 <option value="<?= htmlspecialchars($role) ?>"><?= htmlspecialchars(ucfirst($role)) ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -89,3 +92,48 @@
         </div>
     </div>
 </div>
+
+<!--Data Modal Box Edit User-->
+<div class="modal fade" id="modalEditUser" tabindex="-1" aria-labelledby="modalEditUserLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditUserLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post" id="edit-user-form">
+                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="id" id="edit-user-id">
+                    <div class="mb-3">
+                        <label for="edit-name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="edit-name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="edit-username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit-email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-role" class="form-label">Role</label>
+                        <select class="form-select" id="edit-role" name="role" required>
+                            <option value="" disabled selected>Pilih Role</option>
+                            <?php foreach ($roles as $role) : ?>
+                                <option value="<?= htmlspecialchars($role) ?>"><?= htmlspecialchars(ucfirst($role)) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/public/assets/js/admin-users.js"></script>

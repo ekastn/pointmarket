@@ -13,9 +13,12 @@ class UserService
         $this->apiClient = $apiClient;
     }
 
-    public function getAllUsers(string $search = '', string $role = ''): ?array
+    public function getAllUsers(string $search = '', string $role = '', int $page = 1, int $limit = 10): ?array
     {
-        $queryParams = [];
+        $queryParams = [
+            'page' => $page,
+            'limit' => $limit,
+        ];
         if (!empty($search)) {
             $queryParams['search'] = $search;
         }
@@ -26,7 +29,7 @@ class UserService
         $response = $this->apiClient->request('GET', '/api/v1/users', ['query' => $queryParams]);
 
         if ($response['success']) {
-            return $response['data'];
+            return $response; 
         }
 
         return null;
@@ -80,5 +83,16 @@ class UserService
         }
 
         return null;
+    }
+
+    public function updateUser(int $id, array $userData): void
+    {
+        $response = $this->apiClient->request('PUT', '/api/v1/users/' . $id, [
+            'json' => $userData,
+        ]);
+
+        if (!$response['success']) {
+            throw new \Exception($response['message']);
+        }
     }
 }

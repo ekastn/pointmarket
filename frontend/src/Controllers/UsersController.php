@@ -20,35 +20,31 @@ class UsersController extends BaseController
         $search = $_GET['search'] ?? '';
         $role = $_GET['role'] ?? '';
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 10; 
+        $limit = 10;
 
-        $usersData = $this->userService->getAllUsers($search, $role);
+        // Fetch paginated data from the service
+        $response = $this->userService->getAllUsers($search, $role, $page, $limit);
         $rolesData = $this->userService->getRoles();
 
-        if ($usersData !== null && $rolesData !== null) {
-            $users = $usersData;
-            $roles = $rolesData;
+        if ($response !== null && $rolesData !== null) {
+            $users = $response['data'];
+            $meta = $response['meta'];
 
-            // Manual pagination logic for the view
-            $total_data = count($users);
-            $total_pages = ceil($total_data / $limit);
-            $offset = ($page - 1) * $limit;
-            $users_paginated = array_slice($users, $offset, $limit);
-
-            $start = $offset + 1;
-            $end = min($offset + $limit, $total_data);
+            $total_data = $meta['total_records'];
+            $start = ($page - 1) * $limit + 1;
+            $end = min($start + $limit - 1, $total_data);
 
             $this->render('admin/users', [
                 'user' => $_SESSION['user_data'],
                 'title' => 'User',
-                'users' => $users_paginated,
-                'roles' => $roles,
+                'users' => $users,
+                'roles' => $rolesData,
                 'search' => $search,
                 'role' => $role,
-                'page' => $page,
-                'limit' => $limit,
+                'page' => $meta['page'],
+                'limit' => $meta['limit'],
                 'total_data' => $total_data,
-                'total_pages' => $total_pages,
+                'total_pages' => $meta['total_pages'],
                 'start' => $start,
                 'end' => $end,
             ]);
@@ -60,20 +56,24 @@ class UsersController extends BaseController
 
     public function saveUser(): void
     {
+        $name = $_POST['name'] ?? '';
         $username = $_POST['username'] ?? '';
         $email = $_POST['email'] ?? '';
-        $roleId = $_POST['role_id'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $role = $_POST['role'] ?? '';
 
-        if (empty($username) || empty($email) || empty($roleId)) {
+        if (empty($name) || empty($username) || empty($email) || empty($password) || empty($role)) {
             $_SESSION['messages']['error'] = 'All fields are required.';
-            $this->redirect('/admin/users');
+            $this->redirect('/users');
             return;
         }
 
         $userData = [
+            'name' => $name,
             'username' => $username,
             'email' => $email,
-            'role_id' => (int)$roleId,
+            'password' => $password,
+            'role' => $role,
         ];
 
         $result = $this->userService->createUser($userData);
@@ -81,9 +81,12 @@ class UsersController extends BaseController
         if ($result !== null) {
             $_SESSION['messages']['success'] = 'User created successfully!';
         } else {
-            $_SESSION['messages']['error'] = 'Failed to create user.';
+            // Assuming the API might return a specific error message
+            $errorMessage = $_SESSION['api_error_message'] ?? 'Failed to create user.';
+            $_SESSION['messages']['error'] = $errorMessage;
         }
-        $this->redirect('/admin/users');
+        unset($_SESSION['api_error_message']); // Clear the specific error message
+        $this->redirect('/users');
     }
 
     public function updateUserRole(int $id): void
@@ -106,23 +109,43 @@ class UsersController extends BaseController
         }
     }
 
-    public function deleteUser(): void
+    public function deleteUser(int $id): void
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-        $userId = $input['id'] ?? null;
-
-        if (! $userId) {
+        if (! $id) {
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
 
             return;
         }
 
-        $result = $this->userService->deleteUser($userId);
+        $result = $this->userService->deleteUser($id);
 
         if ($result !== null) {
             echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to delete user']);
         }
+    }
+
+    public function updateUser(int $id): void
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $name = $input['name'] ?? '';
+        $username = $input['username'] ?? '';
+        $email = $input['email'] ?? '';
+        $role = $input['role'] ?? '';
+
+        if (empty($id) || empty($name) || empty($username) || empty($email) || empty($role)) {
+            echo json_encode(['success' => false, 'message' => 'All fields are required.']);
+            return;
+        }
+
+        $userData = [
+            'name' => $name,
+            'username' => $username,
+            'email' => $email,
+            'role' => $role,
+        ];
+
+        $this->userService->updateUser($id, $userData);
     }
 }

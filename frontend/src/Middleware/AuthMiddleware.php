@@ -35,7 +35,7 @@ class AuthMiddleware extends BaseController
             return false;
         }
 
-        $user = $this->profileService->getUserProfile();
+        $user = $_SESSION['user_data'];
 
         if ($user['role'] !== $role && $user['role'] !== 'admin') {
             $_SESSION['messages'] = ['error' => 'Anda tidak memiliki akses ke halaman ini.'];

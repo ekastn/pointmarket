@@ -20,3 +20,20 @@ func Error(c *gin.Context, status int, message string) {
 		"message": message,
 	})
 }
+
+// Paginated sends a successful API response with pagination metadata.
+func Paginated(c *gin.Context, code int, message string, data interface{}, totalRecords int64, page, limit int) {
+	totalPages := (totalRecords + int64(limit) - 1) / int64(limit)
+
+	c.JSON(code, gin.H{
+		"success": true,
+		"message": message,
+		"data":    data,
+		"meta": gin.H{
+			"total_records": totalRecords,
+			"page":          page,
+			"limit":         limit,
+			"total_pages":   totalPages,
+		},
+	})
+}

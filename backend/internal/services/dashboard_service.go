@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 )
@@ -72,14 +71,11 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 			return dashboardData, err
 		}
 
-		log.Println("query learning style")
 		learningStyle, err := s.q.GetStudentLearningStyle(ctx, userID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-                log.Println("learning style not found")
-            } else {
+			if !errors.Is(err, sql.ErrNoRows) {
 				return dashboardData, err
-            }
+			}
 		}
 
 		const defaultScore = 0.0

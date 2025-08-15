@@ -73,17 +73,10 @@ class Router
 
     public function dispatch(string $method, string $uri): void
     {
-        error_log('--- Dispatch Start ---');
-        error_log('Initial Method: '.$method);
-        error_log('URI: '.$uri);
-        error_log('POST Data: '.print_r($_POST, true));
-        error_log('Raw Input: '.file_get_contents('php://input')); // This is important for JSON payloads
         // The _method override logic is here
         if ($method === 'POST' && isset($_POST['_method'])) {
             $method = strtoupper($_POST['_method']);
         }
-        error_log('Method After Override: '.$method);
-        error_log('--- Dispatch End ---');
 
         $path = parse_url($uri, PHP_URL_PATH);
         // Normalize incoming path: remove trailing slash unless it's the root path

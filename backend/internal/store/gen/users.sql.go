@@ -10,6 +10,32 @@ import (
 	"database/sql"
 )
 
+const countSearchedUsers = `-- name: CountSearchedUsers :one
+SELECT count(*) FROM users
+WHERE
+  (display_name LIKE CONCAT('%', ?, '%') OR username LIKE CONCAT('%', ?, '%') OR email LIKE CONCAT('%', ?, '%'))
+  AND
+  (role = ? OR ? = '')
+`
+
+type CountSearchedUsersParams struct {
+	Search interface{} `json:"search"`
+	Role   UsersRole   `json:"role"`
+}
+
+func (q *Queries) CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countSearchedUsers,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Role,
+		arg.Role,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :execresult
 INSERT INTO users (
   email, username, password, display_name, role
@@ -270,26 +296,29 @@ func (q *Queries) LatestUserLearningStyle(ctx context.Context, userID int64) (Us
 const searchUsers = `-- name: SearchUsers :many
 SELECT id, email, username, password, display_name, role, created_at, updated_at FROM users
 WHERE
-  (display_name LIKE ? OR username LIKE ? OR email LIKE ?)
+  (display_name LIKE CONCAT('%', ?, '%') OR username LIKE CONCAT('%', ?, '%') OR email LIKE CONCAT('%', ?, '%'))
   AND
   (role = ? OR ? = '')
 ORDER BY created_at DESC
+LIMIT ? OFFSET ?
 `
 
 type SearchUsersParams struct {
-	DisplayName string    `json:"display_name"`
-	Username    string    `json:"username"`
-	Email       string    `json:"email"`
-	Role        UsersRole `json:"role"`
+	Search interface{} `json:"search"`
+	Role   UsersRole   `json:"role"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
 }
 
 func (q *Queries) SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error) {
 	rows, err := q.db.QueryContext(ctx, searchUsers,
-		arg.DisplayName,
-		arg.Username,
-		arg.Email,
+		arg.Search,
+		arg.Search,
+		arg.Search,
 		arg.Role,
 		arg.Role,
+		arg.Limit,
+		arg.Offset,
 	)
 	if err != nil {
 		return nil, err
@@ -324,19 +353,29 @@ func (q *Queries) SearchUsers(ctx context.Context, arg SearchUsersParams) ([]Use
 const updateUser = `-- name: UpdateUser :exec
 UPDATE users
 SET
+  username = ?,
   display_name = ?,
-  email = ?
+  email = ?,
+  role = ?
 WHERE id = ?
 `
 
 type UpdateUserParams struct {
-	DisplayName string `json:"display_name"`
-	Email       string `json:"email"`
-	ID          int64  `json:"id"`
+	Username    string    `json:"username"`
+	DisplayName string    `json:"display_name"`
+	Email       string    `json:"email"`
+	Role        UsersRole `json:"role"`
+	ID          int64     `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.ExecContext(ctx, updateUser, arg.DisplayName, arg.Email, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateUser,
+		arg.Username,
+		arg.DisplayName,
+		arg.Email,
+		arg.Role,
+		arg.ID,
+	)
 	return err
 }
 

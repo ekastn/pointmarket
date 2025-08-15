@@ -12,6 +12,7 @@ import (
 type Querier interface {
 	// User Badges --
 	AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserParams) (sql.Result, error)
+	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
 	// Assignments --
 	CreateAssignment(ctx context.Context, arg CreateAssignmentParams) (sql.Result, error)
 	// Badges --

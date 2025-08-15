@@ -24,8 +24,10 @@ INSERT INTO users (
 -- name: UpdateUser :exec
 UPDATE users
 SET
+  username = ?,
   display_name = ?,
-  email = ?
+  email = ?,
+  role = ?
 WHERE id = ?;
 
 -- name: UpdateUserProfile :exec
@@ -48,10 +50,18 @@ WHERE id = ?;
 -- name: SearchUsers :many
 SELECT * FROM users
 WHERE
-  (display_name LIKE ? OR username LIKE ? OR email LIKE ?)
+  (display_name LIKE CONCAT('%', sqlc.arg('search'), '%') OR username LIKE CONCAT('%', sqlc.arg('search'), '%') OR email LIKE CONCAT('%', sqlc.arg('search'), '%'))
   AND
   (role = sqlc.arg('role') OR sqlc.arg('role') = '')
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountSearchedUsers :one
+SELECT count(*) FROM users
+WHERE
+  (display_name LIKE CONCAT('%', sqlc.arg('search'), '%') OR username LIKE CONCAT('%', sqlc.arg('search'), '%') OR email LIKE CONCAT('%', sqlc.arg('search'), '%'))
+  AND
+  (role = sqlc.arg('role') OR sqlc.arg('role') = '');
 
 -- name: GetRoles :many
 SELECT role FROM users;

@@ -5,8 +5,10 @@ import (
 )
 
 type UpdateUserRequest struct {
+	Username  string  `json:"username" binding:"required"`
 	Name      string  `json:"name" binding:"required"`
 	Email     string  `json:"email" binding:"required,email"`
+	Role      string  `json:"role" binding:"required"`
 	AvatarURL *string `json:"avatar_url"`
 	Bio       *string `json:"bio"`
 }
@@ -20,15 +22,14 @@ type CreateUserRequest struct {
 }
 
 type UserDTO struct {
-	ID        int        `json:"id"`
-	Username  string     `json:"username"`
-	Name      string     `json:"name"`
-	Email     string     `json:"email"`
-	Role      string     `json:"role"`
-	Avatar    *string    `json:"avatar"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	LastLogin *time.Time `json:"last_login"`
+	ID        int       `json:"id"`
+	Username  string    `json:"username"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	Avatar    *string   `json:"avatar"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type VARKScores struct {

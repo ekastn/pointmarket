@@ -1,25 +1,14 @@
 <?php
-// Tentukan jumlah data per halaman
-$limit = 10;
+// Helper function to build query strings
+function build_query_string(array $params): string
+{
+    return http_build_query(array_filter($params));
+}
 
-// Ambil halaman saat ini dari URL, jika tidak ada, set ke 1
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-
-// Hitung total data
-$total_data = count($users);
-
-// Hitung total halaman
-$total_pages = ceil($total_data / $limit);
-
-// Hitung offset untuk query
-$offset = ($page - 1) * $limit;
-
-// Ambil data untuk halaman saat ini
-$users = array_slice($users, $offset, $limit);
-
-// Hitung data yang ditampilkan
-$start = $offset + 1; // Data pertama yang ditampilkan
-$end = min($offset + $limit, $total_data); // Data terakhir yang ditampilkan
+$base_params = [
+    'search' => $search ?? '',
+    'role' => $role ?? ''
+];
 ?>
 
 <table class="table table-bordered table-striped">
@@ -34,161 +23,102 @@ $end = min($offset + $limit, $total_data); // Data terakhir yang ditampilkan
         </tr>
     </thead>
     <tbody>
-        <?php $i = 1; ?>
-        <?php
-        // Cari data pengguna berdasarkan kata kunci dan role
-        if (isset($_GET['search']) || isset($_GET['role'])) {
-            $search = strtolower($_GET['search'] ?? '');  // Mengonversi kata kunci pencarian menjadi huruf kecil
-            $role = $_GET['role'] ?? ''; // Mengambil role yang dipilih
-
-            $users = array_filter($users, function ($data) use ($search, $role) {
-                $matchesSearch = strpos(strtolower($data['username']), $search) !== false ||
-                    strpos(strtolower($data['email']), $search) !== false;
-                $matchesRole = empty($role) || strtolower($data['role']) === strtolower($role);
-
-                return $matchesSearch && $matchesRole;
-            });
-            // Perbarui total data setelah pencarian
-            $total_data = count($users); // Total data setelah filter
-
-            // Hitung total halaman
-            $total_pages = ceil($total_data / $limit); // Total halaman berdasarkan limit
-
-            // Hitung offset untuk query
-            $offset = ($page - 1) * $limit; // Offset untuk data yang diambil
-
-            // Ambil data untuk halaman saat ini
-            $users = array_slice($users, $offset, $limit); // Ambil data sesuai offset dan limit
-
-            // Hitung data yang ditampilkan
-            $start = $offset + 1; // Data pertama yang ditampilkan
-            $end = min($offset + $limit, $total_data); // Data terakhir yang ditampilkan
-
-            // Jika total data adalah 6, maka end akan menjadi 6
-            if ($total_data < $limit) {
-                $end = $total_data; // Set end ke total data jika kurang dari limit
-            }
-        }
-        foreach ($users as $u) : ?>
+        <?php if (empty($users)) : ?>
             <tr>
-                <td><?= $i++; ?></td>
-                <td><?= $u['username']; ?></td>
-                <td><?= $u['email']; ?></td>
-                <td>
-                    <span class="badge bg-<?php
-                                                if ($u['role'] === 'superadmin') {
-                                                    echo 'success';
-                                                } elseif ($u['role'] === 'admin') {
-                                                    echo 'warning';
-                                                } elseif ($u['role'] === 'dosen') {
-                                                    echo 'danger';
-                                                } else {
-                                                    echo 'info';
-                                                }
-                                                ?>">
-                        <?php echo $u['role']; ?>
-                    </span>
-                </td>
-                <td><?= date('d-m-Y', strtotime($u['created_at'])); ?></td>
-                <!-- <td><?= $u['created_at']; ?></td> -->
-                <td>
-                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalDetail<?php echo $u['id']; ?>"><i class="fas fa-eye"></i><span class="d-none d-md-inline"> Detail</span></button>
-                </td>
-                <?php if (isset($_SESSION['user_groups']) && in_array('superadmin', $_SESSION['user_groups'])) : ?>
-                    <td>
-                        <button href="/User/delete_User/<?= $u['id']; ?>" class="btn btn-danger btn-hapus"><i class="fas fa-trash"></i><span class="d-none d-md-inline"> Hapus</span></button>
-                    </td>
-                <?php endif ?>
+                <td colspan="6" class="text-center">No users found.</td>
             </tr>
-        <?php endforeach; ?>
+        <?php else : ?>
+            <?php $i = $start; ?>
+            <?php foreach ($users as $u) : ?>
+                <tr>
+                    <td><?= $i++; ?></td>
+                    <td><?= htmlspecialchars($u['username']); ?></td>
+                    <td><?= htmlspecialchars($u['email']); ?></td>
+                    <td>
+                        <span class="badge bg-<?php
+                                                    $role_class = 'info';
+                                                    if ($u['role'] === 'admin') $role_class = 'warning';
+                                                    if ($u['role'] === 'guru') $role_class = 'danger';
+                                                    if ($u['role'] === 'siswa') $role_class = 'success';
+                                                    echo $role_class;
+                                                    ?>">
+                            <?= htmlspecialchars($u['role']); ?>
+                        </span>
+                    </td>
+                    <td><?= date('d-m-Y H:i', strtotime($u['created_at'])); ?></td>
+                    <td>
+                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalDetail<?= $u['id']; ?>"><i class="fas fa-eye"></i><span class="d-none d-md-inline"> Detail</span></button>
+                        <button type="button" class="btn btn-warning btn-sm btn-edit-user" data-bs-toggle="modal" data-bs-target="#modalEditUser"
+                            data-user-id="<?= $u['id']; ?>"
+                            data-user-name="<?= htmlspecialchars($u['name']); ?>"
+                            data-user-username="<?= htmlspecialchars($u['username']); ?>"
+                            data-user-email="<?= htmlspecialchars($u['email']); ?>"
+                            data-user-role="<?= htmlspecialchars($u['role']); ?>">
+                            <i class="fas fa-edit"></i><span class="d-none d-md-inline"> Edit</span>
+                        </button>
+                    </td>
+                    <?php if (isset($_SESSION['user_data']) && $_SESSION['user_data']['role'] === 'admin') : ?>
+                        <td>
+                            <button class="btn btn-danger btn-sm btn-hapus" data-user-id="<?= $u['id']; ?>"><i class="fas fa-trash"></i><span class="d-none d-md-inline"> Hapus</span></button>
+                        </td>
+                    <?php endif; ?>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </tbody>
-
 </table>
 
 <!-- Pagination -->
 <nav class="d-flex justify-content-between align-items-center" aria-label="Page navigation">
-    <!-- Menampilkan informasi jumlah data di kiri -->
     <div class="mb-3">
         Showing <?= $start; ?> to <?= $end; ?> of <?= $total_data; ?> entries
     </div>
-    <!-- Menampilkan pagination di kanan -->
-    <ul class="pagination mb-0">
-        <!-- Tombol Previous -->
-        <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-            <a class="page-link" href="?page=<?= $page - 1; ?>" aria-label="Previous">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>
-
-        <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-            <li class="page-item <?= ($i == $page) ? 'active' : ''; ?>">
-                <a class="page-link" href="?page=<?= $i; ?>">
-                    <?= $i; ?>
+    <?php if ($total_pages > 1) : ?>
+        <ul class="pagination mb-0">
+            <!-- Tombol Previous -->
+            <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?<?= build_query_string(array_merge($base_params, ['page' => $page - 1])); ?>" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
-        <?php endfor; ?>
 
-        <!-- Tombol Next -->
-        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">
-            <a class="page-link" href="?page=<?= $page + 1; ?>" aria-label="Next">
-                <span aria-hidden="true">&raquo;</span>
-            </a>
-        </li>
-    </ul>
+            <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
+                <li class="page-item <?= ($i == $page) ? 'active' : ''; ?>">
+                    <a class="page-link" href="?<?= build_query_string(array_merge($base_params, ['page' => $i])); ?>">
+                        <?= $i; ?>
+                    </a>
+                </li>
+            <?php endfor; ?>
+
+            <!-- Tombol Next -->
+            <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?<?= build_query_string(array_merge($base_params, ['page' => $page + 1])); ?>" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    <?php endif; ?>
 </nav>
 
 <!-- Modal Box Detail -->
 <?php foreach ($users as $u) : ?>
-    <div class="modal fade" id="modalDetail<?php echo $u['id']; ?>" tabindex="-1" aria-labelledby="modalDetailLabel<?php echo $u['id']; ?>" aria-hidden="true">
+    <div class="modal fade" id="modalDetail<?= $u['id']; ?>" tabindex="-1" aria-labelledby="modalDetailLabel<?= $u['id']; ?>" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetailLabel<?php echo $u['id']; ?>">Profil : <?= $u['username']; ?> </h5>
+                    <h5 class="modal-title" id="modalDetailLabel<?= $u['id']; ?>">Profil : <?= htmlspecialchars($u['username']); ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
-                    <div class="col-lg-13">
-                        <div class="card mb-3">
-                            <div class="row g-0">
-                                <!-- <div class="col-md-4">
-                                    <img src="/img/admin.jpg" class="img-fluid rounded-start" alt="<?= $u['username']; ?>">
-                                </div> -->
-                                <div class="col-md-8">
-                                    <div class="card-body">
-                                        <ul class="list-group list-group-flush">
-                                            <h5 class="card-title"><b>Nama :</b></h5>
-                                            <li class="list-group-item">
-                                                <h4><?= $u['username']; ?></h4>
-                                            </li>
-                                            <h5 class="card-title"><b>Email :</b></h5>
-                                            <li class="list-group-item">
-                                                <h4><?= $u['email']; ?></h4>
-                                            </li>
-                                            <li class="list-group-item">
-                                                <span class="badge bg-<?php
-                                                                            if ($u['role'] === 'superadmin') {
-                                                                                echo 'success';
-                                                                            } elseif ($u['role'] === 'admin') {
-                                                                                echo 'warning';
-                                                                            } elseif ($u['role'] === 'dosen') {
-                                                                                echo 'danger';
-                                                                            } else {
-                                                                                echo 'info';
-                                                                            }
-                                                                            ?>">
-                                                    <?php echo $u['role']; ?>
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><b>Username:</b> <?= htmlspecialchars($u['username']); ?></li>
+                        <li class="list-group-item"><b>Email:</b> <?= htmlspecialchars($u['email']); ?></li>
+                        <li class="list-group-item"><b>Role:</b> <?= htmlspecialchars($u['role']); ?></li>
+                        <li class="list-group-item"><b>Created At:</b> <?= date('d-m-Y H:i:s', strtotime($u['created_at'])); ?></li>
+                        <li class="list-group-item"><b>Updated At:</b> <?= date('d-m-Y H:i:s', strtotime($u['updated_at'])); ?></li>
+                    </ul>
                 </div>
-
             </div>
         </div>
     </div>
-
 <?php endforeach; ?>

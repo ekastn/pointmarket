@@ -73,6 +73,18 @@ class Router
 
     public function dispatch(string $method, string $uri): void
     {
+        error_log('--- Dispatch Start ---');
+        error_log('Initial Method: '.$method);
+        error_log('URI: '.$uri);
+        error_log('POST Data: '.print_r($_POST, true));
+        error_log('Raw Input: '.file_get_contents('php://input')); // This is important for JSON payloads
+        // The _method override logic is here
+        if ($method === 'POST' && isset($_POST['_method'])) {
+            $method = strtoupper($_POST['_method']);
+        }
+        error_log('Method After Override: '.$method);
+        error_log('--- Dispatch End ---');
+
         $path = parse_url($uri, PHP_URL_PATH);
         // Normalize incoming path: remove trailing slash unless it's the root path
         if ($path !== '/') {
@@ -107,7 +119,10 @@ class Router
                 $middleware = $route['middleware'];
 
                 // Convert route path to a regex pattern
-                $pattern = preg_replace('#\{([a-zA-Z0-9_]+)\}#', '([a-zA-Z0-9_]+)', preg_quote($routePath, '#'));
+                $pattern = preg_quote($routePath, '#'); // Escapes / to \/ and { to \{
+                // Now, replace the escaped placeholder pattern (e.g., \{id\}) with the capture group
+                // We need to match the literal backslash before the curly brace (\\)
+                $pattern = preg_replace('#\\\{([a-zA-Z0-9_]+)\\\\}#', '([a-zA-Z0-9_]+)', $pattern);
                 $pattern = '#^'.$pattern.'$#';
 
                 if (preg_match($pattern, $path, $matches)) {
@@ -134,7 +149,7 @@ class Router
             $this->handleError(404, "No route found for {$method} {$path}");
         } catch (Throwable $e) {
             error_log($e);
-            $this->handleError(500, 'An unexpected error occurred.'. $e->getMessage());
+            $this->handleError(500, 'An unexpected error occurred.'.$e->getMessage());
         }
     }
 

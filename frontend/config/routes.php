@@ -59,9 +59,10 @@ return function (Router $router) {
         // Admin routes group
         $router->group('/users', function (Router $router) {
             $router->get('/', [UsersController::class, 'index']);
-            $router->post('/save', [UsersController::class, 'saveUser']); // New route for saving users
+            $router->post('/', [UsersController::class, 'saveUser']); // Create user
+            $router->put('/{id}', [UsersController::class, 'updateUser']); // Update user
             $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);
-            $router->post('/delete', [UsersController::class, 'deleteUser']);
+            $router->delete('/{id}', [UsersController::class, 'deleteUser']); // Delete user
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
         // Teacher specific routes

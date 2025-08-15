@@ -40,12 +40,7 @@ class ApiClient
             $response = $this->client->request($method, $uri, $options);
             $statusCode = $response->getStatusCode();
             $body = json_decode($response->getBody()->getContents(), true);
-
-            if ($statusCode >= 200 && $statusCode < 300) {
-                return ['success' => true, 'data' => $body['data']];
-            } else {
-                return ['success' => false, 'error' => $body['message'] ?? 'Unknown API error', 'status' => $statusCode];
-            }
+            return $body;
         } catch (RequestException $e) {
             $statusCode = $e->getResponse() ? $e->getResponse()->getStatusCode() : 500;
             $errorMessage = $e->getMessage();

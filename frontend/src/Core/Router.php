@@ -46,11 +46,22 @@ class Router
 
     public function addRoute(string $method, string $path, array $handler, array $middleware = []): void
     {
-        $fullPath = $this->currentGroupPrefix.$path;
-        // Normalize the fullPath before storing
+        // Ensure prefix ends with a single slash, and path starts without one (unless it's just '/\')
+        $normalizedPrefix = rtrim($this->currentGroupPrefix, '/');
+        $normalizedPath = ltrim($path, '/');
+
+        // Handle root path specifically to avoid "//" or trailing slash
+        if ($normalizedPath === '') { // Case for root route within a group, e.g., group('/admin', function(){ $router->get('/', ...)})
+            $fullPath = $normalizedPrefix . '/';
+        } else {
+            $fullPath = $normalizedPrefix . '/' . $normalizedPath;
+        }
+
+        // Final normalization for non-root paths to remove trailing slash
         if ($fullPath !== '/') {
             $fullPath = rtrim($fullPath, '/');
         }
+
         $fullMiddleware = array_merge($this->currentGroupMiddleware, $middleware);
         $this->routes[$method][$fullPath] = ['handler' => $handler, 'middleware' => $fullMiddleware];
     }

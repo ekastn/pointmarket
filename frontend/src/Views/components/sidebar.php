@@ -3,6 +3,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $user = $_SESSION['user_data'] ?? null;
 
 $studentsMenu = [
+    ['path' => '/my-missions', 'label' => 'Misi Saya', 'icon' => 'fas fa-trophy'],
     ['path' => '/my-courses', 'label' => 'Kursus Saya', 'icon' => 'fas fa-book'],
     ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
     ['path' => '/quiz', 'label' => 'Kuis', 'icon' => 'fas fa-question-circle'],
@@ -11,6 +12,7 @@ $studentsMenu = [
 ];
 
 $teachersMenu = [
+    ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
     ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
     ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
     ['path' => '/teacher-evaluation-monitoring', 'label' => 'Monitoring Evaluasi', 'icon' => 'fas fa-chart-line'],
@@ -18,6 +20,7 @@ $teachersMenu = [
 
 $adminsMenu = [
     ['path' => '/users', 'label' => 'Pengguna', 'icon' => 'fas fa-users-cog'],
+    ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
     ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
     ['path' => '/reports', 'label' => 'Laporan', 'icon' => 'fas fa-chart-bar'],
 ];

@@ -10,6 +10,7 @@ use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
 use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\UsersController;
+use App\Controllers\MissionsController;
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
 use App\Core\Router;
@@ -76,6 +77,24 @@ return function (Router $router) {
         $router->get('/my-courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
         $router->post('/courses/{id}/enroll', [CoursesController::class, 'enroll'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
         $router->delete('/courses/{id}/unenroll', [CoursesController::class, 'unenroll'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
+
+        // Missions routes (Admin CRUD, Student actions)
+        $router->group('/missions', function (Router $router) {
+            // Admin can create/edit/delete missions
+            $router->post('/', [MissionsController::class, 'store'], [[AuthMiddleware::class, 'requireAdmin']]);
+            $router->put('/{id}', [MissionsController::class, 'update'], [[AuthMiddleware::class, 'requireAdmin']]);
+            $router->delete('/{id}', [MissionsController::class, 'destroy'], [[AuthMiddleware::class, 'requireAdmin']]);
+
+            // Student actions on missions
+            $router->post('/{id}/start', [MissionsController::class, 'start'], [[AuthMiddleware::class, 'requireStudent']]);
+            $router->put('/{id}/status', [MissionsController::class, 'updateStatus'], [[AuthMiddleware::class, 'requireStudent']]);
+        });
+
+        // General missions listing (accessible by Admin, Teacher, Student)
+        $router->get('/missions', [MissionsController::class, 'index']);
+
+        // Student specific missions routes
+        $router->get('/my-missions', [MissionsController::class, 'index']);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

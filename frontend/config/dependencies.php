@@ -2,6 +2,7 @@
 
 use App\Core\ApiClient;
 use App\Core\Router;
+use App\Services\CourseService;
 use App\Services\UserService;
 use App\Services\DashboardService;
 use App\Services\QuestionnaireService;
@@ -10,6 +11,7 @@ use App\Services\QuizService;
 use App\Services\VarkCorrelationService;
 use App\Services\ProfileService;
 use App\Services\WeeklyEvaluationService;
+use App\Services\MissionService;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\ErrorController;
 use Psr\Container\ContainerInterface;
@@ -52,6 +54,10 @@ return [
 
     CourseService::class => function (ApiClient $apiClient) {
         return new CourseService($apiClient);
+    },
+
+    MissionService::class => function (ApiClient $apiClient) { 
+        return new MissionService($apiClient);
     },
 
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {

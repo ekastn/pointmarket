@@ -46,3 +46,35 @@ UPDATE products
 SET
     stock_quantity = ?
 WHERE id = ?;
+
+-- Product Categories --
+
+-- name: CreateProductCategory :execresult
+INSERT INTO product_categories (
+    name, description
+) VALUES (
+    ?, ?
+);
+
+-- name: GetProductCategoryByID :one
+SELECT * FROM product_categories
+WHERE id = ?;
+
+-- name: GetProductCategories :many
+SELECT * FROM product_categories
+ORDER BY name ASC
+LIMIT ? OFFSET ?;
+
+-- name: CountProductCategories :one
+SELECT count(*) FROM product_categories;
+
+-- name: UpdateProductCategory :exec
+UPDATE product_categories
+SET
+    name = ?,
+    description = ?
+WHERE id = ?;
+
+-- name: DeleteProductCategory :exec
+DELETE FROM product_categories
+WHERE id = ?;

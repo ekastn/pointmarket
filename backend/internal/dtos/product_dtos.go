@@ -76,3 +76,30 @@ type UpdateProductRequestDTO struct {
 	IsActive      bool            `json:"is_active"`
 	Metadata      json.RawMessage `json:"metadata"`
 }
+
+// --- Product Category DTOs ---
+
+// ProductCategoryDTO represents a product category for API responses
+type ProductCategoryDTO struct {
+	ID          int32   `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+}
+
+// CreateProductCategoryRequestDTO for creating a new product category
+type CreateProductCategoryRequestDTO struct {
+	Name        string  `json:"name" binding:"required"`
+	Description *string `json:"description"`
+}
+
+// UpdateProductCategoryRequestDTO for updating an existing product category
+type UpdateProductCategoryRequestDTO struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+}
+
+// ListProductCategoriesResponseDTO contains a list of ProductCategoryDTOs
+type ListProductCategoriesResponseDTO struct {
+	Categories []ProductCategoryDTO `json:"categories"`
+	Total      int                  `json:"total"`
+}

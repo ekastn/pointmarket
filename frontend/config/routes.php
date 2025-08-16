@@ -5,6 +5,7 @@ use App\Controllers\AuthController;
 use App\Controllers\BadgesController;
 use App\Controllers\CoursesController;
 use App\Controllers\DashboardController;
+use App\Controllers\ProductCategoriesController;
 use App\Controllers\ProductsController;
 use App\Controllers\ProfileController;
 use App\Controllers\ProgressController;
@@ -117,6 +118,14 @@ return function (Router $router) {
         $router->put('/products/{id}', [ProductsController::class, 'update'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]); // Admin-only
         $router->delete('/products/{id}', [ProductsController::class, 'destroy'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]); // Admin-only
         $router->post('/products/{id}/purchase', [ProductsController::class, 'purchase'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]); // For students
+
+        // Product Categories routes (Admin)
+        $router->group('/product-categories', function (Router $router) {
+            $router->get('/', [ProductCategoriesController::class, 'index']);
+            $router->post('/', [ProductCategoriesController::class, 'store']);
+            $router->put('/{id}', [ProductCategoriesController::class, 'update']);
+            $router->delete('/{id}', [ProductCategoriesController::class, 'destroy']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

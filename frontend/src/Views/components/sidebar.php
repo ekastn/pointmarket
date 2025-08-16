@@ -26,6 +26,7 @@ $adminsMenu = [
     ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
     ['path' => '/badges', 'label' => 'Lencana', 'icon' => 'fas fa-id-badge'],
     ['path' => '/products', 'label' => 'Kelola Produk', 'icon' => 'fas fa-box-open'],
+    ['path' => '/product-categories', 'label' => 'Kelola Kategori Produk', 'icon' => 'fas fa-tags'],
     ['path' => '/reports', 'label' => 'Laporan', 'icon' => 'fas fa-chart-bar'],
 ];
 

@@ -225,3 +225,141 @@ func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID 
 
 	return tx.Commit() // Commit the transaction
 }
+
+// CreateProductCategory creates a new product category
+func (s *ProductService) CreateProductCategory(ctx context.Context, req dtos.CreateProductCategoryRequestDTO) (dtos.ProductCategoryDTO, error) {
+	result, err := s.q.CreateProductCategory(ctx, gen.CreateProductCategoryParams{
+		Name:        req.Name,
+		Description: sql.NullString{String: *req.Description, Valid: req.Description != nil},
+	})
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	category, err := s.q.GetProductCategoryByID(ctx, int32(id))
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	var categoryDTO dtos.ProductCategoryDTO
+	categoryDTO.ID = category.ID
+	categoryDTO.Name = category.Name
+	if category.Description.Valid {
+		categoryDTO.Description = &category.Description.String
+	} else {
+		categoryDTO.Description = nil
+	}
+	return categoryDTO, nil
+}
+
+// GetProductCategoryByID retrieves a single product category by its ID
+func (s *ProductService) GetProductCategoryByID(ctx context.Context, id int32) (dtos.ProductCategoryDTO, error) {
+	category, err := s.q.GetProductCategoryByID(ctx, id)
+	if err == sql.ErrNoRows {
+		return dtos.ProductCategoryDTO{}, nil // Category not found
+	}
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	var categoryDTO dtos.ProductCategoryDTO
+	categoryDTO.ID = category.ID
+	categoryDTO.Name = category.Name
+	if category.Description.Valid {
+		categoryDTO.Description = &category.Description.String
+	} else {
+		categoryDTO.Description = nil
+	}
+	return categoryDTO, nil
+}
+
+// GetProductCategories retrieves a list of all product categories with pagination
+func (s *ProductService) GetProductCategories(ctx context.Context, page, limit int, search string) ([]dtos.ProductCategoryDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	// Get total count of product categories
+	totalCategories, err := s.q.CountProductCategories(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get the paginated list of product categories
+	categories, err := s.q.GetProductCategories(ctx, gen.GetProductCategoriesParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var categoryDTOs []dtos.ProductCategoryDTO
+	for _, category := range categories {
+		var categoryDTO dtos.ProductCategoryDTO
+		categoryDTO.ID = category.ID
+		categoryDTO.Name = category.Name
+		if category.Description.Valid {
+			categoryDTO.Description = &category.Description.String
+		} else {
+			categoryDTO.Description = nil
+		}
+		categoryDTOs = append(categoryDTOs, categoryDTO)
+	}
+	return categoryDTOs, totalCategories, nil
+}
+
+// UpdateProductCategory updates an existing product category
+func (s *ProductService) UpdateProductCategory(ctx context.Context, id int32, req dtos.UpdateProductCategoryRequestDTO) (dtos.ProductCategoryDTO, error) {
+	// Get existing category to apply partial updates
+	existingCategory, err := s.q.GetProductCategoryByID(ctx, id)
+	if err == sql.ErrNoRows {
+		return dtos.ProductCategoryDTO{}, nil // Category not found
+	}
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	// Apply updates
+	name := existingCategory.Name
+	if req.Name != nil {
+		name = *req.Name
+	}
+
+	description := existingCategory.Description
+	if req.Description != nil {
+		description = sql.NullString{String: *req.Description, Valid: true}
+	}
+
+	err = s.q.UpdateProductCategory(ctx, gen.UpdateProductCategoryParams{
+		ID:          id,
+		Name:        name,
+		Description: description,
+	})
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	updatedCategory, err := s.q.GetProductCategoryByID(ctx, id)
+	if err != nil {
+		return dtos.ProductCategoryDTO{}, err
+	}
+
+	var categoryDTO dtos.ProductCategoryDTO
+	categoryDTO.ID = updatedCategory.ID
+	categoryDTO.Name = updatedCategory.Name
+	if updatedCategory.Description.Valid {
+		categoryDTO.Description = &updatedCategory.Description.String
+	} else {
+		categoryDTO.Description = nil
+	}
+	return categoryDTO, nil
+}
+
+// DeleteProductCategory deletes a product category by its ID
+func (s *ProductService) DeleteProductCategory(ctx context.Context, id int32) error {
+	return s.q.DeleteProductCategory(ctx, id)
+}

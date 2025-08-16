@@ -68,6 +68,10 @@ return [
         return new ProductService($apiClient);
     },
 
+    ProductCategoryService::class => function (ApiClient $apiClient) {
+        return new ProductCategoryService($apiClient);
+    },
+
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {
         return new AuthMiddleware($apiClient, $profileService);
     },

@@ -15,6 +15,7 @@ type Querier interface {
 	CountBadges(ctx context.Context) (int64, error)
 	CountCourses(ctx context.Context) (int64, error)
 	CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int64, error)
+	CountProductCategories(ctx context.Context) (int64, error)
 	CountProducts(ctx context.Context) (int64, error)
 	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
 	// Assignments --
@@ -27,6 +28,8 @@ type Querier interface {
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (sql.Result, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error)
+	// Product Categories --
+	CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (sql.Result, error)
 	// Quizzes --
 	CreateQuiz(ctx context.Context, arg CreateQuizParams) (sql.Result, error)
 	// Quiz Questions --
@@ -47,6 +50,7 @@ type Querier interface {
 	DeleteCourse(ctx context.Context, id int64) error
 	DeleteMission(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
+	DeleteProductCategory(ctx context.Context, id int32) error
 	DeleteQuiz(ctx context.Context, id int64) error
 	DeleteQuizQuestion(ctx context.Context, id int64) error
 	DeleteStudentAssignment(ctx context.Context, id int64) error
@@ -74,6 +78,8 @@ type Querier interface {
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
 	GetMissions(ctx context.Context) ([]Mission, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
+	GetProductCategories(ctx context.Context, arg GetProductCategoriesParams) ([]ProductCategory, error)
+	GetProductCategoryByID(ctx context.Context, id int32) (ProductCategory, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]Product, error)
 	GetQuestionnaireByID(ctx context.Context, id int32) (Questionnaire, error)
 	GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (GetQuestionnaireByTypeRow, error)
@@ -120,6 +126,7 @@ type Querier interface {
 	UpdateCourse(ctx context.Context, arg UpdateCourseParams) error
 	UpdateMission(ctx context.Context, arg UpdateMissionParams) error
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
+	UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) error
 	UpdateProductStock(ctx context.Context, arg UpdateProductStockParams) error
 	UpdateQuiz(ctx context.Context, arg UpdateQuizParams) error
 	UpdateQuizQuestion(ctx context.Context, arg UpdateQuizQuestionParams) error

@@ -135,3 +135,95 @@ func (h *ProductHandler) PurchaseProduct(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Product purchased successfully", nil)
 }
+
+// CreateProductCategory handles creating a new product category
+func (h *ProductHandler) CreateProductCategory(c *gin.Context) {
+	var req dtos.CreateProductCategoryRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+
+	category, err := h.productService.CreateProductCategory(c.Request.Context(), req)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to create product category: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Product category created successfully", category)
+}
+
+// GetProductCategoryByID handles fetching a single product category by ID
+func (h *ProductHandler) GetProductCategoryByID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 32) // Category ID is INT in DB
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid category ID")
+		return
+	}
+
+	category, err := h.productService.GetProductCategoryByID(c.Request.Context(), int32(id))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve product category: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Product category retrieved successfully", category)
+}
+
+// GetProductCategories handles fetching a list of product categories
+func (h *ProductHandler) GetProductCategories(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search") // Assuming search by name
+
+	categories, totalCategories, err := h.productService.GetProductCategories(c.Request.Context(), page, limit, search)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve product categories: "+err.Error())
+		return
+	}
+
+	response.Paginated(c, http.StatusOK, "Product categories retrieved successfully", categories, totalCategories, page, limit)
+}
+
+// UpdateProductCategory handles updating an existing product category
+func (h *ProductHandler) UpdateProductCategory(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 32) // Category ID is INT in DB
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid category ID")
+		return
+	}
+
+	var req dtos.UpdateProductCategoryRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+
+	category, err := h.productService.UpdateProductCategory(c.Request.Context(), int32(id), req)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to update product category: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Product category updated successfully", category)
+}
+
+// DeleteProductCategory handles deleting a product category by its ID
+func (h *ProductHandler) DeleteProductCategory(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 32) // Category ID is INT in DB
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid category ID")
+		return
+	}
+
+	err = h.productService.DeleteProductCategory(c.Request.Context(), int32(id))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to delete product category: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Product category deleted successfully", nil)
+}

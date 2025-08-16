@@ -11,6 +11,17 @@ import (
 	"encoding/json"
 )
 
+const countProductCategories = `-- name: CountProductCategories :one
+SELECT count(*) FROM product_categories
+`
+
+func (q *Queries) CountProductCategories(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countProductCategories)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countProducts = `-- name: CountProducts :one
 SELECT count(*) FROM products
 `
@@ -78,6 +89,25 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (s
 	)
 }
 
+const createProductCategory = `-- name: CreateProductCategory :execresult
+
+INSERT INTO product_categories (
+    name, description
+) VALUES (
+    ?, ?
+)
+`
+
+type CreateProductCategoryParams struct {
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+}
+
+// Product Categories --
+func (q *Queries) CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createProductCategory, arg.Name, arg.Description)
+}
+
 const deleteProduct = `-- name: DeleteProduct :exec
 DELETE FROM products
 WHERE id = ?
@@ -85,6 +115,16 @@ WHERE id = ?
 
 func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteProduct, id)
+	return err
+}
+
+const deleteProductCategory = `-- name: DeleteProductCategory :exec
+DELETE FROM product_categories
+WHERE id = ?
+`
+
+func (q *Queries) DeleteProductCategory(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteProductCategory, id)
 	return err
 }
 
@@ -109,6 +149,52 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
+	return i, err
+}
+
+const getProductCategories = `-- name: GetProductCategories :many
+SELECT id, name, description FROM product_categories
+ORDER BY name ASC
+LIMIT ? OFFSET ?
+`
+
+type GetProductCategoriesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetProductCategories(ctx context.Context, arg GetProductCategoriesParams) ([]ProductCategory, error) {
+	rows, err := q.db.QueryContext(ctx, getProductCategories, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductCategory
+	for rows.Next() {
+		var i ProductCategory
+		if err := rows.Scan(&i.ID, &i.Name, &i.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getProductCategoryByID = `-- name: GetProductCategoryByID :one
+SELECT id, name, description FROM product_categories
+WHERE id = ?
+`
+
+func (q *Queries) GetProductCategoryByID(ctx context.Context, id int32) (ProductCategory, error) {
+	row := q.db.QueryRowContext(ctx, getProductCategoryByID, id)
+	var i ProductCategory
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
 }
 
@@ -196,6 +282,25 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.Metadata,
 		arg.ID,
 	)
+	return err
+}
+
+const updateProductCategory = `-- name: UpdateProductCategory :exec
+UPDATE product_categories
+SET
+    name = ?,
+    description = ?
+WHERE id = ?
+`
+
+type UpdateProductCategoryParams struct {
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	ID          int32          `json:"id"`
+}
+
+func (q *Queries) UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) error {
+	_, err := q.db.ExecContext(ctx, updateProductCategory, arg.Name, arg.Description, arg.ID)
 	return err
 }
 

@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"pointmarket/backend/internal/store/gen"
@@ -126,11 +127,11 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("userID")
+	userID := middleware.GetUserID(c)
 
 	scores, err := h.questionnaireService.SubmitVARK(
 		c.Request.Context(),
-		int64(userID.(uint)),
+		int64(userID),
 		req.QuestionnaireID,
 		req.Answers,
 	)
@@ -142,7 +143,7 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 	row, fusedScores, keywords, sentences, err := h.textAnalyzerService.Predict(
 		c.Request.Context(),
 		req.Text,
-		int64(userID.(uint)),
+		int64(userID),
 		scores,
 	)
 	if err != nil {
@@ -175,13 +176,9 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 }
 
 func (h *QuestionnaireHandler) GetCorrelation(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User not authenticated")
-		return
-	}
+	userID := middleware.GetUserID(c)
 
-	analysisResult, err := h.correlationService.GetCorrelationAnalysisForStudent(c.Request.Context(), int64(userID.(uint)))
+	analysisResult, err := h.correlationService.GetCorrelationAnalysisForStudent(c.Request.Context(), int64(userID))
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return

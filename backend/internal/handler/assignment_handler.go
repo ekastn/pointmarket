@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/response" // ADD THIS IMPORT
+	"pointmarket/backend/internal/middleware"
+	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
-	// "pointmarket/backend/internal/utils" // REMOVE OR COMMENT OUT THIS IMPORT IF NOT USED
+
+	"github.com/gin-gonic/gin"
 )
 
 // AssignmentHandler handles HTTP requests for assignments
@@ -45,7 +46,7 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, assignment)
+	response.Success(c, http.StatusCreated, "Assignment created successfully", assignment)
 }
 
 // GetAssignmentByID retrieves an assignment by its ID
@@ -75,7 +76,7 @@ func (h *AssignmentHandler) GetAssignmentByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, assignment)
+	response.Success(c, http.StatusOK, "Assignment found successfully", assignment)
 }
 
 // GetAssignments retrieves a list of assignments
@@ -99,24 +100,17 @@ func (h *AssignmentHandler) GetAssignments(c *gin.Context) {
 	}
 
 	// Get user ID and role from context (set by authentication middleware)
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusInternalServerError, "User ID not found in context") // FIX
-		return
-	}
-	userRole, exists := c.Get("userRole")
-	if !exists {
-		response.Error(c, http.StatusInternalServerError, "User role not found in context") // FIX
-		return
-	}
+	userID := middleware.GetUserID(c)
 
-	assignments, err := h.assignmentService.GetAssignments(c.Request.Context(), userID.(int64), userRole.(string), courseIDFilter)
+	userRole := middleware.GetRole(c)
+
+	assignments, err := h.assignmentService.GetAssignments(c.Request.Context(), userID, userRole, courseIDFilter)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListAssignmentsResponseDTO{
+	response.Success(c, http.StatusOK, "Assignments found successfully", dtos.ListAssignmentsResponseDTO{
 		Assignments: assignments,
 		Total:       len(assignments),
 	})
@@ -158,7 +152,7 @@ func (h *AssignmentHandler) UpdateAssignment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, assignment)
+	response.Success(c, http.StatusOK, "Assignment updated successfully", assignment)
 }
 
 // DeleteAssignment handles the deletion of an assignment
@@ -184,7 +178,7 @@ func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	response.Success(c, http.StatusNoContent, "Assignment deleted successfully", nil)
 }
 
 // CreateStudentAssignment handles recording a student starting an assignment
@@ -211,7 +205,7 @@ func (h *AssignmentHandler) CreateStudentAssignment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, studentAssignment)
+	response.Success(c, http.StatusCreated, "Student assignment created successfully", studentAssignment)
 }
 
 // GetStudentAssignmentByID retrieves a specific student's assignment record by ID
@@ -241,7 +235,7 @@ func (h *AssignmentHandler) GetStudentAssignmentByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, studentAssignment)
+	response.Success(c, http.StatusOK, "Student assignment found successfully", studentAssignment)
 }
 
 // GetStudentAssignmentsList retrieves a list of student assignments for a specific student
@@ -266,7 +260,7 @@ func (h *AssignmentHandler) GetStudentAssignmentsList(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListStudentAssignmentsResponseDTO{
+	response.Success(c, http.StatusOK, "Student assignments found successfully", dtos.ListStudentAssignmentsResponseDTO{
 		StudentAssignments: studentAssignments,
 		Total:              len(studentAssignments),
 	})
@@ -294,7 +288,7 @@ func (h *AssignmentHandler) GetStudentAssignmentsByAssignmentID(c *gin.Context) 
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListStudentAssignmentsResponseDTO{
+	response.Success(c, http.StatusOK, "Student assignments found successfully", dtos.ListStudentAssignmentsResponseDTO{
 		StudentAssignments: studentAssignments,
 		Total:              len(studentAssignments),
 	})
@@ -336,7 +330,7 @@ func (h *AssignmentHandler) UpdateStudentAssignment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, studentAssignment)
+	response.Success(c, http.StatusOK, "Student assignment updated successfully", studentAssignment)
 }
 
 // DeleteStudentAssignment handles the deletion of a student's assignment record
@@ -362,5 +356,5 @@ func (h *AssignmentHandler) DeleteStudentAssignment(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	response.Success(c, http.StatusNoContent, "Student assignment deleted successfully", nil)
 }

@@ -72,11 +72,11 @@ func GetUserID(c *gin.Context) int64 {
 
 // GetRole retrieves the role from the Gin context
 func GetRole(c *gin.Context) string {
-    role, exists := c.Get("role")
-    if !exists {
-        response.Error(c, http.StatusUnauthorized, "Unauthorized")
-        c.Abort()
-        return ""
-    }
-    return role.(string)
+	role, exists := c.Get("role")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		c.Abort()
+		return ""
+	}
+	return role.(string)
 }

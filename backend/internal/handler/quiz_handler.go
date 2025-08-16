@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 // QuizHandler handles HTTP requests for quizzes
@@ -44,7 +46,7 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, quiz)
+	response.Success(c, http.StatusCreated, "Quiz created successfully", quiz)
 }
 
 // GetQuizByID retrieves a quiz by its ID
@@ -74,7 +76,7 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quiz)
+	response.Success(c, http.StatusOK, "Quiz retrieved successfully", quiz)
 }
 
 // GetQuizzes retrieves a list of quizzes
@@ -98,24 +100,16 @@ func (h *QuizHandler) GetQuizzes(c *gin.Context) {
 	}
 
 	// Get user ID and role from context (set by authentication middleware)
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusInternalServerError, "User ID not found in context")
-		return
-	}
-	userRole, exists := c.Get("userRole")
-	if !exists {
-		response.Error(c, http.StatusInternalServerError, "User role not found in context")
-		return
-	}
+	userID := middleware.GetUserID(c)
+	userRole := middleware.GetRole(c)
 
-	quizzes, err := h.quizService.GetQuizzes(c.Request.Context(), userID.(int64), userRole.(string), courseIDFilter)
+	quizzes, err := h.quizService.GetQuizzes(c.Request.Context(), userID, userRole, courseIDFilter)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListQuizzesResponseDTO{
+	response.Success(c, http.StatusOK, "Quizzes retrieved successfully", dtos.ListQuizzesResponseDTO{
 		Quizzes: quizzes,
 		Total:   len(quizzes),
 	})
@@ -157,7 +151,7 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quiz)
+	response.Success(c, http.StatusOK, "Quiz updated successfully", quiz)
 }
 
 // DeleteQuiz handles the deletion of a quiz
@@ -183,7 +177,7 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	response.Success(c, http.StatusNoContent, "Quiz deleted successfully", nil)
 }
 
 // CreateQuizQuestion handles the creation of a new quiz question
@@ -218,7 +212,7 @@ func (h *QuizHandler) CreateQuizQuestion(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, question)
+	response.Success(c, http.StatusCreated, "Question created successfully", question)
 }
 
 // GetQuizQuestionByID retrieves a quiz question by its ID
@@ -255,7 +249,7 @@ func (h *QuizHandler) GetQuizQuestionByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, question)
+	response.Success(c, http.StatusOK, "Quiz question retrieved successfully", question)
 }
 
 // GetQuizQuestionsByQuizID retrieves all questions for a specific quiz
@@ -280,10 +274,7 @@ func (h *QuizHandler) GetQuizQuestionsByQuizID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListQuizQuestionsResponseDTO{
-		QuizQuestions: questions,
-		Total:         len(questions),
-	})
+	response.Success(c, http.StatusOK, "Quiz questions retrieved successfully", questions)
 }
 
 // UpdateQuizQuestion handles the update of an existing quiz question
@@ -329,7 +320,7 @@ func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, question)
+	response.Success(c, http.StatusOK, "Quiz question updated successfully", question)
 }
 
 // DeleteQuizQuestion handles the deletion of a quiz question
@@ -362,7 +353,7 @@ func (h *QuizHandler) DeleteQuizQuestion(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	response.Success(c, http.StatusNoContent, "Quiz question deleted successfully", nil)
 }
 
 // CreateStudentQuiz handles recording a student starting a quiz
@@ -397,7 +388,7 @@ func (h *QuizHandler) CreateStudentQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, studentQuiz)
+	response.Success(c, http.StatusCreated, "Student quiz created successfully", studentQuiz)
 }
 
 // GetStudentQuizByID retrieves a specific student's quiz record by ID
@@ -427,7 +418,7 @@ func (h *QuizHandler) GetStudentQuizByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, studentQuiz)
+	response.Success(c, http.StatusOK, "Student quiz retrieved successfully", studentQuiz)
 }
 
 // GetStudentQuizzesList retrieves a list of student quizzes for a specific student
@@ -452,7 +443,7 @@ func (h *QuizHandler) GetStudentQuizzesList(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListStudentQuizzesResponseDTO{
+	response.Success(c, http.StatusOK, "Student quizzes retrieved successfully", dtos.ListStudentQuizzesResponseDTO{
 		StudentQuizzes: studentQuizzes,
 		Total:          len(studentQuizzes),
 	})
@@ -480,7 +471,7 @@ func (h *QuizHandler) GetStudentQuizzesByQuizID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtos.ListStudentQuizzesResponseDTO{
+	response.Success(c, http.StatusOK, "Student quizzes retrieved successfully", dtos.ListStudentQuizzesResponseDTO{
 		StudentQuizzes: studentQuizzes,
 		Total:          len(studentQuizzes),
 	})
@@ -522,7 +513,7 @@ func (h *QuizHandler) UpdateStudentQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, studentQuiz)
+	response.Success(c, http.StatusOK, "Student quiz updated successfully", studentQuiz)
 }
 
 // DeleteStudentQuiz handles the deletion of a student's quiz record
@@ -548,5 +539,5 @@ func (h *QuizHandler) DeleteStudentQuiz(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	response.Success(c, http.StatusNoContent, "Student quiz deleted successfully", nil)
 }

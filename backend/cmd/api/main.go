@@ -119,6 +119,8 @@ func main() {
 			badgesRoutes.DELETE("/:id/revoke", adminRoutes.Handlers[0], badgeHandler.RevokeBadge) // Admin-only
 		}
 
+		authRequired.GET("/my-badges", badgeHandler.GetUserOwnBadges)
+
 		missionsRoutes := authRequired.Group("/missions")
 		{
 			missionsRoutes.POST("", adminRoutes.Handlers[0], missionHandler.CreateMission) // Admin-only

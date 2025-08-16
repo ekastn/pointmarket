@@ -31,6 +31,17 @@ func (q *Queries) AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserPara
 	return q.db.ExecContext(ctx, awardBadgeToUser, arg.UserID, arg.BadgeID)
 }
 
+const countBadges = `-- name: CountBadges :one
+SELECT count(*) FROM badges
+`
+
+func (q *Queries) CountBadges(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countBadges)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createBadge = `-- name: CreateBadge :execresult
 
 INSERT INTO badges (
@@ -163,10 +174,16 @@ func (q *Queries) GetBadgeByID(ctx context.Context, id int64) (Badge, error) {
 const getBadges = `-- name: GetBadges :many
 SELECT id, title, description, criteria, repeatable, created_at FROM badges
 ORDER BY created_at DESC
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetBadges(ctx context.Context) ([]Badge, error) {
-	rows, err := q.db.QueryContext(ctx, getBadges)
+type GetBadgesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetBadges(ctx context.Context, arg GetBadgesParams) ([]Badge, error) {
+	rows, err := q.db.QueryContext(ctx, getBadges, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

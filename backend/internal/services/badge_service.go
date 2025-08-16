@@ -59,11 +59,26 @@ func (s *BadgeService) GetBadgeByID(ctx context.Context, id int64) (dtos.BadgeDT
 	return badgeDTO, nil
 }
 
-// GetBadges retrieves a list of all badges
-func (s *BadgeService) GetBadges(ctx context.Context) ([]dtos.BadgeDTO, error) {
-	badges, err := s.q.GetBadges(ctx)
+// GetBadges retrieves a list of all badges with pagination
+func (s *BadgeService) GetBadges(ctx context.Context, page, limit int, search string) ([]dtos.BadgeDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	// Base parameters for queries
+	listParams := gen.GetBadgesParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	}
+
+	// Get total count of badges
+	totalBadges, err := s.q.CountBadges(ctx)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Get the paginated list of badges
+	badges, err := s.q.GetBadges(ctx, listParams)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	var badgeDTOs []dtos.BadgeDTO
@@ -72,7 +87,7 @@ func (s *BadgeService) GetBadges(ctx context.Context) ([]dtos.BadgeDTO, error) {
 		badgeDTO.FromBadgeModel(badge)
 		badgeDTOs = append(badgeDTOs, badgeDTO)
 	}
-	return badgeDTOs, nil
+	return badgeDTOs, totalBadges, nil
 }
 
 // UpdateBadge updates an existing badge

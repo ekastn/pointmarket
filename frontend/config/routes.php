@@ -2,6 +2,7 @@
 
 use App\Controllers\AssignmentsController;
 use App\Controllers\AuthController;
+use App\Controllers\BadgesController;
 use App\Controllers\CoursesController;
 use App\Controllers\DashboardController;
 use App\Controllers\ProfileController;
@@ -95,6 +96,19 @@ return function (Router $router) {
 
         // Student specific missions routes
         $router->get('/my-missions', [MissionsController::class, 'index']);
+
+        // Badges routes (Admin)
+        $router->group('/badges', function (Router $router) {
+            $router->get('/', [BadgesController::class, 'index']);
+            $router->post('/', [BadgesController::class, 'store']);
+            $router->put('/{id}', [BadgesController::class, 'update']);
+            $router->delete('/{id}', [BadgesController::class, 'destroy']);
+            $router->post('/award', [BadgesController::class, 'award']);
+            $router->post('/revoke', [BadgesController::class, 'revoke']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+
+        // Student specific badges routes
+        $router->get('/my-badges', [BadgesController::class, 'myBadges'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

@@ -50,5 +50,6 @@
     <script src="/public/assets/js/student-courses.js"></script>
     <script src="/public/assets/js/admin-missions.js"></script>
     <script src="/public/assets/js/student-missions.js"></script>
+    <script src="/public/assets/js/admin-badges.js"></script>
 </body>
 </html>

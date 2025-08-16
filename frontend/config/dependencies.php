@@ -60,6 +60,10 @@ return [
         return new MissionService($apiClient);
     },
 
+    BadgeService::class => function (ApiClient $apiClient) {
+        return new BadgeService($apiClient);
+    },
+
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {
         return new AuthMiddleware($apiClient, $profileService);
     },

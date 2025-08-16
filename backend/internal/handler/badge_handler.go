@@ -90,17 +90,18 @@ func (h *BadgeHandler) GetBadges(c *gin.Context) {
 		return
 	}
 
-	// If no user_id param, return all badges
-	badges, err := h.badgeService.GetBadges(c.Request.Context())
+	// If no user_id param, return all badges with pagination
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	badges, totalBadges, err := h.badgeService.GetBadges(c.Request.Context(), page, limit, search)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to retrieve badges: "+err.Error())
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Badges retrieved successfully", dtos.ListBadgesResponseDTO{
-		Badges: badges,
-		Total:  len(badges),
-	})
+	response.Paginated(c, http.StatusOK, "Badges retrieved successfully", badges, totalBadges, page, limit)
 }
 
 // UpdateBadge handles updating an existing badge (Admin-only)
@@ -210,4 +211,24 @@ func (h *BadgeHandler) RevokeBadge(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Badge revoked successfully", nil)
+}
+
+// GetUserOwnBadges handles fetching the authenticated user's own badges
+func (h *BadgeHandler) GetUserOwnBadges(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "User ID not found in context")
+		return
+	}
+
+	userBadges, err := h.badgeService.GetUserBadgesByUserID(c.Request.Context(), userID.(int64))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve user badges: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User badges retrieved successfully", dtos.ListUserBadgesResponseDTO{
+		UserBadges: userBadges,
+		Total:      len(userBadges),
+	})
 }

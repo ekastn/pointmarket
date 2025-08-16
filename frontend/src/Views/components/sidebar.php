@@ -5,6 +5,7 @@ $user = $_SESSION['user_data'] ?? null;
 $studentsMenu = [
     ['path' => '/my-missions', 'label' => 'Misi Saya', 'icon' => 'fas fa-trophy'],
     ['path' => '/my-courses', 'label' => 'Kursus Saya', 'icon' => 'fas fa-book'],
+    ['path' => '/my-badges', 'label' => 'Lencana Saya', 'icon' => 'fas fa-id-badge'],
     ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
     ['path' => '/quiz', 'label' => 'Kuis', 'icon' => 'fas fa-question-circle'],
     ['path' => '/questionnaire', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
@@ -22,6 +23,7 @@ $adminsMenu = [
     ['path' => '/users', 'label' => 'Pengguna', 'icon' => 'fas fa-users-cog'],
     ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
     ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
+    ['path' => '/badges', 'label' => 'Lencana', 'icon' => 'fas fa-id-badge'],
     ['path' => '/reports', 'label' => 'Laporan', 'icon' => 'fas fa-chart-bar'],
 ];
 

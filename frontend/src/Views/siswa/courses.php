@@ -1,6 +1,4 @@
 <?php
-$this->layout('layouts/main', ['title' => $title, 'user' => $user]);
-
 // Helper function to build query strings
 function build_query_string(array $params): string
 {

@@ -13,7 +13,11 @@ WHERE id = ?;
 
 -- name: GetBadges :many
 SELECT * FROM badges
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountBadges :one
+SELECT count(*) FROM badges;
 
 -- name: UpdateBadge :exec
 UPDATE badges

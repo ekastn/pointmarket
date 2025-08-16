@@ -2,8 +2,8 @@
 
 use App\Controllers\AssignmentsController;
 use App\Controllers\AuthController;
+use App\Controllers\CoursesController;
 use App\Controllers\DashboardController;
-use App\Controllers\MaterialsController;
 use App\Controllers\ProfileController;
 use App\Controllers\ProgressController;
 use App\Controllers\QuestionnaireController;
@@ -58,6 +58,24 @@ return function (Router $router) {
         // Teacher specific routes
         $router->get('teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index'], [[AuthMiddleware::class, 'requireTeacher']]);
         $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);
+
+        // Courses routes (Admin/Teacher CRUD)
+        $router->group('/courses', function (Router $router) {
+            // Admin/Teacher can create/edit/delete courses
+            $router->post('/', [CoursesController::class, 'store']);
+            $router->get('/create', [CoursesController::class, 'create']); // Admin/Teacher can access create form
+            $router->get('/{id}/edit', [CoursesController::class, 'edit']); // Admin/Teacher can access edit form
+            $router->put('/{id}', [CoursesController::class, 'update']);
+            $router->delete('/{id}', [CoursesController::class, 'destroy']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdminOrTeacher']]);
+
+        // General courses listing (accessible by Admin, Teacher, Student)
+        $router->get('/courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireLogin']]);
+
+        // Student specific courses routes
+        $router->get('/my-courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
+        $router->post('/courses/{id}/enroll', [CoursesController::class, 'enroll'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
+        $router->delete('/courses/{id}/unenroll', [CoursesController::class, 'unenroll'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

@@ -37,7 +37,7 @@ func Auth(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		// Get user ID from username and set in context
-		var userID uint
+		var userID int64
 		err = db.Get(&userID, "SELECT id FROM users WHERE username = ?", claims.Username)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, "Failed to get user ID from token")
@@ -53,7 +53,7 @@ func Auth(cfg *config.Config, db *sqlx.DB) gin.HandlerFunc {
 }
 
 // GetUserID retrieves the userID from the Gin context
-func GetUserID(c *gin.Context) uint {
+func GetUserID(c *gin.Context) int64 {
 	userID, exists := c.Get("userID")
 	if !exists {
 		response.Error(c, http.StatusUnauthorized, "Unauthorized")
@@ -61,11 +61,22 @@ func GetUserID(c *gin.Context) uint {
 		return 0
 	}
 
-	uID, ok := userID.(uint)
+	uID, ok := userID.(int64)
 	if !ok {
 		response.Error(c, http.StatusUnauthorized, "Unauthorized")
 		c.Abort()
 		return 0
 	}
 	return uID
+}
+
+// GetRole retrieves the role from the Gin context
+func GetRole(c *gin.Context) string {
+    role, exists := c.Get("role")
+    if !exists {
+        response.Error(c, http.StatusUnauthorized, "Unauthorized")
+        c.Abort()
+        return ""
+    }
+    return role.(string)
 }

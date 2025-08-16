@@ -11,7 +11,17 @@ WHERE id = ?;
 
 -- name: GetCourses :many
 SELECT * FROM courses
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountCourses :one
+SELECT count(*) FROM courses;
+
+-- name: GetCoursesByOwnerID :many
+SELECT * FROM courses
+WHERE owner_id = ?
+ORDER BY created_at DESC
+LIMIT ? OFFSET ?;
 
 -- name: UpdateCourse :exec
 UPDATE courses
@@ -53,3 +63,7 @@ ORDER BY c.title ASC;
 -- name: UnenrollStudentFromCourse :exec
 DELETE FROM student_courses
 WHERE student_id = ? AND course_id = ?;
+
+-- name: CountCoursesByOwnerID :one
+SELECT count(*) FROM courses
+WHERE owner_id = ?;

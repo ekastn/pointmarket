@@ -12,6 +12,29 @@ import (
 	"time"
 )
 
+const countCourses = `-- name: CountCourses :one
+SELECT count(*) FROM courses
+`
+
+func (q *Queries) CountCourses(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCourses)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countCoursesByOwnerID = `-- name: CountCoursesByOwnerID :one
+SELECT count(*) FROM courses
+WHERE owner_id = ?
+`
+
+func (q *Queries) CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCoursesByOwnerID, ownerID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCourse = `-- name: CreateCourse :execresult
 INSERT INTO courses (
     title, slug, description, owner_id, metadata
@@ -91,10 +114,61 @@ func (q *Queries) GetCourseByID(ctx context.Context, id int64) (Course, error) {
 const getCourses = `-- name: GetCourses :many
 SELECT id, title, slug, description, owner_id, metadata, created_at, updated_at FROM courses
 ORDER BY created_at DESC
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetCourses(ctx context.Context) ([]Course, error) {
-	rows, err := q.db.QueryContext(ctx, getCourses)
+type GetCoursesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetCourses(ctx context.Context, arg GetCoursesParams) ([]Course, error) {
+	rows, err := q.db.QueryContext(ctx, getCourses, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Course
+	for rows.Next() {
+		var i Course
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Slug,
+			&i.Description,
+			&i.OwnerID,
+			&i.Metadata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCoursesByOwnerID = `-- name: GetCoursesByOwnerID :many
+SELECT id, title, slug, description, owner_id, metadata, created_at, updated_at FROM courses
+WHERE owner_id = ?
+ORDER BY created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetCoursesByOwnerIDParams struct {
+	OwnerID int64 `json:"owner_id"`
+	Limit   int32 `json:"limit"`
+	Offset  int32 `json:"offset"`
+}
+
+func (q *Queries) GetCoursesByOwnerID(ctx context.Context, arg GetCoursesByOwnerIDParams) ([]Course, error) {
+	rows, err := q.db.QueryContext(ctx, getCoursesByOwnerID, arg.OwnerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

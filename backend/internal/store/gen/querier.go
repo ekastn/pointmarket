@@ -12,6 +12,8 @@ import (
 type Querier interface {
 	// User Badges --
 	AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserParams) (sql.Result, error)
+	CountCourses(ctx context.Context) (int64, error)
+	CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int64, error)
 	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
 	// Assignments --
 	CreateAssignment(ctx context.Context, arg CreateAssignmentParams) (sql.Result, error)
@@ -59,7 +61,8 @@ type Querier interface {
 	GetBadgeByID(ctx context.Context, id int64) (Badge, error)
 	GetBadges(ctx context.Context) ([]Badge, error)
 	GetCourseByID(ctx context.Context, id int64) (Course, error)
-	GetCourses(ctx context.Context) ([]Course, error)
+	GetCourses(ctx context.Context, arg GetCoursesParams) ([]Course, error)
+	GetCoursesByOwnerID(ctx context.Context, arg GetCoursesByOwnerIDParams) ([]Course, error)
 	GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error)
 	GetLatestVarkResult(ctx context.Context, studentID int64) (GetLatestVarkResultRow, error)
 	GetLikertStatsByStudent(ctx context.Context, studentID int64) ([]GetLikertStatsByStudentRow, error)

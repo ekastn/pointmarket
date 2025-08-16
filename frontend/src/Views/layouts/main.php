@@ -33,5 +33,7 @@
         const JWT_TOKEN = "<?php echo $_SESSION['jwt_token'] ?? ''; ?>";
     </script>
     <script src="/public/assets/js/dashboard.js"></script>
+    <script src="/public/assets/js/admin-courses.js"></script>
+    <script src="/public/assets/js/student-courses.js"></script>
 </body>
 </html>

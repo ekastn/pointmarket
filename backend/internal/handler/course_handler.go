@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"strconv"
@@ -28,24 +29,16 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 		return
 	}
 
-	// Infer OwnerID from authenticated user if not admin
-	userRole, exists := c.Get("userRole")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User role not found in context")
-		return
-	}
-	authUserID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User ID not found in context")
-		return
-	}
+	userRole := middleware.GetRole(c)
 
-	if userRole.(string) == "guru" {
-		req.OwnerID = authUserID.(int64)
-	} else if userRole.(string) == "admin" {
+	authUserID := middleware.GetUserID(c)
+
+	if userRole == "guru" {
+		req.OwnerID = authUserID
+	} else if userRole == "admin" {
 		// Admin can specify owner_id, or it can be inferred from admin's ID if not provided
 		if req.OwnerID == 0 {
-			req.OwnerID = authUserID.(int64)
+			req.OwnerID = authUserID
 		}
 	} else {
 		response.Error(c, http.StatusForbidden, "Forbidden: Only teachers and admins can create courses")
@@ -86,21 +79,13 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 
 // GetCourses handles fetching a list of courses based on user role and filters
 func (h *CourseHandler) GetCourses(c *gin.Context) {
-	authUserID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User ID not found in context")
-		return
-	}
-	userRole, exists := c.Get("userRole")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User role not found in context")
-		return
-	}
+	authUserID := middleware.GetUserID(c)
+	userRole := middleware.GetRole(c)
 
 	var filterUserID *int64
 	userIDStr := c.Query("user_id")
 
-	if userRole.(string) == "admin" {
+	if userRole == "admin" {
 		if userIDStr != "" {
 			parsedUserID, err := strconv.ParseInt(userIDStr, 10, 64)
 			if err != nil {
@@ -109,28 +94,27 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 			}
 			filterUserID = &parsedUserID
 		}
-	} else if userRole.(string) == "siswa" {
+	} else if userRole == "siswa" {
 		// Students automatically get their own enrolled courses
-		actualAuthUserID := authUserID.(int64) // Corrected type assertion
-		filterUserID = &actualAuthUserID
-	} else if userRole.(string) == "guru" {
+		filterUserID = &authUserID
+	} else if userRole == "guru" {
 		// Teachers get courses they own
-		actualAuthUserID := authUserID.(int64) // Corrected type assertion
-		filterUserID = &actualAuthUserID
+		filterUserID = &authUserID
 		// TODO: This needs a GetCoursesByOwnerID query in service
 		// For now, it will return all courses if no specific query for owner_id exists
 	}
 
-	courses, err := h.courseService.GetCourses(c.Request.Context(), authUserID.(int64), userRole.(string), filterUserID)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	courses, totalCourses, err := h.courseService.GetCourses(c.Request.Context(), authUserID, userRole, filterUserID, page, limit, search)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Courses retrieved successfully", dtos.ListCoursesResponseDTO{
-		Courses: courses,
-		Total:   len(courses),
-	})
+	response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
 }
 
 // UpdateCourse handles updating an existing course (Admin/Teacher-only, owner only)
@@ -149,16 +133,8 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 	}
 
 	// Authorization check: Only owner or admin can update
-	authUserID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User ID not found in context")
-		return
-	}
-	userRole, exists := c.Get("userRole")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User role not found in context")
-		return
-	}
+	authUserID := middleware.GetUserID(c)
+	userRole := middleware.GetRole(c)
 
 	// Get the course to check ownership
 	course, err := h.courseService.GetCourseByID(c.Request.Context(), id)
@@ -171,7 +147,7 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 		return
 	}
 
-	if userRole.(string) != "admin" && course.OwnerID != authUserID.(int64) {
+	if userRole != "admin" && course.OwnerID != authUserID {
 		response.Error(c, http.StatusForbidden, "Forbidden: You do not own this course or are not an admin")
 		return
 	}
@@ -195,16 +171,8 @@ func (h *CourseHandler) DeleteCourse(c *gin.Context) {
 	}
 
 	// Authorization check: Only owner or admin can delete
-	authUserID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User ID not found in context")
-		return
-	}
-	userRole, exists := c.Get("userRole")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User role not found in context")
-		return
-	}
+	authUserID := middleware.GetUserID(c)
+	userRole := middleware.GetRole(c)
 
 	// Get the course to check ownership
 	course, err := h.courseService.GetCourseByID(c.Request.Context(), id)
@@ -217,7 +185,7 @@ func (h *CourseHandler) DeleteCourse(c *gin.Context) {
 		return
 	}
 
-	if userRole.(string) != "admin" && course.OwnerID != authUserID.(int64) {
+	if userRole != "admin" && course.OwnerID != authUserID {
 		response.Error(c, http.StatusForbidden, "Forbidden: You do not own this course or are not an admin")
 		return
 	}
@@ -248,16 +216,12 @@ func (h *CourseHandler) EnrollStudent(c *gin.Context) {
 
 	// If UserID is not provided in the request body, use the authenticated user's ID
 	if req.UserID == 0 {
-		authUserID, exists := c.Get("userID")
-		if !exists {
-			response.Error(c, http.StatusUnauthorized, "User ID not found in context")
-			return
-		}
-		req.UserID = authUserID.(int64)
+		authUserID := middleware.GetUserID(c)
+		req.UserID = authUserID
 	} else {
 		// If UserID is provided, ensure only admin can specify it
-		userRole, exists := c.Get("userRole")
-		if !exists || userRole.(string) != "admin" {
+		userRole := middleware.GetRole(c)
+		if userRole != "admin" {
 			response.Error(c, http.StatusForbidden, "Forbidden: Only admins can enroll other users")
 			return
 		}
@@ -296,16 +260,12 @@ func (h *CourseHandler) UnenrollStudent(c *gin.Context) {
 
 	// If UserID is not provided in the request body, use the authenticated user's ID
 	if req.UserID == 0 {
-		authUserID, exists := c.Get("userID")
-		if !exists {
-			response.Error(c, http.StatusUnauthorized, "User ID not found in context")
-			return
-		}
-		req.UserID = authUserID.(int64)
+		authUserID := middleware.GetUserID(c)
+		req.UserID = authUserID
 	} else {
 		// If UserID is provided, ensure only admin can specify it
-		userRole, exists := c.Get("userRole")
-		if !exists || userRole.(string) != "admin" {
+		userRole := middleware.GetRole(c)
+		if userRole != "admin" {
 			response.Error(c, http.StatusForbidden, "Forbidden: Only admins can unenroll other users")
 			return
 		}

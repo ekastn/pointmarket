@@ -60,4 +60,20 @@ class AuthMiddleware extends BaseController
     {
         return $this->requireRole('siswa');
     }
+
+    public function requireAdminOrTeacher(): bool
+    {
+        if (! $this->requireLogin()) {
+            $this->redirect('/login');
+            return false;
+        }
+
+        $user = $_SESSION['user_data'];
+        if ($user['role'] !== 'admin' && $user['role'] !== 'guru') {
+            $_SESSION['messages'] = ['error' => 'Anda tidak memiliki akses ke halaman ini.'];
+            $this->redirect('/dashboard');
+            return false;
+        }
+        return true;
+    }
 }

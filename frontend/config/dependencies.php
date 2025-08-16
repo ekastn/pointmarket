@@ -50,6 +50,10 @@ return [
         return new WeeklyEvaluationService($apiClient);
     },
 
+    CourseService::class => function (ApiClient $apiClient) {
+        return new CourseService($apiClient);
+    },
+
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {
         return new AuthMiddleware($apiClient, $profileService);
     },

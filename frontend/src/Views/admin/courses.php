@@ -14,14 +14,6 @@ $base_params = [
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
 
-    <?php if (isset($_SESSION['messages'])): ?>
-        <div class="alert alert-<?= key($_SESSION['messages']) ?> alert-dismissible fade show" role="alert">
-            <?= reset($_SESSION['messages']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php unset($_SESSION['messages']); ?>
-    <?php endif; ?>
-
     <div class="row mb-3">
         <div class="col-12 col-md-6">
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahCourse">

@@ -5,6 +5,7 @@ use App\Controllers\AuthController;
 use App\Controllers\BadgesController;
 use App\Controllers\CoursesController;
 use App\Controllers\DashboardController;
+use App\Controllers\ProductsController;
 use App\Controllers\ProfileController;
 use App\Controllers\ProgressController;
 use App\Controllers\QuestionnaireController;
@@ -109,6 +110,13 @@ return function (Router $router) {
 
         // Student specific badges routes
         $router->get('/my-badges', [BadgesController::class, 'myBadges'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
+
+        // Products routes
+        $router->get('/products', [ProductsController::class, 'index'], [[AuthMiddleware::class, 'requireLogin']]); // Marketplace view for all users, with admin-specific controls
+        $router->post('/products', [ProductsController::class, 'store'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]); // Admin-only
+        $router->put('/products/{id}', [ProductsController::class, 'update'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]); // Admin-only
+        $router->delete('/products/{id}', [ProductsController::class, 'destroy'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]); // Admin-only
+        $router->post('/products/{id}/purchase', [ProductsController::class, 'purchase'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]); // For students
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

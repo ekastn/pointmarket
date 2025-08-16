@@ -52,3 +52,27 @@ type ListProductsResponseDTO struct {
 	Products []ProductDTO `json:"products"`
 	Total    int          `json:"total"`
 }
+
+// CreateProductRequestDTO for creating a new product
+type CreateProductRequestDTO struct {
+	CategoryID    *int32          `json:"category_id"`
+	Name          string          `json:"name" binding:"required"`
+	Description   *string         `json:"description"`
+	PointsPrice   int32           `json:"points_price" binding:"required"`
+	Type          string          `json:"type" binding:"required"`
+	StockQuantity *int32          `json:"stock_quantity"`
+	IsActive      bool            `json:"is_active"`
+	Metadata      json.RawMessage `json:"metadata"`
+}
+
+// UpdateProductRequestDTO for updating an existing product
+type UpdateProductRequestDTO struct {
+	CategoryID    *int32          `json:"category_id"`
+	Name          string          `json:"name"`
+	Description   *string         `json:"description"`
+	PointsPrice   int32           `json:"points_price"`
+	Type          string          `json:"type"`
+	StockQuantity *int32          `json:"stock_quantity"`
+	IsActive      bool            `json:"is_active"`
+	Metadata      json.RawMessage `json:"metadata"`
+}

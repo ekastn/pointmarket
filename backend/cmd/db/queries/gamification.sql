@@ -111,3 +111,15 @@ WHERE id = ?;
 -- name: DeleteUserMission :exec
 DELETE FROM user_missions
 WHERE id = ?;
+
+-- User Stats --
+
+-- name: GetUserStats :one
+SELECT * FROM user_stats
+WHERE user_id = ?;
+
+-- name: UpdateUserStatsPoints :exec
+UPDATE user_stats
+SET
+    total_points = ?
+WHERE user_id = ?;

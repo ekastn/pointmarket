@@ -6,6 +6,7 @@ $studentsMenu = [
     ['path' => '/my-missions', 'label' => 'Misi Saya', 'icon' => 'fas fa-trophy'],
     ['path' => '/my-courses', 'label' => 'Kursus Saya', 'icon' => 'fas fa-book'],
     ['path' => '/my-badges', 'label' => 'Lencana Saya', 'icon' => 'fas fa-id-badge'],
+    ['path' => '/products', 'label' => 'Marketplace', 'icon' => 'fas fa-store'],
     ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
     ['path' => '/quiz', 'label' => 'Kuis', 'icon' => 'fas fa-question-circle'],
     ['path' => '/questionnaire', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
@@ -24,6 +25,7 @@ $adminsMenu = [
     ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
     ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
     ['path' => '/badges', 'label' => 'Lencana', 'icon' => 'fas fa-id-badge'],
+    ['path' => '/products', 'label' => 'Kelola Produk', 'icon' => 'fas fa-box-open'],
     ['path' => '/reports', 'label' => 'Laporan', 'icon' => 'fas fa-chart-bar'],
 ];
 

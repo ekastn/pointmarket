@@ -64,6 +64,10 @@ return [
         return new BadgeService($apiClient);
     },
 
+    ProductService::class => function (ApiClient $apiClient) {
+        return new ProductService($apiClient);
+    },
+
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {
         return new AuthMiddleware($apiClient, $profileService);
     },

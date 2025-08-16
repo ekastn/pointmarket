@@ -27,19 +27,6 @@
         </div>
     </div>
 
-    <div class="toast-container position-static">
-        <?php if (!empty($message)): ?>
-            <?php foreach ($message as $type => $message): ?>
-                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-body">
-                        <?php echo $message; ?>
-                    </div>
-                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_BASE_URL = "<?php echo API_BASE_URL; ?>";

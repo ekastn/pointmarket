@@ -374,6 +374,20 @@ func (q *Queries) GetUserMissionsByUserID(ctx context.Context, userID int64) ([]
 	return items, nil
 }
 
+const getUserStats = `-- name: GetUserStats :one
+
+SELECT user_id, total_points, updated_at FROM user_stats
+WHERE user_id = ?
+`
+
+// User Stats --
+func (q *Queries) GetUserStats(ctx context.Context, userID int64) (UserStat, error) {
+	row := q.db.QueryRowContext(ctx, getUserStats, userID)
+	var i UserStat
+	err := row.Scan(&i.UserID, &i.TotalPoints, &i.UpdatedAt)
+	return i, err
+}
+
 const revokeBadgeFromUser = `-- name: RevokeBadgeFromUser :exec
 DELETE FROM user_badges
 WHERE user_id = ? AND badge_id = ?
@@ -463,5 +477,22 @@ type UpdateUserMissionStatusParams struct {
 
 func (q *Queries) UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserMissionStatus, arg.Status, arg.CompletedAt, arg.ID)
+	return err
+}
+
+const updateUserStatsPoints = `-- name: UpdateUserStatsPoints :exec
+UPDATE user_stats
+SET
+    total_points = ?
+WHERE user_id = ?
+`
+
+type UpdateUserStatsPointsParams struct {
+	TotalPoints int64 `json:"total_points"`
+	UserID      int64 `json:"user_id"`
+}
+
+func (q *Queries) UpdateUserStatsPoints(ctx context.Context, arg UpdateUserStatsPointsParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserStatsPoints, arg.TotalPoints, arg.UserID)
 	return err
 }

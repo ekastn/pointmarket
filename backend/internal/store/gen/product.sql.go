@@ -7,7 +7,86 @@ package gen
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 )
+
+const countProducts = `-- name: CountProducts :one
+SELECT count(*) FROM products
+`
+
+func (q *Queries) CountProducts(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countProducts)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const createOrder = `-- name: CreateOrder :execresult
+INSERT INTO orders (
+    user_id, product_id, points_spent, status
+) VALUES (
+    ?, ?, ?, ?
+)
+`
+
+type CreateOrderParams struct {
+	UserID      int64        `json:"user_id"`
+	ProductID   int64        `json:"product_id"`
+	PointsSpent int32        `json:"points_spent"`
+	Status      OrdersStatus `json:"status"`
+}
+
+func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createOrder,
+		arg.UserID,
+		arg.ProductID,
+		arg.PointsSpent,
+		arg.Status,
+	)
+}
+
+const createProduct = `-- name: CreateProduct :execresult
+INSERT INTO products (
+    category_id, name, description, points_price, type, stock_quantity, is_active, metadata
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?, ?
+)
+`
+
+type CreateProductParams struct {
+	CategoryID    sql.NullInt32   `json:"category_id"`
+	Name          string          `json:"name"`
+	Description   sql.NullString  `json:"description"`
+	PointsPrice   int32           `json:"points_price"`
+	Type          string          `json:"type"`
+	StockQuantity sql.NullInt32   `json:"stock_quantity"`
+	IsActive      bool            `json:"is_active"`
+	Metadata      json.RawMessage `json:"metadata"`
+}
+
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createProduct,
+		arg.CategoryID,
+		arg.Name,
+		arg.Description,
+		arg.PointsPrice,
+		arg.Type,
+		arg.StockQuantity,
+		arg.IsActive,
+		arg.Metadata,
+	)
+}
+
+const deleteProduct = `-- name: DeleteProduct :exec
+DELETE FROM products
+WHERE id = ?
+`
+
+func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteProduct, id)
+	return err
+}
 
 const getProductByID = `-- name: GetProductByID :one
 SELECT id, category_id, name, description, points_price, type, stock_quantity, is_active, metadata, created_at, updated_at FROM products
@@ -36,10 +115,16 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error)
 const getProducts = `-- name: GetProducts :many
 SELECT id, category_id, name, description, points_price, type, stock_quantity, is_active, metadata, created_at, updated_at FROM products
 ORDER BY created_at DESC
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetProducts(ctx context.Context) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, getProducts)
+type GetProductsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetProducts(ctx context.Context, arg GetProductsParams) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, getProducts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -71,4 +156,62 @@ func (q *Queries) GetProducts(ctx context.Context) ([]Product, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateProduct = `-- name: UpdateProduct :exec
+UPDATE products
+SET
+    category_id = ?,
+    name = ?,
+    description = ?,
+    points_price = ?,
+    type = ?,
+    stock_quantity = ?,
+    is_active = ?,
+    metadata = ?
+WHERE id = ?
+`
+
+type UpdateProductParams struct {
+	CategoryID    sql.NullInt32   `json:"category_id"`
+	Name          string          `json:"name"`
+	Description   sql.NullString  `json:"description"`
+	PointsPrice   int32           `json:"points_price"`
+	Type          string          `json:"type"`
+	StockQuantity sql.NullInt32   `json:"stock_quantity"`
+	IsActive      bool            `json:"is_active"`
+	Metadata      json.RawMessage `json:"metadata"`
+	ID            int64           `json:"id"`
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
+	_, err := q.db.ExecContext(ctx, updateProduct,
+		arg.CategoryID,
+		arg.Name,
+		arg.Description,
+		arg.PointsPrice,
+		arg.Type,
+		arg.StockQuantity,
+		arg.IsActive,
+		arg.Metadata,
+		arg.ID,
+	)
+	return err
+}
+
+const updateProductStock = `-- name: UpdateProductStock :exec
+UPDATE products
+SET
+    stock_quantity = ?
+WHERE id = ?
+`
+
+type UpdateProductStockParams struct {
+	StockQuantity sql.NullInt32 `json:"stock_quantity"`
+	ID            int64         `json:"id"`
+}
+
+func (q *Queries) UpdateProductStock(ctx context.Context, arg UpdateProductStockParams) error {
+	_, err := q.db.ExecContext(ctx, updateProductStock, arg.StockQuantity, arg.ID)
+	return err
 }

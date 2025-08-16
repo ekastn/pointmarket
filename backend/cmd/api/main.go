@@ -30,7 +30,7 @@ func main() {
 	questionnaireService := services.NewQuestionnaireService(querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 	correlationService := services.NewCorrelationService(querier)
-	productService := services.NewProductService(querier)
+	productService := services.NewProductService(db.DB, querier)
 	badgeService := services.NewBadgeService(querier)
 	missionService := services.NewMissionService(querier)
 	courseService := services.NewCourseService(querier)
@@ -106,6 +106,10 @@ func main() {
 		{
 			productRoutes.GET("", productHandler.GetProducts)
 			productRoutes.GET("/:id", productHandler.GetProductByID)
+			productRoutes.POST("", adminRoutes.Handlers[0], productHandler.CreateProduct)       // Admin-only
+			productRoutes.PUT("/:id", adminRoutes.Handlers[0], productHandler.UpdateProduct)    // Admin-only
+			productRoutes.DELETE("/:id", adminRoutes.Handlers[0], productHandler.DeleteProduct) // Admin-only
+			productRoutes.POST("/:id/purchase", productHandler.PurchaseProduct)                 // Auth required
 		}
 
 		badgesRoutes := authRequired.Group("/badges")

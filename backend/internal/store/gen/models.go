@@ -55,6 +55,49 @@ func (ns NullAssignmentsStatus) Value() (driver.Value, error) {
 	return string(ns.AssignmentsStatus), nil
 }
 
+type OrdersStatus string
+
+const (
+	OrdersStatusPending   OrdersStatus = "pending"
+	OrdersStatusCompleted OrdersStatus = "completed"
+	OrdersStatusCancelled OrdersStatus = "cancelled"
+)
+
+func (e *OrdersStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = OrdersStatus(s)
+	case string:
+		*e = OrdersStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for OrdersStatus: %T", src)
+	}
+	return nil
+}
+
+type NullOrdersStatus struct {
+	OrdersStatus OrdersStatus `json:"orders_status"`
+	Valid        bool         `json:"valid"` // Valid is true if OrdersStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullOrdersStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.OrdersStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.OrdersStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullOrdersStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.OrdersStatus), nil
+}
+
 type QuestionnaireVarkOptionsLearningStyle string
 
 const (
@@ -531,6 +574,15 @@ type Mission struct {
 	Metadata     json.RawMessage `json:"metadata"`
 	CreatedAt    time.Time       `json:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at"`
+}
+
+type Order struct {
+	ID          int64        `json:"id"`
+	UserID      int64        `json:"user_id"`
+	ProductID   int64        `json:"product_id"`
+	PointsSpent int32        `json:"points_spent"`
+	Status      OrdersStatus `json:"status"`
+	OrderedAt   time.Time    `json:"ordered_at"`
 }
 
 type PointsTransaction struct {

@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 )
 
 const countProductCategories = `-- name: CountProductCategories :one
@@ -129,13 +130,32 @@ func (q *Queries) DeleteProductCategory(ctx context.Context, id int32) error {
 }
 
 const getProductByID = `-- name: GetProductByID :one
-SELECT id, category_id, name, description, points_price, type, stock_quantity, is_active, metadata, created_at, updated_at FROM products
-WHERE id = ?
+SELECT
+    p.id, p.category_id, p.name, p.description, p.points_price, p.type, p.stock_quantity, p.is_active, p.metadata, p.created_at, p.updated_at,
+    pc.name AS category_name
+FROM products p
+LEFT JOIN product_categories pc ON p.category_id = pc.id
+WHERE p.id = ?
 `
 
-func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error) {
+type GetProductByIDRow struct {
+	ID            int64           `json:"id"`
+	CategoryID    sql.NullInt32   `json:"category_id"`
+	Name          string          `json:"name"`
+	Description   sql.NullString  `json:"description"`
+	PointsPrice   int32           `json:"points_price"`
+	Type          string          `json:"type"`
+	StockQuantity sql.NullInt32   `json:"stock_quantity"`
+	IsActive      bool            `json:"is_active"`
+	Metadata      json.RawMessage `json:"metadata"`
+	CreatedAt     time.Time       `json:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at"`
+	CategoryName  sql.NullString  `json:"category_name"`
+}
+
+func (q *Queries) GetProductByID(ctx context.Context, id int64) (GetProductByIDRow, error) {
 	row := q.db.QueryRowContext(ctx, getProductByID, id)
-	var i Product
+	var i GetProductByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.CategoryID,
@@ -148,6 +168,7 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error)
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CategoryName,
 	)
 	return i, err
 }
@@ -199,25 +220,51 @@ func (q *Queries) GetProductCategoryByID(ctx context.Context, id int32) (Product
 }
 
 const getProducts = `-- name: GetProducts :many
-SELECT id, category_id, name, description, points_price, type, stock_quantity, is_active, metadata, created_at, updated_at FROM products
+SELECT
+    p.id, p.category_id, p.name, p.description, p.points_price, p.type, p.stock_quantity, p.is_active, p.metadata, p.created_at, p.updated_at,
+    pc.name AS category_name
+FROM products p
+LEFT JOIN product_categories pc ON p.category_id = pc.id
+WHERE (? IS NULL OR p.category_id = ?)
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?
 `
 
 type GetProductsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	CategoryID sql.NullInt32 `json:"category_id"`
+	Limit      int32         `json:"limit"`
+	Offset     int32         `json:"offset"`
 }
 
-func (q *Queries) GetProducts(ctx context.Context, arg GetProductsParams) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, getProducts, arg.Limit, arg.Offset)
+type GetProductsRow struct {
+	ID            int64           `json:"id"`
+	CategoryID    sql.NullInt32   `json:"category_id"`
+	Name          string          `json:"name"`
+	Description   sql.NullString  `json:"description"`
+	PointsPrice   int32           `json:"points_price"`
+	Type          string          `json:"type"`
+	StockQuantity sql.NullInt32   `json:"stock_quantity"`
+	IsActive      bool            `json:"is_active"`
+	Metadata      json.RawMessage `json:"metadata"`
+	CreatedAt     time.Time       `json:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at"`
+	CategoryName  sql.NullString  `json:"category_name"`
+}
+
+func (q *Queries) GetProducts(ctx context.Context, arg GetProductsParams) ([]GetProductsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getProducts,
+		arg.CategoryID,
+		arg.CategoryID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Product
+	var items []GetProductsRow
 	for rows.Next() {
-		var i Product
+		var i GetProductsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CategoryID,
@@ -230,6 +277,7 @@ func (q *Queries) GetProducts(ctx context.Context, arg GetProductsParams) ([]Pro
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CategoryName,
 		); err != nil {
 			return nil, err
 		}

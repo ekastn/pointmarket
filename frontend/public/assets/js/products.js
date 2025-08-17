@@ -33,4 +33,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    const categoryFilter = document.querySelector('select[name="category_id"]');
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', function () {
+            const selectedCategoryId = this.value;
+            const currentUrl = new URL(window.location.href);
+            if (selectedCategoryId) {
+                currentUrl.searchParams.set('category_id', selectedCategoryId);
+            } else {
+                currentUrl.searchParams.delete('category_id');
+            }
+            window.location.href = currentUrl.toString();
+        });
+    }
 });

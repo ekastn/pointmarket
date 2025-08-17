@@ -20,10 +20,23 @@ $base_params = [
                 <i class="fas fa-plus"></i> Input
             </button>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-3">
             <form method="GET" class="d-flex">
                 <input type="text" name="search" class="form-control me-2" placeholder="Search by name" value="<?= htmlspecialchars($search) ?>">
                 <button class="btn btn-outline-secondary" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="col-12 col-md-3">
+            <form method="GET" class="d-flex">
+                <select name="category_id" class="form-select me-2">
+                    <option value="">All Categories</option>
+                    <?php foreach ($categories as $category) : ?>
+                        <option value="<?= htmlspecialchars($category['id']) ?>" <?= ($category_id == $category['id']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($category['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button class="btn btn-outline-secondary" type="submit">Filter</button>
             </form>
         </div>
     </div>
@@ -63,6 +76,17 @@ $base_params = [
             </div>
             <div class="modal-body">
                 <form action="/products" method="post">
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">No Category</option>
+                            <?php foreach ($categories as $category) : ?>
+                                <option value="<?= htmlspecialchars($category['id']) ?>">
+                                    <?= htmlspecialchars($category['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="name" name="name" required>
@@ -113,6 +137,17 @@ $base_params = [
                 <form action="" method="post" id="edit-product-form">
                     <input type="hidden" name="_method" value="PUT">
                     <input type="hidden" name="id" id="edit-product-id">
+                    <div class="mb-3">
+                        <label for="edit-category_id" class="form-label">Category</label>
+                        <select class="form-select" id="edit-category_id" name="category_id">
+                            <option value="">No Category</option>
+                            <?php foreach ($categories as $category) : ?>
+                                <option value="<?= htmlspecialchars($category['id']) ?>">
+                                    <?= htmlspecialchars($category['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label for="edit-name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="edit-name" name="name" required>

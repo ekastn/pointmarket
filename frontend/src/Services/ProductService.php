@@ -35,6 +35,17 @@ class ProductService
         return null;
     }
 
+    public function getAllProductCategories(): ?array
+    {
+        $response = $this->apiClient->request('GET', '/api/v1/product-categories');
+
+        if ($response['success']) {
+            return $response['data'];
+        }
+
+        return null;
+    }
+
     public function getProductById(int $id): ?array
     {
         $response = $this->apiClient->request('GET', '/api/v1/products/' . $id);

@@ -1,9 +1,18 @@
 -- name: GetProductByID :one
-SELECT * FROM products
-WHERE id = ?;
+SELECT
+    p.*,
+    pc.name AS category_name
+FROM products p
+LEFT JOIN product_categories pc ON p.category_id = pc.id
+WHERE p.id = ?;
 
 -- name: GetProducts :many
-SELECT * FROM products
+SELECT
+    p.*,
+    pc.name AS category_name
+FROM products p
+LEFT JOIN product_categories pc ON p.category_id = pc.id
+WHERE (sqlc.arg('category_id') IS NULL OR p.category_id = sqlc.arg('category_id'))
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?;
 

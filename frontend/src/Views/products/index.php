@@ -29,6 +29,19 @@ $base_params = [
                 <button class="btn btn-outline-secondary" type="submit">Search</button>
             </form>
         </div>
+        <div class="col-12 col-md-6">
+            <form method="GET" class="d-flex">
+                <select name="category_id" class="form-select me-2">
+                    <option value="">All Categories</option>
+                    <?php foreach ($categories as $category) : ?>
+                        <option value="<?= htmlspecialchars($category['id']) ?>" <?= ($category_id == $category['id']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($category['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button class="btn btn-outline-secondary" type="submit">Filter</button>
+            </form>
+        </div>
     </div>
 
     <div class="row">
@@ -47,6 +60,9 @@ $base_params = [
                             <p class="card-text"><?= htmlspecialchars($product['description'] ?? 'No description provided.') ?></p>
                             <p class="card-text"><strong>Price:</strong> <?= htmlspecialchars($product['points_price']) ?> Points</p>
                             <p class="card-text"><strong>Type:</strong> <?= htmlspecialchars($product['type']) ?></p>
+                            <?php if ($product['category_name'] !== null) : ?>
+                                <p class="card-text"><strong>Category:</strong> <?= htmlspecialchars($product['category_name']) ?></p>
+                            <?php endif; ?>
                             <?php if ($product['stock_quantity'] !== null) : ?>
                                 <p class="card-text"><strong>Stock:</strong> <?= htmlspecialchars($product['stock_quantity']) ?></p>
                             <?php endif; ?>

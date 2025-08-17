@@ -33,7 +33,7 @@ func (s *ProductService) GetProductByID(ctx context.Context, id int64) (dtos.Pro
 }
 
 // GetProducts retrieves a list of products with pagination
-func (s *ProductService) GetProducts(ctx context.Context, page, limit int, search string) ([]dtos.ProductDTO, int64, error) {
+func (s *ProductService) GetProducts(ctx context.Context, page, limit int, search string, categoryID *int32) ([]dtos.ProductDTO, int64, error) {
 	offset := (page - 1) * limit
 
 	// Get total count of products
@@ -42,10 +42,17 @@ func (s *ProductService) GetProducts(ctx context.Context, page, limit int, searc
 		return nil, 0, err
 	}
 
+	var cIDParams sql.NullInt32
+
+	if categoryID != nil {
+		cIDParams = sql.NullInt32{Int32: *categoryID, Valid: true}
+	}
+
 	// Get the paginated list of products
 	products, err := s.q.GetProducts(ctx, gen.GetProductsParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Limit:      int32(limit),
+		Offset:     int32(offset),
+		CategoryID: cIDParams,
 	})
 	if err != nil {
 		return nil, 0, err

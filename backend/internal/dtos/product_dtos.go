@@ -19,33 +19,96 @@ type ProductDTO struct {
 	Metadata      json.RawMessage `json:"metadata"`
 	CreatedAt     time.Time       `json:"created_at"`
 	UpdatedAt     time.Time       `json:"updated_at"`
+	CategoryName  *string         `json:"category_name"`
 }
 
 // FromProductModel converts a gen.Product model to a ProductDTO
-func (dto *ProductDTO) FromProductModel(m gen.Product) {
-	dto.ID = m.ID
-	if m.CategoryID.Valid {
-		dto.CategoryID = &m.CategoryID.Int32
-	} else {
-		dto.CategoryID = nil
+func (dto *ProductDTO) FromProductModel(m interface{}) {
+	switch p := m.(type) {
+	case gen.Product:
+		dto.ID = p.ID
+		if p.CategoryID.Valid {
+			dto.CategoryID = &p.CategoryID.Int32
+		} else {
+			dto.CategoryID = nil
+		}
+		if p.StockQuantity.Valid {
+			dto.StockQuantity = &p.StockQuantity.Int32
+		} else {
+			dto.StockQuantity = nil
+		}
+		dto.Name = p.Name
+		if p.Description.Valid {
+			dto.Description = &p.Description.String
+		} else {
+			dto.Description = nil
+		}
+		dto.PointsPrice = p.PointsPrice
+		dto.Type = p.Type
+		dto.IsActive = p.IsActive
+		dto.Metadata = p.Metadata
+		dto.CreatedAt = p.CreatedAt
+		dto.UpdatedAt = p.UpdatedAt
+		dto.CategoryName = nil // Default for gen.Product
+	case gen.GetProductByIDRow:
+		dto.ID = p.ID
+		if p.CategoryID.Valid {
+			dto.CategoryID = &p.CategoryID.Int32
+		} else {
+			dto.CategoryID = nil
+		}
+		if p.StockQuantity.Valid {
+			dto.StockQuantity = &p.StockQuantity.Int32
+		} else {
+			dto.StockQuantity = nil
+		}
+		dto.Name = p.Name
+		if p.Description.Valid {
+			dto.Description = &p.Description.String
+		} else {
+			dto.Description = nil
+		}
+		dto.PointsPrice = p.PointsPrice
+		dto.Type = p.Type
+		dto.IsActive = p.IsActive
+		dto.Metadata = p.Metadata
+		dto.CreatedAt = p.CreatedAt
+		dto.UpdatedAt = p.UpdatedAt
+		if p.CategoryName.Valid {
+			dto.CategoryName = &p.CategoryName.String
+		} else {
+			dto.CategoryName = nil
+		}
+	case gen.GetProductsRow:
+		dto.ID = p.ID
+		if p.CategoryID.Valid {
+			dto.CategoryID = &p.CategoryID.Int32
+		} else {
+			dto.CategoryID = nil
+		}
+		if p.StockQuantity.Valid {
+			dto.StockQuantity = &p.StockQuantity.Int32
+		} else {
+			dto.StockQuantity = nil
+		}
+		dto.Name = p.Name
+		if p.Description.Valid {
+			dto.Description = &p.Description.String
+		} else {
+			dto.Description = nil
+		}
+		dto.PointsPrice = p.PointsPrice
+		dto.Type = p.Type
+		dto.IsActive = p.IsActive
+		dto.Metadata = p.Metadata
+		dto.CreatedAt = p.CreatedAt
+		dto.UpdatedAt = p.UpdatedAt
+		if p.CategoryName.Valid {
+			dto.CategoryName = &p.CategoryName.String
+		} else {
+			dto.CategoryName = nil
+		}
 	}
-	if m.StockQuantity.Valid {
-		dto.StockQuantity = &m.StockQuantity.Int32
-	} else {
-		dto.StockQuantity = nil
-	}
-	dto.Name = m.Name
-	if m.Description.Valid {
-		dto.Description = &m.Description.String
-	} else {
-		dto.Description = nil
-	}
-	dto.PointsPrice = m.PointsPrice
-	dto.Type = m.Type
-	dto.IsActive = m.IsActive
-	dto.Metadata = m.Metadata
-	dto.CreatedAt = m.CreatedAt
-	dto.UpdatedAt = m.UpdatedAt
 }
 
 type ListProductsResponseDTO struct {

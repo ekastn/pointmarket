@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const productStockQuantity = editButton.dataset.productStockQuantity;
                 const productIsActive = editButton.dataset.productIsActive;
                 const productMetadata = editButton.dataset.productMetadata;
+                const productCategoryId = editButton.dataset.productCategoryId; // Added
 
                 document.getElementById('edit-product-id').value = productId;
                 document.getElementById('edit-name').value = productName;
@@ -26,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('edit-stock_quantity').value = productStockQuantity;
                 document.getElementById('edit-is_active').checked = productIsActive === '1';
                 document.getElementById('edit-metadata').value = productMetadata;
+                document.getElementById('edit-category_id').value = productCategoryId; // Added
 
                 // Set form action for PUT request
                 editProductForm.action = `/products/${productId}`;
@@ -48,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             jsonData['is_active'] = document.getElementById('edit-is_active').checked;
+            jsonData['category_id'] = document.getElementById('edit-category_id').value || null; // Added
 
             try {
                 const response = await fetch(`/products/${productId}`, {

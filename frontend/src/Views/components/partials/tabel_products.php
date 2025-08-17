@@ -6,6 +6,7 @@
             <th>Description</th>
             <th>Price</th>
             <th>Type</th>
+            <th>Category</th>
             <th>Stock</th>
             <th>Active</th>
             <th>Created At</th>
@@ -26,6 +27,7 @@
                     <td><?= htmlspecialchars($product['description'] ?? '-'); ?></td>
                     <td><?= htmlspecialchars($product['points_price']); ?></td>
                     <td><?= htmlspecialchars($product['type']); ?></td>
+                    <td><?= htmlspecialchars($product['category_name'] ?? '-'); ?></td>
                     <td><?= htmlspecialchars($product['stock_quantity'] ?? '-'); ?></td>
                     <td><?= $product['is_active'] ? 'Yes' : 'No'; ?></td>
                     <td><?= date('d-m-Y H:i', strtotime($product['created_at'])); ?></td>

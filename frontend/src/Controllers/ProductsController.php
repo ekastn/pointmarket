@@ -22,41 +22,39 @@ class ProductsController extends BaseController
         $page = (int) ($_GET['page'] ?? 1);
         $limit = 10;
 
-        $response = $this->productService->getAllProducts($search, $categoryId, $page, $limit);
+        $productsResponse = $this->productService->getAllProducts($search, $categoryId, $page, $limit);
+        $categoriesResponse = $this->productService->getAllProductCategories(); // Fetch all categories
 
-        if ($response !== null) {
-            $products = $response['data'] ?? [];
-            $meta = $response['meta'] ?? [];
+        if ($productsResponse !== null && $categoriesResponse !== null) {
+            $products = $productsResponse['data'] ?? [];
+            $meta = $productsResponse['meta'] ?? [];
+            $categories = $categoriesResponse ?? []; // Extract categories data
 
             $userRole = $_SESSION['user_data']['role'] ?? '';
 
+            $commonData = [
+                'user' => $_SESSION['user_data'],
+                'products' => $products,
+                'search' => $search,
+                'category_id' => $categoryId,
+                'page' => $meta['page'],
+                'limit' => $meta['limit'],
+                'total_data' => $meta['total_records'],
+                'total_pages' => $meta['total_pages'],
+                'categories' => $categories, // Pass categories to both views
+            ];
+
             if ($userRole === 'admin') {
-                $this->render('admin/products', [
-                    'user' => $_SESSION['user_data'],
+                $this->render('admin/products', array_merge($commonData, [
                     'title' => 'Product Management',
-                    'products' => $products,
-                    'search' => $search,
-                    'category_id' => $categoryId,
-                    'page' => $meta['page'],
-                    'limit' => $meta['limit'],
-                    'total_data' => $meta['total_records'],
-                    'total_pages' => $meta['total_pages'],
-                ]);
+                ]));
             } else {
-                $this->render('products/index', [
-                    'user' => $_SESSION['user_data'],
+                $this->render('products/index', array_merge($commonData, [
                     'title' => 'Marketplace',
-                    'products' => $products,
-                    'search' => $search,
-                    'category_id' => $categoryId,
-                    'page' => $meta['page'],
-                    'limit' => $meta['limit'],
-                    'total_data' => $meta['total_records'],
-                    'total_pages' => $meta['total_pages'],
-                ]);
+                ]));
             }
         } else {
-            $_SESSION['messages']['error'] = 'Failed to fetch products.';
+            $_SESSION['messages']['error'] = 'Failed to fetch products or categories.';
             $this->redirect('/dashboard');
         }
     }
@@ -87,7 +85,7 @@ class ProductsController extends BaseController
     {
         $input = json_decode(file_get_contents('php://input'), true);
         $productData = [
-            'category_id' => $input['category_id'] ?? null,
+            'category_id' => isset($input['category_id']) ? (int) $input['category_id'] : null,
             'name' => $input['name'] ?? '',
             'description' => $input['description'] ?? null,
             'points_price' => isset($input['points_price']) ? (int) $input['points_price'] : 0,

@@ -212,13 +212,13 @@ func main() {
 			weeklyEvaluationRoutes.POST("/initialize", adminRoutes.Handlers[0], weeklyEvaluationHandler.InitializeWeeklyEvaluations) // Admin-only
 		}
 
-		productCategoriesRoutes := adminRoutes.Group("/product-categories")
+		productCategoriesRoutes := authRequired.Group("/product-categories")
 		{
-			productCategoriesRoutes.POST("", productHandler.CreateProductCategory)
+			productCategoriesRoutes.POST("", adminRoutes.Handlers[0], productHandler.CreateProductCategory) // Admin-only
 			productCategoriesRoutes.GET("", productHandler.GetProductCategories)
 			productCategoriesRoutes.GET("/:id", productHandler.GetProductCategoryByID)
-			productCategoriesRoutes.PUT("/:id", productHandler.UpdateProductCategory)
-			productCategoriesRoutes.DELETE("/:id", productHandler.DeleteProductCategory)
+			productCategoriesRoutes.PUT("/:id", adminRoutes.Handlers[0], productHandler.UpdateProductCategory)    // Admin-only
+			productCategoriesRoutes.DELETE("/:id", adminRoutes.Handlers[0], productHandler.DeleteProductCategory) // Admin-only
 		}
 	}
 

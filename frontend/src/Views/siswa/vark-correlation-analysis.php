@@ -64,7 +64,7 @@ $ams_score = $ams_score ?? 'N/A';
                 <div class="alert alert-primary">
                     <strong>Insight:</strong> Sangat menyukai penjelasan verbal dan diskusi kelompok.
                 </div>
-                <?php elseif ($dominant_style === 'Reading/Writing'): ?>
+                <?php elseif ($dominant_style === 'Reading'): ?>
                 <ul>
                     <li><strong>Elaborasi</strong> - Sangat Kuat (r ≈ 0.80)</li>
                     <li><strong>Regulasi Diri Metakognitif</strong> - Sangat Kuat (r ≈ 0.75)</li>
@@ -119,7 +119,7 @@ $ams_score = $ams_score ?? 'N/A';
                 <div class="alert alert-success">
                     <strong>Insight:</strong> Kegembiraan dari interaksi verbal dan pengakuan sosial memotivasi.
                 </div>
-                <?php elseif ($dominant_style === 'Reading/Writing'): ?>
+                <?php elseif ($dominant_style === 'Reading'): ?>
                 <ul>
                     <li><strong>Intrinsik - Untuk Mengetahui</strong> - Sangat Kuat (r ≈ 0.78)</li>
                     <li><strong>Intrinsik - Mencapai</strong> - Kuat (r ≈ 0.70)</li>

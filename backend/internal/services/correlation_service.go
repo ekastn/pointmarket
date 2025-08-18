@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 )
@@ -16,7 +17,7 @@ func NewCorrelationService(q gen.Querier) *CorrelationService {
 }
 
 func (s *CorrelationService) GetCorrelationAnalysisForStudent(ctx context.Context, studentID int64) (*dtos.CorrelationAnalysisResponse, error) {
-	pref, err := s.q.GetStudentLearningStyle(ctx, studentID)
+	pref, err := s.q.GetLatestUserLearningStyle(ctx, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get VARK result: %w", err)
 	}
@@ -73,6 +74,8 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 		Recommendations:   []string{},
 	}
 
+	log.Printf("Dominant VARK style: %s", dominantVARKStyle)
+
 	switch dominantVARKStyle {
 	case "Visual":
 		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{
@@ -120,7 +123,7 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 			"Provide audio content dan podcast-style materials",
 			"Encourage help-seeking behaviors dalam format verbal",
 		}
-	case "Reading/Writing":
+	case "Reading":
 		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{
 			{Component: "Elaboration", Correlation: 0.80, Explanation: "Very Strong - highest correlation, excel at written elaboration"},
 			{Component: "Metacognitive Self-Reg", Correlation: 0.75, Explanation: "Very Strong - strong self-monitoring through writing"},

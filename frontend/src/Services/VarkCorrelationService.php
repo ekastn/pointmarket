@@ -15,7 +15,7 @@ class VarkCorrelationService
 
     public function analyzeCorrelation(): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/correlation/analyze');
+        $response = $this->apiClient->request('GET', '/api/v1/questionnaires/correlations');
         if ($response['success']) {
             return $response['data'];
         }

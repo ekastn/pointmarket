@@ -141,6 +141,31 @@ func (q *Queries) GetActiveStudents(ctx context.Context) ([]GetActiveStudentsRow
 	return items, nil
 }
 
+const getLatestUserLearningStyle = `-- name: GetLatestUserLearningStyle :one
+SELECT id, user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic, created_at
+FROM user_learning_styles
+WHERE user_id = ?
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error) {
+	row := q.db.QueryRowContext(ctx, getLatestUserLearningStyle, userID)
+	var i UserLearningStyle
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Label,
+		&i.ScoreVisual,
+		&i.ScoreAuditory,
+		&i.ScoreReading,
+		&i.ScoreKinesthetic,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getRoles = `-- name: GetRoles :many
 SELECT role FROM users
 `
@@ -266,31 +291,6 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
-}
-
-const latestUserLearningStyle = `-- name: LatestUserLearningStyle :one
-SELECT id, user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic, created_at
-FROM user_learning_styles
-WHERE user_id = ?
-ORDER BY created_at DESC
-LIMIT 1
-`
-
-func (q *Queries) LatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error) {
-	row := q.db.QueryRowContext(ctx, latestUserLearningStyle, userID)
-	var i UserLearningStyle
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Type,
-		&i.Label,
-		&i.ScoreVisual,
-		&i.ScoreAuditory,
-		&i.ScoreReading,
-		&i.ScoreKinesthetic,
-		&i.CreatedAt,
-	)
-	return i, err
 }
 
 const searchUsers = `-- name: SearchUsers :many

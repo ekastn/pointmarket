@@ -40,7 +40,7 @@ func main() {
 
 	authHandler := handler.NewAuthHandler(*authService)
 	userHandler := handler.NewUserHandler(*userService)
-	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService)
+	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService, userService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)

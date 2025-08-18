@@ -71,7 +71,7 @@ INSERT INTO user_learning_styles
   (user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
--- name: LatestUserLearningStyle :one
+-- name: GetLatestUserLearningStyle :one
 SELECT *
 FROM user_learning_styles
 WHERE user_id = ?

@@ -166,3 +166,27 @@ func (s *UserService) UpdateUser(ctx context.Context, userID int64, req dtos.Upd
 func (s *UserService) GetActiveStudents(ctx context.Context) ([]gen.GetActiveStudentsRow, error) {
 	return s.q.GetActiveStudents(ctx)
 }
+
+// UpdateUserLearningStyle insert new record to user_learning_style table
+func (s *UserService) UpdateUserLearningStyle(
+	ctx context.Context,
+	userID int64,
+	prefType string,
+	label string,
+	score dtos.VARKScores,
+) error {
+	return s.q.CreateUserLearningStyle(ctx, gen.CreateUserLearningStyleParams{
+		UserID:           userID,
+		Type:             gen.UserLearningStylesType(prefType),
+		Label:            label,
+		ScoreVisual:      &score.Visual,
+		ScoreAuditory:    &score.Auditory,
+		ScoreReading:     &score.Reading,
+		ScoreKinesthetic: &score.Kinesthetic,
+	})
+}
+
+// GetLatestUserLearningStyle returns the latest learning style data for a user
+func (s *UserService) GetLatestUserLearningStyle(ctx context.Context, userID int64) (gen.UserLearningStyle, error) {
+	return s.q.GetLatestUserLearningStyle(ctx, userID)
+}

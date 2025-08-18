@@ -16,17 +16,20 @@ type QuestionnaireHandler struct {
 	questionnaireService *services.QuestionnaireService
 	textAnalyzerService  *services.TextAnalyzerService
 	correlationService   *services.CorrelationService
+	userService          *services.UserService
 }
 
 func NewQuestionnaireHandler(
 	questionnaireService *services.QuestionnaireService,
 	textAnalyzerService *services.TextAnalyzerService,
 	correlationService *services.CorrelationService,
+	userService *services.UserService,
 ) *QuestionnaireHandler {
 	return &QuestionnaireHandler{
 		questionnaireService: questionnaireService,
 		textAnalyzerService:  textAnalyzerService,
 		correlationService:   correlationService,
+		userService:          userService,
 	}
 }
 
@@ -172,6 +175,18 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 		req.Text,
 		int64(userID),
 		scores,
+	)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = h.userService.UpdateUserLearningStyle(
+		c.Request.Context(),
+		userID,
+		row.LearningPreferenceType,
+		row.LearningPreferenceLabel,
+		*fusedScores,
 	)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())

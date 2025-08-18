@@ -73,6 +73,7 @@ type Querier interface {
 	GetCourses(ctx context.Context, arg GetCoursesParams) ([]Course, error)
 	GetCoursesByOwnerID(ctx context.Context, arg GetCoursesByOwnerIDParams) ([]Course, error)
 	GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error)
+	GetLatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	GetLatestVarkResult(ctx context.Context, studentID int64) (GetLatestVarkResultRow, error)
 	GetLikertStatsByStudent(ctx context.Context, studentID int64) ([]GetLikertStatsByStudentRow, error)
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
@@ -116,7 +117,6 @@ type Querier interface {
 	GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx context.Context, arg GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams) (int64, error)
 	GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]WeeklyEvaluation, error)
 	GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error)
-	LatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	MarkOverdueWeeklyEvaluations(ctx context.Context) error
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)

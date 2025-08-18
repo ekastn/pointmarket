@@ -25,12 +25,17 @@ class MotivationalEngineService:
             key: value for key, value in analysis_result.items() 
             if key in ['Visual', 'Aural', 'Read/Write', 'Kinesthetic']
         }
-        
+
         # Build enhanced response
-        response: AnalysisResponse = {
+        response  = {
             "strategy_used": strategy_name or self.nlp_service.default_strategy,
             "word_count": len(text.split()),
-            "scores": vark_scores,
+            "scores": {
+                "visual": vark_scores.get('Visual', 0),
+                "auditory": vark_scores.get('Aural', 0),
+                "reading": vark_scores.get('Read/Write', 0),
+                "kinesthetic": vark_scores.get('Kinesthetic', 0)
+            },
             "keywords": analysis_result.get('keywords', []),
             "key_sentences": analysis_result.get('key_sentences', []),
             "text_stats": analysis_result.get('text_stats', {

@@ -1,9 +1,6 @@
 <?php
 // Data for this view will be passed from the NLPDemoController
-$user = $user ?? ['name' => 'Guest'];
-$nlpStats = $nlpStats ?? null;
-$nlpResult = $nlpResult ?? null;
-$messages = $messages ?? [];
+$user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -27,16 +24,6 @@ $messages = $messages ?? [];
         </div>
     </div>
 </div>
-
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?php echo $type === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
-            <i class="fas fa-<?php echo $type === 'success' ? 'check-circle' : 'exclamation-circle'; ?> me-2"></i>
-            <?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
 
 <!-- Info Alert -->
 <div class="alert alert-info mb-4">
@@ -140,21 +127,6 @@ $messages = $messages ?? [];
     </div>
 </div>
 
-<!-- Statistics -->
-<div class="card mt-4">
-    <div class="card-header">
-        <h6><i class="fas fa-chart-bar me-2"></i>Statistik Analisis Anda</h6>
-    </div>
-    <div class="card-body">
-        <div id="user-stats">
-            <div class="text-center text-muted">
-                <i class="fas fa-chart-line fa-2x mb-2"></i>
-                <p>Lakukan analisis pertama untuk melihat statistik</p>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Examples -->
 <div class="row mt-4">
     <div class="col-md-6">
@@ -190,19 +162,6 @@ $messages = $messages ?? [];
             </div>
         </div>
     </div>
-</div>
-
-<!-- Navigation -->
-<div class="text-center mt-4">
-    <a href="/assignments" class="btn btn-primary me-2">
-        <i class="fas fa-tasks me-1"></i>Coba di Assignment
-    </a>
-    <a href="/ai-explanation" class="btn btn-secondary me-2">
-        <i class="fas fa-book me-1"></i>Pelajari Lebih Lanjut
-    </a>
-    <a href="/dashboard" class="btn btn-outline-secondary">
-        <i class="fas fa-home me-1"></i>Kembali ke Dashboard
-    </a>
 </div>
 
 <script>
@@ -343,7 +302,7 @@ $messages = $messages ?? [];
             // Scroll to results
             nlpResultsContainer.scrollIntoView({ behavior: 'smooth' });
             
-            fetch(`${API_BASE_URL}/api/v1/nlp/analyze`, {
+            fetch(`${API_BASE_URL}/api/v1/text-analyzer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -373,7 +332,7 @@ $messages = $messages ?? [];
             debugOutput.style.display = 'block';
             debugContent.textContent = 'Testing API...';
             
-            fetch(`${API_BASE_URL}/api/v1/nlp/analyze`, {
+            fetch(`${API_BASE_URL}/api/v1/text-analyzer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -401,29 +360,22 @@ $messages = $messages ?? [];
 
         // Render analysis results
         function renderResults(data) {
-            const qualityMetrics = [
-                { key: 'sentiment', label: 'Sentiment Score' },
-                { key: 'complexity', label: 'Complexity Score' },
-                { key: 'structure', label: 'Structure Score' }, // fixed from 'coherence'
-                { key: 'grammar', label: 'Grammar Score' },
-                { key: 'readability', label: 'Readability Score' }
-            ];
+            const qualityMetrics = Object.keys(data.text_stats);
 
             let html = `
                 <div class="row mb-4">
                    ${qualityMetrics.map(metric => {
-                       const value = data[metric.key] || {};
-                       const score = value.score?.toFixed(1) ?? '–';
-                       const label = value.label ?? 'Unknown';
-                       const scoreClass = getScoreClass(value.score ?? 0);
+                       const value = data.text_stats[metric] || {};
+                       const scoreClass = getScoreClass(value ?? 0);
+                       const label = metric.replace(/_/g, ' ');
                        return `
                            <div class="col-md-4 mb-3">
                                <div class="card h-100 border-0 shadow-sm">
                                    <div class="card-body text-center">
-                                       <h3>${score}</h3>
-                                       <p class="text-muted mb-0">${metric.label}</p>
-                                       <span class="score-badge ${scoreClass}">
-                                           ${label}
+                                       <h3>${label}</h3>
+                                       <p class="text-muted mb-0">${scoreClass}</p>
+                                       <span class="score-badge score-${scoreClass}">
+                                           ${value}
                                        </span>
                                    </div>
                                </div>
@@ -462,55 +414,20 @@ $messages = $messages ?? [];
             } else {
                 html += `<p class="text-muted">Tidak ada kalimat penting yang ditemukan.</p>`;
             }
+
+            const varkscore = data.learning_style.scores;
+            const styleType = data.learning_style.type;
+            const styleLabel = data.learning_style.label;
             
             html += `
                 </div>
-                
-                <h6>Statistik Teks:</h6>
-                <div class="row text-stats">
-                    <div class="col-md-3 col-6 mb-3">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body py-2 text-center">
-                                <h4>${data.text_stats.wordCount}</h4>
-                                <small class="text-muted">Kata</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6 mb-3">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body py-2 text-center">
-                                <h4>${data.text_stats.sentenceCount}</h4>
-                                <small class="text-muted">Kalimat</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6 mb-3">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body py-2 text-center">
-                                <h4>${data.text_stats.avgWordLength.toFixed(1)}</h4>
-                                <small class="text-muted">Rata-rata Panjang Kata</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6 mb-3">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body py-2 text-center">
-                                <h4>${data.text_stats.readingTime}</h4>
-                                <small class="text-muted">Waktu Baca (detik)</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            html += `
                 <h6>Preferensi Belajar:</h6>
                 <div class="row mb-4">
                     <div class="col-md-6 mb-3">
                         <div class="card h-100 border-0 shadow-sm">
                             <div class="card-body text-center">
-                                <h4><i class="${getVARKIcon(data.learning_preference.label)} me-2"></i>${data.learning_preference.label}</h4>
-                                <p class="text-muted mb-0">Tipe: ${data.learning_preference.type}</p>
+                                <h4><i class="${getVARKIcon(styleLabel)} me-2"></i>${styleLabel}</h4>
+                                <p class="text-muted mb-0">Tipe: ${styleType}</p>
                             </div>
                         </div>
                     </div>
@@ -521,19 +438,19 @@ $messages = $messages ?? [];
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         Visual
-                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.visual.toFixed(1)}</span>
+                                        <span class="badge bg-primary rounded-pill">${varkscore.visual.toFixed(1)}</span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         Aural
-                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.aural.toFixed(1)}</span>
+                                        <span class="badge bg-primary rounded-pill">${varkscore.auditory.toFixed(1)}</span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         Read/Write
-                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.read_write.toFixed(1)}</span>
+                                        <span class="badge bg-primary rounded-pill">${varkscore.reading.toFixed(1)}</span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         Kinesthetic
-                                        <span class="badge bg-primary rounded-pill">${data.learning_preference.combined.kinesthetic.toFixed(1)}</span>
+                                        <span class="badge bg-primary rounded-pill">${varkscore.kinesthetic.toFixed(1)}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -547,18 +464,18 @@ $messages = $messages ?? [];
 
         // Get score class based on value
         function getScoreClass(score) {
-            if (score >= 0.7) return 'score-high';
-            if (score >= 0.4) return 'score-medium';
-            return 'score-low';
+            if (score >= 0.7) return 'high';
+            if (score >= 0.4) return 'medium';
+            return 'low';
         }
 
         // Helper to get VARK icon
         function getVARKIcon(type) {
             switch (type) {
-                case 'Visual': return 'fas fa-eye';
-                case 'Aural': return 'fas fa-volume-up';
-                case 'Read/Write': return 'fas fa-book-open';
-                case 'Kinesthetic': return 'fas fa-running';
+                case 'visual': return 'fas fa-eye';
+                case 'auditory': return 'fas fa-volume-up';
+                case 'reading': return 'fas fa-book-open';
+                case 'kinesthetic': return 'fas fa-running';
                 default: return 'fas fa-question-circle';
             }
         }

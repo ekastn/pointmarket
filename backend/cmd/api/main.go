@@ -42,7 +42,7 @@ func main() {
 	userHandler := handler.NewUserHandler(*userService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
-
+	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
 	productHandler := handler.NewProductHandler(*productService)
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
@@ -91,6 +91,8 @@ func main() {
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
 		authRequired.GET("/dashboard", dashboardHandler.GetDashboardData)
 		authRequired.GET("/roles", userHandler.GetRoles)
+
+		authRequired.POST("/text-analyzer", textAnalyzerHandler.PredictText)
 
 		userRoutes := adminRoutes.Group("/users")
 		{

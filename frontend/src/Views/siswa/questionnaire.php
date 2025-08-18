@@ -43,7 +43,7 @@ $messages = $messages ?? [];
             <div class="card stats-card h-100">
                 <div class="card-body">
                     <h5 class="card-title">
-                        <i class="fas fa-<?php echo $stat['type'] === 'mslq' ? 'brain' : ($stat['type'] === 'ams' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
+                        <i class="fas fa-<?php echo $stat['type'] === 'MSLQ' ? 'brain' : ($stat['type'] === 'AMS' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
                         <?php echo strtoupper($stat['type']); ?>
                     </h5>
                     <div class="row">
@@ -106,7 +106,7 @@ $messages = $messages ?? [];
             <div class="card questionnaire-card <?php echo htmlspecialchars($questionnaire['type']); ?> h-100">
                 <div class="card-body">
                     <h5 class="card-title">
-                        <i class="fas fa-<?php echo $questionnaire['type'] === 'mslq' ? 'brain' : ($questionnaire['type'] === 'ams' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
+                        <i class="fas fa-<?php echo $questionnaire['type'] === 'MSLQ' ? 'brain' : ($questionnaire['type'] === 'AMS' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
                         <?php echo htmlspecialchars($questionnaire['name']); ?>
                     </h5>
                     <p class="card-text"><?php echo htmlspecialchars($questionnaire['description']); ?></p>
@@ -159,7 +159,7 @@ $messages = $messages ?? [];
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h6 class="mb-1">
-                                        <i class="fas fa-<?php echo $item['questionnaire_type'] === 'mslq' ? 'brain' : 'heart'; ?> me-2"></i>
+                                        <i class="fas fa-<?php echo $item['questionnaire_type'] === 'MSLQ' ? 'brain' : 'heart'; ?> me-2"></i>
                                         <?php echo htmlspecialchars($item['questionnaire_name']); ?>
                                     </h6>
                                     <p class="text-muted mb-2"><?php echo htmlspecialchars($item['questionnaire_description'] ?? 'No description available.'); ?></p>
@@ -420,7 +420,7 @@ $messages = $messages ?? [];
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                if (data.data.questionnaire.type === 'vark') {
+                if (data.data.questionnaire.type === 'VARK') {
                     loadVARKPracticeForm(data.data.questionnaire, data.data.questions);
                 } else {
                     loadPracticeForm(data.data.questionnaire, data.data.questions);
@@ -758,7 +758,7 @@ $messages = $messages ?? [];
         const payload = {
             questionnaire_id: currentQuestionnaireId, // This is the VARK questionnaire ID
             answers: varkAnswers,
-            nlp_text: nlpText
+            text: nlpText
         };
         
         // Submit data to backend API
@@ -773,13 +773,12 @@ $messages = $messages ?? [];
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Display combined VARK and NLP results
+                const learningStyle = data.data.learning_style;
                 let resultHtml = `
                     <div class="alert alert-success text-center">
                         <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
                         <h5>Assessment Completed Successfully!</h5>
-                        <p>Your dominant style (fused): <strong>${data.data.dominant_style}</strong></p>
-                        <p class="mb-0">${data.message}</p>
+                        <p>Your dominant style (fused): <strong>${learningStyle.label}</strong></p>
                     </div>
                 `;
 
@@ -788,42 +787,39 @@ $messages = $messages ?? [];
                     <div class="card mb-3">
                         <div class="card-header">VARK Scores</div>
                         <div class="card-body">
-                            <p>Visual: ${data.data.visual_score}</p>
-                            <p>Auditory: ${data.data.auditory_score}</p>
-                            <p>Reading/Writing: ${data.data.reading_score}</p>
-                            <p>Kinesthetic: ${data.data.kinesthetic_score}</p>
+                            <p>Visual: ${learningStyle.scores.visual}</p>
+                            <p>Auditory: ${learningStyle.scores.auditory}</p>
+                            <p>Reading/Writing: ${learningStyle.scores.reading}</p>
+                            <p>Kinesthetic: ${learningStyle.scores.kinesthetic}</p>
                         </div>
                     </div>
                 `;
 
+                const textStats = data.data.text_stats;
+                const qualityMetrics = Object.keys(textStats);
+
                 // Display NLP analysis if available
-                if (data.data.learning_preference && data.data.text_stats) {
-                    resultHtml += `
-                        <div class="card mb-3">
-                            <div class="card-header">NLP Analysis</div>
-                            <div class="card-body">
-                                <h6>Learning Preference: ${data.data.learning_preference.label} (${data.data.learning_preference.type})</h6>
-                                <p>Word Count: ${data.data.text_stats.wordCount}</p>
-                                <p>Sentence Count: ${data.data.text_stats.sentenceCount}</p>
-                                <p>Average Word Length: ${data.data.text_stats.avgWordLength.toFixed(2)}</p>
-                                <p>Reading Time (minutes): ${data.data.text_stats.readingTime}</p>
-                                <p>Grammar Score: ${data.data.grammar_score.score.toFixed(2)} (${data.data.grammar_score.label})</p>
-                                <p>Readability Score: ${data.data.readability_score.score.toFixed(2)} (${data.data.readability_score.label})</p>
-                                <p>Sentiment Score: ${data.data.sentiment_score.score.toFixed(2)} (${data.data.sentiment_score.label})</p>
-                                <p>Structure Score: ${data.data.structure_score.score.toFixed(2)} (${data.data.structure_score.label})</p>
-                                <p>Complexity Score: ${data.data.complexity_score.score.toFixed(2)} (${data.data.complexity_score.label})</p>
-                                <h6>Keywords:</h6>
-                                <ul>
-                                    ${data.data.keywords.map(kw => `<li>${kw}</li>`).join('')}
-                                </ul>
-                                <h6>Key Sentences:</h6>
-                                <ul>
-                                    ${data.data.key_sentences.map(ks => `<li>${ks}</li>`).join('')}
-                                </ul>
-                            </div>
+                resultHtml += `
+                    <div class="card mb-3">
+                        <div class="card-header">NLP Analysis</div>
+                        <div class="card-body">
+                            <h6>Learning Preference: ${learningStyle.label} (${learningStyle.type})</h6>
+                                ${qualityMetrics.map(metric => {
+                                    const value = textStats[metric] ?? 0;
+                                    const label = metric.replace(/_/g, ' ');
+                                    return `<p>${label}: ${value}</p>`;
+                                 }).join('')}
+                            <h6>Keywords:</h6>
+                            <ul>
+                                ${data.data.keywords.map(kw => `<li>${kw}</li>`).join('')}
+                            </ul>
+                            <h6>Key Sentences:</h6>
+                            <ul>
+                                ${data.data.key_sentences.map(ks => `<li>${ks}</li>`).join('')}
+                            </ul>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
 
                 resultHtml += `
                     <div class="text-center mt-3">

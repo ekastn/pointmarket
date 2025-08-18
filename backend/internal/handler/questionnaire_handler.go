@@ -82,19 +82,46 @@ func (h *QuestionnaireHandler) GetQuestionnaireByID(c *gin.Context) {
 		return
 	}
 
-	var questionsDTOs []dtos.QuestionnaireQuestionDTO
-	for _, q := range questions {
-		var qDTO dtos.QuestionnaireQuestionDTO
-		qDTO.FromQuestion(q)
-		questionsDTOs = append(questionsDTOs, qDTO)
-	}
+	if questionnaire.Type != gen.QuestionnairesTypeVARK {
+		var questionsDTOs []dtos.QuestionnaireLikertQuestionDTO
+		for _, q := range questions {
+			var qDTO dtos.QuestionnaireLikertQuestionDTO
+			qDTO.FromQuestion(q)
+			questionsDTOs = append(questionsDTOs, qDTO)
+		}
 
-	detailResponse := dtos.QuestionnaireDetailResponseDTO{
-		Questionnaire: questionnaireDTO,
-		Questions:     questionsDTOs,
-	}
+		detailResponse := dtos.QuestionnaireLikertDetailResponse{
+			Questionnaire: questionnaireDTO,
+			Questions:     questionsDTOs,
+		}
 
-	response.Success(c, http.StatusOK, "Questionnaire retrieved successfully", detailResponse)
+		response.Success(c, http.StatusOK, "Questionnaire retrieved successfully", detailResponse)
+	} else {
+		options, err := h.questionnaireService.GetVarkOptionsByQuestionnaireID(c.Request.Context(), questionnaire.ID)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		optionsByQuestionID := make(map[int32][]gen.QuestionnaireVarkOption)
+		for _, o := range options {
+			optionsByQuestionID[o.QuestionID] = append(optionsByQuestionID[o.QuestionID], o)
+		}
+
+		var questionsDTOs []dtos.QuestionnaireVarkQuestionDTO
+		for _, q := range questions {
+			var qDTO dtos.QuestionnaireVarkQuestionDTO
+			qDTO.FromQuestionAndOptions(q, optionsByQuestionID[q.ID])
+			questionsDTOs = append(questionsDTOs, qDTO)
+		}
+
+		detailResponse := dtos.QuestionnaireVarkDetailResponse{
+			Questionnaire: questionnaireDTO,
+			Questions:     questionsDTOs,
+		}
+
+		response.Success(c, http.StatusOK, "Questionnaire retrieved successfully", detailResponse)
+	}
 }
 
 func (h *QuestionnaireHandler) SubmitLikert(c *gin.Context) {
@@ -104,10 +131,10 @@ func (h *QuestionnaireHandler) SubmitLikert(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("userID")
+	userID := middleware.GetUserID(c)
 	score, err := h.questionnaireService.SubmitLikert(
 		c.Request.Context(),
-		int64(userID.(uint)),
+		userID,
 		req.QuestionnaireID,
 		req.WeeklyEvaluationID,
 		req.Answers,

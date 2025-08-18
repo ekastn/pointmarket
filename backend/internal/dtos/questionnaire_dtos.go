@@ -15,12 +15,29 @@ type QuestionnaireDTO struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
-type QuestionnaireQuestionDTO struct {
+type QuestionnaireLikertQuestionDTO struct {
 	ID              int32   `json:"id"`
 	QuestionnaireID int32   `json:"questionnaire_id"`
-	Number          int32   `json:"number"`
-	Text            string  `json:"text"`
+	QuestionNumber  int32   `json:"question_number"`
+	QuestionText    string  `json:"question_text"`
 	Subscale        *string `json:"subscale,omitempty"`
+}
+
+type QuestionnaireVarkQuestionDTO struct {
+	ID              int32                        `json:"id"`
+	QuestionnaireID int32                        `json:"questionnaire_id"`
+	QuestionNumber  int32                        `json:"question_number"`
+	QuestionText    string                       `json:"question_text"`
+	Subscale        *string                      `json:"subscale,omitempty"`
+	Options         []QuestionnaireVarkOptionDTO `json:"options"`
+}
+
+type QuestionnaireVarkOptionDTO struct {
+	ID            int32  `json:"id"`
+	QuestionID    int32  `json:"question_id"`
+	OptionText    string `json:"option_text"`
+	OptionLetter  string `json:"option_letter"`
+	LearningStyle string `json:"learning_style"`
 }
 
 type LikertSubmissionRequestDTO struct {
@@ -90,9 +107,14 @@ type LikertStatsDTO struct {
 	LowestScore     *float64 `json:"lowest_score"`
 }
 
-type QuestionnaireDetailResponseDTO struct {
-	Questionnaire QuestionnaireDTO           `json:"questionnaire"`
-	Questions     []QuestionnaireQuestionDTO `json:"questions"`
+type QuestionnaireLikertDetailResponse struct {
+	Questionnaire QuestionnaireDTO                 `json:"questionnaire"`
+	Questions     []QuestionnaireLikertQuestionDTO `json:"questions"`
+}
+
+type QuestionnaireVarkDetailResponse struct {
+	Questionnaire QuestionnaireDTO               `json:"questionnaire"`
+	Questions     []QuestionnaireVarkQuestionDTO `json:"questions"`
 }
 
 func (d *QuestionnaireDTO) FromQuestionnaire(q gen.Questionnaire) {
@@ -115,10 +137,43 @@ func (d *QuestionnaireDTO) FromQuestionnaire(q gen.Questionnaire) {
 	}
 }
 
-func (d *QuestionnaireQuestionDTO) FromQuestion(q gen.QuestionnaireQuestion) {
+func (d *QuestionnaireLikertQuestionDTO) FromQuestion(q gen.QuestionnaireQuestion) {
 	d.ID = q.ID
 	d.QuestionnaireID = q.QuestionnaireID
-	d.Number = q.QuestionNumber
-	d.Text = q.QuestionText
-	d.Subscale = &q.Subscale.String
+	d.QuestionNumber = q.QuestionNumber
+	d.QuestionText = q.QuestionText
+
+	if q.Subscale.Valid {
+		d.Subscale = &q.Subscale.String
+	} else {
+		d.Subscale = nil
+	}
+}
+
+func (d *QuestionnaireVarkQuestionDTO) FromQuestionAndOptions(q gen.QuestionnaireQuestion, options []gen.QuestionnaireVarkOption) {
+	d.ID = q.ID
+	d.QuestionnaireID = q.QuestionnaireID
+	d.QuestionNumber = q.QuestionNumber
+	d.QuestionText = q.QuestionText
+
+	if q.Subscale.Valid {
+		d.Subscale = &q.Subscale.String
+	} else {
+		d.Subscale = nil
+	}
+
+	d.Options = make([]QuestionnaireVarkOptionDTO, 0, len(options))
+	for _, option := range options {
+		var optionDTO QuestionnaireVarkOptionDTO
+		optionDTO.FromVarkOption(option)
+		d.Options = append(d.Options, optionDTO)
+	}
+}
+
+func (d *QuestionnaireVarkOptionDTO) FromVarkOption(option gen.QuestionnaireVarkOption) {
+	d.ID = option.ID
+	d.QuestionID = option.QuestionID
+	d.OptionText = option.OptionText
+	d.OptionLetter = option.OptionLetter
+	d.LearningStyle = string(option.LearningStyle)
 }

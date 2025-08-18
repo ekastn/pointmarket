@@ -13,40 +13,8 @@ class DemoController extends BaseController
 
     public function showNLPDemo(): void
     {
-        session_start();
-        $user = $_SESSION['user_data'] ?? null;
-
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
-        $nlpStats = null;
-        $nlpStatsResponse = $this->apiClient->request('GET', '/api/v1/nlp/stats');
-        if ($nlpStatsResponse['success'] && !empty($nlpStatsResponse['data'])) {
-            $nlpStats = $nlpStatsResponse['data'];
-        }
-
-        $nlpResult = $_SESSION['nlp_result'] ?? null;
-        unset($_SESSION['nlp_result']); // Clear after displaying
-
-        $messages = $_SESSION['messages'] ?? [];
-        unset($_SESSION['messages']);
-
         $this->render('siswa/nlp-demo', [
             'title' => 'NLP Demo',
-            'user' => $user,
-            'nlpStats' => $nlpStats,
-            'nlpResult' => $nlpResult,
-            'messages' => $messages,
         ]);
     }
 

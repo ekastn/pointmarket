@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"strconv"
@@ -21,17 +23,8 @@ func NewWeeklyEvaluationHandler(weeklyEvaluationService *services.WeeklyEvaluati
 
 // GetWeeklyEvaluations handles fetching weekly evaluations for students or teachers
 func (h *WeeklyEvaluationHandler) GetWeeklyEvaluations(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User not authenticated")
-		return
-	}
-
-	role, exists := c.Get("role")
-	if !exists {
-		response.Error(c, http.StatusUnauthorized, "User role not found")
-		return
-	}
+	userID := middleware.GetUserID(c)
+	role := middleware.GetRole(c)
 
 	view := c.Query("view")
 	studentIDParam := c.Query("student_id")
@@ -46,15 +39,18 @@ func (h *WeeklyEvaluationHandler) GetWeeklyEvaluations(c *gin.Context) {
 	numberOfWeeks := int32(parsedWeeks)
 
 	if role == "siswa" {
+		log.Println("Fetching weekly evaluations for student:", userID)
+		log.Println("Number of weeks:", numberOfWeeks)
 		evaluations, err := h.weeklyEvaluationService.GetWeeklyEvaluationsByStudentID(
 			c.Request.Context(),
-			int64(userID.(uint)),
+			userID,
 			numberOfWeeks,
 		)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		response.Success(c, http.StatusOK, "Weekly evaluations retrieved successfully", evaluations)
 	} else if role == "guru" {
 		if view == "monitoring" {

@@ -2,7 +2,10 @@
 
 use App\Core\ApiClient;
 use App\Core\Router;
+use App\Services\BadgeService;
 use App\Services\CourseService;
+use App\Services\ProductCategoryService;
+use App\Services\ProductService;
 use App\Services\UserService;
 use App\Services\DashboardService;
 use App\Services\QuestionnaireService;
@@ -10,10 +13,10 @@ use App\Services\AssignmentService;
 use App\Services\QuizService;
 use App\Services\VarkCorrelationService;
 use App\Services\ProfileService;
-use App\Services\WeeklyEvaluationService;
 use App\Services\MissionService;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\ErrorController;
+use App\Services\WeeklyEvaluationService;
 use Psr\Container\ContainerInterface;
 
 return [
@@ -48,10 +51,6 @@ return [
         return new ProfileService($apiClient);
     },
 
-    WeeklyEvaluationService::class => function (ApiClient $apiClient) {
-        return new WeeklyEvaluationService($apiClient);
-    },
-
     CourseService::class => function (ApiClient $apiClient) {
         return new CourseService($apiClient);
     },
@@ -70,6 +69,10 @@ return [
 
     ProductCategoryService::class => function (ApiClient $apiClient) {
         return new ProductCategoryService($apiClient);
+    },
+
+    WeeklyEvaluationService::class => function (ApiClient $apiClient) {
+        return new WeeklyEvaluationService($apiClient);
     },
 
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {

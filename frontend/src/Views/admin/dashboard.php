@@ -78,7 +78,7 @@ $statsItems = [
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class_="card-header">
+            <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-bolt me-2"></i>
                     Quick Actions
@@ -86,29 +86,37 @@ $statsItems = [
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3 mb-2">
-                        <a href="/users" class="btn btn-primary w-100">
+                    <div class="col mb-2">
+                        <a href="/users" class="btn btn-primary w-100 h-100">
                             <i class="fas fa-users-cog me-2"></i>
                             Manage Users
                         </a>
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/reports" class="btn btn-success w-100">
+                    <div class="col mb-2">
+                        <a href="/reports" class="btn btn-success w-100 h-100">
                             <i class="fas fa-chart-bar me-2"></i>
                             View Reports
                         </a>
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/settings" class="btn btn-info w-100">
+                    <div class="col mb-2">
+                        <a href="/settings" class="btn btn-info w-100 h-100">
                             <i class="fas fa-cog me-2"></i>
                             System Settings
                         </a>
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/backup" class="btn btn-warning w-100">
+                    <div class="col mb-2">
+                        <a href="/backup" class="btn btn-warning w-100 h-100">
                             <i class="fas fa-database me-2"></i>
                             Backup Data
                         </a>
+                    </div>
+                    <div class="col mb-2">
+                        <form action="/weekly-evaluations/initialize" method="post">
+                            <button type="submit" class="btn btn-danger w-100 h-100">
+                                <i class="fas fa-calendar-plus me-2"></i>
+                                Initialize Weekly Evaluations
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

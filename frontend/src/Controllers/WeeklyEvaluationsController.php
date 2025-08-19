@@ -17,30 +17,50 @@ class WeeklyEvaluationsController extends BaseController
 
     public function index(): void
     {
-        session_start();
-        $user = $_SESSION['user_data'] ?? null;
+        $userRole = $_SESSION['user_data']['role'] ?? '';
 
-        if (!$user || $user['role'] !== 'siswa') {
-            $_SESSION['messages'] = ['error' => 'Akses ditolak. Hanya siswa yang dapat melihat halaman ini.'];
-            $this->redirect('/dashboard');
-            return;
+        if ($userRole === 'admin') {
+            // Admins can view the teacher dashboard
+            $this->viewTeacherDashboard();
+        } elseif ($userRole === 'guru') {
+            $this->viewTeacherDashboard();
+        } elseif ($userRole === 'siswa') {
+            $this->viewStudentDashboard();
+        } else {
+            $this->redirect('/login');
         }
+    }
 
-        $weeklyProgress = [];
-        $messages = $_SESSION['messages'] ?? [];
-        unset($_SESSION['messages']);
-
-        $weeklyProgress = $this->weeklyEvaluationService->getWeeklyEvaluationProgressByStudentID();
-
-        if ($weeklyProgress === null) {
-            $_SESSION['messages'] = ['error' => 'Failed to load weekly evaluation progress.'];
-            $weeklyProgress = [];
-        }
+    private function viewStudentDashboard(): void
+    {
+        $evaluations = $this->weeklyEvaluationService->getWeeklyEvaluations();
 
         $this->render('siswa/weekly-evaluations', [
-            'user' => $user,
-            'messages' => $messages,
-            'weeklyProgress' => $weeklyProgress,
+            'title' => 'Weekly Evaluations',
+            'evaluations' => $evaluations,
         ]);
+    }
+
+    private function viewTeacherDashboard(): void
+    {
+        $dashboardData = $this->weeklyEvaluationService->getTeacherDashboard();
+
+        $this->render('guru/teacher-evaluation-monitoring', [
+            'title' => 'Teacher Evaluation Monitoring',
+            'dashboardData' => $dashboardData,
+        ]);
+    }
+
+    public function initialize(): void
+    {
+        $result = $this->weeklyEvaluationService->initializeWeeklyEvaluations();
+
+        if ($result) {
+            $_SESSION['messages']['success'] = 'Weekly evaluations initialized successfully!';
+        } else {
+            $_SESSION['messages']['error'] = 'Failed to initialize weekly evaluations.';
+        }
+
+        $this->redirect('/dashboard');
     }
 }

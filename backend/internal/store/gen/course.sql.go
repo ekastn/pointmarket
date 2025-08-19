@@ -35,6 +35,27 @@ func (q *Queries) CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int
 	return count, err
 }
 
+const countCoursesWithEnrollmentStatus = `-- name: CountCoursesWithEnrollmentStatus :one
+SELECT
+    COUNT(c.id)
+FROM courses AS c
+WHERE
+    (c.title LIKE CONCAT('%', ?, '%') OR
+     c.description LIKE CONCAT('%', ?, '%'))
+    OR ? = ''
+`
+
+type CountCoursesWithEnrollmentStatusParams struct {
+	Search interface{} `json:"search"`
+}
+
+func (q *Queries) CountCoursesWithEnrollmentStatus(ctx context.Context, arg CountCoursesWithEnrollmentStatusParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCoursesWithEnrollmentStatus, arg.Search, arg.Search, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCourse = `-- name: CreateCourse :execresult
 INSERT INTO courses (
     title, slug, description, owner_id, metadata
@@ -185,6 +206,79 @@ func (q *Queries) GetCoursesByOwnerID(ctx context.Context, arg GetCoursesByOwner
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCoursesWithEnrollmentStatus = `-- name: GetCoursesWithEnrollmentStatus :many
+SELECT
+    c.id, c.title, c.slug, c.description, c.owner_id, c.metadata, c.created_at, c.updated_at,
+    CASE WHEN sc.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_enrolled
+FROM courses AS c
+LEFT JOIN student_courses AS sc ON c.id = sc.course_id AND sc.student_id = ?
+WHERE
+    (c.title LIKE CONCAT('%', ?, '%') OR
+     c.description LIKE CONCAT('%', ?, '%'))
+    OR ? = '' -- If search is empty, return all
+ORDER BY c.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetCoursesWithEnrollmentStatusParams struct {
+	StudentID int64       `json:"student_id"`
+	Search    interface{} `json:"search"`
+	Limit     int32       `json:"limit"`
+	Offset    int32       `json:"offset"`
+}
+
+type GetCoursesWithEnrollmentStatusRow struct {
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Slug        string          `json:"slug"`
+	Description sql.NullString  `json:"description"`
+	OwnerID     int64           `json:"owner_id"`
+	Metadata    json.RawMessage `json:"metadata"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	IsEnrolled  int32           `json:"is_enrolled"`
+}
+
+func (q *Queries) GetCoursesWithEnrollmentStatus(ctx context.Context, arg GetCoursesWithEnrollmentStatusParams) ([]GetCoursesWithEnrollmentStatusRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCoursesWithEnrollmentStatus,
+		arg.StudentID,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCoursesWithEnrollmentStatusRow
+	for rows.Next() {
+		var i GetCoursesWithEnrollmentStatusRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Slug,
+			&i.Description,
+			&i.OwnerID,
+			&i.Metadata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsEnrolled,
 		); err != nil {
 			return nil, err
 		}

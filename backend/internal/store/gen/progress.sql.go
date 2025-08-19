@@ -114,7 +114,7 @@ func (q *Queries) GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx con
 
 const getWeeklyEvaluationsByStudentID = `-- name: GetWeeklyEvaluationsByStudentID :many
 SELECT id, student_id, questionnaire_id, status, due_date, completed_at, created_at, updated_at FROM weekly_evaluations
-WHERE student_id = ? AND due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK) AND due_date <= CURDATE()
+WHERE student_id = ? AND due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
 ORDER BY due_date DESC
 `
 
@@ -165,7 +165,7 @@ SELECT
     u.display_name as student_name
 FROM weekly_evaluations we
 JOIN users u ON we.student_id = u.id
-WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK) AND we.due_date <= CURDATE()
+WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
 `
 
 type GetWeeklyEvaluationsForTeacherDashboardRow struct {

@@ -13,14 +13,6 @@ $base_params = [
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
 
-    <?php if (isset($_SESSION['messages'])): ?>
-        <div class="alert alert-<?= key($_SESSION['messages']) ?> alert-dismissible fade show" role="alert">
-            <?= reset($_SESSION['messages']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php unset($_SESSION['messages']); ?>
-    <?php endif; ?>
-
     <div class="row mb-3">
         <div class="col-12 col-md-6">
             <form method="GET" class="d-flex">
@@ -30,45 +22,53 @@ $base_params = [
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">My Enrolled Courses</h6>
+    <div class="col-md-9 col-lg-10 ">
+        <div class="mb-5">
+            <h4 class="mb-3">My Courses</h4>
+            <div class="row">
+                <?php foreach ($courses as $course): ?>
+                    <?php if ($course["is_enrolled"]): ?>
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card card-hover h-100">
+                                <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title"><?= $course["title"] ?></h5>
+                                    </div>
+                                    <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
+                                    <div class="mt-auto">
+                                        <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">View Courses</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Title</th>
-                            <th>Slug</th>
-                            <th>Description</th>
-                            <th>Owner ID</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($courses)) : ?>
-                            <tr>
-                                <td colspan="6" class="text-center">No courses found.</td>
-                            </tr>
-                        <?php else : ?>
-                            <?php $i = $start; ?>
-                            <?php foreach ($courses as $course) : ?>
-                                <tr>
-                                    <td><?= $i++; ?></td>
-                                    <td><?= htmlspecialchars($course['title']); ?></td>
-                                    <td><?= htmlspecialchars($course['slug']); ?></td>
-                                    <td><?= htmlspecialchars($course['description'] ?? '-'); ?></td>
-                                    <td><?= htmlspecialchars($course['owner_id']); ?></td>
-                                    <td>
-                                        <button class="btn btn-danger btn-sm btn-unenroll" data-course-id="<?= $course['id']; ?>"><i class="fas fa-minus-circle"></i> Unenroll</button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+
+        <!-- Available Courses -->
+        <div>
+            <h4 class="mb-3">Available Courses</h4>
+            <div class="row">
+                <?php foreach ($courses as $course): ?>
+                    <?php if (!$course["is_enrolled"]): ?>
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card card-hover h-100">
+                                <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title"><?= $course["title"] ?></h5>
+                                    </div>
+                                    <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
+                                    <div class="mt-auto">
+                                        <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">View Courses</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
@@ -105,3 +105,4 @@ $base_params = [
         <?php endif; ?>
     </nav>
 </div>
+

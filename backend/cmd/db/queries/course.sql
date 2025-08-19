@@ -67,3 +67,25 @@ WHERE student_id = ? AND course_id = ?;
 -- name: CountCoursesByOwnerID :one
 SELECT count(*) FROM courses
 WHERE owner_id = ?;
+
+-- name: GetCoursesWithEnrollmentStatus :many
+SELECT
+    c.*,
+    CASE WHEN sc.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_enrolled
+FROM courses AS c
+LEFT JOIN student_courses AS sc ON c.id = sc.course_id AND sc.student_id = sqlc.arg('student_id')
+WHERE
+    (c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+     c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))
+    OR sqlc.arg('search') = '' -- If search is empty, return all
+ORDER BY c.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountCoursesWithEnrollmentStatus :one
+SELECT
+    COUNT(c.id)
+FROM courses AS c
+WHERE
+    (c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+     c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))
+    OR sqlc.arg('search') = '';

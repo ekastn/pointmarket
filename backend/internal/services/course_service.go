@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 )
@@ -62,71 +61,20 @@ func (s *CourseService) GetCourseByID(ctx context.Context, id int64) (dtos.Cours
 }
 
 // GetCourses retrieves a list of courses based on role and filters
-func (s *CourseService) GetCourses(ctx context.Context, userID int64, userRole string, filterUserID *int64, page, limit int, search string) ([]dtos.CourseDTO, int64, error) {
+func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, page, limit int, search string) ([]dtos.CourseDTO, int64, error) {
 	offset := (page - 1) * limit
 
 	var courses []gen.Course
 	var totalCourses int64
 	var err error
-
-	// Base parameters for queries
 	listParams := gen.GetCoursesParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
 
-	switch userRole {
-	case "admin":
-		if filterUserID != nil {
-			// Admin filtering for a specific user's enrolled courses
-			studentCourses, err := s.q.GetStudentCoursesByUserID(ctx, *filterUserID)
-			if err != nil {
-				return nil, 0, err
-			}
-			var courseDTOs []dtos.CourseDTO
-			for _, sc := range studentCourses {
-				var courseDesc *string
-				if sc.CourseDescription.Valid {
-					courseDesc = &sc.CourseDescription.String
-				}
-				courseDTOs = append(courseDTOs, dtos.CourseDTO{
-					ID:          sc.CourseID,
-					Title:       sc.CourseTitle,
-					Slug:        sc.CourseSlug,
-					Description: courseDesc,
-					OwnerID:     sc.CourseOwnerID,
-					Metadata:    sc.CourseMetadata,
-					// CreatedAt and UpdatedAt are not in GetStudentCoursesByUserIDRow
-					// This means we might need to fetch full course details if needed
-				})
-			}
-			totalCourses = int64(len(courseDTOs)) // Count of enrolled courses for this student
-			return courseDTOs, totalCourses, nil
-		} else {
-			// Admin getting all courses with pagination and search
-			courses, err = s.q.GetCourses(ctx, listParams)
-			if err != nil {
-				return nil, 0, err
-			}
-			totalCourses, err = s.q.CountCourses(ctx)
-		}
-	case "guru": // Teacher
-		// Teachers get courses they own with pagination and search
-		courses, err = s.q.GetCoursesByOwnerID(ctx, gen.GetCoursesByOwnerIDParams{
-			OwnerID: userID,
-			Limit:   int32(limit),
-			Offset:  int32(offset),
-		})
-		if err != nil {
-			return nil, 0, err
-		}
-		totalCourses, err = s.q.CountCoursesByOwnerID(ctx, userID)
-		if err != nil {
-			return nil, 0, err
-		}
-	case "siswa": // Student
-		// Students get courses they are enrolled in with pagination and search
-		studentCourses, err := s.q.GetStudentCoursesByUserID(ctx, userID) // This query doesn't support limit/offset
+	if filterUserID != nil {
+		// Admin filtering for a specific user's enrolled courses
+		studentCourses, err := s.q.GetStudentCoursesByUserID(ctx, *filterUserID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -144,12 +92,18 @@ func (s *CourseService) GetCourses(ctx context.Context, userID int64, userRole s
 				OwnerID:     sc.CourseOwnerID,
 				Metadata:    sc.CourseMetadata,
 				// CreatedAt and UpdatedAt are not in GetStudentCoursesByUserIDRow
+				// This means we might need to fetch full course details if needed
 			})
 		}
 		totalCourses = int64(len(courseDTOs)) // Count of enrolled courses for this student
 		return courseDTOs, totalCourses, nil
-	default:
-		return nil, 0, fmt.Errorf("unsupported user role: %s", userRole)
+	} else {
+		// Admin getting all courses with pagination and search
+		courses, err = s.q.GetCourses(ctx, listParams)
+		if err != nil {
+			return nil, 0, err
+		}
+		totalCourses, err = s.q.CountCourses(ctx)
 	}
 
 	if err != nil {
@@ -162,6 +116,62 @@ func (s *CourseService) GetCourses(ctx context.Context, userID int64, userRole s
 		courseDTO.FromCourseModel(course)
 		courseDTOs = append(courseDTOs, courseDTO)
 	}
+	return courseDTOs, totalCourses, nil
+}
+
+// GetCoursesByOwnerID retrieves a list of courses owned by a specific user
+func (s *CourseService) GetCoursesByOwnerID(ctx context.Context, ownerID int64, page, limit int) ([]dtos.CourseDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	courses, err := s.q.GetCoursesByOwnerID(ctx, gen.GetCoursesByOwnerIDParams{
+		OwnerID: ownerID,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	totalCourses, err := s.q.CountCoursesByOwnerID(ctx, ownerID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var courseDTOs []dtos.CourseDTO
+	for _, course := range courses {
+		var courseDTO dtos.CourseDTO
+		courseDTO.FromCourseModel(course)
+		courseDTOs = append(courseDTOs, courseDTO)
+	}
+	return courseDTOs, totalCourses, nil
+}
+
+// GetStudentViewableCourses retrieves a list of courses for students with enrollment status
+func (s *CourseService) GetStudentViewableCourses(ctx context.Context, studentID int64, page, limit int, search string) ([]dtos.StudentCoursesDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	courses, err := s.q.GetCoursesWithEnrollmentStatus(ctx, gen.GetCoursesWithEnrollmentStatusParams{
+		StudentID: studentID,
+		Search:    search,
+		Limit:     int32(limit),
+		Offset:    int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	totalCourses, err := s.q.CountCoursesWithEnrollmentStatus(ctx, gen.CountCoursesWithEnrollmentStatusParams{Search: search})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var courseDTOs []dtos.StudentCoursesDTO
+	for _, course := range courses {
+		var courseDTO dtos.StudentCoursesDTO
+		courseDTO.FromStudentCoursesModel(course)
+		courseDTOs = append(courseDTOs, courseDTO)
+	}
+
 	return courseDTOs, totalCourses, nil
 }
 

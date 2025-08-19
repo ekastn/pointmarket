@@ -52,7 +52,7 @@ class CoursesController extends BaseController
             } elseif ($userRole === 'siswa') {
                 $this->render('siswa/courses', [
                     'user' => $_SESSION['user_data'],
-                    'title' => 'My Courses',
+                    'title' => 'Courses',
                     'courses' => $courses,
                     'search' => $search,
                     'page' => $meta['page'],

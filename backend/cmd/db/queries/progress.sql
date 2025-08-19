@@ -24,7 +24,7 @@ WHERE id = ? AND student_id = ?;
 
 -- name: GetWeeklyEvaluationsByStudentID :many
 SELECT * FROM weekly_evaluations
-WHERE student_id = ? AND due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK) AND due_date <= CURDATE()
+WHERE student_id = ? AND due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
 ORDER BY due_date DESC;
 
 -- name: GetWeeklyEvaluationsForTeacherDashboard :many
@@ -37,7 +37,7 @@ SELECT
     u.display_name as student_name
 FROM weekly_evaluations we
 JOIN users u ON we.student_id = u.id
-WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK) AND we.due_date <= CURDATE();
+WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK);
 
 -- name: CreateWeeklyEvaluation :exec
 INSERT INTO weekly_evaluations

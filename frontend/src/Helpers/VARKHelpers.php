@@ -45,32 +45,32 @@ function getVARKLearningTips($dominantStyle) {
             'icon' => 'fas fa-hand-rock'
         ],
         // Multi-modal styles (simplified descriptions)
-        'Visual-Aural' => [
+        'Visual/Auditory' => [
             'study_tips' => ['Gunakan kombinasi visual dan audio.'],
             'description' => 'Anda belajar terbaik dengan melihat dan mendengar.',
             'icon' => 'fas fa-eye-dropper'
         ],
-        'Visual-Reading' => [
+        'Visual/Reading' => [
             'study_tips' => ['Kombinasikan visual dengan membaca/menulis.'],
             'description' => 'Anda belajar terbaik dengan melihat dan membaca/menulis.',
             'icon' => 'fas fa-book-reader'
         ],
-        'Visual-Kinesthetic' => [
+        'Visual/Kinesthetic' => [
             'study_tips' => ['Gunakan visual dan praktik langsung.'],
             'description' => 'Anda belajar terbaik dengan melihat dan melakukan.',
             'icon' => 'fas fa-drafting-compass'
         ],
-        'Aural-Reading' => [
+        'Auditory/Reading' => [
             'study_tips' => ['Kombinasikan mendengar dengan membaca/menulis.'],
             'description' => 'Anda belajar terbaik dengan mendengar dan membaca/menulis.',
             'icon' => 'fas fa-file-audio'
         ],
-        'Aural-Kinesthetic' => [
+        'Auditory/Kinesthetic' => [
             'study_tips' => ['Kombinasikan mendengar dengan praktik langsung.'],
             'description' => 'Anda belajar terbaik dengan mendengar dan melakukan.',
             'icon' => 'fas fa-music'
         ],
-        'Reading-Kinesthetic' => [
+        'Reading/Kinesthetic' => [
             'study_tips' => ['Kombinasikan membaca/menulis dengan praktik langsung.'],
             'description' => 'Anda belajar terbaik dengan membaca/menulis dan melakukan.',
             'icon' => 'fas fa-pen-ruler'

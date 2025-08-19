@@ -6,46 +6,39 @@ use App\Core\ApiClient;
 
 class WeeklyEvaluationService
 {
-    private ApiClient $apiClient;
+    protected ApiClient $apiClient;
 
     public function __construct(ApiClient $apiClient)
     {
         $this->apiClient = $apiClient;
     }
 
-    public function getStudentEvaluationStatus(): ?array
+    public function getWeeklyEvaluations(): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/evaluations/weekly/teacher/status');
+        $response = $this->apiClient->request('GET', '/api/v1/weekly-evaluations');
+
         if ($response['success']) {
             return $response['data'];
         }
+
         return null;
     }
 
-    public function getWeeklyEvaluationOverview(int $weeks = 4): ?array
+    public function getTeacherDashboard(): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/evaluations/weekly/teacher/overview?weeks=' . $weeks);
+        $response = $this->apiClient->request('GET', '/api/v1/weekly-evaluations?view=monitoring');
+
         if ($response['success']) {
             return $response['data'];
         }
+
         return null;
     }
 
-    public function getWeeklyEvaluationProgressByStudentID(int $weeks = 8): ?array
+    public function initializeWeeklyEvaluations(): ?bool
     {
-        $response = $this->apiClient->request('GET', '/api/v1/evaluations/weekly/student/progress?weeks=' . $weeks);
-        if ($response['success']) {
-            return $response['data'];
-        }
-        return null;
-    }
+        $response = $this->apiClient->request('POST', '/api/v1/weekly-evaluations/initialize');
 
-    public function getPendingWeeklyEvaluations(): ?array
-    {
-        $response = $this->apiClient->request('GET', '/api/v1/evaluations/weekly/student/pending');
-        if ($response['success']) {
-            return $response['data'];
-        }
-        return null;
+        return $response['success'] ?? false;
     }
 }

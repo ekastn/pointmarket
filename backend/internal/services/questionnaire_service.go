@@ -51,7 +51,7 @@ func (s *QuestionnaireService) GetQuestionsByQuestionnaireID(ctx context.Context
 
 // GetVarkOptionsByQuestionnaireID retrieves all VARK options for a given questionnaire ID
 func (s *QuestionnaireService) GetVarkOptionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]gen.QuestionnaireVarkOption, error) {
-    return s.q.GetVarkOptionsByQuestionnaireID(ctx, questionnaireID)
+	return s.q.GetVarkOptionsByQuestionnaireID(ctx, questionnaireID)
 }
 
 // SubmitLikert saves a student's Likert answers

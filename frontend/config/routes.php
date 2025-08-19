@@ -61,7 +61,10 @@ return function (Router $router) {
 
         // Teacher specific routes
         $router->get('teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index'], [[AuthMiddleware::class, 'requireTeacher']]);
+
+        // Weekly Evaluations routes
         $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);
+        $router->post('weekly-evaluations/initialize', [WeeklyEvaluationsController::class, 'initialize'], [[AuthMiddleware::class, 'requireAdmin']]);
 
         // Courses routes (Admin/Teacher CRUD)
         $router->group('/courses', function (Router $router) {
@@ -74,12 +77,10 @@ return function (Router $router) {
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdminOrTeacher']]);
 
         // General courses listing (accessible by Admin, Teacher, Student)
-        $router->get('/courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireLogin']]);
-
-        // Student specific courses routes
-        $router->get('/my-courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
-        $router->post('/courses/{id}/enroll', [CoursesController::class, 'enroll'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
-        $router->delete('/courses/{id}/unenroll', [CoursesController::class, 'unenroll'], [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireStudent']]);
+        $router->get('/courses', [CoursesController::class, 'index']);
+        $router->get('/my-courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireStudent']]);
+        $router->post('/courses/{id}/enroll', [CoursesController::class, 'enroll'], [[AuthMiddleware::class, 'requireStudent']]);
+        $router->delete('/courses/{id}/unenroll', [CoursesController::class, 'unenroll'], [[AuthMiddleware::class, 'requireStudent']]);
 
         // Missions routes (Admin CRUD, Student actions)
         $router->group('/missions', function (Router $router) {

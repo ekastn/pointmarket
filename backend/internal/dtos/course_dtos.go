@@ -37,6 +37,29 @@ func (dto *CourseDTO) FromCourseModel(m gen.Course) {
 	dto.UpdatedAt = m.UpdatedAt
 }
 
+// StudentCoursesDTO for listing courses for students with enrollment status
+type StudentCoursesDTO struct {
+	CourseDTO
+	IsEnrolled bool `json:"is_enrolled"`
+}
+
+// FromStudentCoursesModel converts a gen.StudentCourses model to a StudentCoursesDTO
+func (dto *StudentCoursesDTO) FromStudentCoursesModel(m gen.GetCoursesWithEnrollmentStatusRow) {
+	dto.ID = m.ID
+	dto.Title = m.Title
+	dto.Slug = m.Slug
+	if m.Description.Valid {
+		dto.Description = &m.Description.String
+	} else {
+		dto.Description = nil
+	}
+	dto.OwnerID = m.OwnerID
+	dto.Metadata = m.Metadata
+	dto.CreatedAt = m.CreatedAt
+	dto.UpdatedAt = m.UpdatedAt
+	dto.IsEnrolled = m.IsEnrolled == 1
+}
+
 // CreateCourseRequestDTO for creating a new course
 type CreateCourseRequestDTO struct {
 	Title       string          `json:"title" binding:"required"`
@@ -60,8 +83,6 @@ type ListCoursesResponseDTO struct {
 	Total   int         `json:"total"`
 }
 
-// --- Student Enrollment DTOs ---
-
 // EnrollStudentRequestDTO for enrolling a student in a course
 type EnrollStudentRequestDTO struct {
 	UserID   int64 `json:"user_id" binding:"required"`
@@ -83,6 +104,6 @@ type StudentCourseDTO struct {
 
 // ListStudentCoursesResponseDTO for listing a student's enrolled courses
 type ListStudentCoursesResponseDTO struct {
-	StudentCourses []StudentCourseDTO `json:"student_courses"`
-	Total          int                `json:"total"`
+	StudentCourses []StudentCoursesDTO `json:"student_courses"`
+	Total          int                 `json:"total"`
 }

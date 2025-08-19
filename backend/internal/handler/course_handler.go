@@ -30,7 +30,6 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	}
 
 	userRole := middleware.GetRole(c)
-
 	authUserID := middleware.GetUserID(c)
 
 	if userRole == "guru" {
@@ -82,39 +81,43 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 	authUserID := middleware.GetUserID(c)
 	userRole := middleware.GetRole(c)
 
-	var filterUserID *int64
-	userIDStr := c.Query("user_id")
-
-	if userRole == "admin" {
-		if userIDStr != "" {
-			parsedUserID, err := strconv.ParseInt(userIDStr, 10, 64)
-			if err != nil {
-				response.Error(c, http.StatusBadRequest, "Invalid user ID parameter")
-				return
-			}
-			filterUserID = &parsedUserID
-		}
-	} else if userRole == "siswa" {
-		// Students automatically get their own enrolled courses
-		filterUserID = &authUserID
-	} else if userRole == "guru" {
-		// Teachers get courses they own
-		filterUserID = &authUserID
-		// TODO: This needs a GetCoursesByOwnerID query in service
-		// For now, it will return all courses if no specific query for owner_id exists
-	}
-
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
 
-	courses, totalCourses, err := h.courseService.GetCourses(c.Request.Context(), authUserID, userRole, filterUserID, page, limit, search)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
-		return
+	var filterUserID *int64
+	userIDStr := c.Query("user_id")
+	parseUserID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err == nil {
+		filterUserID = &parseUserID
 	}
 
-	response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+	switch userRole {
+	case "guru":
+		courses, totalCourses, err := h.courseService.GetCoursesByOwnerID(c.Request.Context(), authUserID, page, limit)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
+			return
+		}
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+		return
+	case "admin":
+		courses, totalCourses, err := h.courseService.GetCourses(c.Request.Context(), filterUserID, page, limit, search)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
+			return
+		}
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+		return
+	case "siswa":
+		courses, totalCourses, err := h.courseService.GetStudentViewableCourses(c.Request.Context(), authUserID, page, limit, search)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
+			return
+		}
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+		return
+	}
 }
 
 // UpdateCourse handles updating an existing course (Admin/Teacher-only, owner only)

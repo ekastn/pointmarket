@@ -22,11 +22,12 @@ type AdminDashboardStatsDTO struct {
 
 // StudentDashboardStatsDTO holds aggregated statistics for a student's dashboard.
 type StudentDashboardStatsDTO struct {
-	TotalPoints          int64                `json:"total_points"`
-	CompletedAssignments int64                `json:"completed_assignments"`
-	MSLQScore            float64              `json:"mslq_score"`
-	AMSScore             float64              `json:"ams_score"`
-	LearningStyle        StudentLearningStyle `json:"learning_style"`
+	TotalPoints          int64                       `json:"total_points"`
+	CompletedAssignments int64                       `json:"completed_assignments"`
+	MSLQScore            float64                     `json:"mslq_score"`
+	AMSScore             float64                     `json:"ams_score"`
+	LearningStyle        StudentLearningStyle        `json:"learning_style"`
+	WeeklyEvaluations    []WeeklyEvaluationDetailDTO `json:"weekly_evaluations"`
 }
 
 // TeacherDashboardStatsDTO holds counts for the teacher dashboard.

@@ -85,7 +85,7 @@ type Querier interface {
 	GetProductCategoryByID(ctx context.Context, id int32) (ProductCategory, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]GetProductsRow, error)
 	GetQuestionnaireByID(ctx context.Context, id int32) (Questionnaire, error)
-	GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (GetQuestionnaireByTypeRow, error)
+	GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (Questionnaire, error)
 	GetQuestionnaires(ctx context.Context) ([]Questionnaire, error)
 	GetQuestionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireQuestion, error)
 	GetQuizByID(ctx context.Context, id int64) (Quiz, error)
@@ -117,7 +117,8 @@ type Querier interface {
 	GetUsers(ctx context.Context) ([]User, error)
 	GetVarkOptionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireVarkOption, error)
 	GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx context.Context, arg GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams) (int64, error)
-	GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]WeeklyEvaluation, error)
+	GetWeeklyEvaluationResult(ctx context.Context, weeklyEvaluationID sql.NullInt64) (GetWeeklyEvaluationResultRow, error)
+	GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]GetWeeklyEvaluationsByStudentIDRow, error)
 	GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error)
 	MarkOverdueWeeklyEvaluations(ctx context.Context) error
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error

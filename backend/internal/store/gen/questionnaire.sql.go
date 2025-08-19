@@ -255,19 +255,23 @@ func (q *Queries) GetQuestionnaireByID(ctx context.Context, id int32) (Questionn
 }
 
 const getQuestionnaireByType = `-- name: GetQuestionnaireByType :one
-SELECT id, name FROM questionnaires
+SELECT id, type, name, description, total_questions, status, created_at, updated_at FROM questionnaires
 WHERE type = ? AND status = 'active'
 `
 
-type GetQuestionnaireByTypeRow struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
-}
-
-func (q *Queries) GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (GetQuestionnaireByTypeRow, error) {
+func (q *Queries) GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (Questionnaire, error) {
 	row := q.db.QueryRowContext(ctx, getQuestionnaireByType, type_)
-	var i GetQuestionnaireByTypeRow
-	err := row.Scan(&i.ID, &i.Name)
+	var i Questionnaire
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Name,
+		&i.Description,
+		&i.TotalQuestions,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 

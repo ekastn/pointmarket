@@ -23,9 +23,24 @@ SET status = 'completed', completed_at = NOW()
 WHERE id = ? AND student_id = ?;
 
 -- name: GetWeeklyEvaluationsByStudentID :many
-SELECT * FROM weekly_evaluations
-WHERE student_id = ? AND due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
-ORDER BY due_date DESC;
+SELECT
+    we.id,
+    we.student_id,
+    we.questionnaire_id,
+    we.status,
+    we.due_date,
+    we.completed_at,
+    q.name AS questionnaire_title,
+    q.type AS questionnaire_type,
+    q.description AS questionnaire_description
+FROM
+    weekly_evaluations we
+JOIN
+    questionnaires q ON we.questionnaire_id = q.id
+WHERE
+    we.student_id = ? AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+ORDER BY
+    we.due_date DESC;
 
 -- name: GetWeeklyEvaluationsForTeacherDashboard :many
 SELECT
@@ -52,3 +67,12 @@ WHERE status = 'pending' AND due_date < NOW();
 -- name: GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate :one
 SELECT id FROM weekly_evaluations
 WHERE student_id = ? AND questionnaire_id = ? AND due_date = ?;
+
+-- name: GetWeeklyEvaluationResult :one
+SELECT
+    sqr.total_score AS score,
+    sqr.created_at AS completed_at
+FROM
+    student_questionnaire_likert_results sqr
+WHERE
+    sqr.weekly_evaluation_id = ?;

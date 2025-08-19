@@ -67,5 +67,5 @@ GROUP BY q.id, q.type, q.name
 ORDER BY q.type;
 
 -- name: GetQuestionnaireByType :one
-SELECT id, name FROM questionnaires
+SELECT * FROM questionnaires
 WHERE type = ? AND status = 'active';

@@ -4,17 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 )
 
 type DashboardService struct {
-	q gen.Querier
+	q                       gen.Querier
+	weeklyEvaluationService *WeeklyEvaluationService
 }
 
-func NewDashboardService(q gen.Querier) *DashboardService {
+func NewDashboardService(q gen.Querier, weeklyEvaluationService *WeeklyEvaluationService) *DashboardService {
 	return &DashboardService{
-		q: q,
+		q:                       q,
+		weeklyEvaluationService: weeklyEvaluationService,
 	}
 }
 
@@ -115,6 +118,16 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 					Kinesthetic: scoreKinesthetic,
 				},
 			},
+		}
+
+		// Fetch current week's evaluations
+		currentWeekEvals, err := s.weeklyEvaluationService.GetCurrentWeekEvaluationsByStudentID(ctx, userID)
+		if err != nil {
+			fmt.Printf("Warning: Failed to get current week evaluations for dashboard: %v\n", err)
+			// Decide how to handle error: return error, or proceed with empty slice
+			studentStatsDTO.WeeklyEvaluations = []dtos.WeeklyEvaluationDetailDTO{}
+		} else {
+			studentStatsDTO.WeeklyEvaluations = currentWeekEvals
 		}
 
 		dashboardData.StudentStats = studentStatsDTO

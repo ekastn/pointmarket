@@ -281,13 +281,13 @@ func (s *QuestionnaireService) GetLikertStats(ctx context.Context, studentID int
 }
 
 // GetQuestionnaireByType retrieves a questionnaire by its type
-func (s *QuestionnaireService) GetQuestionnaireByType(ctx context.Context, qType gen.QuestionnairesType) (gen.GetQuestionnaireByTypeRow, error) {
+func (s *QuestionnaireService) GetQuestionnaireByType(ctx context.Context, qType gen.QuestionnairesType) (gen.Questionnaire, error) {
 	row, err := s.q.GetQuestionnaireByType(ctx, qType)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return gen.GetQuestionnaireByTypeRow{}, fmt.Errorf("questionnaire of type %s not found", qType)
+			return gen.Questionnaire{}, fmt.Errorf("questionnaire of type %s not found", qType)
 		}
-		return gen.GetQuestionnaireByTypeRow{}, fmt.Errorf("failed to get questionnaire by type %s: %w", qType, err)
+		return gen.Questionnaire{}, fmt.Errorf("failed to get questionnaire by type %s: %w", qType, err)
 	}
 	return row, nil
 }

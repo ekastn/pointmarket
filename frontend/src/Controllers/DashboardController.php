@@ -42,8 +42,10 @@ class DashboardController extends BaseController
                 return;
             case 'siswa':
                 $studentStats = $dashboardData['student_stats'] ?? null;
+                $weeklyEvaluations = $studentStats['weekly_evaluations'] ?? []; // Extract the new data
                 $this->render('siswa/dashboard', [
                     'studentStats' => $studentStats,
+                    'weekly_evaluations' => $weeklyEvaluations, // Pass the extracted data to the view
                 ]);
                 return;
         }

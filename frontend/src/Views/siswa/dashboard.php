@@ -171,80 +171,92 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-calendar-check me-2"></i>
                     Weekly Evaluations
                 </h5>
+                <a href="/weekly-evaluations" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye me-1"></i>
+                    View All
+                </a>
             </div>
             <div class="card-body">
-                <!-- Assessment Results Overview -->
-                <div class="row mb-4">
-                    <div class="col">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-brain me-2"></i>
-                                    MSLQ Assessment
-                                </h6>
-                            </div>
-                            <div class="card-body text-center">
-                                <?php if (isset($questionnaireStats[0]) && $questionnaireStats[0]['total_completed'] > 0) { ?>
-                                    <div class="score-badge badge bg-success mb-3">
-                                        <?php echo htmlspecialchars(number_format($questionnaireStats[0]['average_score'], 1)); ?>/7.0
-                                    </div>
-                                    <h6 class="text-success">Completed</h6>
-                                    <p class="small text-muted">Learning strategies and motivation assessment</p>
-                                    <div class="progress progress-custom mb-2">
-                                        <div class="progress-bar bg-success" style="width: <?php echo htmlspecialchars(($questionnaireStats[0]['average_score'] / 7) * 100); ?>%"></div>
-                                    </div>
-                                    <a href="/questionnaire" class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-eye me-1"></i>View Details
-                                    </a>
-                                <?php } else { ?>
-                                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
-                                    <h6 class="text-muted">Not Completed</h6>
-                                    <p class="small text-muted">Take the assessment to get personalized learning insights</p>
-                                    <a href="/questionnaire" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-play me-1"></i>Start Assessment
-                                    </a>
-                                <?php } ?>
-                            </div>
-                        </div>
-                    </div>
+                <div class="row">
+                    <?php
+                    // Organize evaluations by questionnaire title for easy access
+                    $currentWeekEvaluations = [];
+                    foreach ($weekly_evaluations as $eval) {
+                        $currentWeekEvaluations[$eval['questionnaire_type']] = $eval;
+                    }
 
-                    <div class="col">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-header bg-warning text-dark">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-heart me-2"></i>
-                                    AMS Assessment
-                                </h6>
-                            </div>
-                            <div class="card-body text-center">
-                                <?php if (isset($questionnaireStats[1]) && $questionnaireStats[1]['total_completed'] > 0) { ?>
-                                    <div class="score-badge badge bg-warning text-dark mb-3">
-                                        <?php echo htmlspecialchars(number_format($questionnaireStats[1]['average_score'], 1)); ?>/7.0
-                                    </div>
-                                    <h6 class="text-warning">Completed</h6>
-                                    <p class="small text-muted">Academic motivation scale assessment</p>
-                                    <div class="progress progress-custom mb-2">
-                                        <div class="progress-bar bg-warning" style="width: <?php echo htmlspecialchars(($questionnaireStats[1]['average_score'] / 7) * 100); ?>%"></div>
-                                    </div>
-                                    <a href="/questionnaire" class="btn btn-sm btn-outline-warning">
-                                        <i class="fas fa-eye me-1"></i>View Details
-                                    </a>
-                                <?php } else { ?>
-                                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
-                                    <h6 class="text-muted">Not Completed</h6>
-                                    <p class="small text-muted">Assess your academic motivation patterns</p>
-                                    <a href="/questionnaire" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-play me-1"></i>Start Assessment
-                                    </a>
-                                <?php } ?>
+                    $evaluationTypes = [
+                        'MSLQ' => ['icon' => 'fas fa-brain', 'color' => 'success'],
+                        'AMS' => ['icon' => 'fas fa-heart', 'color' => 'warning'],
+                    ];
+
+                    foreach ($evaluationTypes as $type => $meta) : 
+                        $evaluation = $currentWeekEvaluations[$type] ?? null;
+                        $title = $evaluation['questionnaire_title'] ?? 'not_assigned'; // Default status if not found
+                        $status = $evaluation['status'] ?? 'not_assigned'; // Default status if not found
+                        $score = $evaluation['score'] ?? null;
+                        $completedAt = $evaluation['completed_at'] ?? null;
+                        $description = $evaluation['questionnaire_description'] ?? null;
+                    ?>
+                        <div class="col-md-6 mb-3">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-<?= $meta['color'] ?> text-white">
+                                    <h6 class="mb-0">
+                                        <i class="<?= $meta['icon'] ?> me-2"></i>
+                                        <?= htmlspecialchars($title) ?>
+                                    </h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <?php if ($status === 'pending') : ?>
+                                        <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">Pending</h6>
+                                        <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
+                                        <p class="small text-muted">Due: <?= htmlspecialchars(date('D, M d', strtotime($evaluation['due_date']))) ?></p>
+                                        <a href="/questionnaire?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-play me-1"></i>Start Evaluation
+                                        </a>
+                                    <?php elseif ($status === 'completed') : ?>
+                                        <div class="score-badge badge bg-<?= $meta['color'] ?> mb-3">
+                                            <?php echo htmlspecialchars(number_format($score, 1)); ?>/7.0
+                                        </div>
+                                        <h6 class="text-<?= $meta['color'] ?>">Completed</h6>
+                                        <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
+                                        <p class="small text-muted">On: <?= htmlspecialchars(date('D, M d', strtotime($completedAt))) ?></p>
+                                        <a href="/questionnaire/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-outline-<?= $meta['color'] ?>">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                    <?php elseif ($status === 'overdue') : ?>
+                                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                                        <h6 class="text-danger">Overdue</h6>
+                                        <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
+                                        <p class="small text-muted">Due: <?= htmlspecialchars(date('D, M d', strtotime($evaluation['due_date']))) ?></p>
+                                        <?php if ($evaluation['completed_at']) : // Check if it was completed but marked overdue later ?>
+                                            <a href="/questionnaire/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-eye me-1"></i>View Details (Overdue)
+                                            </a>
+                                        <?php else : ?>
+                                            <a href="/questionnaire?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-play me-1"></i>Start Evaluation (Overdue)
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php else : // status === 'not_assigned' or other unexpected status ?>
+                                        <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">Not Available This Week</h6>
+                                        <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
+                                        <p class="small text-muted">Check back later or view all evaluations.</p>
+                                        <a href="/weekly-evaluations" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-eye me-1"></i>View All
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>

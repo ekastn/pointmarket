@@ -24,11 +24,11 @@ func main() {
 
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
 
-	dashboardService := services.NewDashboardService(querier)
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
 	questionnaireService := services.NewQuestionnaireService(querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
+	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
 	correlationService := services.NewCorrelationService(querier)
 	productService := services.NewProductService(db.DB, querier)
 	badgeService := services.NewBadgeService(querier)

@@ -42,6 +42,7 @@ class ViewRenderer
 
     public function includePartial(string $partialName, array $data = []): void
     {
+        $data['renderer'] = $this;
         $partialFile = $this->viewsPath . $partialName . '.php';
 
         if (!file_exists($partialFile)) {

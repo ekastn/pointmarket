@@ -66,9 +66,9 @@ class BadgesController extends BaseController
         $result = $this->badgeService->createBadge($badgeData);
 
         if ($result !== null) {
-            echo json_encode(['success' => true, 'message' => 'Badge created successfully!']);
+            $this->redirect('/badges');
         } else {
-            echo json_encode(['success' => false, 'message' => $_SESSION['api_error_message'] ?? 'Failed to create badge.']);
+            throw new \Exception('Failed to create badge.');
         }
         exit;
     }

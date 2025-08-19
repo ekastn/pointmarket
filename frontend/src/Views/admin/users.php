@@ -39,13 +39,7 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="table-responsive">
-                <?php $renderer->includePartial('components/partials/tabel_user', ['users' => $users, 'roles' => $roles, 'page' => $page, 'limit' => $limit, 'total_data' => $total_data, 'total_pages' => $total_pages, 'start' => $start, 'end' => $end]); ?>
-            </div>
-        </div>
-    </div>
+    <?php $renderer->includePartial('components/partials/table_user', ['users' => $users, 'roles' => $roles, 'page' => $page, 'limit' => $limit, 'total_data' => $total_data, 'total_pages' => $total_pages, 'start' => $start, 'end' => $end]); ?>
 </div>
 
 <!--Data Modal Box Tambah User-->
@@ -78,9 +72,9 @@
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" name="role" required>
                             <option value="" disabled selected>Pilih Role</option>
-                            <?php foreach ($roles as $role) : ?>
+                            <?php foreach ($roles as $role) { ?>
                                 <option value="<?= htmlspecialchars($role) ?>"><?= htmlspecialchars(ucfirst($role)) ?></option>
-                            <?php endforeach; ?>
+                            <?php } ?>
                         </select>
                     </div>
                     <div class="modal-footer">
@@ -121,9 +115,9 @@
                         <label for="edit-role" class="form-label">Role</label>
                         <select class="form-select" id="edit-role" name="role" required>
                             <option value="" disabled selected>Pilih Role</option>
-                            <?php foreach ($roles as $role) : ?>
+                            <?php foreach ($roles as $role) { ?>
                                 <option value="<?= htmlspecialchars($role) ?>"><?= htmlspecialchars(ucfirst($role)) ?></option>
-                            <?php endforeach; ?>
+                            <?php } ?>
                         </select>
                     </div>
                     <div class="modal-footer">

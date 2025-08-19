@@ -62,7 +62,7 @@ class ProductsController extends BaseController
     public function store(): void
     {
         $productData = [
-            'category_id' => $_POST['category_id'] ?? null,
+            'category_id' => (int) $_POST['category_id'] ?? null,
             'name' => $_POST['name'] ?? '',
             'description' => $_POST['description'] ?? null,
             'points_price' => isset($_POST['points_price']) ? (int) $_POST['points_price'] : 0,

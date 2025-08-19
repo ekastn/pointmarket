@@ -64,7 +64,7 @@ class ProductService
         if ($response['success']) {
             return $response['data'];
         } else {
-            $_SESSION['api_error_message'] = $response['message'] ?? 'Failed to create product.';
+            $_SESSION['messages']['error'] = $response['message'] ?? 'Failed to create product.';
         }
 
         return null;

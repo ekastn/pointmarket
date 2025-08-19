@@ -41,29 +41,20 @@ $base_params = [
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Product List</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <?php
-                // Pass data to the partial
-                $renderer->includePartial('components/partials/tabel_products', [
-                    'products' => $products,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'total_data' => $total_data,
-                    'total_pages' => $total_pages,
-                    'start' => ($page - 1) * $limit + 1,
-                    'end' => min($page * $limit, $total_data),
-                    'search' => $search,
-                    'base_params' => $base_params,
-                ]);
-                ?>
-            </div>
-        </div>
-    </div>
+    <?php
+    // Pass data to the partial
+    $renderer->includePartial('components/partials/table_products', [
+        'products' => $products,
+        'page' => $page,
+        'limit' => $limit,
+        'total_data' => $total_data,
+        'total_pages' => $total_pages,
+        'start' => ($page - 1) * $limit + 1,
+        'end' => min($page * $limit, $total_data),
+        'search' => $search,
+        'base_params' => $base_params,
+    ]);
+    ?>
 </div>
 
 <!-- Data Modal Box Tambah Product -->

@@ -11,7 +11,6 @@ use App\Controllers\ProfileController;
 use App\Controllers\ProgressController;
 use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
-use App\Controllers\TeacherEvaluationMonitoringController;
 use App\Controllers\UsersController;
 use App\Controllers\MissionsController;
 use App\Controllers\VarkCorrelationAnalysisController;
@@ -39,7 +38,13 @@ return function (Router $router) {
 
         $router->get('assignments', [AssignmentsController::class, 'index']);
         $router->get('quiz', [QuizController::class, 'index']);
-        $router->get('questionnaire', [QuestionnaireController::class, 'index']);
+
+        $router->group('questionnaires', function (Router $router) {
+            $router->get('/', [QuestionnaireController::class, 'index']);
+            $router->get('/{id}', [QuestionnaireController::class, 'startQuestionnairePage']);
+            $router->post('/likert', [QuestionnaireController::class, 'submitLikertQuestionnaire']);
+            $router->post('/vark', [QuestionnaireController::class, 'submitVARKQuestionnaire']);
+        });
 
         $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
@@ -59,8 +64,6 @@ return function (Router $router) {
             $router->delete('/{id}', [UsersController::class, 'deleteUser']); // Delete user
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
-        // Teacher specific routes
-        $router->get('teacher-evaluation-monitoring', [TeacherEvaluationMonitoringController::class, 'index'], [[AuthMiddleware::class, 'requireTeacher']]);
 
         // Weekly Evaluations routes
         $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);

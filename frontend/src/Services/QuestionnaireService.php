@@ -24,7 +24,7 @@ class QuestionnaireService
 
     public function submitQuestionnaire(int $questionnaireId, array $answers, int $weekNumber, int $year): ?array
     {
-        $response = $this->apiClient->request('POST', '/api/v1/questionnaires/submit', [
+        $response = $this->apiClient->request('POST', '/api/v1/questionnaires', [
             'json' => [
                 'questionnaire_id' => $questionnaireId,
                 'answers' => $answers,
@@ -38,9 +38,16 @@ class QuestionnaireService
         return null;
     }
 
-    public function submitVARK(array $answers): ?array
+    public function submitVARK(int $questionnaireId, array $answers, string $nlpText): ?array
     {
-        $response = $this->apiClient->request('POST', '/api/v1/questionnaires/vark', ['json' => ['answers' => $answers]]);
+        $response = $this->apiClient->request('POST', '/api/v1/questionnaires/vark', [
+            'json' => [
+                'questionnaire_id' => $questionnaireId,
+                'answers' => $answers,
+                'text' => $nlpText,
+            ],
+        ]);
+
         if ($response['success']) {
             return $response['data'];
         }

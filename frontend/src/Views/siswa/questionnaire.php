@@ -95,7 +95,6 @@ $messages = $messages ?? [];
 </div>
 
 <?php $renderer->includePartial('siswa/partials/available_questionnaires', ['questionnaires' => $questionnaires]); ?>
-<?php $renderer->includePartial('siswa/partials/questionnaire_modals'); ?>
 
 <!-- Recent History -->
 <div class="row">

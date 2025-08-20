@@ -32,12 +32,9 @@
                         </small>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-primary btn-sm" onclick="startQuestionnaire(<?php echo htmlspecialchars($questionnaire['id']); ?>)">
+                        <a href="/questionnaires/<?php echo htmlspecialchars($questionnaire['id']); ?>" class="btn btn-primary btn-sm">
                             <i class="fas fa-play me-1"></i> Practice
-                        </button>
-                        <button class="btn btn-outline-info btn-sm" onclick="viewQuestionnaireInfo(<?php echo htmlspecialchars($questionnaire['id']); ?>)">
-                            <i class="fas fa-info me-1"></i> Info
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

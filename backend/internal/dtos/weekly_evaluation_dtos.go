@@ -22,13 +22,13 @@ type WeeklyEvaluationDetailDTO struct {
 // FromWeeklyEvaluation converts a gen.GetWeeklyEvaluationsByStudentIDRow to WeeklyEvaluationDetailDTO
 func FromWeeklyEvaluation(we gen.GetWeeklyEvaluationsByStudentIDRow) WeeklyEvaluationDetailDTO {
 	dto := WeeklyEvaluationDetailDTO{
-		ID:                  we.ID,
-		StudentID:           we.StudentID,
-		QuestionnaireID:     we.QuestionnaireID,
-		QuestionnaireTitle:  we.QuestionnaireTitle,
-		QuestionnaireType:   string(we.QuestionnaireType),
-		Status:              string(we.Status),
-		DueDate:             we.DueDate,
+		ID:                 we.ID,
+		StudentID:          we.StudentID,
+		QuestionnaireID:    we.QuestionnaireID,
+		QuestionnaireTitle: we.QuestionnaireTitle,
+		QuestionnaireType:  string(we.QuestionnaireType),
+		Status:             string(we.Status),
+		DueDate:            we.DueDate,
 	}
 	if we.QuestionnaireDescription.Valid {
 		dto.QuestionnaireDescription = &we.QuestionnaireDescription.String

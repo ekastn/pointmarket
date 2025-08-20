@@ -9,7 +9,7 @@ $studentsMenu = [
     ['path' => '/products', 'label' => 'Marketplace', 'icon' => 'fas fa-store'],
     ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
     ['path' => '/quiz', 'label' => 'Kuis', 'icon' => 'fas fa-question-circle'],
-    ['path' => '/questionnaire', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
+    ['path' => '/questionnaires', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
     ['path' => '/vark-correlation-analysis', 'label' => 'Analisis Korelasi VARK', 'icon' => 'fas fa-chart-pie'],
     ['path' => '/weekly-evaluations', 'label' => 'Evaluasi Mingguan', 'icon' => 'fas fa-calendar-check'],
 ];

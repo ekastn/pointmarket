@@ -1,7 +1,7 @@
-<div class="container-fluid h-100 bg-primary">
+<div class="container-fluid h-100">
     <div class="row h-100">
         <!-- Left Side - Branding -->
-        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary">
             <div class="text-center text-white">
                 <i class="fas fa-graduation-cap fa-5x mb-4"></i>
                 <h1 class="display-4 fw-bold mb-3">POINTMARKET</h1>

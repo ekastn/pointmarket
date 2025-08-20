@@ -23,11 +23,42 @@ $base_params = [
     </div>
 
     <div class="col-md-9 col-lg-10 ">
+        <?php
+        $myCourses = array_filter($courses, function($course) {
+            return $course["is_enrolled"];
+        });
+        ?>
+
+        <?php if (!empty($myCourses)): ?>
         <div class="mb-5">
             <h4 class="mb-3">My Courses</h4>
             <div class="row">
+                <?php foreach ($myCourses as $course): ?>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title"><?= $course["title"] ?></h5>
+                                </div>
+                                <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
+                                <div class="mt-auto">
+                                    <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">View Courses</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Available Courses -->
+        <div>
+            <h4 class="mb-3">Available Courses</h4>
+            <div class="row">
                 <?php foreach ($courses as $course): ?>
-                    <?php if ($course["is_enrolled"]): ?>
+                    <?php if (!$course["is_enrolled"]): ?>
                         <div class="col-lg-4 col-md-6 mb-4">
                             <div class="card card-hover h-100">
                                 <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">

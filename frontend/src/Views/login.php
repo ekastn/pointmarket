@@ -1,7 +1,7 @@
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid h-100 bg-primary">
+    <div class="row h-100">
         <!-- Left Side - Branding -->
-        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary">
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
             <div class="text-center text-white">
                 <i class="fas fa-graduation-cap fa-5x mb-4"></i>
                 <h1 class="display-4 fw-bold mb-3">POINTMARKET</h1>
@@ -110,12 +110,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="text-center mt-4">
-                    <small class="text-muted">
-                        © 2025 POINTMARKET. Dibuat untuk Penelitian Fundamental.
-                    </small>
                 </div>
             </div>
         </div>

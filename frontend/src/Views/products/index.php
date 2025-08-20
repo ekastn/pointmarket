@@ -14,14 +14,6 @@ $base_params = [
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
 
-    <?php if (isset($_SESSION['messages'])): ?>
-        <div class="alert alert-<?= key($_SESSION['messages']) ?> alert-dismissible fade show" role="alert">
-            <?= reset($_SESSION['messages']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php unset($_SESSION['messages']); ?>
-    <?php endif; ?>
-
     <div class="row mb-3">
         <div class="col-12 col-md-6">
             <form method="GET" class="d-flex">
@@ -53,23 +45,7 @@ $base_params = [
             </div>
         <?php else : ?>
             <?php foreach ($products as $product) : ?>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card shadow h-100">
-                        <div class="card-body">
-                            <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
-                            <p class="card-text"><?= htmlspecialchars($product['description'] ?? 'No description provided.') ?></p>
-                            <p class="card-text"><strong>Price:</strong> <?= htmlspecialchars($product['points_price']) ?> Points</p>
-                            <p class="card-text"><strong>Type:</strong> <?= htmlspecialchars($product['type']) ?></p>
-                            <?php if ($product['category_name'] !== null) : ?>
-                                <p class="card-text"><strong>Category:</strong> <?= htmlspecialchars($product['category_name']) ?></p>
-                            <?php endif; ?>
-                            <?php if ($product['stock_quantity'] !== null) : ?>
-                                <p class="card-text"><strong>Stock:</strong> <?= htmlspecialchars($product['stock_quantity']) ?></p>
-                            <?php endif; ?>
-                            <button class="btn btn-primary btn-purchase" data-product-id="<?= $product['id']; ?>">Purchase</button>
-                        </div>
-                    </div>
-                </div>
+                <?php $renderer->includePartial('components/partials/product_card', ['product' => $product]); ?>
             <?php endforeach; ?>
         <?php endif; ?>
     </div>

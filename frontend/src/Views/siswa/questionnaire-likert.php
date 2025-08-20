@@ -15,14 +15,14 @@ $messages = $messages ?? [];
     <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i><?= htmlspecialchars($questionnaire['name'] ?? 'Likert Questionnaire') ?></h1>
 </div>
 
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
+<?php if (! empty($messages)) { ?>
+    <?php foreach ($messages as $type => $message) { ?>
         <div class="alert alert-<?= $type === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
             <?= htmlspecialchars($message); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    <?php endforeach; ?>
-<?php endif; ?>
+    <?php } ?>
+<?php } ?>
 
 <style>
     .scale-option {
@@ -103,24 +103,24 @@ $messages = $messages ?? [];
 <form id="likertQuestionnaireForm">
     <input type="hidden" name="questionnaire_id" value="<?= htmlspecialchars($questionnaire['id'] ?? ''); ?>">
     <div class="question-list mb-4">
-        <?php foreach ($questions as $index => $question): ?>
+        <?php foreach ($questions as $index => $question) { ?>
             <div class="card question-card mb-3">
                 <div class="card-body">
                     <h6 class="card-title">Question <?= $index + 1; ?>: <small class="text-muted">(<?= htmlspecialchars($question['subscale'] ?? 'General'); ?>)</small></h6>
                     <p class="card-text"><?= htmlspecialchars($question['question_text']); ?></p>
                     <div class="row text-center likert-scale-options">
-                        <?php for ($i = 1; $i <= 7; $i++): ?>
+                        <?php for ($i = 1; $i <= 7; $i++) { ?>
                             <div class="col">
                                 <div class="scale-option" data-question-id="<?= htmlspecialchars($question['id']); ?>" data-value="<?= $i; ?>">
                                     <input type="radio" name="answers[<?= htmlspecialchars($question['id']); ?>]" id="q<?= htmlspecialchars($question['id']); ?>_<?= $i; ?>" value="<?= $i; ?>" required style="display: none;">
                                     <span><?= $i; ?></span>
                                 </div>
                             </div>
-                        <?php endfor; ?>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
-        <?php endforeach; ?>
+        <?php } ?>
     </div>
 
     <div class="d-flex justify-content-between">
@@ -130,6 +130,8 @@ $messages = $messages ?? [];
 </form>
 
 <script>
+const WEEKLY_EVALUATION_ID = <?= json_encode($weeklyEvaluationId ?? null); ?>;
+
 document.getElementById('likertQuestionnaireForm').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent default form submission
 
@@ -162,10 +164,10 @@ document.getElementById('likertQuestionnaireForm').addEventListener('submit', fu
         return;
     }
 
-    // Prepare payload for API
     const payload = {
         questionnaire_id: formData.get('questionnaire_id'),
-        answers: answers
+        answers: answers,
+        weekly_evaluation_id: WEEKLY_EVALUATION_ID 
     };
 
     // Show loading indicator

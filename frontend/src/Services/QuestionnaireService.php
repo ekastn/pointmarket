@@ -22,7 +22,7 @@ class QuestionnaireService
         return null;
     }
 
-    public function submitQuestionnaire(int $questionnaireId, array $answers, int $weekNumber, int $year): ?array
+    public function submitQuestionnaire(int $questionnaireId, array $answers, int $weekNumber, int $year, int | null $weeklyEvaluationId): ?array
     {
         $response = $this->apiClient->request('POST', '/api/v1/questionnaires', [
             'json' => [
@@ -30,6 +30,7 @@ class QuestionnaireService
                 'answers' => $answers,
                 'week_number' => $weekNumber,
                 'year' => $year,
+                'weekly_evaluation_id' => $weeklyEvaluationId
             ],
         ]);
         if ($response['success']) {

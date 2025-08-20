@@ -77,7 +77,7 @@ class QuestionnaireController extends BaseController
 
         $questionnaireData = $this->questionnaireService->getQuestionnaire($id);
 
-        if (!$questionnaireData) {
+        if (! $questionnaireData) {
             $_SESSION['messages']['error'] = 'Questionnaire not found or failed to load.';
             header('Location: /questionnaires');
             exit();
@@ -85,6 +85,8 @@ class QuestionnaireController extends BaseController
 
         $questionnaire = $questionnaireData['questionnaire'];
         $questions = $questionnaireData['questions'];
+
+        $weeklyEvaluationId = $_GET['weekly_evaluation_id'] ?? null;
 
         if ($questionnaire['type'] === 'VARK') {
             $this->render('siswa/questionnaire-vark', [
@@ -101,6 +103,7 @@ class QuestionnaireController extends BaseController
                 'questionnaire' => $questionnaire,
                 'questions' => $questions,
                 'messages' => $messages,
+                'weeklyEvaluationId' => $weeklyEvaluationId,
             ]);
         }
     }
@@ -110,16 +113,17 @@ class QuestionnaireController extends BaseController
         $input = json_decode(file_get_contents('php://input'), true);
 
         $questionnaireId = $input['questionnaire_id'] ?? null;
+        $weeklyEvaluationId = $input['weekly_evaluation_id'] ?? null;
         $answers = $input['answers'] ?? [];
         $weekNumber = date('W'); // Current week number
         $year = date('Y'); // Current year
 
-        if (!$questionnaireId || empty($answers)) {
+        if (! $questionnaireId || empty($answers)) {
             echo json_encode(['success' => false, 'message' => 'Invalid submission data.']);
             exit();
         }
 
-        $result = $this->questionnaireService->submitQuestionnaire($questionnaireId, $answers, $weekNumber, $year);
+        $result = $this->questionnaireService->submitQuestionnaire($questionnaireId, $answers, $weekNumber, $year, $weeklyEvaluationId);
 
         if ($result) {
             echo json_encode(['success' => true, 'message' => 'Questionnaire submitted successfully!', 'data' => $result]);
@@ -136,7 +140,7 @@ class QuestionnaireController extends BaseController
         $answers = $input['answers'] ?? [];
         $nlpText = $input['text'] ?? '';
 
-        if (!$questionnaireId || empty($answers) || empty($nlpText)) {
+        if (! $questionnaireId || empty($answers) || empty($nlpText)) {
             echo json_encode(['success' => false, 'message' => 'Invalid submission data for VARK/NLP.']);
             exit();
         }

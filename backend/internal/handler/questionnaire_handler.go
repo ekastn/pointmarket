@@ -218,7 +218,7 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 			"grammar_score":       row.ScoreGrammar,
 			"readability_score":   row.ScoreReadability,
 			"sentiment_score":     row.ScoreSentiment,
-			"structure_score":     row.ScoreStructure, 
+			"structure_score":     row.ScoreStructure,
 			"complexity_score":    row.ScoreComplexity,
 		},
 	}

@@ -150,7 +150,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <a href="/questionnaire" class="btn btn-info w-100">
+                        <a href="/questionnaires" class="btn btn-info w-100">
                             <i class="fas fa-clipboard-list me-2"></i>
                             Questionnaires
                         </a>
@@ -217,7 +217,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                                         <h6 class="text-muted">Pending</h6>
                                         <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
                                         <p class="small text-muted">Due: <?= htmlspecialchars(date('D, M d', strtotime($evaluation['due_date']))) ?></p>
-                                        <a href="/questionnaire?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-primary">
+                                        <a href="/questionnaires/<?= htmlspecialchars($evaluation['questionnaire_id']) ?>?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-primary">
                                             <i class="fas fa-play me-1"></i>Start Evaluation
                                         </a>
                                     <?php elseif ($status === 'completed') : ?>
@@ -227,7 +227,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                                         <h6 class="text-<?= $meta['color'] ?>">Completed</h6>
                                         <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
                                         <p class="small text-muted">On: <?= htmlspecialchars(date('D, M d', strtotime($completedAt))) ?></p>
-                                        <a href="/questionnaire/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-outline-<?= $meta['color'] ?>">
+                                        <a href="/questionnaires/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-outline-<?= $meta['color'] ?>">
                                             <i class="fas fa-eye me-1"></i>View Details
                                         </a>
                                     <?php elseif ($status === 'overdue') : ?>
@@ -236,11 +236,11 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                                         <?php if ($description) : ?><p class="small text-muted"><?= htmlspecialchars($description) ?></p><?php endif; ?>
                                         <p class="small text-muted">Due: <?= htmlspecialchars(date('D, M d', strtotime($evaluation['due_date']))) ?></p>
                                         <?php if ($evaluation['completed_at']) : // Check if it was completed but marked overdue later ?>
-                                            <a href="/questionnaire/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-outline-danger">
+                                            <a href="/questionnaires/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-eye me-1"></i>View Details (Overdue)
                                             </a>
                                         <?php else : ?>
-                                            <a href="/questionnaire?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-danger">
+                                            <a href="/questionnaires/<?= htmlspecialchars($evaluation['questionnaire_id']) ?>?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-sm btn-danger">
                                                 <i class="fas fa-play me-1"></i>Start Evaluation (Overdue)
                                             </a>
                                         <?php endif; ?>

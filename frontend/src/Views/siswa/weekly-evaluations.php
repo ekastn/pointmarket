@@ -28,20 +28,20 @@
                             <p class="card-text">Status: <span class="badge bg-<?= $evaluation['status'] === 'completed' ? 'success' : ($evaluation['status'] === 'pending' ? 'warning' : 'danger') ?>"><?= htmlspecialchars($evaluation['status']) ?></span></p>
 
                             <?php if ($evaluation['status'] === 'pending') : ?>
-                                <a href="/questionnaire?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-primary">Start Evaluation</a>
+                                <a href="/questionnaires/<?= htmlspecialchars($evaluation['questionnaire_id']) ?>?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-primary">Start Evaluation</a>
                             <?php elseif ($evaluation['status'] === 'completed') : ?>
                                 <?php if (isset($evaluation['score'])) : ?>
                                     <p class="card-text">Score: <span class="badge bg-info"><?= htmlspecialchars(number_format($evaluation['score'], 1)) ?></span></p>
                                 <?php endif; ?>
                                 <p class="card-text">Completed: <?= htmlspecialchars(date('M d, Y', strtotime($evaluation['completed_at']))) ?></p>
-                                <a href="/questionnaire/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-outline-secondary">View Details</a>
+                                <a href="/questionnaires/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-outline-secondary">View Details</a>
                             <?php elseif ($evaluation['status'] === 'overdue') : ?>
                                 <p class="card-text">Score: <span class="badge bg-info"><?= htmlspecialchars(number_format($evaluation['score'], 1)) ?></span></p>
                                 <?php if ($evaluation['completed_at']) : // Check if it was completed but marked overdue later ?>
                                     <p class="card-text">Completed: <?= htmlspecialchars(date('M d, Y', strtotime($evaluation['completed_at']))) ?></p>
-                                    <a href="/questionnaire/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-outline-danger">View Details (Overdue)</a>
+                                    <a href="/questionnaires/results?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-outline-danger">View Details (Overdue)</a>
                                 <?php else : ?>
-                                    <a href="/questionnaire?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-danger">Start Evaluation (Overdue)</a>
+                                    <a href="/questionnaires/<?= htmlspecialchars($evaluation['questionnaire_id']) ?>?weekly_evaluation_id=<?= htmlspecialchars($evaluation['id']) ?>" class="btn btn-danger">Start Evaluation (Overdue)</a>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>

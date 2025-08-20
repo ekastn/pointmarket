@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"log"
 	"net/http"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/middleware"
@@ -8,6 +10,7 @@ import (
 	"pointmarket/backend/internal/services"
 	"pointmarket/backend/internal/store/gen"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -166,17 +169,22 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 		req.Answers,
 	)
 	if err != nil {
+		log.Println("Error submitting VARK:", err)
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 90*time.Second)
+	defer cancel()
+
 	row, fusedScores, keywords, sentences, err := h.textAnalyzerService.Predict(
-		c.Request.Context(),
+		ctx,
 		req.Text,
 		int64(userID),
 		scores,
 	)
 	if err != nil {
+		log.Println("Error analyzing text:", err)
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -189,6 +197,7 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 		*fusedScores,
 	)
 	if err != nil {
+		log.Println("Error updating user learning style:", err)
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -209,7 +218,7 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 			"grammar_score":       row.ScoreGrammar,
 			"readability_score":   row.ScoreReadability,
 			"sentiment_score":     row.ScoreSentiment,
-			"structure_score":     row.ScoreSentiment,
+			"structure_score":     row.ScoreStructure, 
 			"complexity_score":    row.ScoreComplexity,
 		},
 	}

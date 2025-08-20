@@ -16,7 +16,8 @@ class ApiClient
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->client = new Client([
             'base_uri' => $this->baseUrl,
-            'timeout'  => 5.0,
+            'timeout'  => 0,
+            'connect_timeout' => 30.0,
         ]);
     }
 

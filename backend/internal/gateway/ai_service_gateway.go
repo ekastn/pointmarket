@@ -10,7 +10,6 @@ import (
 )
 
 // AIServiceGateway handles communication with the external AI service.
-
 type AIServiceGateway struct {
 	BaseURL string
 	Client  *http.Client
@@ -21,7 +20,7 @@ func NewAIServiceGateway(baseURL string) *AIServiceGateway {
 	return &AIServiceGateway{
 		BaseURL: baseURL,
 		Client: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 90 * time.Second,
 		},
 	}
 }

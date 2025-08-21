@@ -77,31 +77,6 @@ $base_params = [
                 <?php endforeach; ?>
             </div>
         </div>
-
-        <!-- Available Courses -->
-        <div>
-            <h4 class="mb-3">Available Courses</h4>
-            <div class="row">
-                <?php foreach ($courses as $course): ?>
-                    <?php if (!$course["is_enrolled"]): ?>
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="card card-hover h-100">
-                                <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h5 class="card-title"><?= $course["title"] ?></h5>
-                                    </div>
-                                    <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
-                                    <div class="mt-auto">
-                                        <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">View Courses</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        </div>
     </div>
 
     <!-- Pagination -->

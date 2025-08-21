@@ -1,3 +1,7 @@
+<?php
+$user = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
+?>
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container-fluid">
         <button class="btn btn-primary d-md-none me-2" type="button" id="sidebarToggle">

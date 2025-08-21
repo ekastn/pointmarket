@@ -16,7 +16,7 @@ func main() {
 
 	querier := gen.New(db)
 	userService := services.NewUserService(querier)
-	questionnaireService := services.NewQuestionnaireService(querier)
+	questionnaireService := services.NewQuestionnaireService(db.DB, querier)
 
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 

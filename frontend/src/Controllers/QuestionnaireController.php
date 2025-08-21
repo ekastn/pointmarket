@@ -17,16 +17,7 @@ class QuestionnaireController extends BaseController
 
     public function index(): void
     {
-        session_start();
         $user = $_SESSION['user_data'] ?? null;
-
-        $questionnaires = [];
-        $history = [];
-        $stats = [];
-        $varkResult = null;
-        $pendingEvaluations = [];
-        $messages = $_SESSION['messages'] ?? [];
-        unset($_SESSION['messages']);
 
         // Fetch all questionnaires
         $questionnaires = $this->questionnaireService->getAllQuestionnaires();
@@ -35,42 +26,105 @@ class QuestionnaireController extends BaseController
             $questionnaires = [];
         }
 
-        // Fetch questionnaire history
-        $history = $this->questionnaireService->getQuestionnaireHistory();
-        if ($history === null) {
-            $_SESSION['messages']['error'] = 'Failed to fetch questionnaire history.';
+        // Check user role to render appropriate view
+        if ($user && $user['role'] === 'admin') {
+            $this->render('admin/questionnaires/index', [
+                'title' => 'Manage Questionnaires',
+                'user' => $user,
+                'questionnaires' => $questionnaires,
+                'messages' => $messages,
+            ]);
+        } else {
             $history = [];
-        }
-
-        // Fetch questionnaire stats
-        $stats = $this->questionnaireService->getQuestionnaireStats();
-        if ($stats === null) {
-            $_SESSION['messages']['error'] = 'Failed to fetch questionnaire statistics.';
             $stats = [];
-        }
-
-        // Fetch VARK result
-        $varkResult = $this->questionnaireService->getLatestVARKResult();
-        if ($varkResult === null) {
-            // Error already handled by service, just ensure it's null
             $varkResult = null;
+            $pendingEvaluations = [];
+            $messages = $_SESSION['messages'] ?? [];
+
+            // Fetch questionnaire history
+            $history = $this->questionnaireService->getQuestionnaireHistory();
+            if ($history === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch questionnaire history.';
+                $history = [];
+            }
+
+            // Fetch questionnaire stats
+            $stats = $this->questionnaireService->getQuestionnaireStats();
+            if ($stats === null) {
+                $_SESSION['messages']['error'] = 'Failed to fetch questionnaire statistics.';
+                $stats = [];
+            }
+
+            // Fetch VARK result
+            $varkResult = $this->questionnaireService->getLatestVARKResult();
+            if ($varkResult === null) {
+                // Error already handled by service, just ensure it's null
+                $varkResult = null;
+            }
+            $this->render('siswa/questionnaire', [
+                'title' => 'Questionnaires',
+                'user' => $user,
+                'questionnaires' => $questionnaires,
+                'history' => $history,
+                'stats' => $stats,
+                'pendingEvaluations' => $pendingEvaluations,
+                'varkResult' => $varkResult,
+                'messages' => $messages,
+            ]);
+        }
+    }
+
+    public function create(): void
+    {
+        $user = $_SESSION['user_data'] ?? null;
+        $messages = $_SESSION['messages'] ?? [];
+        unset($_SESSION['messages']);
+
+        // Only admins can access this page
+        if (! $user || $user['role'] !== 'admin') {
+            $_SESSION['messages']['error'] = 'Unauthorized access.';
+            $this->redirect('/questionnaires');
         }
 
-        $this->render('siswa/questionnaire', [
-            'title' => 'Questionnaires',
+        $this->render('admin/questionnaires/manage', [
+            'title' => 'Create Questionnaire',
             'user' => $user,
-            'questionnaires' => $questionnaires,
-            'history' => $history,
-            'stats' => $stats,
-            'pendingEvaluations' => $pendingEvaluations,
-            'varkResult' => $varkResult,
+            'questionnaire' => [], // Empty array for new questionnaire
+            'questions' => [],   // Empty array for new questions
+            'messages' => $messages,
+        ]);
+    }
+
+    public function edit(int $id): void
+    {
+        $user = $_SESSION['user_data'] ?? null;
+        $messages = $_SESSION['messages'] ?? [];
+        unset($_SESSION['messages']);
+
+        // Only admins can access this page
+        if (! $user || $user['role'] !== 'admin') {
+            $_SESSION['messages']['error'] = 'Unauthorized access.';
+            $this->redirect('/questionnaires');
+        }
+
+        $questionnaireData = $this->questionnaireService->getQuestionnaire($id);
+
+        if (! $questionnaireData) {
+            $_SESSION['messages']['error'] = 'Questionnaire not found or failed to load.';
+            $this->redirect('/questionnaires');
+        }
+
+        $this->render('admin/questionnaires/manage', [
+            'title' => 'Edit Questionnaire',
+            'user' => $user,
+            'questionnaire' => $questionnaireData['questionnaire'],
+            'questions' => $questionnaireData['questions'],
             'messages' => $messages,
         ]);
     }
 
     public function startQuestionnairePage(int $id): void
     {
-        session_start();
         $user = $_SESSION['user_data'] ?? null;
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']);
@@ -88,7 +142,16 @@ class QuestionnaireController extends BaseController
 
         $weeklyEvaluationId = $_GET['weekly_evaluation_id'] ?? null;
 
-        if ($questionnaire['type'] === 'VARK') {
+        if ($user && $user['role'] === 'admin') {
+            // Admin view for questionnaire details (read-only or with edit buttons)
+            $this->render('admin/questionnaires/manage', [
+                'title' => $questionnaire['name'],
+                'user' => $user,
+                'questionnaire' => $questionnaire,
+                'questions' => $questions,
+                'messages' => $messages,
+            ]);
+        } elseif ($questionnaire['type'] === 'VARK') {
             $this->render('siswa/questionnaire-vark', [
                 'title' => $questionnaire['name'],
                 'user' => $user,
@@ -156,6 +219,41 @@ class QuestionnaireController extends BaseController
             echo json_encode(['success' => true, 'message' => 'VARK/NLP analysis submitted successfully!', 'data' => $result]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to submit VARK/NLP analysis. Please try again.']);
+        }
+    }
+
+    public function store(): void
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $result = $this->questionnaireService->createQuestionnaire($input);
+
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Questionnaire created successfully!', 'data' => $result]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to create questionnaire. Please try again.']);
+        }
+    }
+
+    public function update(int $id): void
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $result = $this->questionnaireService->updateQuestionnaire($id, $input);
+
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Questionnaire updated successfully!', 'data' => $result]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update questionnaire. Please try again.']);
+        }
+    }
+
+    public function destroy(int $id): void
+    {
+        $result = $this->questionnaireService->deleteQuestionnaire($id);
+
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Questionnaire deleted successfully!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete questionnaire. Please try again.']);
         }
     }
 }

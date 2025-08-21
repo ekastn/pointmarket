@@ -69,3 +69,52 @@ ORDER BY q.type;
 -- name: GetQuestionnaireByType :one
 SELECT * FROM questionnaires
 WHERE type = ? AND status = 'active';
+
+-- name: CreateQuestionnaire :execresult
+INSERT INTO questionnaires (type, name, description, total_questions, status)
+VALUES (?, ?, ?, ?, ?);
+
+-- name: UpdateQuestionnaire :exec
+UPDATE questionnaires
+SET
+  name = ?,
+  description = ?,
+  total_questions = ?,
+  status = ?
+WHERE id = ?;
+
+-- name: DeleteQuestionnaire :exec
+DELETE FROM questionnaires
+WHERE id = ?;
+
+-- name: CreateQuestion :execresult
+INSERT INTO questionnaire_questions (questionnaire_id, question_number, question_text, subscale)
+VALUES (?, ?, ?, ?);
+
+-- name: UpdateQuestion :exec
+UPDATE questionnaire_questions
+SET
+  question_number = ?,
+  question_text = ?,
+  subscale = ?
+WHERE id = ?;
+
+-- name: DeleteQuestion :exec
+DELETE FROM questionnaire_questions
+WHERE id = ?;
+
+-- name: CreateVarkOption :execresult
+INSERT INTO questionnaire_vark_options (question_id, option_text, option_letter, learning_style)
+VALUES (?, ?, ?, ?);
+
+-- name: UpdateVarkOption :exec
+UPDATE questionnaire_vark_options
+SET
+  option_text = ?,
+  option_letter = ?,
+  learning_style = ?
+WHERE id = ?;
+
+-- name: DeleteVarkOption :exec
+DELETE FROM questionnaire_vark_options
+WHERE id = ?;

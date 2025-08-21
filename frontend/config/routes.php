@@ -44,6 +44,13 @@ return function (Router $router) {
             $router->get('/{id}', [QuestionnaireController::class, 'startQuestionnairePage']);
             $router->post('/likert', [QuestionnaireController::class, 'submitLikertQuestionnaire']);
             $router->post('/vark', [QuestionnaireController::class, 'submitVARKQuestionnaire']);
+
+            // Admin CRUD routes
+            $router->get('/create', [QuestionnaireController::class, 'create'], [[AuthMiddleware::class, 'requireAdmin']]);
+            $router->get('/{id}/edit', [QuestionnaireController::class, 'edit'], [[AuthMiddleware::class, 'requireAdmin']]);
+            $router->post('/', [QuestionnaireController::class, 'store'], [[AuthMiddleware::class, 'requireAdmin']]);
+            $router->put('/{id}', [QuestionnaireController::class, 'update'], [[AuthMiddleware::class, 'requireAdmin']]);
+            $router->delete('/{id}', [QuestionnaireController::class, 'destroy'], [[AuthMiddleware::class, 'requireAdmin']]);
         });
 
         $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);

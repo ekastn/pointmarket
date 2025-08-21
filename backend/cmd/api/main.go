@@ -26,7 +26,7 @@ func main() {
 
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
-	questionnaireService := services.NewQuestionnaireService(querier)
+	questionnaireService := services.NewQuestionnaireService(db.DB, querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
 	correlationService := services.NewCorrelationService(querier)
@@ -205,6 +205,11 @@ func main() {
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
 			questionnaireRoutes.POST("/vark", questionnaireHandler.SubmitVark)
 			questionnaireRoutes.GET("/correlations", questionnaireHandler.GetCorrelation)
+
+			// Admin routes for questionnaires
+			questionnaireRoutes.POST("/", adminRoutes.Handlers[0], questionnaireHandler.CreateQuestionnaire)
+			questionnaireRoutes.PUT("/:id", adminRoutes.Handlers[0], questionnaireHandler.UpdateQuestionnaire)
+			questionnaireRoutes.DELETE("/:id", adminRoutes.Handlers[0], questionnaireHandler.DeleteQuestionnaire)
 		}
 
 		// NEW: Weekly Evaluations routes

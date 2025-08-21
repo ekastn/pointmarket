@@ -38,6 +38,71 @@ func (q *Queries) CreateLikertResult(ctx context.Context, arg CreateLikertResult
 	return err
 }
 
+const createQuestion = `-- name: CreateQuestion :execresult
+INSERT INTO questionnaire_questions (questionnaire_id, question_number, question_text, subscale)
+VALUES (?, ?, ?, ?)
+`
+
+type CreateQuestionParams struct {
+	QuestionnaireID int32          `json:"questionnaire_id"`
+	QuestionNumber  int32          `json:"question_number"`
+	QuestionText    string         `json:"question_text"`
+	Subscale        sql.NullString `json:"subscale"`
+}
+
+func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createQuestion,
+		arg.QuestionnaireID,
+		arg.QuestionNumber,
+		arg.QuestionText,
+		arg.Subscale,
+	)
+}
+
+const createQuestionnaire = `-- name: CreateQuestionnaire :execresult
+INSERT INTO questionnaires (type, name, description, total_questions, status)
+VALUES (?, ?, ?, ?, ?)
+`
+
+type CreateQuestionnaireParams struct {
+	Type           QuestionnairesType       `json:"type"`
+	Name           string                   `json:"name"`
+	Description    sql.NullString           `json:"description"`
+	TotalQuestions int32                    `json:"total_questions"`
+	Status         NullQuestionnairesStatus `json:"status"`
+}
+
+func (q *Queries) CreateQuestionnaire(ctx context.Context, arg CreateQuestionnaireParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createQuestionnaire,
+		arg.Type,
+		arg.Name,
+		arg.Description,
+		arg.TotalQuestions,
+		arg.Status,
+	)
+}
+
+const createVarkOption = `-- name: CreateVarkOption :execresult
+INSERT INTO questionnaire_vark_options (question_id, option_text, option_letter, learning_style)
+VALUES (?, ?, ?, ?)
+`
+
+type CreateVarkOptionParams struct {
+	QuestionID    int32                                 `json:"question_id"`
+	OptionText    string                                `json:"option_text"`
+	OptionLetter  string                                `json:"option_letter"`
+	LearningStyle QuestionnaireVarkOptionsLearningStyle `json:"learning_style"`
+}
+
+func (q *Queries) CreateVarkOption(ctx context.Context, arg CreateVarkOptionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createVarkOption,
+		arg.QuestionID,
+		arg.OptionText,
+		arg.OptionLetter,
+		arg.LearningStyle,
+	)
+}
+
 const createVarkResult = `-- name: CreateVarkResult :exec
 INSERT INTO student_questionnaire_vark_results
   (student_id, questionnaire_id, vark_type, vark_label, score_visual, score_auditory, score_reading, score_kinesthetic, answers)
@@ -68,6 +133,36 @@ func (q *Queries) CreateVarkResult(ctx context.Context, arg CreateVarkResultPara
 		arg.ScoreKinesthetic,
 		arg.Answers,
 	)
+	return err
+}
+
+const deleteQuestion = `-- name: DeleteQuestion :exec
+DELETE FROM questionnaire_questions
+WHERE id = ?
+`
+
+func (q *Queries) DeleteQuestion(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteQuestion, id)
+	return err
+}
+
+const deleteQuestionnaire = `-- name: DeleteQuestionnaire :exec
+DELETE FROM questionnaires
+WHERE id = ?
+`
+
+func (q *Queries) DeleteQuestionnaire(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteQuestionnaire, id)
+	return err
+}
+
+const deleteVarkOption = `-- name: DeleteVarkOption :exec
+DELETE FROM questionnaire_vark_options
+WHERE id = ?
+`
+
+func (q *Queries) DeleteVarkOption(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteVarkOption, id)
 	return err
 }
 
@@ -389,4 +484,85 @@ func (q *Queries) GetVarkOptionsByQuestionnaireID(ctx context.Context, questionn
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateQuestion = `-- name: UpdateQuestion :exec
+UPDATE questionnaire_questions
+SET
+  question_number = ?,
+  question_text = ?,
+  subscale = ?
+WHERE id = ?
+`
+
+type UpdateQuestionParams struct {
+	QuestionNumber int32          `json:"question_number"`
+	QuestionText   string         `json:"question_text"`
+	Subscale       sql.NullString `json:"subscale"`
+	ID             int32          `json:"id"`
+}
+
+func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) error {
+	_, err := q.db.ExecContext(ctx, updateQuestion,
+		arg.QuestionNumber,
+		arg.QuestionText,
+		arg.Subscale,
+		arg.ID,
+	)
+	return err
+}
+
+const updateQuestionnaire = `-- name: UpdateQuestionnaire :exec
+UPDATE questionnaires
+SET
+  name = ?,
+  description = ?,
+  total_questions = ?,
+  status = ?
+WHERE id = ?
+`
+
+type UpdateQuestionnaireParams struct {
+	Name           string                   `json:"name"`
+	Description    sql.NullString           `json:"description"`
+	TotalQuestions int32                    `json:"total_questions"`
+	Status         NullQuestionnairesStatus `json:"status"`
+	ID             int32                    `json:"id"`
+}
+
+func (q *Queries) UpdateQuestionnaire(ctx context.Context, arg UpdateQuestionnaireParams) error {
+	_, err := q.db.ExecContext(ctx, updateQuestionnaire,
+		arg.Name,
+		arg.Description,
+		arg.TotalQuestions,
+		arg.Status,
+		arg.ID,
+	)
+	return err
+}
+
+const updateVarkOption = `-- name: UpdateVarkOption :exec
+UPDATE questionnaire_vark_options
+SET
+  option_text = ?,
+  option_letter = ?,
+  learning_style = ?
+WHERE id = ?
+`
+
+type UpdateVarkOptionParams struct {
+	OptionText    string                                `json:"option_text"`
+	OptionLetter  string                                `json:"option_letter"`
+	LearningStyle QuestionnaireVarkOptionsLearningStyle `json:"learning_style"`
+	ID            int32                                 `json:"id"`
+}
+
+func (q *Queries) UpdateVarkOption(ctx context.Context, arg UpdateVarkOptionParams) error {
+	_, err := q.db.ExecContext(ctx, updateVarkOption,
+		arg.OptionText,
+		arg.OptionLetter,
+		arg.LearningStyle,
+		arg.ID,
+	)
+	return err
 }

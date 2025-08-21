@@ -75,19 +75,23 @@ if (!function_exists('build_query_string')) {
                                             if (!$show_action) continue;
 
                                             $attributes_str = '';
+                                            $tag = 'button';
                                             if (isset($action['attributes'])) {
                                                 $attrs = is_callable($action['attributes']) ? $action['attributes']($row) : $action['attributes'];
+                                                if (isset($attrs['href'])) {
+                                                    $tag = 'a';
+                                                }
                                                 foreach ($attrs as $key => $value) {
                                                     $attributes_str .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($value) . '"';
                                                 }
                                             }
                                             ?>
-                                            <button type="button" class="btn <?= htmlspecialchars($action['class']); ?> btn-sm"<?= $attributes_str; ?>>
+                                            <<?= $tag; ?> type="<?= ($tag === 'button') ? 'button' : ''; ?>" class="btn <?= htmlspecialchars($action['class']); ?> btn-sm"<?= $attributes_str; ?>>
                                                 <?php if (isset($action['icon'])): ?>
                                                     <i class="<?= htmlspecialchars($action['icon']); ?>"></i>
                                                 <?php endif; ?>
                                                 <span class="d-none d-md-inline"> <?= htmlspecialchars($action['label']); ?></span>
-                                            </button>
+                                            </<?= $tag; ?>>
                                         <?php endforeach; ?>
                                     </td>
                                 <?php endif; ?>

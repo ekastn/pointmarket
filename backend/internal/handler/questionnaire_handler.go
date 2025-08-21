@@ -237,3 +237,57 @@ func (h *QuestionnaireHandler) GetCorrelation(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Correlation analysis successful", analysisResult)
 }
+
+func (h *QuestionnaireHandler) CreateQuestionnaire(c *gin.Context) {
+	var req dtos.AdminQuestionnaireDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	questionnaire, err := h.questionnaireService.CreateQuestionnaire(c.Request.Context(), req)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Questionnaire created successfully", questionnaire)
+}
+
+func (h *QuestionnaireHandler) UpdateQuestionnaire(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid questionnaire ID")
+		return
+	}
+
+	var req dtos.AdminQuestionnaireDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	questionnaire, err := h.questionnaireService.UpdateQuestionnaire(c.Request.Context(), int32(id), req)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Questionnaire updated successfully", questionnaire)
+}
+
+func (h *QuestionnaireHandler) DeleteQuestionnaire(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid questionnaire ID")
+		return
+	}
+
+	err = h.questionnaireService.DeleteQuestionnaire(c.Request.Context(), int32(id))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Questionnaire deleted successfully", nil)
+}

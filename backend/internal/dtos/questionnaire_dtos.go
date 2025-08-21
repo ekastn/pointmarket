@@ -177,3 +177,31 @@ func (d *QuestionnaireVarkOptionDTO) FromVarkOption(option gen.QuestionnaireVark
 	d.OptionLetter = option.OptionLetter
 	d.LearningStyle = string(option.LearningStyle)
 }
+
+// AdminOptionDTO represents a single option for a VARK question in the admin view.
+type AdminOptionDTO struct {
+	ID            *int32 `json:"id,omitempty"`
+	OptionText    string `json:"option_text"`
+	OptionLetter  string `json:"option_letter"`
+	LearningStyle string `json:"learning_style"`
+}
+
+// AdminQuestionDTO represents a single question in a questionnaire in the admin view.
+type AdminQuestionDTO struct {
+	ID             *int32           `json:"id,omitempty"`
+	QuestionNumber int32            `json:"question_number"`
+	QuestionText   string           `json:"question_text"`
+	Subscale       *string          `json:"subscale,omitempty"`
+	Options        []AdminOptionDTO `json:"options,omitempty"` // Only for VARK questions
+}
+
+// AdminQuestionnaireDTO represents the full state of a questionnaire for admin CRUD operations.
+type AdminQuestionnaireDTO struct {
+	ID             *int32             `json:"id,omitempty"`
+	Name           string             `json:"name"`
+	Description    string             `json:"description"`
+	Type           string             `json:"type"`
+	Status         string             `json:"status"`
+	TotalQuestions int32              `json:"total_questions"`
+	Questions      []AdminQuestionDTO `json:"questions"`
+}

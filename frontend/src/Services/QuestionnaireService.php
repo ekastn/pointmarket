@@ -90,4 +90,31 @@ class QuestionnaireService
         }
         return null;
     }
+
+    public function createQuestionnaire(array $data): ?array
+    {
+        $response = $this->apiClient->request('POST', '/api/v1/questionnaires', ['json' => $data]);
+        if ($response['success']) {
+            return $response['data'];
+        }
+        return null;
+    }
+
+    public function updateQuestionnaire(int $id, array $data): ?array
+    {
+        $response = $this->apiClient->request('PUT', '/api/v1/questionnaires/' . $id, ['json' => $data]);
+        if ($response['success']) {
+            return $response['data'];
+        }
+        return null;
+    }
+
+    public function deleteQuestionnaire(int $id): ?array
+    {
+        $response = $this->apiClient->request('DELETE', '/api/v1/questionnaires/' . $id);
+        if ($response['success']) {
+            return $response['data'];
+        }
+        return null;
+    }
 }

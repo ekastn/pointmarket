@@ -31,6 +31,8 @@ type Querier interface {
 	CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error)
 	// Product Categories --
 	CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (sql.Result, error)
+	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (sql.Result, error)
+	CreateQuestionnaire(ctx context.Context, arg CreateQuestionnaireParams) (sql.Result, error)
 	// Quizzes --
 	CreateQuiz(ctx context.Context, arg CreateQuizParams) (sql.Result, error)
 	// Quiz Questions --
@@ -44,6 +46,7 @@ type Querier interface {
 	CreateUserLearningStyle(ctx context.Context, arg CreateUserLearningStyleParams) error
 	// User Missions --
 	CreateUserMission(ctx context.Context, arg CreateUserMissionParams) (sql.Result, error)
+	CreateVarkOption(ctx context.Context, arg CreateVarkOptionParams) (sql.Result, error)
 	CreateVarkResult(ctx context.Context, arg CreateVarkResultParams) error
 	CreateWeeklyEvaluation(ctx context.Context, arg CreateWeeklyEvaluationParams) error
 	DeleteAssignment(ctx context.Context, id int64) error
@@ -52,12 +55,15 @@ type Querier interface {
 	DeleteMission(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteProductCategory(ctx context.Context, id int32) error
+	DeleteQuestion(ctx context.Context, id int32) error
+	DeleteQuestionnaire(ctx context.Context, id int32) error
 	DeleteQuiz(ctx context.Context, id int64) error
 	DeleteQuizQuestion(ctx context.Context, id int64) error
 	DeleteStudentAssignment(ctx context.Context, id int64) error
 	DeleteStudentQuiz(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserMission(ctx context.Context, id int64) error
+	DeleteVarkOption(ctx context.Context, id int32) error
 	// Student Enrollment --
 	EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error)
 	GetActiveQuestionnaires(ctx context.Context) ([]Questionnaire, error)
@@ -131,6 +137,8 @@ type Querier interface {
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) error
 	UpdateProductStock(ctx context.Context, arg UpdateProductStockParams) error
+	UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) error
+	UpdateQuestionnaire(ctx context.Context, arg UpdateQuestionnaireParams) error
 	UpdateQuiz(ctx context.Context, arg UpdateQuizParams) error
 	UpdateQuizQuestion(ctx context.Context, arg UpdateQuizQuestionParams) error
 	UpdateStudentAssignment(ctx context.Context, arg UpdateStudentAssignmentParams) error
@@ -140,6 +148,7 @@ type Querier interface {
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
 	UpdateUserStatsPoints(ctx context.Context, arg UpdateUserStatsPointsParams) error
+	UpdateVarkOption(ctx context.Context, arg UpdateVarkOptionParams) error
 	UpdateWeeklyEvaluationStatus(ctx context.Context, arg UpdateWeeklyEvaluationStatusParams) error
 }
 

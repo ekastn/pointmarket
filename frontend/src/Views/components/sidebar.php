@@ -29,6 +29,7 @@ $adminsMenu = [
     ['path' => '/products', 'label' => 'Kelola Produk', 'icon' => 'fas fa-box-open'],
     ['path' => '/product-categories', 'label' => 'Kelola Kategori Produk', 'icon' => 'fas fa-tags'],
     ['path' => '/reports', 'label' => 'Laporan', 'icon' => 'fas fa-chart-bar'],
+    ['path' => '/questionnaires', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
 ];
 
 $aiMenu = [

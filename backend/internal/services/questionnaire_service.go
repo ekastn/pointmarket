@@ -14,12 +14,13 @@ import (
 
 // QuestionnaireService provides business logic for questionnaires
 type QuestionnaireService struct {
-	q gen.Querier
+	db *sql.DB
+	q  *gen.Queries
 }
 
 // NewQuestionnaireService creates a new instance of QuestionnaireService
-func NewQuestionnaireService(q gen.Querier) *QuestionnaireService {
-	return &QuestionnaireService{q: q}
+func NewQuestionnaireService(db *sql.DB, q *gen.Queries) *QuestionnaireService {
+	return &QuestionnaireService{db: db, q: q}
 }
 
 // GetQuestionnaires retrieves all questionnaires
@@ -290,4 +291,150 @@ func (s *QuestionnaireService) GetQuestionnaireByType(ctx context.Context, qType
 		return gen.Questionnaire{}, fmt.Errorf("failed to get questionnaire by type %s: %w", qType, err)
 	}
 	return row, nil
+}
+
+func (s *QuestionnaireService) CreateQuestionnaire(ctx context.Context, arg dtos.AdminQuestionnaireDTO) (gen.Questionnaire, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return gen.Questionnaire{}, err
+	}
+	defer tx.Rollback()
+
+	qtx := s.q.WithTx(tx)
+
+	questionnaireResult, err := qtx.CreateQuestionnaire(ctx, gen.CreateQuestionnaireParams{
+		Type:           gen.QuestionnairesType(arg.Type),
+		Name:           arg.Name,
+		Description:    sql.NullString{String: arg.Description, Valid: true},
+		TotalQuestions: int32(len(arg.Questions)),
+		Status:         gen.NullQuestionnairesStatus{QuestionnairesStatus: gen.QuestionnairesStatus(arg.Status), Valid: true},
+	})
+	if err != nil {
+		return gen.Questionnaire{}, err
+	}
+	questionnaireId, err := questionnaireResult.LastInsertId()
+	if err != nil {
+		return gen.Questionnaire{}, err
+	}
+
+	for _, qDto := range arg.Questions {
+		questionResult, err := qtx.CreateQuestion(ctx, gen.CreateQuestionParams{
+			QuestionnaireID: int32(questionnaireId),
+			QuestionNumber:  qDto.QuestionNumber,
+			QuestionText:    qDto.QuestionText,
+			Subscale:        sql.NullString{String: *qDto.Subscale, Valid: qDto.Subscale != nil},
+		})
+		if err != nil {
+			return gen.Questionnaire{}, err
+		}
+
+		if arg.Type == "VARK" {
+			questionId, err := questionResult.LastInsertId()
+			if err != nil {
+				return gen.Questionnaire{}, err
+			}
+			for _, oDto := range qDto.Options {
+				_, err := qtx.CreateVarkOption(ctx, gen.CreateVarkOptionParams{
+					QuestionID:    int32(questionId),
+					OptionText:    oDto.OptionText,
+					OptionLetter:  oDto.OptionLetter,
+					LearningStyle: gen.QuestionnaireVarkOptionsLearningStyle(oDto.LearningStyle),
+				})
+				if err != nil {
+					return gen.Questionnaire{}, err
+				}
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return gen.Questionnaire{}, err
+	}
+
+	return s.q.GetQuestionnaireByID(ctx, int32(questionnaireId))
+}
+
+func (s *QuestionnaireService) UpdateQuestionnaire(ctx context.Context, id int32, arg dtos.AdminQuestionnaireDTO) (gen.Questionnaire, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return gen.Questionnaire{}, err
+	}
+	defer tx.Rollback()
+
+	qtx := s.q.WithTx(tx)
+
+	err = qtx.UpdateQuestionnaire(ctx, gen.UpdateQuestionnaireParams{
+		ID:             id,
+		Name:           arg.Name,
+		Description:    sql.NullString{String: arg.Description, Valid: true},
+		TotalQuestions: int32(len(arg.Questions)),
+		Status:         gen.NullQuestionnairesStatus{QuestionnairesStatus: gen.QuestionnairesStatus(arg.Status), Valid: true},
+	})
+	if err != nil {
+		return gen.Questionnaire{}, err
+	}
+
+	// Delete existing questions and options
+	questions, err := qtx.GetQuestionsByQuestionnaireID(ctx, id)
+	if err != nil {
+		return gen.Questionnaire{}, err
+	}
+	for _, q := range questions {
+		if arg.Type == "VARK" {
+			options, err := qtx.GetVarkOptionsByQuestionnaireID(ctx, q.QuestionnaireID)
+			if err != nil {
+				return gen.Questionnaire{}, err
+			}
+			for _, o := range options {
+				err := qtx.DeleteVarkOption(ctx, o.ID)
+				if err != nil {
+					return gen.Questionnaire{}, err
+				}
+			}
+		}
+		err := qtx.DeleteQuestion(ctx, q.ID)
+		if err != nil {
+			return gen.Questionnaire{}, err
+		}
+	}
+
+	for _, qDto := range arg.Questions {
+		questionResult, err := qtx.CreateQuestion(ctx, gen.CreateQuestionParams{
+			QuestionnaireID: id,
+			QuestionNumber:  qDto.QuestionNumber,
+			QuestionText:    qDto.QuestionText,
+			Subscale:        sql.NullString{String: *qDto.Subscale, Valid: qDto.Subscale != nil},
+		})
+		if err != nil {
+			return gen.Questionnaire{}, err
+		}
+
+		if arg.Type == "VARK" {
+			questionId, err := questionResult.LastInsertId()
+			if err != nil {
+				return gen.Questionnaire{}, err
+			}
+			for _, oDto := range qDto.Options {
+				_, err := qtx.CreateVarkOption(ctx, gen.CreateVarkOptionParams{
+					QuestionID:    int32(questionId),
+					OptionText:    oDto.OptionText,
+					OptionLetter:  oDto.OptionLetter,
+					LearningStyle: gen.QuestionnaireVarkOptionsLearningStyle(oDto.LearningStyle),
+				})
+				if err != nil {
+					return gen.Questionnaire{}, err
+				}
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return gen.Questionnaire{}, err
+	}
+
+	return s.q.GetQuestionnaireByID(ctx, id)
+}
+
+func (s *QuestionnaireService) DeleteQuestionnaire(ctx context.Context, id int32) error {
+	return s.q.DeleteQuestionnaire(ctx, id)
 }

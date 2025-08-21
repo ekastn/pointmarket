@@ -97,61 +97,7 @@ if ($isEditMode && !empty($questions)) {
         </div>
         <div class="card-body" id="questionsContainer">
             <!-- Questions will be dynamically added here -->
-            <?php if (!empty($questionnaireData['questions'])): ?>
-                <?php foreach ($questionnaireData['questions'] as $qIndex => $q): ?>
-                    <div class="question-card card mb-3" data-question-id="<?= htmlspecialchars($q['id'] ?? ''); ?>">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Question <span class="question-number-display"></span></h6>
-                                <button type="button" class="btn btn-danger btn-sm delete-question-btn"><i class="fas fa-trash"></i></button>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Question Text</label>
-                                <textarea class="form-control question-text-input" rows="2" required><?= htmlspecialchars($q['question_text']); ?></textarea>
-                            </div>
-                            <div class="mb-3 subscale-group <?= ($questionnaireData['type'] === 'VARK') ? 'd-none' : ''; ?>">
-                                <label class="form-label">Subscale</label>
-                                <input type="text" class="form-control subscale-input" value="<?= htmlspecialchars($q['subscale'] ?? ''); ?>">
-                            </div>
-                            <div class="options-group <?= ($questionnaireData['type'] !== 'VARK') ? 'd-none' : ''; ?>">
-                                <h6 class="mt-3">Options <button type="button" class="btn btn-success btn-sm add-option-btn"><i class="fas fa-plus"></i></button></h6>
-                                <div class="options-container">
-                                    <?php if (!empty($q['options'])): ?>
-                                        <?php foreach ($q['options'] as $oIndex => $o): ?>
-                                            <div class="option-item border p-2 mb-2" data-option-id="<?= htmlspecialchars($o['id'] ?? ''); ?>">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="mb-0">Option <span class="option-letter-display"></span></h6>
-                                                    <button type="button" class="btn btn-danger btn-sm delete-option-btn"><i class="fas fa-trash"></i></button>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label">Option Text</label>
-                                                    <input type="text" class="form-control option-text-input" value="<?= htmlspecialchars($o['option_text']); ?>" required>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-2">
-                                                        <label class="form-label">Option Letter</label>
-                                                        <input type="text" class="form-control option-letter-input" maxlength="1" value="<?= htmlspecialchars($o['option_letter']); ?>" required>
-                                                    </div>
-                                                    <div class="col-md-6 mb-2">
-                                                        <label class="form-label">Learning Style</label>
-                                                        <select class="form-select learning-style-input" required>
-                                                            <option value="">Select Style</option>
-                                                            <option value="Visual" <?= ($o['learning_style'] === 'Visual') ? 'selected' : ''; ?>>Visual</option>
-                                                            <option value="Auditory" <?= ($o['learning_style'] === 'Auditory') ? 'selected' : ''; ?>>Auditory</option>
-                                                            <option value="Reading" <?= ($o['learning_style'] === 'Reading') ? 'selected' : ''; ?>>Reading/Writing</option>
-                                                            <option value="Kinesthetic" <?= ($o['learning_style'] === 'Kinesthetic') ? 'selected' : ''; ?>>Kinesthetic</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
+            
         </div>
     </div>
 

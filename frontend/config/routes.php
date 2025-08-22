@@ -8,7 +8,6 @@ use App\Controllers\DashboardController;
 use App\Controllers\ProductCategoriesController;
 use App\Controllers\ProductsController;
 use App\Controllers\ProfileController;
-use App\Controllers\ProgressController;
 use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
 use App\Controllers\UsersController;
@@ -54,9 +53,6 @@ return function (Router $router) {
         });
 
         $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
-
-        // Progress/Analytics routes
-        $router->get('progress', [ProgressController::class, 'index']);
 
         // User Profile routes
         $router->get('profile', [ProfileController::class, 'showProfile']);

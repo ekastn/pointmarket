@@ -24,17 +24,6 @@ $messages = $messages ?? [];
     </div>
 </div>
 
-<!-- Messages -->
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?php echo htmlspecialchars($type); ?> alert-dismissible fade show" role="alert">
-            <i class="fas fa-<?php echo $type === 'success' ? 'check-circle' : 'exclamation-circle'; ?> me-2"></i>
-            <?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
-
 <!-- Welcome Card -->
 <div class="row mb-4">
     <div class="col-md-8">

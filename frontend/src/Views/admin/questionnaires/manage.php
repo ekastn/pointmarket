@@ -3,12 +3,10 @@
  * @var array $user
  * @var array $questionnaire
  * @var array $questions
- * @var array $messages
  */
 $user = $user ?? ['name' => 'Guest'];
 $questionnaire = $questionnaire ?? [];
 $questions = $questions ?? [];
-$messages = $messages ?? [];
 
 $isEditMode = isset($questionnaire['id']);
 $formTitle = $isEditMode ? 'Edit Questionnaire: ' . htmlspecialchars($questionnaire['name']) : 'Create New Questionnaire';

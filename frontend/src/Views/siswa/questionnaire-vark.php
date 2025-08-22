@@ -8,21 +8,11 @@
 $user = $user ?? ['name' => 'Guest'];
 $questionnaire = $questionnaire ?? [];
 $questions = $questions ?? [];
-$messages = $messages ?? [];
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i><?= htmlspecialchars($questionnaire['name'] ?? 'VARK Questionnaire') ?></h1>
 </div>
-
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?= $type === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
-            <?= htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
 
 <div class="card mb-4">
     <div class="card-header">

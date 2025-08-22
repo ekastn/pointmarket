@@ -10,7 +10,6 @@ $nlpStats = $nlpStats ?? null;
 $varkResult = $varkResult ?? null;
 $weeklyProgress = $weeklyProgress ?? [];
 $recentActivities = $recentActivities ?? [];
-$messages = $messages ?? [];
 
 use function App\Helpers\formatDate;
 ?>
@@ -18,15 +17,6 @@ use function App\Helpers\formatDate;
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-user-circle me-2"></i>My Profile</h1>
 </div>
-
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?php echo htmlspecialchars($type); ?> alert-dismissible fade show">
-            <?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
 
 <div class="row">
     <div class="col-md-4">

@@ -7,7 +7,6 @@ $subjects = $subjects ?? [];
 $pendingEvaluations = $pendingEvaluations ?? [];
 $status_filter = $status_filter ?? 'all';
 $subject_filter = $subject_filter ?? 'all';
-$messages = $messages ?? [];
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -23,15 +22,6 @@ $messages = $messages ?? [];
         </div>
     </div>
 </div>
-
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?php echo $type === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
-            <?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
 
 <!-- Pending Weekly Evaluations Alert -->
 <?php if (!empty($pendingEvaluations)): ?>

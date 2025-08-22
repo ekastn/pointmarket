@@ -62,15 +62,6 @@ $pagination = [
     </div>
 </div>
 
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?= $type === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
-            <?= htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
-
 <?php
 $renderer->includePartial('components/partials/table', [
     'columns' => $columns,

@@ -11,6 +11,30 @@
 <body>
     <?php include __DIR__.'/../components/navbar.php'; ?>
 
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <?php
+        // Display flash messages as toasts
+        $messages = $_SESSION['messages'] ?? [];
+        if (!empty($messages)) {
+            foreach ($messages as $type => $message) {
+                $toastId = 'toast_' . uniqid();
+                $headerClass = $type === 'success' ? 'bg-primary text-white' : 'bg-danger text-white';
+                $headerText = $type === 'success' ? 'Success' : 'Error';
+                ?>
+                <div id="<?= $toastId ?>" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                    <div class="toast-body d-flex align-items-center <?= $headerClass ?>">
+                        <strong class="me-auto"><?= htmlspecialchars($message) ?></strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+                <?php
+            }
+            // Unset the messages so they don't show again on refresh
+            unset($_SESSION['messages']);
+        }
+        ?>
+    </div>
+
     <div class="container-fluid">
         <div class="row">
             <div class="pt-3">
@@ -36,5 +60,16 @@
     <script src="/public/assets/js/admin-missions.js"></script>
     <script src="/public/assets/js/student-missions.js"></script>
     <script src="/public/assets/js/admin-badges.js"></script>
+    <script>
+        // Initialize and show all toasts on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function (toastEl) {
+                var toast = new bootstrap.Toast(toastEl);
+                toast.show();
+                return toast;
+            });
+        });
+    </script>
 </body>
 </html>

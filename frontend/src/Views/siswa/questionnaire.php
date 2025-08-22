@@ -23,15 +23,6 @@ $messages = $messages ?? [];
     </div>
 </div>
 
-<?php if (!empty($messages)): ?>
-    <?php foreach ($messages as $type => $message): ?>
-        <div class="alert alert-<?php echo $type === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
-            <?php echo htmlspecialchars($message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
-
 <!-- Statistics Overview -->
 <div class="row mb-4">
     <div class="col-12">

@@ -5,18 +5,19 @@ use App\Controllers\AuthController;
 use App\Controllers\BadgesController;
 use App\Controllers\CoursesController;
 use App\Controllers\DashboardController;
+use App\Controllers\DemoController;
+use App\Controllers\MissionsController;
 use App\Controllers\ProductCategoriesController;
 use App\Controllers\ProductsController;
 use App\Controllers\ProfileController;
 use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
+use App\Controllers\SettingsController;
 use App\Controllers\UsersController;
-use App\Controllers\MissionsController;
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
-use App\Controllers\DemoController;
 
 return function (Router $router) {
     // Public routes
@@ -28,7 +29,7 @@ return function (Router $router) {
     // Authenticated routes group
     $router->group('/', function (Router $router) {
         $router->get('dashboard', [DashboardController::class, 'showDashboard']);
-        
+
         // Consolidated Demo routes
         $router->get('ai-explanation', [DemoController::class, 'showAIExplanation']);
         $router->get('ai-recommendations', [DemoController::class, 'showAIRecommendations']);
@@ -66,7 +67,6 @@ return function (Router $router) {
             $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);
             $router->delete('/{id}', [UsersController::class, 'deleteUser']); // Delete user
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
-
 
         // Weekly Evaluations routes
         $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);
@@ -133,6 +133,12 @@ return function (Router $router) {
             $router->put('/{id}', [ProductCategoriesController::class, 'update']);
             $router->delete('/{id}', [ProductCategoriesController::class, 'destroy']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+
+        $router->group('/settings', function (Router $router) {
+            $router->get('/', [SettingsController::class, 'index']);
+            $router->put('/multimodal', [SettingsController::class, 'updateMultimodalThreshold']);
+
+        }, [[AuthMiddleware::class, 'requireLogin']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

@@ -42,9 +42,9 @@ $aiMenu = [
 <div id="sidebarOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark d-none" style="opacity: 0.5; z-index: 1029;"></div>
 
 <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light">
-    <button id="sidebarToggle" class="btn rounded-circle">
-        <i class="fas fa-chevron-left"></i>
-    </button>
+    <!-- <button id="sidebarToggle" class="btn rounded-circle"> -->
+    <!--     <i class="fas fa-chevron-left"></i> -->
+    <!-- </button> -->
     <nav class="nav nav-pills flex-column mb-auto overflow-y-auto">
         <div class="nav flex-column gap-2">
             <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt']); ?>

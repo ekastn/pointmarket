@@ -2,6 +2,7 @@ package utils
 
 import (
 	"math"
+	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/dtos"
 	"sort"
 	"strings"
@@ -129,9 +130,7 @@ func DetermineLearningPreferenceType(scores dtos.VARKScores) (string, string) {
 		label = max1.Name
 	} else {
 		max2 := entries[1]
-		// Threshold for Multimodal
-		// Assuming scores are out of 10
-		const theta = 0.15
+		theta := config.GetMultimodalThreshold()
 
 		if math.Abs(max1.Score-max2.Score) < theta {
 			prefType = "multimodal"

@@ -50,6 +50,7 @@ func main() {
 	courseHandler := handler.NewCourseHandler(*courseService)
 	assignmentHandler := handler.NewAssignmentHandler(assignmentService)
 	quizHandler := handler.NewQuizHandler(quizService)
+	scoringHandler := handler.NewScoringHandler()
 
 	r := gin.Default()
 
@@ -226,6 +227,12 @@ func main() {
 			productCategoriesRoutes.GET("/:id", productHandler.GetProductCategoryByID)
 			productCategoriesRoutes.PUT("/:id", adminRoutes.Handlers[0], productHandler.UpdateProductCategory)    // Admin-only
 			productCategoriesRoutes.DELETE("/:id", adminRoutes.Handlers[0], productHandler.DeleteProductCategory) // Admin-only
+		}
+
+		scoringsRoutes := adminRoutes.Group("/scorings")
+		{
+			scoringsRoutes.PUT("/multimodal", scoringHandler.UpdateMultimodalThreshold)
+			scoringsRoutes.GET("/multimodal", scoringHandler.GetMultimodalThreshold)
 		}
 	}
 

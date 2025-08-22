@@ -39,161 +39,208 @@ $aiMenu = [
 ];
 ?>
 
-<!-- Mobile menu button -->
-<button id="mobile-menu-btn" class="d-lg-none position-fixed btn btn-primary shadow" style="top: 1rem; left: 1rem; z-index: 1050;">
-    <i class="fas fa-bars"></i>
-</button>
+<div id="sidebarOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark d-none" style="opacity: 0.5; z-index: 1029;"></div>
 
-<!-- Overlay for mobile -->
-<div id="mobile-overlay" class="d-lg-none position-fixed w-100 h-100 bg-dark bg-opacity-50 d-none" style="z-index: 1040;"></div>
+<div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light">
+    <button id="sidebarToggle" class="btn rounded-circle">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <nav class="nav nav-pills flex-column mb-auto overflow-y-auto">
+        <div class="nav flex-column gap-2">
+            <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt']); ?>
 
-<div id="sidebar" class="position-fixed position-lg-static bg-light border-end h-100 d-none d-lg-block" style="width: 16rem; z-index: 1040; transition: transform 0.3s ease-in-out;">
-    <div class="d-flex flex-column h-100">
-        <nav class="flex-grow-1 p-3 overflow-auto">
-            <div class="nav flex-column gap-2">
-                <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt']); ?>
+            <hr />
 
-                <hr />
-
-                <?php if (isset($user) && $user['role'] === 'siswa'): ?>
-                    <?php foreach ($studentsMenu as $menu): ?>
-                        <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
-                    <?php endforeach; ?>
-                <?php elseif (isset($user) && $user['role'] === 'guru'): ?>
-                    <?php foreach ($teachersMenu as $menu): ?>
-                        <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
-                    <?php endforeach; ?>
-                <?php elseif (isset($user) && $user['role'] === 'admin'): ?>
-                    <?php foreach ($adminsMenu as $menu): ?>
-                        <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-
-                <hr />
-
-                <h6 class="px-3 mb-1 text-muted">
-                    Fitur AI
-                </h6>
-                <?php foreach ($aiMenu as $menu): ?>
+            <?php if (isset($user) && $user['role'] === 'siswa'): ?>
+                <?php foreach ($studentsMenu as $menu): ?>
                     <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
                 <?php endforeach; ?>
+            <?php elseif (isset($user) && $user['role'] === 'guru'): ?>
+                <?php foreach ($teachersMenu as $menu): ?>
+                    <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
+                <?php endforeach; ?>
+            <?php elseif (isset($user) && $user['role'] === 'admin'): ?>
+                <?php foreach ($adminsMenu as $menu): ?>
+                    <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
-                <hr />
+            <hr />
 
-                <h6 class="px-3 mb-1 text-muted">
-                    <span>Support</span>
-                </h6>
-                <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle']); ?>
-            </div>
-        </nav>
-    </div>
+            <h6 class="px-3 mb-1 text-muted">
+                Fitur AI
+            </h6>
+            <?php foreach ($aiMenu as $menu): ?>
+                <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
+            <?php endforeach; ?>
+
+            <hr />
+
+            <h6 class="px-3 mb-1 text-muted">
+                <span>Support</span>
+            </h6>
+            <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle']); ?>
+        </div>
+    </nav>
 </div>
 
 <style>
-.sidebar-nav-link.active {
-    color: #007bff;
-    background-color: #e9ecef;
-    border-left: 4px solid #007bff;
-    padding-left: 11px;
-}
-
-.sidebar-nav-link:hover {
-    color: #007bff;
-    background-color: #e9ecef;
-    border-left: 4px solid #007bff;
-    padding-left: 11px;
-}
-
-.submenu-link:hover {
-    background-color: var(--bs-light) !important;
-    color: var(--bs-dark) !important;
-}
-
-.user-info:hover {
-    background-color: var(--bs-light) !important;
-}
-
-.section-chevron {
-    transition: transform 0.2s ease;
-}
-
-.section-chevron.rotated {
-    transform: rotate(180deg);
-}
-
-@media (max-width: 991.98px) {
-    #sidebar.show {
-        display: block !important;
-        transform: translateX(0);
+    #sidebar .nav-link.active {
+        color: #007bff;
+        background-color: #e9ecef;
+        border-left: 4px solid #007bff;
+        padding-left: 11px;
     }
-    
+
+    #sidebar .nav-link:hover {
+        color: #007bff;
+        background-color: #e9ecef;
+        border-left: 4px solid #007bff;
+        padding-left: 11px;
+    }
+
     #sidebar {
-        transform: translateX(-100%);
+        width: 280px;
+        transition: all 0.3s;
+        position: relative;
     }
-}
+    #sidebar.collapsed {
+        width: 88px;
+    }
+    #sidebar.collapsed .nav-link span,
+    #sidebar.collapsed .text-muted,
+    #sidebar.collapsed hr {
+        display: none;
+    }
+    #sidebar .nav-link .fas {
+        width: 24px;
+        text-align: center;
+    }
+
+    #sidebarToggle {
+        position: absolute;
+        top: 1rem;
+        right: -1.25rem;
+        z-index: 1031;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        transition: transform 0.3s;
+    }
+
+    #sidebar.collapsed #sidebarToggle {
+        transform: translateX(-6px);
+    }
+
+    #sidebar.collapsed #sidebarToggle i {
+        transform: rotate(180deg);
+    }
+
+    .custom-tooltip .tooltip-inner {
+      background-color: #fff;
+      color: #495057;
+      font-size: 0.9rem;
+      font-weight: 400;
+      border-radius: 0.25rem;
+      border: 1px solid #ced4da;
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+      padding: 0.5rem 1rem;
+    }
+    .custom-tooltip .tooltip-arrow::before {
+      border-right-color: #fff;
+    }
+
+    @media (max-width: 768px) {
+        #sidebar {
+            position: fixed;
+            height: 100%;
+            z-index: 1030;
+            transform: translateX(-100%);
+        }
+        #sidebar.show {
+            transform: translateX(0);
+        }
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+        #sidebarToggle {
+            display: none; /* Hide on mobile, use navbar toggle if needed */
+        }
+        .content-wrapper {
+            margin-left: 0;
+        }
+        .content-wrapper.collapsed {
+            margin-left: 0;
+        }
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Mobile menu functionality
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('mobile-overlay');
-    const menuIcon = mobileMenuBtn.querySelector('i');
-    
-    let isOpen = false;
-    
-    function toggleMobileMenu() {
-        isOpen = !isOpen;
-        
-        if (isOpen) {
-            sidebar.classList.add('show');
-            sidebar.classList.remove('d-none');
-            overlay.classList.remove('d-none');
-            menuIcon.className = 'fas fa-times';
-        } else {
-            sidebar.classList.remove('show');
-            sidebar.classList.add('d-none');
-            overlay.classList.add('d-none');
-            menuIcon.className = 'fas fa-bars';
-        }
-    }
-    
-    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    overlay.addEventListener('click', toggleMobileMenu);
-    
-    // Section toggle functionality
-    const sectionToggles = document.querySelectorAll('.section-toggle');
-    
-    sectionToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const section = this.dataset.section;
-            const submenu = document.querySelector(`.submenu[data-section="${section}"]`);
-            const chevron = this.querySelector('.section-chevron');
-            
-            if (submenu.classList.contains('d-none')) {
-                submenu.classList.remove('d-none');
-                chevron.classList.add('rotated');
-            } else {
-                submenu.classList.add('d-none');
-                chevron.classList.remove('rotated');
-            }
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const contentWrapper = document.querySelector('.content-wrapper');
+    const overlay = document.getElementById('sidebarOverlay');
+    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle'); // Get the new button
+
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('#sidebar .sidebar-nav-link'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover',
+            customClass: 'custom-tooltip'
         });
     });
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 992) {
-            sidebar.classList.remove('show', 'd-none');
-            sidebar.classList.add('d-lg-block');
-            overlay.classList.add('d-none');
-            menuIcon.className = 'fas fa-bars';
-            isOpen = false;
-        } else if (!isOpen) {
-            sidebar.classList.add('d-none');
-            sidebar.classList.remove('d-lg-block');
+
+    const handleTooltips = () => {
+        if (sidebar.classList.contains('collapsed') && window.innerWidth > 768) {
+            tooltipList.forEach(tooltip => tooltip.enable());
+        } else {
+            tooltipList.forEach(tooltip => tooltip.disable());
         }
-    });
+    };
+
+    const toggleDesktopSidebar = () => {
+        sidebar.classList.toggle('collapsed');
+        if(contentWrapper) {
+            contentWrapper.classList.toggle('collapsed');
+        }
+        localStorage.setItem('sidebar.collapsed', sidebar.classList.contains('collapsed'));
+        handleTooltips();
+    };
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleDesktopSidebar);
+    }
+
+    const toggleMobileSidebar = () => {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('d-none');
+    };
+
+    if (mobileSidebarToggle) { // Listen to the new button
+        mobileSidebarToggle.addEventListener('click', toggleMobileSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', toggleMobileSidebar);
+    }
+
+    const setupSidebar = () => {
+        if (window.innerWidth > 768) {
+            if (localStorage.getItem('sidebar.collapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+                if(contentWrapper) {
+                    contentWrapper.classList.add('collapsed');
+                }
+            }
+        } else {
+            sidebar.classList.remove('show');
+            overlay.classList.add('d-none');
+        }
+        handleTooltips();
+    };
+
+    window.addEventListener('resize', setupSidebar);
+    setupSidebar(); // Initial setup
 });
 </script>
-

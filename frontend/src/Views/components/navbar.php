@@ -4,16 +4,18 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container-fluid">
-        <button class="btn btn-primary d-md-none me-2" type="button" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-        <a class="navbar-brand" href="/dashboard">
-            <i class="fas fa-graduation-cap me-2"></i>
-            POINTMARKET
-        </a>
-        
+        <div class="d-flex align-items-center">
+            <button class="btn btn-primary d-lg-none me-2" type="button" id="mobileSidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-graduation-cap me-2"></i>
+                POINTMARKET
+            </a>
+        </div>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
+            <i class="fas fa-bars"></i>
         </button>
         
         <div class="collapse navbar-collapse" id="navbarNav">

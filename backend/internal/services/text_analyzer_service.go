@@ -8,8 +8,6 @@ import (
 	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
-	"sort"
-	"strings"
 )
 
 // TextAnalyzerService provides business logic for NLP analysis
@@ -41,7 +39,7 @@ func (s *TextAnalyzerService) Predict(
 		return nil, nil, nil, nil, err
 	}
 
-	textVARKScores := aiServiceResp.Scores
+	textVARKScores := utils.NormalizeVARKScores(aiServiceResp.Scores)
 	keywords := aiServiceResp.Keywords
 	keySentences := aiServiceResp.KeySentences
 	textStats := aiServiceResp.TextStats
@@ -57,7 +55,7 @@ func (s *TextAnalyzerService) Predict(
 	// Learning Preference Analysis
 	nlpConfidenceWeight := s.calculateNLPConfidenceWeight(textStats.WordCount)
 	fusedVARKScores := s.fuseLearningPreferences(textVARKScores, nlpConfidenceWeight, questionnaireVARKScores)
-	prefType, prefLabel := s.determineLearningPreferenceType(fusedVARKScores)
+	prefType, prefLabel := utils.DetermineLearningPreferenceType(fusedVARKScores)
 
 	scoreJSON, err := json.Marshal(fusedVARKScores)
 	snapshot := gen.CreateTextAnalysisSnapshotParams{
@@ -120,62 +118,6 @@ func (s *TextAnalyzerService) fuseLearningPreferences(
 	fused.Kinesthetic = s.validateAndClampScore(fused.Kinesthetic)
 
 	return fused
-}
-
-// determineLearningPreferenceType classifies preference as Dominant or Multimodal
-// returns preference type and label
-func (s *TextAnalyzerService) determineLearningPreferenceType(scores dtos.VARKScores) (string, string) {
-	scoresMap := map[string]float64{
-		"Visual":      scores.Visual,
-		"Auditory":    scores.Auditory,
-		"Reading":     scores.Reading,
-		"Kinesthetic": scores.Kinesthetic,
-	}
-
-	// Sort scores to find max1 and max2
-	type ScoreEntry struct {
-		Name  string
-		Score float64
-	}
-
-	var entries []ScoreEntry
-	for name, score := range scoresMap {
-		entries = append(entries, ScoreEntry{Name: name, Score: score})
-	}
-
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Score > entries[j].Score
-	})
-
-	// Default values
-	prefType := "dominant"
-	label := "undefined"
-
-	if len(entries) == 0 {
-		return prefType, label
-	}
-
-	max1 := entries[0]
-	if len(entries) == 1 {
-		label = max1.Name
-	} else {
-		max2 := entries[1]
-		// Threshold for Multimodal (theta from PDF is 0.15, here using 15 points difference)
-		// Assuming scores are out of 100, 15 points is 0.15 * 100
-		const theta = 15.0
-
-		if math.Abs(max1.Score-max2.Score) < theta {
-			prefType = "multimodal"
-			// Sort alphabetically for consistent multimodal label
-			names := []string{max1.Name, max2.Name}
-			sort.Strings(names)
-			label = strings.Join(names, "/")
-		} else {
-			label = max1.Name
-		}
-	}
-
-	return prefType, label
 }
 
 func (s *TextAnalyzerService) validateAndClampScore(score float64) float64 {

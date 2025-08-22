@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 	"strconv"
-	"strings"
 )
 
 // QuestionnaireService provides business logic for questionnaires
@@ -199,37 +199,18 @@ func (s *QuestionnaireService) SubmitVARK(
 		return dtos.VARKScores{}, err
 	}
 
-	styleType := "dominant"
-	dominantStyle := ""
-	var maxScore int32 = -1
-	var dominantStyles []string
-
-	// Find max score and all dominant styles
-	for style, score := range scores {
-		if score > maxScore {
-			maxScore = score
-			dominantStyles = []string{style} // Start new list of dominant styles
-		} else if score == maxScore && maxScore != -1 {
-			dominantStyles = append(dominantStyles, style) // Add to existing dominant styles
-		}
-	}
-
-	// Determine dominant style string
-	if len(dominantStyles) == 1 {
-		dominantStyle = dominantStyles[0]
-	} else if len(dominantStyles) > 1 {
-		// Handle multi-modal styles (e.g., VARK types like "VR", "ARK")
-		// Sort styles alphabetically for consistent multi-modal naming
-		// For simplicity, just join them for now.
-		styleType = "multimodal"
-		dominantStyle = strings.Join(dominantStyles, "/")
-	}
+	prefType, prefLabel := utils.DetermineLearningPreferenceType(dtos.VARKScores{
+		Visual:      float64(scores["Visual"]),
+		Auditory:    float64(scores["Auditory"]),
+		Reading:     float64(scores["Reading"]),
+		Kinesthetic: float64(scores["Kinesthetic"]),
+	})
 
 	varkResult := gen.CreateVarkResultParams{
 		StudentID:        studentID,
 		QuestionnaireID:  questionnaireID,
-		VarkType:         gen.StudentQuestionnaireVarkResultsVarkType(styleType),
-		VarkLabel:        dominantStyle,
+		VarkType:         gen.StudentQuestionnaireVarkResultsVarkType(prefType),
+		VarkLabel:        prefLabel,
 		ScoreVisual:      scores["Visual"],
 		ScoreAuditory:    scores["Auditory"],
 		ScoreReading:     scores["Reading"],

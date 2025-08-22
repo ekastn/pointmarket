@@ -9,6 +9,7 @@ import (
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 	"strconv"
 	"time"
 
@@ -180,8 +181,8 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 	row, fusedScores, keywords, sentences, err := h.textAnalyzerService.Predict(
 		ctx,
 		req.Text,
-		int64(userID),
-		scores,
+		userID,
+		utils.NormalizeVARKDBScores(scores),
 	)
 	if err != nil {
 		log.Println("Error analyzing text:", err)

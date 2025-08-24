@@ -41,7 +41,8 @@ class DemoController extends BaseController
             return;
         }
 
-        $response = $this->apiClient->request('POST', '/api/v1/nlp/analyze', [
+        // Call Go backend API for analysis (text analyzer endpoint)
+        $response = $this->apiClient->request('POST', '/api/v1/text-analyzer', [
             'json' => [
                 'text' => $textToAnalyze,
                 'context_type' => $contextType,
@@ -75,9 +76,11 @@ class DemoController extends BaseController
             }
         }
 
+        // Pass default theta (multimodal threshold) for client-side demo (kept in sync with backend default 0.15)
         $this->render('siswa/ai-explanation', [
             'title' => 'AI Explanation',
             'user' => $user,
+            'theta' => 0.15,
         ]);
     }
 

@@ -371,16 +371,236 @@
     </div>
 </div>
 
-<!-- Demo Button -->
-<div class="row">
-    <div class="col-12 text-center">
-        <a href="/dashboard" class="btn btn-primary btn-lg">
-            <i class="fas fa-arrow-left me-2"></i>
-            Kembali ke Dashboard
-        </a>
-        <button class="btn btn-success btn-lg ms-3" onclick="demoAI()">
-            <i class="fas fa-play me-2"></i>
-            Demo AI Simulation
-        </button>
+<!-- VARK + NLP Data Fusion (Interactive) -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4><i class="fas fa-balance-scale me-2"></i>VARK + NLP Data Fusion</h4>
+                <p class="mb-0">Simulasikan bagaimana skor VARK (kuisioner) dan NLP (perilaku) digabung dengan bobot adaptif.</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="mb-2">VARK (Self-Report) — 1 sampai 10</h6>
+                        <div class="mb-2">
+                            <label class="form-label">Visual</label>
+                            <input id="vark-visual" type="number" class="form-control" value="6" min="1" max="10" step="0.1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Auditory</label>
+                            <input id="vark-auditory" type="number" class="form-control" value="5" min="1" max="10" step="0.1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Reading</label>
+                            <input id="vark-reading" type="number" class="form-control" value="7" min="1" max="10" step="0.1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Kinesthetic</label>
+                            <input id="vark-kinesthetic" type="number" class="form-control" value="4" min="1" max="10" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="mb-2">NLP (Behavior) — 1 sampai 10</h6>
+                        <div class="mb-2">
+                            <label class="form-label">Visual</label>
+                            <input id="nlp-visual" type="number" class="form-control" value="5" min="1" max="10" step="0.1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Auditory</label>
+                            <input id="nlp-auditory" type="number" class="form-control" value="5.5" min="1" max="10" step="0.1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Reading</label>
+                            <input id="nlp-reading" type="number" class="form-control" value="5" min="1" max="10" step="0.1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Kinesthetic</label>
+                            <input id="nlp-kinesthetic" type="number" class="form-control" value="7.5" min="1" max="10" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="mb-2">Kualitas Data NLP</h6>
+                        <label for="word-count" class="form-label">Jumlah kata (essay terbaru)</label>
+                        <input id="word-count" type="range" class="form-range" min="0" max="500" value="150">
+                        <div class="d-flex justify-content-between">
+                            <small>0</small>
+                            <small><span id="word-count-value">150</span> kata</small>
+                            <small>500</small>
+                        </div>
+                        <hr>
+                        <div>
+                            <div class="d-flex justify-content-between"><small>W_NLP</small><strong><span id="wnlp">0.50</span></strong></div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div id="wnlp-bar" class="progress-bar bg-info" style="width: 50%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between"><small>W_VARK</small><strong><span id="wvark">0.50</span></strong></div>
+                            <div class="progress" style="height: 6px;">
+                                <div id="wvark-bar" class="progress-bar bg-secondary" style="width: 50%"></div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Threshold θ (multimodal):</small>
+                            <strong><span id="theta-value"><?php echo isset($theta) ? htmlspecialchars((string)$theta) : '0.15'; ?></span></strong>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Hasil Skor Fusi (Fused Scores)</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Dimensi</th>
+                                        <th>Fused</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Visual</td><td><strong id="fused-visual">—</strong></td></tr>
+                                    <tr><td>Auditory</td><td><strong id="fused-auditory">—</strong></td></tr>
+                                    <tr><td>Reading</td><td><strong id="fused-reading">—</strong></td></tr>
+                                    <tr><td>Kinesthetic</td><td><strong id="fused-kinesthetic">—</strong></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Keputusan Preferensi</h6>
+                        <div class="alert" id="decision-box">
+                            <div><small>Top VARK vs NLP:</small> <strong id="mismatch-label">—</strong></div>
+                            <div class="mt-1"><small>Label:</small> <strong id="decision-label">—</strong></div>
+                            <div class="mt-1 text-muted"><small>Catatan:</small> Jika selisih dua skor tertinggi < θ, sistem memberi label multimodal.</small></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
+    <script>
+        (function(){
+            const ids = [
+                'vark-visual','vark-auditory','vark-reading','vark-kinesthetic',
+                'nlp-visual','nlp-auditory','nlp-reading','nlp-kinesthetic','word-count'
+            ];
+            const byId = id => document.getElementById(id);
+            const theta = parseFloat(byId('theta-value').textContent) || 0.15;
+
+            function clamp1to10(x){
+                x = Number(x);
+                if (isNaN(x)) return 1;
+                return Math.max(1, Math.min(10, x));
+            }
+
+            function calcWeights(wordCount){
+                const wc = Number(wordCount) || 0;
+                let wnlp = 0.5;
+                if (wc < 100) wnlp = 0.3;
+                else if (wc >= 300) wnlp = 0.7;
+                else wnlp = 0.5;
+                return { wnlp, wvark: 1 - wnlp };
+            }
+
+            function round2(x){ return Math.round(x * 100) / 100; }
+
+            function topTwo(obj){
+                const entries = Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+                return { top1: entries[0], top2: entries[1] };
+            }
+
+            function update(){
+                const vark = {
+                    Visual: clamp1to10(byId('vark-visual').value),
+                    Auditory: clamp1to10(byId('vark-auditory').value),
+                    Reading: clamp1to10(byId('vark-reading').value),
+                    Kinesthetic: clamp1to10(byId('vark-kinesthetic').value),
+                };
+                const nlp = {
+                    Visual: clamp1to10(byId('nlp-visual').value),
+                    Auditory: clamp1to10(byId('nlp-auditory').value),
+                    Reading: clamp1to10(byId('nlp-reading').value),
+                    Kinesthetic: clamp1to10(byId('nlp-kinesthetic').value),
+                };
+                const wc = Number(byId('word-count').value) || 0;
+                byId('word-count-value').textContent = wc;
+
+                const { wnlp, wvark } = calcWeights(wc);
+                byId('wnlp').textContent = round2(wnlp).toFixed(2);
+                byId('wvark').textContent = round2(wvark).toFixed(2);
+                byId('wnlp-bar').style.width = (wnlp*100).toFixed(0)+'%';
+                byId('wvark-bar').style.width = (wvark*100).toFixed(0)+'%';
+
+                const fused = {
+                    Visual: round2(wvark * vark.Visual + wnlp * nlp.Visual),
+                    Auditory: round2(wvark * vark.Auditory + wnlp * nlp.Auditory),
+                    Reading: round2(wvark * vark.Reading + wnlp * nlp.Reading),
+                    Kinesthetic: round2(wvark * vark.Kinesthetic + wnlp * nlp.Kinesthetic),
+                };
+
+                byId('fused-visual').textContent = fused.Visual.toFixed(2);
+                byId('fused-auditory').textContent = fused.Auditory.toFixed(2);
+                byId('fused-reading').textContent = fused.Reading.toFixed(2);
+                byId('fused-kinesthetic').textContent = fused.Kinesthetic.toFixed(2);
+
+                const tv = topTwo(vark); const tn = topTwo(nlp); const tf = topTwo(fused);
+                const mismatch = tv.top1[0] === tn.top1[0] ? 'Konsisten' : (tv.top1[0]+' vs '+tn.top1[0]);
+                byId('mismatch-label').textContent = mismatch;
+
+                const diff = Math.abs(tf.top1[1] - tf.top2[1]);
+                const isMulti = diff < theta;
+                const label = isMulti ? ('Multimodal ('+tf.top1[0]+'/'+tf.top2[0]+')') : ('Dominan ('+tf.top1[0]+')');
+                const box = byId('decision-box');
+                box.classList.remove('alert-success','alert-info');
+                box.classList.add(isMulti ? 'alert-info' : 'alert-success');
+                byId('decision-label').textContent = label + ' — Δ=' + round2(diff).toFixed(2) + ' vs θ=' + theta.toFixed(2);
+            }
+
+            ids.forEach(id => {
+                const el = byId(id);
+                if (!el) return;
+                el.addEventListener('input', update);
+                el.addEventListener('change', update);
+            });
+            update();
+        })();
+    </script>
+</div>
+
+<!-- Explanation of Calculation -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>Penjelasan Perhitungan Skor</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Bagian ini menjelaskan bagaimana sistem menggabungkan skor VARK (self-report) dan skor NLP (perilaku) untuk menentukan preferensi belajar.</p>
+                <ul>
+                    <li><strong>Input:</strong> VARK (1–10), NLP (1–10), jumlah kata (proxy kualitas data), dan ambang <code>θ</code> (multimodal) = <strong><?php echo isset($theta) ? htmlspecialchars((string)$theta) : '0.15'; ?></strong>.</li>
+                    <li><strong>Bobot:</strong> <code>W_NLP</code> bergantung pada jumlah kata:
+                        <div class="mt-1 small">
+                            <code>W_NLP = 0.30</code> jika <code>kata &lt; 100</code> ·
+                            <code>W_NLP = 0.50</code> jika <code>100 ≤ kata &lt; 300</code> ·
+                            <code>W_NLP = 0.70</code> jika <code>kata ≥ 300</code>
+                        </div>
+                        <div class="small">Kemudian <code>W_VARK = 1 − W_NLP</code>.</div>
+                    </li>
+                    <li><strong>Fusi Skor (per dimensi):</strong>
+                        <div class="mt-1"><code>Fused(d) = round2( W_VARK × VARK(d) + W_NLP × NLP(d) )</code>, untuk d ∈ {Visual, Auditory, Reading, Kinesthetic}.</div>
+                    </li>
+                    <li><strong>Keputusan Label:</strong>
+                        <div class="mt-1 small">Urutkan skor <em>Fused</em> menurun → ambil dua teratas s1 ≥ s2 → hitung Δ = |s1 − s2|.</div>
+                        <div class="small">Jika <code>Δ &lt; θ</code> → <strong>Multimodal</strong> (nama dua teratas). Jika tidak → <strong>Dominan</strong> (nama tertinggi).</div>
+                    </li>
+                    <li><strong>Indikator Mismatch:</strong> Bandingkan dimensi tertinggi VARK vs NLP. Jika berbeda → ditampilkan sebagai <em>mismatch</em> untuk transparansi.</li>
+                </ul>
+                <p class="text-muted small mb-0">Catatan: Di backend, nilai NLP (0–1) dan hasil kuisioner (mis. 0–16) dinormalisasi ke skala 1–10 sebelum difusi.</p>
+            </div>
+        </div>
+    </div>
+    
 </div>

@@ -11,12 +11,12 @@ $base_params = [
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
+    <h1 class="h3 mb-4 text-gray-800"><?= htmlspecialchars($title ?: 'Kursus') ?></h1>
 
     <div class="row mb-3">
         <div class="col-12 col-md-6">
             <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Search by title or slug" value="<?= htmlspecialchars($search) ?>">
+                <input type="text" name="search" class="form-control me-2" placeholder="Cari judul atau slug" value="<?= htmlspecialchars($search) ?>">
                 <button class="btn btn-outline-secondary" type="submit">Search</button>
             </form>
         </div>
@@ -31,7 +31,7 @@ $base_params = [
 
         <?php if (!empty($myCourses)): ?>
         <div class="mb-5">
-            <h4 class="mb-3">My Courses</h4>
+            <h4 class="mb-3">Kursus Saya</h4>
             <div class="row">
                 <?php foreach ($myCourses as $course): ?>
                     <div class="col-lg-4 col-md-6 mb-4">
@@ -43,7 +43,7 @@ $base_params = [
                                 </div>
                                 <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
                                 <div class="mt-auto">
-                                    <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">View Courses</a>
+                                    <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">Lihat Kursus</a>
                                 </div>
                             </div>
                         </div>
@@ -55,7 +55,7 @@ $base_params = [
 
         <!-- Available Courses -->
         <div>
-            <h4 class="mb-3">Available Courses</h4>
+            <h4 class="mb-3">Kursus Tersedia</h4>
             <div class="row">
                 <?php foreach ($courses as $course): ?>
                     <?php if (!$course["is_enrolled"]): ?>
@@ -68,7 +68,7 @@ $base_params = [
                                     </div>
                                     <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
                                     <div class="mt-auto">
-                                        <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">View Courses</a>
+                                        <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">Lihat Kursus</a>
                                     </div>
                                 </div>
                             </div>
@@ -82,7 +82,7 @@ $base_params = [
     <!-- Pagination -->
     <nav class="d-flex justify-content-between align-items-center" aria-label="Page navigation">
         <div class="mb-3">
-            Showing <?= $start; ?> to <?= $end; ?> of <?= $total_data; ?> entries
+            Menampilkan <?= $start; ?>–<?= $end; ?> dari <?= $total_data; ?> data
         </div>
         <?php if ($total_pages > 1) : ?>
             <ul class="pagination mb-0">
@@ -111,4 +111,3 @@ $base_params = [
         <?php endif; ?>
     </nav>
 </div>
-

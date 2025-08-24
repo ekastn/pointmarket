@@ -10,14 +10,14 @@ $subject_filter = $subject_filter ?? 'all';
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-tasks me-2"></i>My Assignments</h1>
+    <h1 class="h2"><i class="fas fa-tasks me-2"></i>Tugas Saya</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="/weekly-evaluations" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-check"></i> Weekly Evaluations
+                <i class="fas fa-calendar-check"></i> Evaluasi Mingguan
             </a>
             <a href="/progress" class="btn btn-outline-info">
-                <i class="fas fa-chart-line"></i> My Progress
+                <i class="fas fa-chart-line"></i> Progress Saya
             </a>
         </div>
     </div>
@@ -28,10 +28,10 @@ $subject_filter = $subject_filter ?? 'all';
 <div class="row mb-4">
     <div class="col-12">
         <div class="alert pending-alert">
-            <h5><i class="fas fa-bell me-2"></i>Weekly Evaluations Pending</h5>
-            <p>Complete your <strong><?php echo count($pendingEvaluations); ?> pending weekly evaluation(s)</strong> to help AI provide better assignment recommendations.</p>
+            <h5><i class="fas fa-bell me-2"></i>Evaluasi Mingguan Belum Selesai</h5>
+            <p>Yuk selesaikan <strong><?php echo count($pendingEvaluations); ?> evaluasi mingguan</strong> biar rekomendasi AI untuk tugas makin akurat.</p>
             <a href="/weekly-evaluations" class="btn btn-warning btn-sm">
-                <i class="fas fa-calendar-check me-1"></i> Complete Evaluations
+                <i class="fas fa-calendar-check me-1"></i> Selesaikan Evaluasi
             </a>
         </div>
     </div>
@@ -46,7 +46,7 @@ $subject_filter = $subject_filter ?? 'all';
                 <div class="progress-ring" style="background: linear-gradient(135deg, #d1edff 0%, #a8daff 100%); color: #0c63e4;">
                     <?php echo $stats['total_assignments']; ?>
                 </div>
-                <h6 class="mt-2 mb-0">Total Assignments</h6>
+                <h6 class="mt-2 mb-0">Total Tugas</h6>
             </div>
         </div>
     </div>
@@ -56,7 +56,7 @@ $subject_filter = $subject_filter ?? 'all';
                 <div class="progress-ring" style="background: linear-gradient(135deg, #d4edda 0%, #a3d9a4 100%); color: #155724;">
                     <?php echo $stats['completed']; ?>
                 </div>
-                <h6 class="mt-2 mb-0">Completed</h6>
+                <h6 class="mt-2 mb-0">Selesai</h6>
             </div>
         </div>
     </div>
@@ -66,7 +66,7 @@ $subject_filter = $subject_filter ?? 'all';
                 <div class="progress-ring" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); color: #664d03;">
                     <?php echo $stats['in_progress']; ?>
                 </div>
-                <h6 class="mt-2 mb-0">In Progress</h6>
+                <h6 class="mt-2 mb-0">Proses</h6>
             </div>
         </div>
     </div>
@@ -76,7 +76,7 @@ $subject_filter = $subject_filter ?? 'all';
                 <div class="progress-ring" style="background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%); color: #721c24;">
                     <?php echo $stats['overdue']; ?>
                 </div>
-                <h6 class="mt-2 mb-0">Overdue</h6>
+                <h6 class="mt-2 mb-0">Terlambat</h6>
             </div>
         </div>
     </div>
@@ -87,18 +87,18 @@ $subject_filter = $subject_filter ?? 'all';
     <div class="col-md-6">
         <div class="card stats-card">
             <div class="card-body">
-                <h6><i class="fas fa-trophy me-2 text-warning"></i>Total Points Earned</h6>
+                <h6><i class="fas fa-trophy me-2 text-warning"></i>Total Poin Didapat</h6>
                 <h3 class="text-primary"><?php echo number_format($stats['total_points'], 1); ?></h3>
-                <small class="text-muted">From completed assignments</small>
+                <small class="text-muted">Dari tugas yang selesai</small>
             </div>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card stats-card">
             <div class="card-body">
-                <h6><i class="fas fa-chart-line me-2 text-success"></i>Average Score</h6>
+                <h6><i class="fas fa-chart-line me-2 text-success"></i>Rata-rata Nilai</h6>
                 <h3 class="text-success"><?php echo number_format($stats['average_score'], 1); ?></h3>
-                <small class="text-muted">Per assignment</small>
+                <small class="text-muted">Per tugas</small>
             </div>
         </div>
     </div>
@@ -108,16 +108,16 @@ $subject_filter = $subject_filter ?? 'all';
 <div class="filter-section">
     <div class="row align-items-center">
         <div class="col-md-6">
-            <h6 class="mb-2"><i class="fas fa-filter me-2"></i>Filter Assignments</h6>
+            <h6 class="mb-2"><i class="fas fa-filter me-2"></i>Filter Tugas</h6>
             <div class="d-flex gap-2 flex-wrap">
                 <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
-                    <option value="all" <?php echo $status_filter === 'all' ? 'selected' : ''; ?>>All Status</option>
-                    <option value="not_started" <?php echo $status_filter === 'not_started' ? 'selected' : ''; ?>>Not Started</option>
-                    <option value="in_progress" <?php echo $status_filter === 'in_progress' ? 'selected' : ''; ?>>In Progress</option>
-                    <option value="completed" <?php echo $status_filter === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                    <option value="all" <?php echo $status_filter === 'all' ? 'selected' : ''; ?>>Semua Status</option>
+                    <option value="not_started" <?php echo $status_filter === 'not_started' ? 'selected' : ''; ?>>Belum Mulai</option>
+                    <option value="in_progress" <?php echo $status_filter === 'in_progress' ? 'selected' : ''; ?>>Proses</option>
+                    <option value="completed" <?php echo $status_filter === 'completed' ? 'selected' : ''; ?>>Selesai</option>
                 </select>
                 <select id="subjectFilter" class="form-select form-select-sm" style="width: auto;">
-                    <option value="all" <?php echo $subject_filter === 'all' ? 'selected' : ''; ?>>All Subjects</option>
+                    <option value="all" <?php echo $subject_filter === 'all' ? 'selected' : ''; ?>>Semua Mapel</option>
                     <?php foreach ($subjects as $subject): ?>
                         <option value="<?php echo htmlspecialchars($subject['subject']); ?>" 
                                 <?php echo $subject_filter === $subject['subject'] ? 'selected' : ''; ?>>
@@ -128,7 +128,7 @@ $subject_filter = $subject_filter ?? 'all';
             </div>
         </div>
         <div class="col-md-6">
-            <h6 class="mb-2"><i class="fas fa-book me-2"></i>Subjects</h6>
+            <h6 class="mb-2"><i class="fas fa-book me-2"></i>Mata Pelajaran</h6>
             <div class="d-flex flex-wrap">
                 <?php foreach ($subjects as $subject): ?>
                     <span class="subject-tag bg-light text-dark">
@@ -175,15 +175,15 @@ $subject_filter = $subject_filter ?? 'all';
                     <!-- Assignment Details -->
                     <div class="row text-center mb-3">
                         <div class="col-6">
-                            <small class="text-muted">Points</small>
+                            <small class="text-muted">Poin</small>
                             <div class="fw-bold text-primary"><?php echo htmlspecialchars($assignment['points']); ?></div>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted">Days Left</small>
+                            <small class="text-muted">Sisa Hari</small>
                             <div class="fw-bold <?php echo $assignment['days_remaining'] < 0 ? 'text-danger' : ($assignment['days_remaining'] <= 2 ? 'text-warning' : 'text-success'); ?>">
                                 <?php 
                                 if ($assignment['days_remaining'] < 0) {
-                                    echo abs($assignment['days_remaining']) . ' overdue';
+                                    echo abs($assignment['days_remaining']) . ' terlambat';
                                 } else {
                                     echo htmlspecialchars($assignment['days_remaining']);
                                 }
@@ -196,12 +196,12 @@ $subject_filter = $subject_filter ?? 'all';
                     <div class="mb-3">
                         <small class="text-muted">
                             <i class="fas fa-calendar me-1"></i>
-                            Due: <?php echo htmlspecialchars(date('d M Y', strtotime($assignment['due_date']))); ?>
+                            Tenggat: <?php echo htmlspecialchars(date('d M Y', strtotime($assignment['due_date']))); ?>
                         </small>
                         <br>
                         <small class="text-muted">
                             <i class="fas fa-user me-1"></i>
-                            Teacher: <?php echo htmlspecialchars($assignment['teacher_name']); ?>
+                            Guru: <?php echo htmlspecialchars($assignment['teacher_name']); ?>
                         </small>
                     </div>
 
@@ -250,17 +250,17 @@ $subject_filter = $subject_filter ?? 'all';
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No assignments found</h5>
+                <h5 class="text-muted">Tidak ada tugas</h5>
                 <p class="text-muted">
                     <?php if ($status_filter !== 'all' || $subject_filter !== 'all'): ?>
-                        Try adjusting your filters to see more assignments.
+                        Coba ubah filter untuk melihat tugas lainnya.
                     <?php else: ?>
-                        New assignments will appear here when your teachers create them.
+                        Tugas baru akan muncul di sini saat guru membuatnya.
                     <?php endif; ?>
                 </p>
                 <?php if ($status_filter !== 'all' || $subject_filter !== 'all'): ?>
                     <a href="/assignments" class="btn btn-primary">
-                        <i class="fas fa-undo me-1"></i> Clear Filters
+                        <i class="fas fa-undo me-1"></i> Reset Filter
                     </a>
                 <?php endif; ?>
             </div>
@@ -274,7 +274,7 @@ $subject_filter = $subject_filter ?? 'all';
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="submissionModalTitle">
-                        <i class="fas fa-upload me-2"></i>Submit Assignment
+                        <i class="fas fa-upload me-2"></i>Submit Tugas
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -309,7 +309,7 @@ $subject_filter = $subject_filter ?? 'all';
         }
 
         async function startAssignment(assignmentId) {
-            if (!confirm('Are you sure you want to start this assignment?')) {
+            if (!confirm('Yakin mulai tugas ini?')) {
                 return;
             }
 
@@ -339,27 +339,27 @@ $subject_filter = $subject_filter ?? 'all';
             document.getElementById('submissionModalBody').innerHTML = `
                 <form id="submissionForm">
                     <div class="mb-3">
-                        <label for="submissionText" class="form-label">Your Submission</label>
+                        <label for="submissionText" class="form-label">Jawaban Kamu</label>
                         <textarea class="form-control" id="submissionText" rows="6" 
-                                  placeholder="Enter your assignment solution, answers, or attach relevant content..."
+                                  placeholder="Tulis jawaban/solusi tugas kamu di sini..."
                                   required></textarea>
-                        <div class="form-text">Provide your complete solution or attach relevant files.</div>
+                        <div class="form-text">Tulis jawaban lengkap kamu. (Lampiran belum tersedia di demo)</div>
                     </div>
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Demo Notice:</strong> This is a proof-of-concept demonstration. In the full implementation, AI will provide:
+                        <strong>Demo Notice:</strong> Ini masih demo. Nantinya AI akan menyediakan:
                         <ul class="mb-0 mt-2">
-                            <li><strong>Real-time NLP Analysis:</strong> Grammar checking and content analysis as you type</li>
-                            <li><strong>Intelligent Scoring:</strong> Context-aware evaluation based on assignment requirements</li>
-                            <li><strong>Detailed Feedback:</strong> Specific suggestions for improvement</li>
-                            <li><strong>Draft Management:</strong> Auto-save and revision tracking capabilities</li>
+                            <li><strong>Real-time NLP Analysis:</strong> Cek grammar dan analisis konten saat kamu mengetik</li>
+                            <li><strong>Intelligent Scoring:</strong> Penilaian sesuai konteks dan ketentuan tugas</li>
+                            <li><strong>Detailed Feedback:</strong> Saran detail untuk perbaikan</li>
+                            <li><strong>Draft Management:</strong> Auto-save dan tracking revisi</li>
                         </ul>
-                        <small class="text-muted mt-2 d-block">Current submission will receive a simulated AI score for demonstration purposes.</small>
+                        <small class="text-muted mt-2 d-block">Submit sekarang akan dapat nilai AI simulasi untuk keperluan demo.</small>
                     </div>
                 </form>
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i> Cancel
+                        <i class="fas fa-times me-1"></i> Batal
                     </button>
                     <button type="button" class="btn btn-success" onclick="confirmSubmission(${assignmentId})">
                         <i class="fas fa-upload me-1"></i> Submit Assignment
@@ -375,11 +375,11 @@ $subject_filter = $subject_filter ?? 'all';
             const submissionText = document.getElementById('submissionText').value.trim();
             
             if (!submissionText) {
-                alert('Please provide your submission content.');
+                alert('Isi jawaban dulu ya.');
                 return;
             }
 
-            if (!confirm('Are you sure you want to submit this assignment? You cannot make changes after submission.')) {
+            if (!confirm('Yakin submit tugas ini? Setelah submit nggak bisa diubah.')) {
                 return;
             }
 
@@ -405,20 +405,20 @@ $subject_filter = $subject_filter ?? 'all';
                 document.getElementById('submissionModalBody').innerHTML = `
                         <div class="alert alert-success text-center">
                             <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                            <h5>Assignment Submitted Successfully!</h5>
-                            <p>Your simulated AI score: <strong>${data.score}</strong></p>
+                            <h5>Tugas berhasil di-submit!</h5>
+                            <p>Nilai AI (simulasi): <strong>${data.score}</strong></p>
                             <div class="alert alert-info mt-3 mb-3">
                                 <small>
                                     <i class="fas fa-robot me-1"></i>
-                                    <strong>Demo Mode:</strong> This score is generated for demonstration. 
-                                    In production, our NLP AI will analyze your content for grammar, structure, relevance, and provide detailed feedback.
+                                    <strong>Demo Mode:</strong> Nilai ini hanya simulasi. 
+                                    Nanti AI NLP kami akan analisis konten kamu (grammar, struktur, relevansi) dan kasih feedback detail.
                                 </small>
                             </div>
                             <p class="mb-0">${data.message}</p>
                         </div>
                         <div class="text-center mt-3">
                             <button type="button" class="btn btn-primary" onclick="location.reload()">
-                                <i class="fas fa-sync-alt me-1"></i> Refresh Page
+                                <i class="fas fa-sync-alt me-1"></i> Refresh Halaman
                             </button>
                         </div>
                     `;
@@ -430,7 +430,7 @@ $subject_filter = $subject_filter ?? 'all';
                         </div>
                         <div class="text-center">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                Close
+                                Tutup
                             </button>
                         </div>
                     `;
@@ -440,7 +440,7 @@ $subject_filter = $subject_filter ?? 'all';
         function viewAssignmentDetails(assignmentId) {
             // This would open a detailed view of the assignment
             // For now, we'll just show an alert
-            alert('Assignment details view - Feature coming soon!');
+            alert('Detail tugas - Fitur segera hadir!');
         }
 
         // Auto-refresh every 5 minutes to update due dates and overdue status

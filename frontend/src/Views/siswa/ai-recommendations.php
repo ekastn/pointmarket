@@ -13,7 +13,7 @@ $sampleRecommendations = $sampleRecommendations ?? [];
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="fas fa-robot me-2"></i>
-        AI Recommendations
+        Rekomendasi AI
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
@@ -127,7 +127,7 @@ $sampleRecommendations = $sampleRecommendations ?? [];
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-flask me-2"></i>Demo Real-time AI Processing</h5>
+                <h5><i class="fas fa-flask me-2"></i>Demo Proses AI Real-time</h5>
             </div>
             <div class="card-body">
                 <div class="real-time-demo" id="aiDemo">
@@ -150,27 +150,27 @@ $sampleRecommendations = $sampleRecommendations ?? [];
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-info text-white">
-                <h6><i class="fas fa-language me-2"></i>NLP Statistics</h6>
+                <h6><i class="fas fa-language me-2"></i>Statistik NLP</h6>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
                         <div class="text-center">
                             <h4 class="text-info"><?= number_format($aiMetrics['nlp']['samples_processed'] ?? 0) ?></h4>
-                            <small>Texts Analyzed</small>
+                            <small>Teks Dianalisis</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="text-center">
                             <h4 class="text-info"><?= $aiMetrics['nlp']['avg_score'] ?? 0 ?></h4>
-                            <small>Average Score</small>
+                            <small>Rata-rata Skor</small>
                         </div>
                     </div>
                 </div>
                 <hr>
                 <small class="text-muted">
                     <i class="fas fa-arrow-up text-success me-1"></i>
-                    Improvement: <?= $aiMetrics['nlp']['improvement_rate'] ?? 0 ?>% this month
+                    Improvement: <?= $aiMetrics['nlp']['improvement_rate'] ?? 0 ?>% bulan ini
                 </small>
             </div>
         </div>
@@ -179,20 +179,20 @@ $sampleRecommendations = $sampleRecommendations ?? [];
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h6><i class="fas fa-brain me-2"></i>RL Statistics</h6>
+                <h6><i class="fas fa-brain me-2"></i>Statistik RL</h6>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
                         <div class="text-center">
                             <h4 class="text-primary"><?= number_format($aiMetrics['rl']['decisions_made'] ?? 0) ?></h4>
-                            <small>Decisions Made</small>
+                            <small>Keputusan Diambil</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="text-center">
                             <h4 class="text-primary"><?= $aiMetrics['rl']['avg_reward'] ?? 0 ?></h4>
-                            <small>Average Reward</small>
+                            <small>Rata-rata Reward</small>
                         </div>
                     </div>
                 </div>
@@ -208,14 +208,14 @@ $sampleRecommendations = $sampleRecommendations ?? [];
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-success text-white">
-                <h6><i class="fas fa-filter me-2"></i>CBF Statistics</h6>
+                <h6><i class="fas fa-filter me-2"></i>Statistik CBF</h6>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
                         <div class="text-center">
                             <h4 class="text-success"><?= number_format($aiMetrics['cbf']['recommendations'] ?? 0) ?></h4>
-                            <small>Recommendations</small>
+                            <small>Rekomendasi</small>
                         </div>
                     </div>
                     <div class="col-6">
@@ -228,7 +228,7 @@ $sampleRecommendations = $sampleRecommendations ?? [];
                 <hr>
                 <small class="text-muted">
                     <i class="fas fa-star text-warning me-1"></i>
-                    User Satisfaction: <?= $aiMetrics['cbf']['user_satisfaction'] ?? 0 ?>/5.0
+                    Kepuasan Pengguna: <?= $aiMetrics['cbf']['user_satisfaction'] ?? 0 ?>/5.0
                 </small>
             </div>
         </div>

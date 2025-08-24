@@ -5,14 +5,14 @@ $user = $data['user'] ?? null;
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-question-circle me-2"></i>My Quizzes</h1>
+    <h1 class="h2"><i class="fas fa-question-circle me-2"></i>Kuis Saya</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="/weekly-evaluations" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-check"></i> Weekly Evaluations
+                <i class="fas fa-calendar-check"></i> Evaluasi Mingguan
             </a>
             <a href="/progress" class="btn btn-outline-info">
-                <i class="fas fa-chart-line"></i> My Progress
+                <i class="fas fa-chart-line"></i> Progress Saya
             </a>
         </div>
     </div>
@@ -21,8 +21,8 @@ $user = $data['user'] ?? null;
 <!-- Quizzes List -->
 <div class="row">
     <div class="col-12">
-        <h4><i class="fas fa-list me-2"></i>Quizzes 
-            <small class="text-muted">(<?php echo count($quizzes); ?> quizzes)</small>
+        <h4><i class="fas fa-list me-2"></i>Daftar Kuis 
+            <small class="text-muted">(<?php echo count($quizzes); ?> kuis)</small>
         </h4>
     </div>
     
@@ -54,13 +54,13 @@ $user = $data['user'] ?? null;
                     <!-- Quiz Details -->
                     <div class="row text-center mb-3">
                         <div class="col-6">
-                            <small class="text-muted">Points</small>
+                            <small class="text-muted">Poin</small>
                             <div class="fw-bold text-primary"><?php echo $quiz['points']; ?></div>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted">Duration</small>
+                            <small class="text-muted">Durasi</small>
                             <div class="fw-bold text-info">
-                                <?php echo $quiz['duration'] ? htmlspecialchars($quiz['duration']) . ' mins' : 'N/A'; ?>
+                                <?php echo $quiz['duration'] ? htmlspecialchars($quiz['duration']) . ' menit' : 'N/A'; ?>
                             </div>
                         </div>
                     </div>
@@ -69,19 +69,19 @@ $user = $data['user'] ?? null;
                     <div class="mb-3">
                         <small class="text-muted">
                             <i class="fas fa-calendar me-1"></i>
-                            Due: <?php echo htmlspecialchars($quiz['due_date'] ? date('d M Y', strtotime($quiz['due_date'])) : 'N/A'); ?>
+                            Tenggat: <?php echo htmlspecialchars($quiz['due_date'] ? date('d M Y', strtotime($quiz['due_date'])) : 'N/A'); ?>
                         </small>
                         <br>
                         <small class="text-muted">
                             <i class="fas fa-user me-1"></i>
-                            Teacher ID: <?php echo htmlspecialchars($quiz['teacher_id']); ?>
+                            ID Guru: <?php echo htmlspecialchars($quiz['teacher_id']); ?>
                         </small>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary btn-sm flex-fill" onclick="startQuiz(<?php echo $quiz['id']; ?>)">
-                            <i class="fas fa-play me-1"></i> Start Quiz
+                            <i class="fas fa-play me-1"></i> Mulai Kuis
                         </button>
                         <button class="btn btn-outline-info btn-sm" onclick="viewQuizDetails(<?php echo $quiz['id']; ?>)">
                             <i class="fas fa-eye"></i>
@@ -95,10 +95,8 @@ $user = $data['user'] ?? null;
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No quizzes found</h5>
-                <p class="text-muted">
-                    New quizzes will appear here when your teachers create them.
-                </p>
+                <h5 class="text-muted">Tidak ada kuis</h5>
+                <p class="text-muted">Kuis baru akan muncul di sini saat guru membuatnya.</p>
             </div>
         </div>
     <?php endif; ?>

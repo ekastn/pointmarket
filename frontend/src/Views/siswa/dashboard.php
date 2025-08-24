@@ -7,10 +7,10 @@ $studentStats = $studentStats ?? [];
 $learningStyle = $studentStats['learning_style'] ?? null;
 
 $statsItems = [
-    ['title' => 'Points', 'value' => $studentStats['total_points'], 'icon' => 'fas fa-coins'],
-    ['title' => 'Completed Assignments', 'value' => $studentStats['completed_assignments'], 'icon' => 'fas fa-tasks'],
-    ['title' => 'MSLQ Score', 'value' => $studentStats['mslq_score'], 'icon' => 'fas fa-brain'],
-    ['title' => 'AMS Score', 'value' => $studentStats['ams_score'], 'icon' => 'fas fa-heart'],
+    ['title' => 'Poin', 'value' => $studentStats['total_points'], 'icon' => 'fas fa-coins'],
+    ['title' => 'Tugas Selesai', 'value' => $studentStats['completed_assignments'], 'icon' => 'fas fa-tasks'],
+    ['title' => 'Skor MSLQ', 'value' => $studentStats['mslq_score'], 'icon' => 'fas fa-brain'],
+    ['title' => 'Skor AMS', 'value' => $studentStats['ams_score'], 'icon' => 'fas fa-heart'],
 ];
 
 require_once __DIR__.'/../../Helpers/VARKHelpers.php';
@@ -53,7 +53,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-brain me-2"></i>
-                    Profil Gaya Belajar Anda
+                    Profil Gaya Belajar Kamu
                 </h6>
             </div>
             <div class="card-body">
@@ -77,7 +77,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                                     </p>
                                     
                                     <div class="vark-scores">
-                                        <small class="text-muted">VARK Scores:</small>
+                                        <small class="text-muted">Skor VARK:</small>
                                         <div class="row mt-2">
                                             <div class="col-6">
                                                 <span class="badge bg-info">Visual: <?php echo htmlspecialchars($preferenceScores['Visual'] ?? 'N/A'); ?></span>
@@ -91,7 +91,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <h6 class="text-success">Study Tips for You:</h6>
+                                    <h6 class="text-success">Tips Belajar buat Kamu:</h6>
                                     <ul class="small">
                                         <?php foreach (array_slice($learningTips['study_tips'], 0, 3) as $tip) { ?>
                                             <li><?php echo htmlspecialchars($tip); ?></li>
@@ -105,18 +105,18 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                             <br>
                             <a href="/vark-assessment" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-sync-alt me-1"></i>
-                                Retake Assessment
+                                Ulangi Assessment
                             </a>
                         </div>
                     </div>
                 <?php } else { ?>
                     <div class="text-center">
                         <i class="fas fa-brain fa-3x text-muted mb-3"></i>
-                        <h6 class="text-muted">Learning Style Not Assessed</h6>
-                        <p class="text-muted">Take the VARK assessment to discover your learning style preferences and get personalized study recommendations.</p>
+                        <h6 class="text-muted">Gaya Belajar Belum Dinilai</h6>
+                        <p class="text-muted">Ikuti VARK assessment untuk tahu preferensi belajar kamu dan dapat rekomendasi yang lebih personal.</p>
                         <a href="/vark-assessment" class="btn btn-primary">
                             <i class="fas fa-brain me-1"></i>
-                            Take VARK Assessment
+                            Mulai VARK Assessment
                         </a>
                     </div>
                 <?php } ?>
@@ -132,7 +132,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-bolt me-2"></i>
-                    Quick Actions
+                    Aksi Cepat
                 </h5>
             </div>
             <div class="card-body">
@@ -140,25 +140,25 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                     <div class="col-md-3 mb-2">
                         <a href="/assignments" class="btn btn-primary w-100">
                             <i class="fas fa-tasks me-2"></i>
-                            View Assignments
+                            Lihat Tugas
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
                         <a href="/quiz" class="btn btn-success w-100">
                             <i class="fas fa-question-circle me-2"></i>
-                            Take Quiz
+                            Ikuti Kuis
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
                         <a href="/questionnaires" class="btn btn-info w-100">
                             <i class="fas fa-clipboard-list me-2"></i>
-                            Questionnaires
+                            Kuesioner
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
                         <a href="/materials" class="btn btn-warning w-100">
                             <i class="fas fa-book me-2"></i>
-                            Study Materials
+                            Materi Belajar
                         </a>
                     </div>
                 </div>
@@ -174,11 +174,11 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-calendar-check me-2"></i>
-                    Weekly Evaluations
+                    Evaluasi Mingguan
                 </h5>
                 <a href="/weekly-evaluations" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-eye me-1"></i>
-                    View All
+                    Lihat Semua
                 </a>
             </div>
             <div class="card-body">

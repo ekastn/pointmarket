@@ -11,7 +11,7 @@ $questions = $questions ?? [];
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i><?= htmlspecialchars($questionnaire['name'] ?? 'Likert Questionnaire') ?></h1>
+    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i><?= htmlspecialchars($questionnaire['name'] ?? 'Kuesioner Likert') ?></h1>
 </div>
 
 <style>
@@ -50,40 +50,40 @@ $questions = $questions ?? [];
 
 <div class="card mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Questionnaire Information</h5>
+        <h5 class="mb-0">Info Kuesioner</h5>
     </div>
     <div class="card-body">
-        <p><?= htmlspecialchars($questionnaire['description'] ?? 'No description available.'); ?></p>
+        <p><?= htmlspecialchars($questionnaire['description'] ?? 'Belum ada deskripsi.'); ?></p>
         <div class="row mb-3">
             <div class="col-md-4">
                 <div class="text-center p-3 bg-light rounded">
                     <h5 class="text-primary"><?= htmlspecialchars($questionnaire['total_questions'] ?? 0); ?></h5>
-                    <small class="text-muted">Total Questions</small>
+                    <small class="text-muted">Total Pertanyaan</small>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="text-center p-3 bg-light rounded">
                     <h5 class="text-success"><?= htmlspecialchars(ceil(($questionnaire['total_questions'] ?? 0) * 0.5)); ?></h5>
-                    <small class="text-muted">Est. Minutes</small>
+                    <small class="text-muted">Estimasi Waktu</small>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="text-center p-3 bg-light rounded">
                     <h5 class="text-info">1-7</h5>
-                    <small class="text-muted">Scale Range</small>
+                    <small class="text-muted">Rentang Skala</small>
                 </div>
             </div>
         </div>
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Instructions</h5>
+                <h5 class="mb-0">Panduan</h5>
             </div>
             <div class="card-body">
-                <p>Please rate each statement on a scale of 1-7 based on how true it is of you.</p>
+                <p>Nilai setiap pernyataan di skala 1–7 sesuai kondisimu.</p>
                 <div class="row text-center mb-3">
-                    <div class="col">1 = Not at all true of me</div>
-                    <div class="col">4 = Somewhat true of me</div>
-                    <div class="col">7 = Very true of me</div>
+                    <div class="col">1 = Nggak sesuai</div>
+                    <div class="col">4 = Cukup</div>
+                    <div class="col">7 = Sangat sesuai</div>
                 </div>
             </div>
         </div>
@@ -96,7 +96,7 @@ $questions = $questions ?? [];
         <?php foreach ($questions as $index => $question) { ?>
             <div class="card question-card mb-3">
                 <div class="card-body">
-                    <h6 class="card-title">Question <?= $index + 1; ?>: <small class="text-muted">(<?= htmlspecialchars($question['subscale'] ?? 'General'); ?>)</small></h6>
+                    <h6 class="card-title">Pertanyaan <?= $index + 1; ?>: <small class="text-muted">(<?= htmlspecialchars($question['subscale'] ?? 'Umum'); ?>)</small></h6>
                     <p class="card-text"><?= htmlspecialchars($question['question_text']); ?></p>
                     <div class="row text-center likert-scale-options">
                         <?php for ($i = 1; $i <= 7; $i++) { ?>
@@ -114,7 +114,7 @@ $questions = $questions ?? [];
     </div>
 
     <div class="d-flex justify-content-between">
-        <a href="/questionnaires" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+        <a href="/questionnaires" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Kembali ke Dashboard</a>
         <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Submit Answers</button>
     </div>
 </form>
@@ -150,7 +150,7 @@ document.getElementById('likertQuestionnaireForm').addEventListener('submit', fu
     });
 
     if (!allAnswered) {
-        alert('Please answer all questions before submitting.');
+        alert('Tolong jawab semua pertanyaan dulu.');
         return;
     }
 
@@ -166,7 +166,7 @@ document.getElementById('likertQuestionnaireForm').addEventListener('submit', fu
         <div class="text-center py-5">
             <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
             <h3>Submitting your answers...</h3>
-            <p>Please do not close this page.</p>
+            <p>Jangan tutup halaman ini.</p>
         </div>
     `;
 
@@ -205,7 +205,7 @@ document.getElementById('likertQuestionnaireForm').addEventListener('submit', fu
                     ${resultHtml}
                     <div class="text-center mt-4">
                         <a href="/questionnaires" class="btn btn-primary">
-                            <i class="fas fa-arrow-left me-1"></i> Back to Questionnaires
+                            <i class="fas fa-arrow-left me-1"></i> Kembali ke Kuesioner
                         </a>
                     </div>
                 </div>
@@ -223,7 +223,7 @@ document.getElementById('likertQuestionnaireForm').addEventListener('submit', fu
                     </div>
                     <div class="text-center mt-4">
                         <a href="/questionnaires" class="btn btn-primary">
-                            <i class="fas fa-arrow-left me-1"></i> Back to Questionnaires
+                            <i class="fas fa-arrow-left me-1"></i> Kembali ke Kuesioner
                         </a>
                     </div>
                 </div>

@@ -1,9 +1,9 @@
 <div class="container-fluid mt-4">
-    <h1 class="h3 mb-4 text-gray-800">My Missions</h1>
+    <h1 class="h3 mb-4 text-gray-800">Misi Saya</h1>
 
     <?php if (empty($missions)): ?>
         <div class="alert alert-info" role="alert">
-            You currently have no missions assigned or started.
+            Kamu belum punya misi yang aktif.
         </div>
     <?php else: ?>
         <div class="row">
@@ -14,19 +14,19 @@
                             <h6 class="m-0 font-weight-bold text-primary"><?= htmlspecialchars($mission['mission_title']) ?></h6>
                         </div>
                         <div class="card-body">
-                            <p><?= htmlspecialchars($mission['mission_description'] ?? 'No description provided.') ?></p>
+                            <p><?= htmlspecialchars($mission['mission_description'] ?? 'Belum ada deskripsi.') ?></p>
                             <p><strong>Status:</strong> <?= htmlspecialchars(ucfirst($mission['status'])) ?></p>
-                            <p><strong>Started:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($mission['started_at']))) ?></p>
+                            <p><strong>Mulai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($mission['started_at']))) ?></p>
                             <?php if ($mission['completed_at']): ?>
-                                <p><strong>Completed:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($mission['completed_at']))) ?></p>
+                                <p><strong>Selesai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($mission['completed_at']))) ?></p>
                             <?php endif; ?>
                             <p><strong>Progress:</strong> <?= htmlspecialchars($mission['progress'] ?? 0) ?>%</p>
 
                             <?php if ($mission['status'] !== 'completed'): ?>
-                                <button class="btn btn-success btn-sm start-mission-btn" data-mission-id="<?= $mission['mission_id'] ?>" data-user-mission-id="<?= $mission['id'] ?>">Start/Continue Mission</button>
+                                <button class="btn btn-success btn-sm start-mission-btn" data-mission-id="<?= $mission['mission_id'] ?>" data-user-mission-id="<?= $mission['id'] ?>">Mulai/Lanjutkan</button>
                                 <button class="btn btn-info btn-sm update-status-btn" data-user-mission-id="<?= $mission['id'] ?>" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update Status</button>
                             <?php else: ?>
-                                <span class="badge bg-success">Completed</span>
+                                <span class="badge bg-success">Selesai</span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -41,7 +41,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="updateStatusModalLabel">Update Mission Status</h5>
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Status Misi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

@@ -10,14 +10,14 @@ $messages = $messages ?? [];
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>Questionnaires</h1>
+    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>Kuesioner</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="/weekly-evaluations" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-check"></i> Weekly Evaluations
+                <i class="fas fa-calendar-check"></i> Evaluasi Mingguan
             </a>
             <a href="/ai-explanation" class="btn btn-outline-info">
-                <i class="fas fa-robot"></i> AI Explanation
+                <i class="fas fa-robot"></i> Penjelasan AI
             </a>
         </div>
     </div>
@@ -26,7 +26,7 @@ $messages = $messages ?? [];
 <!-- Statistics Overview -->
 <div class="row mb-4">
     <div class="col-12">
-        <h4><i class="fas fa-chart-bar me-2"></i>Your Statistics</h4>
+        <h4><i class="fas fa-chart-bar me-2"></i>Statistik Kamu</h4>
     </div>
     <?php if (!empty($stats)): ?>
         <?php foreach ($stats as $stat): ?>
@@ -39,20 +39,20 @@ $messages = $messages ?? [];
                     </h5>
                     <div class="row">
                         <div class="col-6">
-                            <p class="mb-1"><strong>Completed:</strong></p>
+                            <p class="mb-1"><strong>Selesai:</strong></p>
                             <h4 class="text-primary"><?php echo htmlspecialchars($stat['total_completed'] ?? 0); ?></h4>
                         </div>
                         <div class="col-6">
                             <?php if ($stat['type'] === 'vark'): ?>
-                                <p class="mb-1"><strong>Learning Style:</strong></p>
+                                <p class="mb-1"><strong>Gaya Belajar:</strong></p>
                                 <?php if ($stat['total_completed'] > 0 && $varkResult): ?>
                                     <h6 class="text-success"><?php echo htmlspecialchars($varkResult['dominant_style']); ?></h6>
                                     <small class="text-muted"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></small>
                                 <?php else: ?>
-                                    <h6 class="text-muted">Not assessed</h6>
+                                    <h6 class="text-muted">Belum dinilai</h6>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <p class="mb-1"><strong>Average Score:</strong></p>
+                                <p class="mb-1"><strong>Rata-rata Skor:</strong></p>
                                 <?php if ($stat['average_score'] !== null): ?>
                                     <?php 
                                     $avg_score = $stat['average_score'];
@@ -67,7 +67,7 @@ $messages = $messages ?? [];
                     </div>
                     <?php if ($stat['last_completed']): ?>
                         <small class="text-muted">
-                            Last completed: <?php echo htmlspecialchars(date('d M Y', strtotime($stat['last_completed']))); ?>
+                            Terakhir selesai: <?php echo htmlspecialchars(date('d M Y', strtotime($stat['last_completed']))); ?>
                         </small>
                     <?php endif; ?>
                 </div>
@@ -78,8 +78,8 @@ $messages = $messages ?? [];
         <div class="col-12">
             <div class="text-center py-4">
                 <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No questionnaire statistics available yet.</h5>
-                <p class="text-muted">Complete a questionnaire to see your progress here.</p>
+                <h5 class="text-muted">Belum ada statistik kuesioner.</h5>
+                <p class="text-muted">Isi kuesioner dulu untuk lihat progress di sini.</p>
             </div>
         </div>
     <?php endif; ?>
@@ -92,7 +92,7 @@ $messages = $messages ?? [];
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Questionnaire History</h5>
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Riwayat Kuesioner Terakhir</h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($history)): ?>
@@ -105,12 +105,12 @@ $messages = $messages ?? [];
                                         <i class="fas fa-<?php echo $item['questionnaire_type'] === 'MSLQ' ? 'brain' : 'heart'; ?> me-2"></i>
                                         <?php echo htmlspecialchars($item['questionnaire_name']); ?>
                                     </h6>
-                                    <p class="text-muted mb-2"><?php echo htmlspecialchars($item['questionnaire_description'] ?? 'No description available.'); ?></p>
+                                    <p class="text-muted mb-2"><?php echo htmlspecialchars($item['questionnaire_description'] ?? 'Belum ada deskripsi.'); ?></p>
                                     <small class="text-muted">
                                         <i class="fas fa-calendar me-1"></i>
                                         <?php echo htmlspecialchars(date('d M Y', strtotime($item['completed_at']))); ?>
                                         <?php if (isset($item['week_number']) && isset($item['year'])): ?>
-                                            | Week <?php echo htmlspecialchars($item['week_number']); ?>/<?php echo htmlspecialchars($item['year']); ?>
+                                            | Minggu <?php echo htmlspecialchars($item['week_number']); ?>/<?php echo htmlspecialchars($item['year']); ?>
                                         <?php endif; ?>
                                     </small>
                                 </div>
@@ -120,7 +120,7 @@ $messages = $messages ?? [];
                                     $scoreClass = $score >= 5.5 ? 'score-high' : ($score >= 4 ? 'score-medium' : 'score-low');
                                     ?>
                                     <span class="score-badge <?php echo $scoreClass; ?>">
-                                        Score: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
+                                        Skor: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
                                     </span>
                                 </div>
                             </div>
@@ -130,10 +130,10 @@ $messages = $messages ?? [];
                 <?php else: ?>
                     <div class="text-center py-4">
                         <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No questionnaire history yet</h5>
-                        <p class="text-muted">Complete your first questionnaire to see your progress here.</p>
+                        <h5 class="text-muted">Belum ada riwayat kuesioner</h5>
+                        <p class="text-muted">Selesaikan kuesioner pertama kamu untuk melihat progress.</p>
                         <a href="/weekly-evaluations" class="btn btn-primary">
-                            <i class="fas fa-calendar-check me-1"></i> Start Weekly Evaluations
+                            <i class="fas fa-calendar-check me-1"></i> Mulai Evaluasi Mingguan
                         </a>
                     </div>
                 <?php endif; ?>
@@ -141,4 +141,3 @@ $messages = $messages ?? [];
         </div>
     </div>
 </div>
-

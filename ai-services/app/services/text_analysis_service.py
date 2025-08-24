@@ -142,10 +142,38 @@ class TextAnalysisService:
         if len(sentences) <= max_sentences:
             return sentences
             
+        # Precompute NLP keywords once for the full text (avoid recomputing per sentence)
+        nlp_keywords = self._extract_nlp_keywords(text, 10)
+
+        # Precompute proper noun density per sentence with a single Stanza pass (if available)
+        proper_noun_density_by_index: List[float] = [0.0] * len(sentences)
+        if self.stanza_pipeline:
+            try:
+                doc = self.stanza_pipeline(text)
+                idx = 0
+                for sent in doc.sentences:
+                    words = [w.text for w in sent.words]
+                    word_count = len(words) if words else 0
+                    proper_nouns = [w for w in sent.words if w.upos == 'PROPN']
+                    density = (len(proper_nouns) / word_count) if word_count > 0 else 0.0
+                    if idx < len(proper_noun_density_by_index):
+                        proper_noun_density_by_index[idx] = density
+                    idx += 1
+            except Exception:
+                # Fallback: keep zeros if Stanza fails for any reason
+                pass
+
         # Score sentences
         sentence_scores = []
         for i, sentence in enumerate(sentences):
-            score = self._score_sentence(sentence, i, len(sentences), text)
+            score = self._score_sentence(
+                sentence,
+                i,
+                len(sentences),
+                text,
+                nlp_keywords,
+                proper_noun_density_by_index[i] if i < len(proper_noun_density_by_index) else 0.0
+            )
             sentence_scores.append((sentence, score))
             
         # Sort by score and return top sentences
@@ -178,7 +206,7 @@ class TextAnalysisService:
         paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
         return paragraphs
 
-    def _score_sentence(self, sentence: str, position: int, total_sentences: int, full_text: str) -> float:
+    def _score_sentence(self, sentence: str, position: int, total_sentences: int, full_text: str, nlp_keywords: List[str], proper_noun_density: float = 0.0) -> float:
         """
         Score a sentence based on various factors.
         """
@@ -198,21 +226,14 @@ class TextAnalysisService:
         elif word_count > 25:
             score += 0.1
             
-        # Keyword density score (using NLP-extracted keywords for better relevance)
-        # Re-extracting keywords for the full text here might be inefficient if called frequently.
-        # Consider passing keywords from analyze() or caching them.
-        nlp_keywords = self._extract_nlp_keywords(full_text, 10) # Get top 10 NLP keywords from full text
+        # Keyword density score (using precomputed NLP-extracted keywords for better relevance)
         sentence_lower = sentence.lower()
         keyword_count = sum(1 for keyword in nlp_keywords if keyword in sentence_lower)
         score += min(keyword_count * 0.1, 0.3)  # Cap at 0.3
         
-        # Proper Noun Density
-        if self.stanza_pipeline:
-            doc = self.stanza_pipeline(sentence)
-            proper_nouns = [word.text for sent in doc.sentences for word in sent.words if word.upos == 'PROPN']
-            if word_count > 0:
-                proper_noun_density = len(proper_nouns) / word_count
-                score += min(proper_noun_density * 0.5, 0.2) # Cap at 0.2
+        # Proper Noun Density (precomputed per sentence; avoids per-sentence Stanza pipeline calls)
+        if word_count > 0 and proper_noun_density > 0:
+            score += min(proper_noun_density * 0.5, 0.2) # Cap at 0.2
         
         # Vocabulary Richness (Type-Token Ratio)
         if word_count > 0:

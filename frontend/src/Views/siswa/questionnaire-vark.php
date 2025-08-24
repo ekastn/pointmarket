@@ -50,29 +50,29 @@ $questions = $questions ?? [];
     
     <div id="vark-questions-step">
         <div class="question-list mb-4">
-            <?php foreach ($questions as $index => $question): ?>
+            <?php foreach ($questions as $index => $question) { ?>
                 <div class="card question-card mb-3">
                     <div class="card-body">
                         <h6 class="card-title">Question <?= $index + 1; ?>:</h6>
                         <p class="card-text"><?= htmlspecialchars($question['question_text']); ?></p>
                         <div class="vark-options">
-                            <?php foreach ($question['options'] as $option): ?>
+                            <?php foreach ($question['options'] as $option) { ?>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="answers[<?= htmlspecialchars($question['id']); ?>]" id="q<?= htmlspecialchars($question['id']); ?>_opt<?= htmlspecialchars($option['option_letter']); ?>" value="<?= htmlspecialchars($option['option_letter']); ?>" required>
                                     <label class="form-check-label" for="q<?= htmlspecialchars($question['id']); ?>_opt<?= htmlspecialchars($option['option_letter']); ?>">
                                         <strong><?= htmlspecialchars(strtoupper($option['option_letter'])); ?>.</strong> <?= htmlspecialchars($option['option_text']); ?>
                                     </label>
                                 </div>
-                            <?php endforeach; ?>
+                            <?php } ?>
                         </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            <?php } ?>
         </div>
 
         <div class="d-flex justify-content-between">
-            <a href="/questionnaires" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
-            <button type="button" class="btn btn-primary" id="nextToNlpStep"><i class="fas fa-arrow-right me-1"></i> Next: NLP Analysis</button>
+            <a href="/questionnaires" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
+            <button type="button" class="btn btn-primary" id="nextToNlpStep">Next <i class="fas fa-arrow-right me-1"></i ></button>
         </div>
     </div>
 
@@ -91,11 +91,13 @@ $questions = $questions ?? [];
             </div>
         </div>
         <div class="d-flex justify-content-between">
-            <button type="button" class="btn btn-secondary" id="backToVarkStep"><i class="fas fa-arrow-left me-1"></i> Back to VARK Questions</button>
-            <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Submit Analysis</button>
+            <button type="button" class="btn btn-secondary" id="backToVarkStep"><i class="fas fa-arrow-left me-1"></i> Back>
+            <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Submit</button>
         </div>
     </div>
 </form>
+
+<?php $renderer->includePartial('components/partials/vark_result'); ?>
 
 <script>
     let varkAnswers = {}; // To store VARK answers temporarily
@@ -154,7 +156,7 @@ $questions = $questions ?? [];
         formContainer.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
-                <h3>Submitting your VARK and NLP analysis...</h3>
+                <h3>Processing answers...</h3>
                 <p>Please do not close this page.</p>
             </div>
         `;
@@ -179,51 +181,9 @@ $questions = $questions ?? [];
         .then(data => {
             let resultHtml = '';
             if (data.success) {
-                const learningStyle = data.data.learning_style;
-                resultHtml = `
-                    <div class="alert alert-success text-center">
-                        <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                        <h5>${data.message || 'Assessment Completed Successfully!'}</h5>
-                        <p>Your dominant style (fused): <strong>${learningStyle.label}</strong></p>
-                    </div>
-                `;
-
-                // Display VARK scores
                 resultHtml += `
-                    <div class="card mb-3">
-                        <div class="card-header">VARK Scores</div>
-                        <div class="card-body">
-                            <p>Visual: ${learningStyle.scores.visual.toFixed(2)}</p>
-                            <p>Auditory: ${learningStyle.scores.auditory.toFixed(2)}</p>
-                            <p>Reading/Writing: ${learningStyle.scores.reading.toFixed(2)}</p>
-                            <p>Kinesthetic: ${learningStyle.scores.kinesthetic.toFixed(2)}</p>
-                        </div>
-                    </div>
-                `;
-
-                const textStats = data.data.text_stats;
-                const qualityMetrics = Object.keys(textStats);
-
-                // Display NLP analysis if available
-                resultHtml += `
-                    <div class="card mb-3">
-                        <div class="card-header">NLP Analysis</div>
-                        <div class="card-body">
-                            <h6>Learning Preference: ${learningStyle.label} (${learningStyle.type})</h6>
-                                ${qualityMetrics.map(metric => {
-                                    const value = textStats[metric] ?? 0;
-                                    const label = metric.replace(/_/g, ' ');
-                                    return `<p>${label}: ${value}</p>`;
-                                 }).join('')}
-                            <h6>Keywords:</h6>
-                            <ul>
-                                ${data.data.keywords.map(kw => `<li>${kw}</li>`).join('')}
-                            </ul>
-                            <h6>Key Sentences:</h6>
-                            <ul>
-                                ${data.data.key_sentences.map(ks => `<li>${ks}</li>`).join('')}
-                            </ul>
-                        </div>
+                    <div id="vark-results-view" class="col">
+                        ${renderVarkResults(data.data)}
                     </div>
                 `;
             } else {
@@ -255,7 +215,7 @@ $questions = $questions ?? [];
                     <div class="card-body">
                         <div class="alert alert-danger text-center">
                             <i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
-                            <h5>Network error. Please try again.</h5>
+                            <h5>Error: ${error.message || 'Failed to submit'}</h5>
                         </div>
                         <div class="text-center mt-4">
                             <a href="/questionnaires" class="btn btn-primary">

@@ -71,16 +71,16 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
                 </div>
             </div>
             
-            <div class="mb-3">
-                <label for="context_type" class="form-label">Konteks:</label>
-                <select id="context_type" name="context_type" class="form-select">
-                    <option value="assignment">Assignment (Tugas)</option>
-                    <option value="matematik">Matematika</option>
-                    <option value="fisika">Fisika</option>
-                    <option value="kimia">Kimia</option>
-                    <option value="biologi">Biologi</option>
-                </select>
-            </div>
+            <!-- <div class="mb-3"> -->
+            <!--     <label for="context_type" class="form-label">Konteks:</label> -->
+            <!--     <select id="context_type" name="context_type" class="form-select"> -->
+            <!--         <option value="assignment">Assignment (Tugas)</option> -->
+            <!--         <option value="matematik">Matematika</option> -->
+            <!--         <option value="fisika">Fisika</option> -->
+            <!--         <option value="kimia">Kimia</option> -->
+            <!--         <option value="biologi">Biologi</option> -->
+            <!--     </select> -->
+            <!-- </div> -->
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-search me-1"></i>Analisis Teks
             </button>
@@ -89,43 +89,36 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
 </div>
 
 <!-- NLP Analysis Results -->
-<div id="nlp-results-container" class="card mt-4" style="display: none;">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Hasil Analisis AI</h5>
-    </div>
-    <div class="card-body" id="nlp-results-body">
-        <!-- Results will be loaded here by JavaScript -->
-    </div>
-</div>
+<?php $renderer->includePartial('components/partials/vark_result', []); ?>
 
-<!-- Debugging Tools -->
-<div class="card mt-4">
-    <div class="card-header">
-        <h6><i class="fas fa-tools me-2"></i>Debugging Tools</h6>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4 mb-2">
-                <button id="test-api" class="btn btn-outline-primary btn-sm w-100">
-                    <i class="fas fa-vial me-1"></i>Test API
-                </button>
-            </div>
-            <div class="col-md-4 mb-2">
-                <button id="view-session" class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="fas fa-key me-1"></i>View Session
-                </button>
-            </div>
-            <div class="col-md-4 mb-2">
-                <a href="/nlp-diagnostics" class="btn btn-outline-info btn-sm w-100">
-                    <i class="fas fa-microscope me-1"></i>Run Diagnostics
-                </a>
-            </div>
-        </div>
-        <div id="debug-output" class="mt-3" style="display: none;">
-            <pre id="debug-content" class="bg-light p-3 rounded"></pre>
-        </div>
-    </div>
-</div>
+<!-- <!-- Debugging Tools --> -->
+<!-- <div class="card mt-4"> -->
+<!--     <div class="card-header"> -->
+<!--         <h6><i class="fas fa-tools me-2"></i>Debugging Tools</h6> -->
+<!--     </div> -->
+<!--     <div class="card-body"> -->
+<!--         <div class="row"> -->
+<!--             <div class="col-md-4 mb-2"> -->
+<!--                 <button id="test-api" class="btn btn-outline-primary btn-sm w-100"> -->
+<!--                     <i class="fas fa-vial me-1"></i>Test API -->
+<!--                 </button> -->
+<!--             </div> -->
+<!--             <div class="col-md-4 mb-2"> -->
+<!--                 <button id="view-session" class="btn btn-outline-secondary btn-sm w-100"> -->
+<!--                     <i class="fas fa-key me-1"></i>View Session -->
+<!--                 </button> -->
+<!--             </div> -->
+<!--             <div class="col-md-4 mb-2"> -->
+<!--                 <a href="/nlp-diagnostics" class="btn btn-outline-info btn-sm w-100"> -->
+<!--                     <i class="fas fa-microscope me-1"></i>Run Diagnostics -->
+<!--                 </a> -->
+<!--             </div> -->
+<!--         </div> -->
+<!--         <div id="debug-output" class="mt-3" style="display: none;"> -->
+<!--             <pre id="debug-content" class="bg-light p-3 rounded"></pre> -->
+<!--         </div> -->
+<!--     </div> -->
+<!-- </div> -->
 
 <!-- Examples -->
 <div class="row mt-4">
@@ -170,10 +163,10 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
 
     document.addEventListener('DOMContentLoaded', function() {
         const textInput = document.getElementById('text_to_analyze');
-        const contextSelect = document.getElementById('context_type');
+        // const contextSelect = document.getElementById('context_type');
         const nlpDemoForm = document.getElementById('nlpDemoForm');
-        const nlpResultsContainer = document.getElementById('nlp-results-container');
-        const nlpResultsBody = document.getElementById('nlp-results-body');
+        const nlpResultsContainer = document.getElementById('vark-results-container');
+        const nlpResultsBody = document.getElementById('vark-results-body');
         const clearTextBtn = document.getElementById('clear-text');
         const testApiBtn = document.getElementById('test-api');
         const viewSessionBtn = document.getElementById('view-session');
@@ -260,7 +253,7 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
                     
                     if (example) {
                         textInput.value = example.text;
-                        contextSelect.value = category;
+                        // contextSelect.value = category;
                         
                         // Add a small animation to show the text was loaded
                         textInput.style.backgroundColor = '#e3f2fd';
@@ -288,7 +281,7 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
             e.preventDefault();
             
             const text = textInput.value.trim();
-            const contextType = contextSelect.value;
+            // const contextType = contextSelect.value;
             
             if (!text) {
                 alert('Please enter some text to analyze.');
@@ -309,14 +302,13 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
                     'Authorization': `Bearer ${JWT_TOKEN}`
                 },
                 body: JSON.stringify({
-                    text: text,
-                    context_type: contextType
+                    text: text
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    renderResults(data.data);
+                    renderVarkResults(data.data, 'vark-results-body');
                 } else {
                     nlpResultsBody.innerHTML = `<div class="alert alert-danger">Error: ${data.message || 'Unknown error'}</div>`;
                 }
@@ -357,127 +349,5 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
             debugOutput.style.display = 'block';
             debugContent.textContent = 'Session data not directly accessible via API for security reasons. This is a placeholder.';
         });
-
-        // Render analysis results
-        function renderResults(data) {
-            const qualityMetrics = Object.keys(data.text_stats);
-
-            let html = `
-                <div class="row mb-4">
-                   ${qualityMetrics.map(metric => {
-                       const value = data.text_stats[metric] || {};
-                       const scoreClass = getScoreClass(value ?? 0);
-                       const label = metric.replace(/_/g, ' ');
-                       return `
-                           <div class="col-md-4 mb-3">
-                               <div class="card h-100 border-0 shadow-sm">
-                                   <div class="card-body text-center">
-                                       <h3>${label}</h3>
-                                       <p class="text-muted mb-0">${scoreClass}</p>
-                                       <span class="score-badge score-${scoreClass}">
-                                           ${value}
-                                       </span>
-                                   </div>
-                               </div>
-                           </div>
-                       `;
-                   }).join('')}
-                 </div>
-                
-                <h6>Kata Kunci:</h6>
-                <div class="mb-4">
-            `;
-            
-            // Add keywords
-            if (data.keywords && data.keywords.length > 0) {
-                data.keywords.forEach(keyword => {
-                    html += `<span class="badge bg-primary me-2 mb-2">${keyword}</span>`;
-                });
-            } else {
-                html += `<p class="text-muted">Tidak ada kata kunci yang signifikan ditemukan.</p>`;
-            }
-            
-            html += `
-                </div>
-                
-                <h6>Kalimat Penting:</h6>
-                <div class="mb-4">
-            `;
-            
-            // Add key sentences
-            if (data.key_sentences && data.key_sentences.length > 0) {
-                html += `<ul class="list-group">`;
-                data.key_sentences.forEach(sentence => {
-                    html += `<li class="list-group-item">${sentence}</li>`;
-                });
-                html += `</ul>`;
-            } else {
-                html += `<p class="text-muted">Tidak ada kalimat penting yang ditemukan.</p>`;
-            }
-
-            const varkscore = data.learning_style.scores;
-            const styleType = data.learning_style.type;
-            const styleLabel = data.learning_style.label;
-            
-            html += `
-                </div>
-                <h6>Preferensi Belajar:</h6>
-                <div class="row mb-4">
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <h4><i class="${getVARKIcon(styleLabel)} me-2"></i>${styleLabel}</h4>
-                                <p class="text-muted mb-0">Tipe: ${styleType}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="card-title">Skor Gabungan VARK:</h6>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Visual
-                                        <span class="badge bg-primary rounded-pill">${varkscore.visual.toFixed(1)}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Aural
-                                        <span class="badge bg-primary rounded-pill">${varkscore.auditory.toFixed(1)}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Read/Write
-                                        <span class="badge bg-primary rounded-pill">${varkscore.reading.toFixed(1)}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Kinesthetic
-                                        <span class="badge bg-primary rounded-pill">${varkscore.kinesthetic.toFixed(1)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            nlpResultsBody.innerHTML = html;
-        }
-
-        // Get score class based on value
-        function getScoreClass(score) {
-            if (score >= 0.7) return 'high';
-            if (score >= 0.4) return 'medium';
-            return 'low';
-        }
-
-        // Helper to get VARK icon
-        function getVARKIcon(type) {
-            switch (type) {
-                case 'visual': return 'fas fa-eye';
-                case 'auditory': return 'fas fa-volume-up';
-                case 'reading': return 'fas fa-book-open';
-                case 'kinesthetic': return 'fas fa-running';
-                default: return 'fas fa-question-circle';
-            }
-        }
     });
 </script>

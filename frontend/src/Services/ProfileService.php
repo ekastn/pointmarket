@@ -22,13 +22,10 @@ class ProfileService
         return null;
     }
 
-    public function updateProfile(array $data): ?array
+    public function updateProfile(array $data): bool
     {
         $response = $this->apiClient->request('PUT', '/api/v1/profile', ['json' => $data]);
-        if ($response['success']) {
-            return $response['data'];
-        }
-        return null;
+        return isset($response['success']) && $response['success'] === true;
     }
 
     public function getAssignmentStatsByStudentID(): ?array
@@ -51,7 +48,8 @@ class ProfileService
 
     public function getWeeklyEvaluationProgressByStudentID(int $weeks = 8): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/evaluations/weekly/student/progress?weeks=' . $weeks);
+        // Updated to the existing backend endpoint
+        $response = $this->apiClient->request('GET', '/api/v1/weekly-evaluations?weeks=' . $weeks);
         if ($response['success']) {
             return $response['data'];
         }

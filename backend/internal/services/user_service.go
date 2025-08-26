@@ -1,12 +1,12 @@
 package services
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/store/gen"
-	"pointmarket/backend/internal/utils"
+    "context"
+    "database/sql"
+    "fmt"
+    "pointmarket/backend/internal/dtos"
+    "pointmarket/backend/internal/store/gen"
+    "pointmarket/backend/internal/utils"
 )
 
 type UserService struct {
@@ -65,27 +65,96 @@ func (s *UserService) CreateUser(ctx context.Context, req dtos.CreateUserRequest
 }
 
 // UpdateUserProfile updates a user's profile information
-func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, req dtos.UpdateUserRequest) error {
-	user, err := s.q.GetUserByID(ctx, userID)
-	if err != nil {
-		return err
-	}
+func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, req dtos.UpdateProfileRequest) error {
+    // Ensure user exists and get current values
+    user, err := s.q.GetUserByID(ctx, userID)
+    if err != nil {
+        return err
+    }
+    if user.ID == 0 {
+        return sql.ErrNoRows
+    }
 
-	if user.ID == 0 {
-		return sql.ErrNoRows
-	}
+    // If Name/Email provided, update users row (preserve username and role)
+    if req.Name != nil || req.Email != nil {
+        upd := gen.UpdateUserParams{
+            ID:          userID,
+            Username:    user.Username,
+            DisplayName: user.DisplayName,
+            Email:       user.Email,
+            Role:        user.Role,
+        }
+        if req.Name != nil {
+            upd.DisplayName = *req.Name
+        }
+        if req.Email != nil {
+            upd.Email = *req.Email
+        }
+        if err := s.q.UpdateUser(ctx, upd); err != nil {
+            return err
+        }
+    }
 
-	data := gen.UpdateUserProfileParams{
-		UserID: userID,
-		AvatarUrl: sql.NullString{
-			String: *req.AvatarURL,
-		},
-		Bio: sql.NullString{
-			String: *req.Bio,
-		},
-	}
+    // If Avatar/Bio provided, upsert into user_profiles
+    if req.AvatarURL != nil || req.Bio != nil {
+        // Get existing profile to preserve values when field is omitted
+        prof, err := s.q.GetUserProfileByID(ctx, userID)
+        if err != nil && err != sql.ErrNoRows {
+            return err
+        }
+        avatar := ""
+        bio := ""
+        if prof.AvatarUrl.Valid {
+            avatar = prof.AvatarUrl.String
+        }
+        if prof.Bio.Valid {
+            bio = prof.Bio.String
+        }
+        if req.AvatarURL != nil {
+            avatar = *req.AvatarURL
+        }
+        if req.Bio != nil {
+            bio = *req.Bio
+        }
+        if err := s.q.UpsertUserProfile(ctx, gen.UpsertUserProfileParams{
+            UserID:    userID,
+            AvatarUrl: sql.NullString{String: avatar, Valid: avatar != ""},
+            Bio:       sql.NullString{String: bio, Valid: bio != ""},
+        }); err != nil {
+            return err
+        }
+    }
 
-	return s.q.UpdateUserProfile(ctx, data)
+    return nil
+}
+
+// GetUserProfile returns merged user and user_profiles data for current user
+func (s *UserService) GetUserProfile(ctx context.Context, userID int64) (dtos.ProfileResponse, error) {
+    row, err := s.q.GetUserProfileByID(ctx, userID)
+    if err != nil {
+        return dtos.ProfileResponse{}, err
+    }
+    var avatarPtr *string
+    var bioPtr *string
+    if row.AvatarUrl.Valid {
+        v := row.AvatarUrl.String
+        avatarPtr = &v
+    }
+    if row.Bio.Valid {
+        v := row.Bio.String
+        bioPtr = &v
+    }
+    return dtos.ProfileResponse{
+        ID:        int(row.ID),
+        Username:  row.Username,
+        Name:      row.DisplayName,
+        Email:     row.Email,
+        Role:      string(row.Role),
+        Avatar:    avatarPtr,
+        Bio:       bioPtr,
+        CreatedAt: row.CreatedAt,
+        UpdatedAt: row.UpdatedAt,
+    }, nil
 }
 
 // SearchUsers retrieves users based on search term and role with pagination

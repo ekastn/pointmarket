@@ -118,6 +118,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserMissionsByUserID(ctx context.Context, userID int64) ([]GetUserMissionsByUserIDRow, error)
+	GetUserProfileByID(ctx context.Context, id int64) (GetUserProfileByIDRow, error)
 	// User Stats --
 	GetUserStats(ctx context.Context, userID int64) (UserStat, error)
 	GetUsers(ctx context.Context) ([]User, error)
@@ -150,6 +151,7 @@ type Querier interface {
 	UpdateUserStatsPoints(ctx context.Context, arg UpdateUserStatsPointsParams) error
 	UpdateVarkOption(ctx context.Context, arg UpdateVarkOptionParams) error
 	UpdateWeeklyEvaluationStatus(ctx context.Context, arg UpdateWeeklyEvaluationStatusParams) error
+	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) error
 }
 
 var _ Querier = (*Queries)(nil)

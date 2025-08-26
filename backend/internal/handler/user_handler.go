@@ -13,7 +13,7 @@ import (
 )
 
 type UserHandler struct {
-	userService services.UserService
+    userService services.UserService
 }
 
 func NewUserHandler(userService services.UserService) *UserHandler {
@@ -43,15 +43,15 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 // UpdateUserProfile handles updating a user's profile information
 func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
-	userID := middleware.GetUserID(c)
+    userID := middleware.GetUserID(c)
 
-	var req dtos.UpdateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
-		return
-	}
+    var req dtos.UpdateProfileRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        response.Error(c, http.StatusBadRequest, err.Error())
+        return
+    }
 
-	err := h.userService.UpdateUserProfile(c.Request.Context(), int64(userID), req)
+    err := h.userService.UpdateUserProfile(c.Request.Context(), int64(userID), req)
 	if err == sql.ErrNoRows {
 		response.Error(c, http.StatusNotFound, "User not found")
 		return
@@ -60,7 +60,22 @@ func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
+    response.Success(c, http.StatusOK, "User profile updated successfully", nil)
+}
+
+// GetUserProfile handles fetching the current user's profile (users + user_profiles)
+func (h *UserHandler) GetUserProfile(c *gin.Context) {
+    userID := middleware.GetUserID(c)
+    prof, err := h.userService.GetUserProfile(c.Request.Context(), int64(userID))
+    if err != nil {
+        if err == sql.ErrNoRows {
+            response.Error(c, http.StatusNotFound, "User not found")
+            return
+        }
+        response.Error(c, http.StatusInternalServerError, err.Error())
+        return
+    }
+    response.Success(c, http.StatusOK, "Profile retrieved successfully", prof)
 }
 
 // GetAllUsers handles fetching all users with pagination, search, and role filters

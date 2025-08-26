@@ -1,11 +1,11 @@
 <?php
-// Data for this view will be passed from the ProfileController
-$user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'role' => 'admin', 'avatar' => null];
+// Unified profile view for all roles
+$user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'role' => 'guest', 'avatar' => null, 'bio' => null];
 ?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-user-circle me-2"></i>My Profile</h1>
-</div>
+  </div>
 
 <div class="row">
     <div class="col-md-4">
@@ -21,7 +21,7 @@ $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'rol
     <div class="col-md-8">
         <div class="card shadow-sm mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Edit Profile Information</h5>
+                <h5 class="mb-0">Edit Profile</h5>
             </div>
             <div class="card-body">
                 <form action="/profile" method="POST">
@@ -38,6 +38,10 @@ $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'rol
                         <input type="text" class="form-control" id="avatar" name="avatar" value="<?php echo htmlspecialchars($user['avatar'] ?? ''); ?>">
                         <div class="form-text">Link to your profile picture (e.g., from Gravatar or an image hosting service).</div>
                     </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3"><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
+                    </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i>Save Changes
                     </button>
@@ -46,3 +50,4 @@ $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'rol
         </div>
     </div>
 </div>
+

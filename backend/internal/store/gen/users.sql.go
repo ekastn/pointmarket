@@ -8,6 +8,7 @@ package gen
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const countSearchedUsers = `-- name: CountSearchedUsers :one
@@ -256,6 +257,51 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	return i, err
 }
 
+const getUserProfileByID = `-- name: GetUserProfileByID :one
+SELECT
+  u.id,
+  u.username,
+  u.display_name,
+  u.email,
+  u.role,
+  p.avatar_url,
+  p.bio,
+  u.created_at,
+  u.updated_at
+FROM users u
+LEFT JOIN user_profiles p ON p.user_id = u.id
+WHERE u.id = ?
+`
+
+type GetUserProfileByIDRow struct {
+	ID          int64          `json:"id"`
+	Username    string         `json:"username"`
+	DisplayName string         `json:"display_name"`
+	Email       string         `json:"email"`
+	Role        UsersRole      `json:"role"`
+	AvatarUrl   sql.NullString `json:"avatar_url"`
+	Bio         sql.NullString `json:"bio"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+}
+
+func (q *Queries) GetUserProfileByID(ctx context.Context, id int64) (GetUserProfileByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserProfileByID, id)
+	var i GetUserProfileByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.DisplayName,
+		&i.Email,
+		&i.Role,
+		&i.AvatarUrl,
+		&i.Bio,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUsers = `-- name: GetUsers :many
 SELECT id, email, username, password, display_name, role, created_at, updated_at FROM users
 ORDER BY created_at DESC
@@ -412,5 +458,24 @@ type UpdateUserRoleParams struct {
 
 func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserRole, arg.Role, arg.ID)
+	return err
+}
+
+const upsertUserProfile = `-- name: UpsertUserProfile :exec
+INSERT INTO user_profiles (user_id, avatar_url, bio)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE
+  avatar_url = VALUES(avatar_url),
+  bio        = VALUES(bio)
+`
+
+type UpsertUserProfileParams struct {
+	UserID    int64          `json:"user_id"`
+	AvatarUrl sql.NullString `json:"avatar_url"`
+	Bio       sql.NullString `json:"bio"`
+}
+
+func (q *Queries) UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) error {
+	_, err := q.db.ExecContext(ctx, upsertUserProfile, arg.UserID, arg.AvatarUrl, arg.Bio)
 	return err
 }

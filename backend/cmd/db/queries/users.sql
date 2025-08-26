@@ -81,3 +81,25 @@ LIMIT 1;
 -- name: GetActiveStudents :many
 SELECT id, email, username, display_name FROM users
 WHERE role = 'siswa';
+
+-- name: GetUserProfileByID :one
+SELECT
+  u.id,
+  u.username,
+  u.display_name,
+  u.email,
+  u.role,
+  p.avatar_url,
+  p.bio,
+  u.created_at,
+  u.updated_at
+FROM users u
+LEFT JOIN user_profiles p ON p.user_id = u.id
+WHERE u.id = ?;
+
+-- name: UpsertUserProfile :exec
+INSERT INTO user_profiles (user_id, avatar_url, bio)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE
+  avatar_url = VALUES(avatar_url),
+  bio        = VALUES(bio);

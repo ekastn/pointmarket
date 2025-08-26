@@ -2,7 +2,7 @@
 $user = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" role="navigation" aria-label="Global">
     <div class="container-fluid">
         <div class="d-flex align-items-center">
             <button class="btn btn-primary d-lg-none me-2" type="button" id="mobileSidebarToggle">
@@ -20,63 +20,7 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
         
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/dashboard">
-                        <i class="fas fa-tachometer-alt me-1"></i>
-                        Dashboard
-                    </a>
-                </li>
-                
-                <?php if (isset($user['role']) && $user['role'] === 'siswa'): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/assignments">
-                            <i class="fas fa-tasks me-1"></i>
-                            Assignments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/quiz">
-                            <i class="fas fa-question-circle me-1"></i>
-                            Quiz
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/questionnaire">
-                            <i class="fas fa-clipboard-list me-1"></i>
-                            Questionnaires
-                        </a>
-                    </li>
-                <?php elseif (isset($user['role']) && $user['role'] === 'guru'): ?>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-chalkboard-teacher me-1"></i>
-                            Teaching
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/assignments">Assignments</a></li>
-                            <li><a class="dropdown-item" href="/quiz">Quiz</a></li>
-                            <li><a class="dropdown-item" href="/materials">Materials</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/students">
-                            <i class="fas fa-users me-1"></i>
-                            Students
-                        </a>
-                    </li>
-                <?php else: // Admin ?>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-cog me-1"></i>
-                            Management
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/users">Users</a></li>
-                            <li><a class="dropdown-item" href="/reports">Reports</a></li>
-                            <li><a class="dropdown-item" href="/settings">Settings</a></li>
-                        </ul>
-                    </li>
-                <?php endif; ?>
+                <!-- Intentionally empty: primary navigation lives in the Sidebar -->
             </ul>
             
             <ul class="navbar-nav">
@@ -104,7 +48,5 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
 </nav>
 
 <style>
-    body {
-        padding-top: 56px; /* Height of navbar */
-    }
+    body { padding-top: 56px; /* Height of navbar */ }
 </style>

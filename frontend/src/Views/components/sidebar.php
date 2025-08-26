@@ -2,41 +2,10 @@
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $user = $_SESSION['user_data'] ?? null;
 
-$studentsMenu = [
-    ['path' => '/my-missions', 'label' => 'Misi Saya', 'icon' => 'fas fa-trophy'],
-    ['path' => '/my-courses', 'label' => 'Kursus Saya', 'icon' => 'fas fa-book'],
-    ['path' => '/my-badges', 'label' => 'Lencana Saya', 'icon' => 'fas fa-id-badge'],
-    ['path' => '/products', 'label' => 'Marketplace', 'icon' => 'fas fa-store'],
-    ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
-    ['path' => '/quiz', 'label' => 'Kuis', 'icon' => 'fas fa-question-circle'],
-    ['path' => '/questionnaires', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
-    ['path' => '/vark-correlation-analysis', 'label' => 'Analisis Korelasi VARK', 'icon' => 'fas fa-chart-pie'],
-    ['path' => '/weekly-evaluations', 'label' => 'Evaluasi Mingguan', 'icon' => 'fas fa-calendar-check'],
-];
-
-$teachersMenu = [
-    ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
-    ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
-    ['path' => '/assignments', 'label' => 'Tugas', 'icon' => 'fas fa-tasks'],
-    ['path' => '/teacher-evaluation-monitoring', 'label' => 'Monitoring Evaluasi', 'icon' => 'fas fa-chart-line'],
-];
-
-$adminsMenu = [
-    ['path' => '/users', 'label' => 'Pengguna', 'icon' => 'fas fa-users-cog'],
-    ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
-    ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
-    ['path' => '/badges', 'label' => 'Lencana', 'icon' => 'fas fa-id-badge'],
-    ['path' => '/products', 'label' => 'Kelola Produk', 'icon' => 'fas fa-box-open'],
-    ['path' => '/product-categories', 'label' => 'Kelola Kategori Produk', 'icon' => 'fas fa-tags'],
-    ['path' => '/reports', 'label' => 'Laporan', 'icon' => 'fas fa-chart-bar'],
-    ['path' => '/questionnaires', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
-];
-
-$aiMenu = [
-    ['path' => '/ai-explanation', 'label' => 'Cara Kerja AI', 'icon' => 'fas fa-graduation-cap'],
-    ['path' => '/ai-recommendations', 'label' => 'Rekomendasi AI', 'icon' => 'fas fa-robot'],
-    ['path' => '/nlp-demo', 'label' => 'Demo NLP', 'icon' => 'fas fa-brain'],
-];
+// Load centralized menu config (anchored at app root)
+$menus = include_app('config/menu.php');
+$role = $user['role'] ?? 'siswa';
+$sections = $menus[$role] ?? [];
 ?>
 
 <div id="sidebarOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark d-none" style="opacity: 0.5; z-index: 1029;"></div>
@@ -45,41 +14,19 @@ $aiMenu = [
     <button id="sidebarToggle" class="btn rounded-circle" style="z-index: 1;">
         <i class="fas fa-chevron-left"></i>
     </button>
-    <nav class="nav nav-pills flex-column mb-auto mb-8">
+    <nav class="nav nav-pills flex-column mb-auto mb-8" role="navigation" aria-label="Sidebar">
         <div class="nav flex-column gap-2">
-            <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt']); ?>
-
-            <hr />
-
-            <?php if (isset($user) && $user['role'] === 'siswa'): ?>
-                <?php foreach ($studentsMenu as $menu): ?>
+            <?php foreach ($sections as $index => $section): ?>
+                <?php if ($index !== 0): ?>
+                    <hr />
+                <?php endif; ?>
+                <?php if (!empty($section['label'])): ?>
+                    <h6 class="px-3 mb-1 text-muted"><?= htmlspecialchars($section['label']); ?></h6>
+                <?php endif; ?>
+                <?php foreach ($section['items'] as $menu): ?>
                     <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
                 <?php endforeach; ?>
-            <?php elseif (isset($user) && $user['role'] === 'guru'): ?>
-                <?php foreach ($teachersMenu as $menu): ?>
-                    <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
-                <?php endforeach; ?>
-            <?php elseif (isset($user) && $user['role'] === 'admin'): ?>
-                <?php foreach ($adminsMenu as $menu): ?>
-                    <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
-                <?php endforeach; ?>
-            <?php endif; ?>
-
-            <hr />
-
-            <h6 class="px-3 mb-1 text-muted">
-                Fitur AI
-            </h6>
-            <?php foreach ($aiMenu as $menu): ?>
-                <?php $renderer->includePartial('components/partials/sidebar_link', $menu); ?>
             <?php endforeach; ?>
-
-            <hr />
-
-            <h6 class="px-3 mb-1 text-muted">
-                <span>Support</span>
-            </h6>
-            <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle']); ?>
         </div>
     </nav>
 </div>

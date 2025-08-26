@@ -45,7 +45,7 @@ $aiMenu = [
     <button id="sidebarToggle" class="btn rounded-circle" style="z-index: 1;">
         <i class="fas fa-chevron-left"></i>
     </button>
-    <nav class="nav nav-pills flex-column mb-auto overflow-y-auto mb-8">
+    <nav class="nav nav-pills flex-column mb-auto mb-8">
         <div class="nav flex-column gap-2">
             <?php $renderer->includePartial('components/partials/sidebar_link', ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt']); ?>
 
@@ -102,7 +102,27 @@ $aiMenu = [
     #sidebar {
         width: 280px;
         transition: all 0.3s;
-        position: relative;
+        position: sticky; /* Stick under the fixed navbar */
+        top: 56px; /* navbar height offset */
+        height: calc(100vh - 56px); /* full viewport minus navbar */
+        overflow: hidden; /* contain inner scroll */
+    }
+
+    /* Make inner nav fill and scroll */
+    #sidebar nav {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: hidden; /* prevent horizontal scroll */
+    }
+
+    /* When collapsed, ensure no horizontal overflow appears */
+    #sidebar.collapsed,
+    #sidebar.collapsed nav {
+        overflow-x: hidden;
+    }
+    #sidebar.collapsed .nav-link {
+        white-space: nowrap;
+        overflow: hidden;
     }
     #sidebar.collapsed {
         width: 88px;
@@ -154,10 +174,13 @@ $aiMenu = [
     @media (max-width: 768px) {
         #sidebar {
             position: fixed;
-            height: 100%;
+            top: 56px; /* keep below navbar */
+            height: calc(100vh - 56px);
             z-index: 1030;
             transform: translateX(-100%);
+            overflow: hidden;
         }
+        #sidebar nav { overflow-y: auto; }
         #sidebar.show {
             transform: translateX(0);
         }

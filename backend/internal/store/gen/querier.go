@@ -146,6 +146,7 @@ type Querier interface {
 	UpdateStudentQuiz(ctx context.Context, arg UpdateStudentQuizParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error
+	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
 	UpdateUserStatsPoints(ctx context.Context, arg UpdateUserStatsPointsParams) error

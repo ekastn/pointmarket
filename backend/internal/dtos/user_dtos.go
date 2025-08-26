@@ -22,14 +22,14 @@ type CreateUserRequest struct {
 }
 
 type UserDTO struct {
-    ID        int       `json:"id"`
-    Username  string    `json:"username"`
-    Name      string    `json:"name"`
-    Email     string    `json:"email"`
-    Role      string    `json:"role"`
-    Avatar    *string   `json:"avatar"`
-    CreatedAt time.Time `json:"created_at"`
-    UpdatedAt time.Time `json:"updated_at"`
+	ID        int       `json:"id"`
+	Username  string    `json:"username"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	Avatar    *string   `json:"avatar"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type VARKScores struct {
@@ -40,28 +40,35 @@ type VARKScores struct {
 }
 
 type StudentLearningStyle struct {
-    Type   string     `json:"type"`
-    Label  string     `json:"label"`
-    Scores VARKScores `json:"scores"`
+	Type   string     `json:"type"`
+	Label  string     `json:"label"`
+	Scores VARKScores `json:"scores"`
 }
 
 // ProfileResponse represents merged user + profile data for the current user
 type ProfileResponse struct {
-    ID        int       `json:"id"`
-    Username  string    `json:"username"`
-    Name      string    `json:"name"` // from users.display_name
-    Email     string    `json:"email"`
-    Role      string    `json:"role"`
-    Avatar    *string   `json:"avatar"`
-    Bio       *string   `json:"bio"`
-    CreatedAt time.Time `json:"created_at"`
-    UpdatedAt time.Time `json:"updated_at"`
+	ID        int       `json:"id"`
+	Username  string    `json:"username"`
+	Name      string    `json:"name"` // from users.display_name
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	Avatar    *string   `json:"avatar"`
+	Bio       *string   `json:"bio"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // UpdateProfileRequest is a partial update payload for the current user's profile
 type UpdateProfileRequest struct {
-    Name      *string `json:"name"`
-    Email     *string `json:"email"`
-    AvatarURL *string `json:"avatar"`
-    Bio       *string `json:"bio"`
+	Name      *string `json:"name"`
+	Email     *string `json:"email"`
+	AvatarURL *string `json:"avatar"`
+	Bio       *string `json:"bio"`
+}
+
+// ChangePasswordRequest represents the payload to change current user's password
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }

@@ -58,6 +58,7 @@ return function (Router $router) {
         // User Profile routes
         $router->get('profile', [ProfileController::class, 'showProfile']);
         $router->post('profile', [ProfileController::class, 'updateProfile']);
+        $router->post('profile/password', [ProfileController::class, 'changePassword']);
 
         // Admin routes group
         $router->group('/users', function (Router $router) {

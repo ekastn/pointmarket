@@ -13,7 +13,7 @@ import (
 )
 
 type UserHandler struct {
-    userService services.UserService
+	userService services.UserService
 }
 
 func NewUserHandler(userService services.UserService) *UserHandler {
@@ -43,15 +43,15 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 // UpdateUserProfile handles updating a user's profile information
 func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
-    userID := middleware.GetUserID(c)
+	userID := middleware.GetUserID(c)
 
-    var req dtos.UpdateProfileRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        response.Error(c, http.StatusBadRequest, err.Error())
-        return
-    }
+	var req dtos.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
 
-    err := h.userService.UpdateUserProfile(c.Request.Context(), int64(userID), req)
+	err := h.userService.UpdateUserProfile(c.Request.Context(), int64(userID), req)
 	if err == sql.ErrNoRows {
 		response.Error(c, http.StatusNotFound, "User not found")
 		return
@@ -60,22 +60,50 @@ func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-    response.Success(c, http.StatusOK, "User profile updated successfully", nil)
+	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
 }
 
 // GetUserProfile handles fetching the current user's profile (users + user_profiles)
 func (h *UserHandler) GetUserProfile(c *gin.Context) {
-    userID := middleware.GetUserID(c)
-    prof, err := h.userService.GetUserProfile(c.Request.Context(), int64(userID))
-    if err != nil {
-        if err == sql.ErrNoRows {
-            response.Error(c, http.StatusNotFound, "User not found")
-            return
-        }
-        response.Error(c, http.StatusInternalServerError, err.Error())
-        return
-    }
-    response.Success(c, http.StatusOK, "Profile retrieved successfully", prof)
+	userID := middleware.GetUserID(c)
+	prof, err := h.userService.GetUserProfile(c.Request.Context(), int64(userID))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			response.Error(c, http.StatusNotFound, "User not found")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Profile retrieved successfully", prof)
+}
+
+// ChangePassword allows the current authenticated user to change their password
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req dtos.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := h.userService.ChangePassword(c.Request.Context(), int64(userID), req); err != nil {
+		// Map common errors to appropriate status codes
+		switch err.Error() {
+		case "invalid current password":
+			response.Error(c, http.StatusUnauthorized, "Invalid current password")
+			return
+		case "passwords do not match", "password must be at least 8 characters", "password must contain letters and numbers", "new password must be different from current password":
+			response.Error(c, http.StatusBadRequest, err.Error())
+			return
+		default:
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	response.Success(c, http.StatusOK, "Password changed successfully", nil)
 }
 
 // GetAllUsers handles fetching all users with pagination, search, and role filters

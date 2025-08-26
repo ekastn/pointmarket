@@ -43,6 +43,13 @@ SET
   role = ?
 WHERE id = ?;
 
+-- name: UpdateUserPassword :exec
+UPDATE users
+SET
+  password = ?,
+  updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;
+
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = ?;

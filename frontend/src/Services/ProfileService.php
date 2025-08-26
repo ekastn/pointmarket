@@ -64,4 +64,16 @@ class ProfileService
         }
         return null;
     }
+
+    public function changePassword(array $data): bool
+    {
+        $response = $this->apiClient->request('PUT', '/api/v1/profile/password', [
+            'json' => [
+                'current_password' => $data['current_password'] ?? '',
+                'new_password' => $data['new_password'] ?? '',
+                'confirm_password' => $data['confirm_password'] ?? '',
+            ],
+        ]);
+        return isset($response['success']) && $response['success'] === true;
+    }
 }

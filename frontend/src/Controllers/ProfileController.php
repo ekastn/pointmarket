@@ -19,7 +19,7 @@ class ProfileController extends BaseController
     {
         $userProfile = $this->profileService->getUserProfile();
         if ($userProfile === null) {
-            $_SESSION['messages'] = ['error' => 'Failed to load user profile.'];
+            $_SESSION['messages'] = ['error' => 'Gagal memuat profil pengguna.'];
         }
 
         $messages = $_SESSION['messages'] ?? [];
@@ -52,7 +52,7 @@ class ProfileController extends BaseController
             $ok = $this->profileService->updateProfile($data);
 
             if ($ok) {
-                $_SESSION['messages'] = ['success' => 'Profile updated successfully!'];
+                $_SESSION['messages'] = ['success' => 'Profil berhasil diperbarui.'];
                 // Update user_data in session after successful profile update
                 $userProfileData = $this->profileService->getUserProfile();
                 if ($userProfileData !== null) {
@@ -60,9 +60,35 @@ class ProfileController extends BaseController
                 }
                 $this->redirect('/profile');
             } else {
-                $_SESSION['messages'] = ['error' => 'Failed to update profile.'];
+                $_SESSION['messages'] = ['error' => 'Gagal memperbarui profil.'];
                 $this->redirect('/profile');
             }
+        } else {
+            $this->redirect('/profile');
+        }
+    }
+
+    public function changePassword(): void
+    {
+        if (!isset($_SESSION['jwt_token'])) {
+            $this->redirect('/login');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'current_password' => $_POST['current_password'] ?? '',
+                'new_password' => $_POST['new_password'] ?? '',
+                'confirm_password' => $_POST['confirm_password'] ?? '',
+            ];
+
+            $ok = $this->profileService->changePassword($data);
+            if ($ok) {
+                $_SESSION['messages'] = ['success' => 'Kata sandi berhasil diubah.'];
+            } else {
+                $_SESSION['messages'] = ['error' => 'Gagal mengubah kata sandi. Periksa kembali isian Anda.'];
+            }
+            $this->redirect('/profile');
         } else {
             $this->redirect('/profile');
         }

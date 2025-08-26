@@ -1,12 +1,12 @@
 package services
 
 import (
-    "context"
-    "database/sql"
-    "fmt"
-    "pointmarket/backend/internal/dtos"
-    "pointmarket/backend/internal/store/gen"
-    "pointmarket/backend/internal/utils"
+	"context"
+	"database/sql"
+	"fmt"
+	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 )
 
 type UserService struct {
@@ -66,95 +66,149 @@ func (s *UserService) CreateUser(ctx context.Context, req dtos.CreateUserRequest
 
 // UpdateUserProfile updates a user's profile information
 func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, req dtos.UpdateProfileRequest) error {
-    // Ensure user exists and get current values
-    user, err := s.q.GetUserByID(ctx, userID)
-    if err != nil {
-        return err
-    }
-    if user.ID == 0 {
-        return sql.ErrNoRows
-    }
+	// Ensure user exists and get current values
+	user, err := s.q.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if user.ID == 0 {
+		return sql.ErrNoRows
+	}
 
-    // If Name/Email provided, update users row (preserve username and role)
-    if req.Name != nil || req.Email != nil {
-        upd := gen.UpdateUserParams{
-            ID:          userID,
-            Username:    user.Username,
-            DisplayName: user.DisplayName,
-            Email:       user.Email,
-            Role:        user.Role,
-        }
-        if req.Name != nil {
-            upd.DisplayName = *req.Name
-        }
-        if req.Email != nil {
-            upd.Email = *req.Email
-        }
-        if err := s.q.UpdateUser(ctx, upd); err != nil {
-            return err
-        }
-    }
+	// If Name/Email provided, update users row (preserve username and role)
+	if req.Name != nil || req.Email != nil {
+		upd := gen.UpdateUserParams{
+			ID:          userID,
+			Username:    user.Username,
+			DisplayName: user.DisplayName,
+			Email:       user.Email,
+			Role:        user.Role,
+		}
+		if req.Name != nil {
+			upd.DisplayName = *req.Name
+		}
+		if req.Email != nil {
+			upd.Email = *req.Email
+		}
+		if err := s.q.UpdateUser(ctx, upd); err != nil {
+			return err
+		}
+	}
 
-    // If Avatar/Bio provided, upsert into user_profiles
-    if req.AvatarURL != nil || req.Bio != nil {
-        // Get existing profile to preserve values when field is omitted
-        prof, err := s.q.GetUserProfileByID(ctx, userID)
-        if err != nil && err != sql.ErrNoRows {
-            return err
-        }
-        avatar := ""
-        bio := ""
-        if prof.AvatarUrl.Valid {
-            avatar = prof.AvatarUrl.String
-        }
-        if prof.Bio.Valid {
-            bio = prof.Bio.String
-        }
-        if req.AvatarURL != nil {
-            avatar = *req.AvatarURL
-        }
-        if req.Bio != nil {
-            bio = *req.Bio
-        }
-        if err := s.q.UpsertUserProfile(ctx, gen.UpsertUserProfileParams{
-            UserID:    userID,
-            AvatarUrl: sql.NullString{String: avatar, Valid: avatar != ""},
-            Bio:       sql.NullString{String: bio, Valid: bio != ""},
-        }); err != nil {
-            return err
-        }
-    }
+	// If Avatar/Bio provided, upsert into user_profiles
+	if req.AvatarURL != nil || req.Bio != nil {
+		// Get existing profile to preserve values when field is omitted
+		prof, err := s.q.GetUserProfileByID(ctx, userID)
+		if err != nil && err != sql.ErrNoRows {
+			return err
+		}
+		avatar := ""
+		bio := ""
+		if prof.AvatarUrl.Valid {
+			avatar = prof.AvatarUrl.String
+		}
+		if prof.Bio.Valid {
+			bio = prof.Bio.String
+		}
+		if req.AvatarURL != nil {
+			avatar = *req.AvatarURL
+		}
+		if req.Bio != nil {
+			bio = *req.Bio
+		}
+		if err := s.q.UpsertUserProfile(ctx, gen.UpsertUserProfileParams{
+			UserID:    userID,
+			AvatarUrl: sql.NullString{String: avatar, Valid: avatar != ""},
+			Bio:       sql.NullString{String: bio, Valid: bio != ""},
+		}); err != nil {
+			return err
+		}
+	}
 
-    return nil
+	return nil
 }
 
 // GetUserProfile returns merged user and user_profiles data for current user
 func (s *UserService) GetUserProfile(ctx context.Context, userID int64) (dtos.ProfileResponse, error) {
-    row, err := s.q.GetUserProfileByID(ctx, userID)
-    if err != nil {
-        return dtos.ProfileResponse{}, err
-    }
-    var avatarPtr *string
-    var bioPtr *string
-    if row.AvatarUrl.Valid {
-        v := row.AvatarUrl.String
-        avatarPtr = &v
-    }
-    if row.Bio.Valid {
-        v := row.Bio.String
-        bioPtr = &v
-    }
-    return dtos.ProfileResponse{
-        ID:        int(row.ID),
-        Username:  row.Username,
-        Name:      row.DisplayName,
-        Email:     row.Email,
-        Role:      string(row.Role),
-        Avatar:    avatarPtr,
-        Bio:       bioPtr,
-        CreatedAt: row.CreatedAt,
-        UpdatedAt: row.UpdatedAt,
-    }, nil
+	row, err := s.q.GetUserProfileByID(ctx, userID)
+	if err != nil {
+		return dtos.ProfileResponse{}, err
+	}
+	var avatarPtr *string
+	var bioPtr *string
+	if row.AvatarUrl.Valid {
+		v := row.AvatarUrl.String
+		avatarPtr = &v
+	}
+	if row.Bio.Valid {
+		v := row.Bio.String
+		bioPtr = &v
+	}
+	return dtos.ProfileResponse{
+		ID:        int(row.ID),
+		Username:  row.Username,
+		Name:      row.DisplayName,
+		Email:     row.Email,
+		Role:      string(row.Role),
+		Avatar:    avatarPtr,
+		Bio:       bioPtr,
+		CreatedAt: row.CreatedAt,
+		UpdatedAt: row.UpdatedAt,
+	}, nil
+}
+
+// ChangePassword validates and updates the user's password
+func (s *UserService) ChangePassword(ctx context.Context, userID int64, req dtos.ChangePasswordRequest) error {
+	if req.NewPassword != req.ConfirmPassword {
+		return fmt.Errorf("passwords do not match")
+	}
+
+	// Basic password policy: length >= 8, at least one letter and one digit
+	if len(req.NewPassword) < 8 {
+		return fmt.Errorf("password must be at least 8 characters")
+	}
+	hasLetter := false
+	hasDigit := false
+	for _, ch := range req.NewPassword {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') {
+			hasLetter = true
+		}
+		if ch >= '0' && ch <= '9' {
+			hasDigit = true
+		}
+	}
+	if !hasLetter || !hasDigit {
+		return fmt.Errorf("password must contain letters and numbers")
+	}
+
+	// Fetch user to verify current password
+	user, err := s.q.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if user.ID == 0 {
+		return sql.ErrNoRows
+	}
+
+	// Verify current password
+	if err := utils.CheckPassword(req.CurrentPassword, user.Password); err != nil {
+		return fmt.Errorf("invalid current password")
+	}
+
+	// Reject if new password equals current
+	if err := utils.CheckPassword(req.NewPassword, user.Password); err == nil {
+		return fmt.Errorf("new password must be different from current password")
+	}
+
+	// Hash and update
+	hashed, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return err
+	}
+	if err := s.q.UpdateUserPassword(ctx, gen.UpdateUserPasswordParams{Password: hashed, ID: userID}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // SearchUsers retrieves users based on search term and role with pagination

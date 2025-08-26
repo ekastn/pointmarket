@@ -80,16 +80,17 @@ func main() {
 		authRoutes.POST("/login", authHandler.Login)
 	}
 
-    // Authenticated routes
-    authRequired := v1.Group("/")
-    authRequired.Use(middleware.Auth(cfg, db))
+	// Authenticated routes
+	authRequired := v1.Group("/")
+	authRequired.Use(middleware.Auth(cfg, db))
 
 	adminRoutes := authRequired.Group("")
 	adminRoutes.Use(middleware.Authz("admin"))
 
 	{
-        authRequired.GET("/profile", userHandler.GetUserProfile)
+		authRequired.GET("/profile", userHandler.GetUserProfile)
 		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
+		authRequired.PUT("/profile/password", userHandler.ChangePassword)
 		authRequired.GET("/dashboard", dashboardHandler.GetDashboardData)
 		authRequired.GET("/roles", userHandler.GetRoles)
 

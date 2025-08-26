@@ -9,32 +9,19 @@ $messages = $messages ?? [];
 
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-tachometer-alt me-2"></i>
-        Dasbor
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-download me-1"></i>
-                Ekspor
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Welcome Card -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h4 class="mb-2">
-            Selamat datang, <?php echo htmlspecialchars($userProfile['name']); ?>!
-        </h4>
-    </div>
-</div>
+<?php 
+$right = '<div class="btn-group">'
+       . '<button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download me-1"></i>Ekspor</button>'
+       . '</div>';
+$renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-tachometer-alt',
+    'title' => 'Dasbor Guru',
+    'right' => $right,
+]);
+?>
 
 <!-- Teacher Stats -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-xl-4 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
@@ -97,7 +84,7 @@ $messages = $messages ?? [];
 </div>
 
 <!-- Quick Actions -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card">
             <div class="card-header">

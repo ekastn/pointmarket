@@ -10,9 +10,10 @@ $questionnaire = $questionnaire ?? [];
 $questions = $questions ?? [];
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i><?= htmlspecialchars($questionnaire['name'] ?? 'Kuesioner Likert') ?></h1>
-</div>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-clipboard-list',
+    'title' => htmlspecialchars($questionnaire['name'] ?? 'Kuesioner Likert'),
+]); ?>
 
 <style>
     .scale-option {
@@ -48,7 +49,7 @@ $questions = $questions ?? [];
     }
 </style>
 
-<div class="card mb-4">
+<div class="card mb-4 pm-section">
     <div class="card-header">
         <h5 class="mb-0">Info Kuesioner</h5>
     </div>
@@ -90,7 +91,7 @@ $questions = $questions ?? [];
     </div>
 </div>
 
-<form id="likertQuestionnaireForm">
+<form id="likertQuestionnaireForm" class="pm-section">
     <input type="hidden" name="questionnaire_id" value="<?= htmlspecialchars($questionnaire['id'] ?? ''); ?>">
     <div class="question-list mb-4">
         <?php foreach ($questions as $index => $question) { ?>

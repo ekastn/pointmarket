@@ -9,23 +9,21 @@ $status_filter = $status_filter ?? 'all';
 $subject_filter = $subject_filter ?? 'all';
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-tasks me-2"></i>Tugas Saya</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="/weekly-evaluations" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-check"></i> Evaluasi Mingguan
-            </a>
-            <a href="/progress" class="btn btn-outline-info">
-                <i class="fas fa-chart-line"></i> Progress Saya
-            </a>
-        </div>
-    </div>
-</div>
+<?php 
+$right = '<div class="btn-group">'
+       . '<a href="/weekly-evaluations" class="btn btn-sm btn-outline-primary"><i class="fas fa-calendar-check"></i> Evaluasi Mingguan</a>'
+       . '<a href="/progress" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-chart-line"></i> Progress Saya</a>'
+       . '</div>';
+$renderer->includePartial('components/partials/page_title', [
+  'icon' => 'fas fa-tasks',
+  'title' => 'Tugas Saya',
+  'right' => $right,
+]);
+?>
 
 <!-- Pending Weekly Evaluations Alert -->
 <?php if (!empty($pendingEvaluations)): ?>
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <div class="alert pending-alert">
             <h5><i class="fas fa-bell me-2"></i>Evaluasi Mingguan Belum Selesai</h5>
@@ -39,7 +37,7 @@ $subject_filter = $subject_filter ?? 'all';
 <?php endif; ?>
 
 <!-- Statistics Overview -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-md-3 mb-3">
         <div class="card stats-card text-center">
             <div class="card-body">
@@ -83,7 +81,7 @@ $subject_filter = $subject_filter ?? 'all';
 </div>
 
 <!-- Performance Summary -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-md-6">
         <div class="card stats-card">
             <div class="card-body">
@@ -105,7 +103,7 @@ $subject_filter = $subject_filter ?? 'all';
 </div>
 
 <!-- Filters -->
-<div class="filter-section">
+<div class="filter-section pm-section">
     <div class="row align-items-center">
         <div class="col-md-6">
             <h6 class="mb-2"><i class="fas fa-filter me-2"></i>Filter Tugas</h6>
@@ -142,128 +140,27 @@ $subject_filter = $subject_filter ?? 'all';
 </div>
 
 <!-- Assignments List -->
-<div class="row">
+<div class="row pm-section">
     <?php if (!empty($assignments)): ?>
         <?php foreach ($assignments as $assignment): ?>
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card assignment-card <?php echo htmlspecialchars($assignment['student_status']); ?> <?php echo htmlspecialchars($assignment['urgency_status']); ?> h-100">
-                <div class="card-body position-relative">
-                    <!-- Urgency Indicator -->
-                    <?php if ($assignment['urgency_status'] !== 'normal'): ?>
-                        <div class="urgency-indicator <?php echo htmlspecialchars($assignment['urgency_status']); ?>"></div>
-                    <?php endif; ?>
-                    
-                    <!-- Status Badge -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge status-badge <?php echo htmlspecialchars($assignment['student_status']); ?> text-white">
-                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $assignment['student_status']))); ?>
-                        </span>
-                        <small class="text-muted"><?php echo htmlspecialchars($assignment['subject']); ?></small>
-                    </div>
-
-                    <!-- Assignment Title -->
-                    <h5 class="card-title"><?php echo htmlspecialchars($assignment['title']); ?></h5>
-                    
-                    <!-- Description -->
-                    <p class="card-text text-muted">
-                        <?php 
-                        $description = htmlspecialchars($assignment['description']);
-                        echo strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description;
-                        ?>
-                    </p>
-
-                    <!-- Assignment Details -->
-                    <div class="row text-center mb-3">
-                        <div class="col-6">
-                            <small class="text-muted">Poin</small>
-                            <div class="fw-bold text-primary"><?php echo htmlspecialchars($assignment['points']); ?></div>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted">Sisa Hari</small>
-                            <div class="fw-bold <?php echo $assignment['days_remaining'] < 0 ? 'text-danger' : ($assignment['days_remaining'] <= 2 ? 'text-warning' : 'text-success'); ?>">
-                                <?php 
-                                if ($assignment['days_remaining'] < 0) {
-                                    echo abs($assignment['days_remaining']) . ' terlambat';
-                                } else {
-                                    echo htmlspecialchars($assignment['days_remaining']);
-                                }
-                                ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Due Date -->
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar me-1"></i>
-                            Tenggat: <?php echo htmlspecialchars(date('d M Y', strtotime($assignment['due_date']))); ?>
-                        </small>
-                        <br>
-                        <small class="text-muted">
-                            <i class="fas fa-user me-1"></i>
-                            Guru: <?php echo htmlspecialchars($assignment['teacher_name']); ?>
-                        </small>
-                    </div>
-
-                    <!-- Score Display (if completed) -->
-                    <?php if ($assignment['student_status'] === 'completed' && $assignment['score'] !== null): ?>
-                        <div class="alert alert-success py-2">
-                            <strong><i class="fas fa-star me-1"></i>Score: <?php echo htmlspecialchars(number_format($assignment['score'], 1)); ?></strong>
-                            <small class="text-muted d-block mt-1">
-                                <i class="fas fa-robot me-1"></i>AI-Simulated Score (Demo) | 
-                                Submitted: <?php echo htmlspecialchars(date('d M Y', strtotime($assignment['submitted_at']))); ?>
-                            </small>
-                            <div class="mt-2">
-                                <small class="text-info">
-                                    <i class="fas fa-lightbulb me-1"></i>
-                                    <strong>Planned AI Features:</strong> Real NLP analysis will provide detailed feedback on grammar, structure, and content relevance.
-                                </small>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex gap-2">
-                        <?php if ($assignment['student_status'] === 'not_started'): ?>
-                            <button class="btn btn-primary btn-sm flex-fill" onclick="startAssignment(<?php echo htmlspecialchars($assignment['id']); ?>)">
-                                <i class="fas fa-play me-1"></i> Start
-                            </button>
-                        <?php elseif ($assignment['student_status'] === 'in_progress'): ?>
-                            <button class="btn btn-success btn-sm flex-fill" onclick="submitAssignment(<?php echo htmlspecialchars($assignment['id']); ?>, '<?php echo htmlspecialchars($assignment['title']); ?>')">
-                                <i class="fas fa-upload me-1"></i> Submit
-                            </button>
-                        <?php else: ?>
-                            <button class="btn btn-outline-success btn-sm flex-fill" disabled>
-                                <i class="fas fa-check me-1"></i> Completed
-                            </button>
-                        <?php endif; ?>
-                        
-                        <button class="btn btn-outline-info btn-sm" onclick="viewAssignmentDetails(<?php echo htmlspecialchars($assignment['id']); ?>)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <?php $renderer->includePartial('components/partials/assignment_card', ['assignment' => $assignment]); ?>
         <?php endforeach; ?>
     <?php else: ?>
         <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Tidak ada tugas</h5>
-                <p class="text-muted">
-                    <?php if ($status_filter !== 'all' || $subject_filter !== 'all'): ?>
-                        Coba ubah filter untuk melihat tugas lainnya.
-                    <?php else: ?>
-                        Tugas baru akan muncul di sini saat guru membuatnya.
-                    <?php endif; ?>
-                </p>
-                <?php if ($status_filter !== 'all' || $subject_filter !== 'all'): ?>
+            <?php $renderer->includePartial('components/partials/empty_state', [
+                'icon' => 'fas fa-tasks',
+                'title' => 'Tidak ada tugas',
+                'subtitle' => ($status_filter !== 'all' || $subject_filter !== 'all') 
+                    ? 'Coba ubah filter untuk melihat tugas lainnya.'
+                    : 'Tugas baru akan muncul di sini saat guru membuatnya.',
+            ]); ?>
+            <?php if ($status_filter !== 'all' || $subject_filter !== 'all'): ?>
+                <div class="text-center mb-4">
                     <a href="/assignments" class="btn btn-primary">
                         <i class="fas fa-undo me-1"></i> Reset Filter
                     </a>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 </div>

@@ -3,12 +3,10 @@ $userProfile = $_SESSION['user_data'] ?? ['name' => 'Guest', 'role' => 'guest'];
 $multimodal_threshold = $multimodal_threshold ?? 0;
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-cog me-2"></i>
-        Settings
-    </h1>
-</div>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-cogs',
+    'title' => 'Pengaturan Sistem',
+]); ?>
 
 <div class="row">
     <div class="col-md-6">
@@ -25,7 +23,7 @@ $multimodal_threshold = $multimodal_threshold ?? 0;
                         <label for="multimodal-threshold" class="form-label">Threshold: <span id="threshold-value"><?php echo htmlspecialchars($multimodal_threshold); ?></span></label>
                         <input type="range" class="form-range" id="multimodal-threshold" min="0" max="10" step="0.01" value="<?php echo htmlspecialchars($multimodal_threshold); ?>">
                     </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
                 </form>
             </div>
         </div>
@@ -53,9 +51,9 @@ $multimodal_threshold = $multimodal_threshold ?? 0;
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Multimodal threshold updated successfully');
+                alert('Ambang multimodal berhasil diperbarui');
             } else {
-                alert('Failed to update multimodal threshold');
+                alert('Gagal memperbarui ambang multimodal');
             }
         });
     });

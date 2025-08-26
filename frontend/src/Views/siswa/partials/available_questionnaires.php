@@ -4,7 +4,7 @@
  */
 ?>
 <!-- Kuesioner Tersedia -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <h4><i class="fas fa-list me-2"></i>Kuesioner Tersedia</h4>
         <p class="text-muted">Practice questionnaire untuk memahami format & konten. Untuk evaluasi mingguan resmi, gunakan <a href="/weekly-evaluations">Evaluasi Mingguan</a>.</p>
@@ -42,11 +42,11 @@
         <?php endforeach; ?>
     <?php else: ?>
         <div class="col-12">
-            <div class="text-center py-4">
-                <i class="fas fa-list fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Belum ada kuesioner saat ini.</h5>
-                <p class="text-muted">Cek lagi nanti atau hubungi support.</p>
-            </div>
+            <?php $renderer->includePartial('components/partials/empty_state', [
+                'icon' => 'fas fa-list',
+                'title' => 'Belum ada kuesioner saat ini',
+                'subtitle' => 'Cek lagi nanti atau hubungi support.',
+            ]); ?>
         </div>
     <?php endif; ?>
 </div>

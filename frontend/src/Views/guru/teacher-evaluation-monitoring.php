@@ -6,7 +6,10 @@
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= htmlspecialchars($title) ?></h1>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-chart-line',
+    'title' => htmlspecialchars($title ?: 'Monitoring Evaluasi'),
+]); ?>
 
     <div class="row">
         <div class="col-12">

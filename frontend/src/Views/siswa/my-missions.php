@@ -1,12 +1,17 @@
 <div class="container-fluid mt-4">
-    <h1 class="h3 mb-4 text-gray-800">Misi Saya</h1>
+    <?php $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-trophy',
+        'title' => 'Misi Saya',
+    ]); ?>
 
     <?php if (empty($missions)): ?>
-        <div class="alert alert-info" role="alert">
-            Kamu belum punya misi yang aktif.
-        </div>
+        <?php $renderer->includePartial('components/partials/empty_state', [
+            'icon' => 'fas fa-trophy',
+            'title' => 'Belum ada misi aktif',
+            'subtitle' => 'Kamu belum punya misi yang aktif.',
+        ]); ?>
     <?php else: ?>
-        <div class="row">
+        <div class="row pm-section">
             <?php foreach ($missions as $mission): ?>
                 <div class="col-lg-6 mb-4">
                     <div class="card shadow mb-4">

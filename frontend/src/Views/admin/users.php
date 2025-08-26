@@ -1,43 +1,24 @@
 <div class="container-fluid mt-3">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">
-            <i class="fas fa-users-cog me-2"></i>
-            Data Pengguna
-        </h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/dashboard">Home</a></li>
-                <li class="breadcrumb-item active" aria-current="page"><?= $title; ?></li>
-            </ol>
-        </nav>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-12 col-md-6">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahUser">
-                <i class="fas fa-plus"></i> Input
-            </button>
-        </div>
-        <div class="col-12 col-md-3">
-            <form method="GET" class="d-flex">
-                <select name="role" class="form-select me-2">
-                    <option value="">Semua Role</option>
-                    <option value="admin" <?= (isset($_GET['role']) && $_GET['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                    <option value="guru" <?= (isset($_GET['role']) && $_GET['role'] === 'guru') ? 'selected' : ''; ?>>Guru</option>
-                    <option value="siswa" <?= (isset($_GET['role']) && $_GET['role'] === 'siswa') ? 'selected' : ''; ?>>Siswa</option>
-                </select>
-                <button class="btn btn-success me-2" type="submit">Filter Role</button>
-            </form>
-        </div>
-        <div class="col-12 col-md-3">
-            <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Cari..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-        </div>
-    </div>
+    <?php 
+        $right = '<div class="d-flex gap-2 align-items-center">'
+            . '<form method="GET" class="d-flex">'
+            . '<select name="role" class="form-select form-select-sm me-2">'
+            . '<option value="">Semua Role</option>'
+            . '<option value="admin" '.((isset($_GET['role']) && $_GET['role']==='admin') ? 'selected' : '').'>Admin</option>'
+            . '<option value="guru" '.((isset($_GET['role']) && $_GET['role']==='guru') ? 'selected' : '').'>Guru</option>'
+            . '<option value="siswa" '.((isset($_GET['role']) && $_GET['role']==='siswa') ? 'selected' : '').'>Siswa</option>'
+            . '</select>'
+            . '<input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Cari..." value="'.(isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '').'">'
+            . '<button type="submit" class="btn btn-outline-secondary btn-sm"><i class="fas fa-search"></i></button>'
+            . '</form>'
+            . '<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahUser"><i class="fas fa-plus"></i> Input</button>'
+            . '</div>';
+        $renderer->includePartial('components/partials/page_title', [
+            'icon' => 'fas fa-users-cog',
+            'title' => 'Data Pengguna',
+            'right' => $right,
+        ]);
+    ?>
 
     <?php $renderer->includePartial('components/partials/table_user', ['users' => $users, 'roles' => $roles, 'page' => $page, 'limit' => $limit, 'total_data' => $total_data, 'total_pages' => $total_pages, 'start' => $start, 'end' => $end]); ?>
 </div>

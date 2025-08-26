@@ -12,21 +12,20 @@ $base_params = [
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
-
-    <div class="row mb-3">
-        <div class="col-12 col-md-6">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahCourse">
-                <i class="fas fa-plus"></i> Input
-            </button>
-        </div>
-        <div class="col-12 col-md-6">
-            <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Search by title or slug" value="<?= htmlspecialchars($search) ?>">
-                <button class="btn btn-outline-secondary" type="submit">Search</button>
-            </form>
-        </div>
-    </div>
+    <?php 
+        $right = '<div class="d-flex gap-2 align-items-center">'
+            . '<form method="GET" class="d-flex">'
+            . '<input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Cari judul atau slug" value="'.htmlspecialchars($search).'">'
+            . '<button class="btn btn-outline-secondary btn-sm" type="submit">Cari</button>'
+            . '</form>'
+            . '<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahCourse"><i class="fas fa-plus"></i> Input</button>'
+            . '</div>';
+        $renderer->includePartial('components/partials/page_title', [
+            'icon' => 'fas fa-book-open',
+            'title' => htmlspecialchars($title ?: 'Kelola Kursus'),
+            'right' => $right,
+        ]);
+    ?>
 
     <?php
     // Pass data to the partial

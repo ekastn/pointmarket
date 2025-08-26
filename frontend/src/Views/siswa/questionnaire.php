@@ -9,22 +9,20 @@ $varkResult = $varkResult ?? null;
 $messages = $messages ?? [];
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>Kuesioner</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="/weekly-evaluations" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-check"></i> Evaluasi Mingguan
-            </a>
-            <a href="/ai-explanation" class="btn btn-outline-info">
-                <i class="fas fa-robot"></i> Penjelasan AI
-            </a>
-        </div>
-    </div>
-</div>
+<?php 
+$right = '<div class="btn-group">'
+       . '<a href="/weekly-evaluations" class="btn btn-sm btn-outline-primary"><i class="fas fa-calendar-check"></i> Evaluasi Mingguan</a>'
+       . '<a href="/ai-explanation" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-robot"></i> Penjelasan AI</a>'
+       . '</div>';
+$renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-clipboard-list',
+    'title' => 'Kuesioner',
+    'right' => $right,
+]);
+?>
 
 <!-- Statistics Overview -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <h4><i class="fas fa-chart-bar me-2"></i>Statistik Kamu</h4>
     </div>
@@ -76,11 +74,11 @@ $messages = $messages ?? [];
         <?php endforeach; ?>
     <?php else: ?>
         <div class="col-12">
-            <div class="text-center py-4">
-                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Belum ada statistik kuesioner.</h5>
-                <p class="text-muted">Isi kuesioner dulu untuk lihat progress di sini.</p>
-            </div>
+            <?php $renderer->includePartial('components/partials/empty_state', [
+                'icon' => 'fas fa-chart-bar',
+                'title' => 'Belum ada statistik kuesioner',
+                'subtitle' => 'Isi kuesioner dulu untuk lihat progress di sini.',
+            ]); ?>
         </div>
     <?php endif; ?>
 </div>
@@ -88,7 +86,7 @@ $messages = $messages ?? [];
 <?php $renderer->includePartial('siswa/partials/available_questionnaires', ['questionnaires' => $questionnaires]); ?>
 
 <!-- Recent History -->
-<div class="row">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
@@ -128,14 +126,13 @@ $messages = $messages ?? [];
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="text-center py-4">
-                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Belum ada riwayat kuesioner</h5>
-                        <p class="text-muted">Selesaikan kuesioner pertama kamu untuk melihat progress.</p>
-                        <a href="/weekly-evaluations" class="btn btn-primary">
-                            <i class="fas fa-calendar-check me-1"></i> Mulai Evaluasi Mingguan
-                        </a>
-                    </div>
+                    <?php $renderer->includePartial('components/partials/empty_state', [
+                        'icon' => 'fas fa-clipboard-list',
+                        'title' => 'Belum ada riwayat kuesioner',
+                        'subtitle' => 'Selesaikan kuesioner pertama kamu untuk melihat progress.',
+                        'cta_path' => '/weekly-evaluations',
+                        'cta_label' => 'Mulai Evaluasi Mingguan',
+                    ]); ?>
                 <?php endif; ?>
             </div>
         </div>

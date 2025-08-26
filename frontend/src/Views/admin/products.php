@@ -12,35 +12,26 @@ $base_params = [
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
+    <?php 
+        $right = '<div class="d-flex gap-2 align-items-center">'
+            . '<form method="GET" class="d-flex">'
+            . '<input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Cari produk..." value="'.htmlspecialchars($search).'">'
+            . '<select name="category_id" class="form-select form-select-sm me-2"><option value="">Semua Kategori</option>';
+        foreach ($categories as $category) {
+            $sel = ($category_id == $category['id']) ? 'selected' : '';
+            $right .= '<option value="'.htmlspecialchars($category['id']).'" '.$sel.'>'.htmlspecialchars($category['name']).'</option>';
+        }
+        $right .= '</select><button class="btn btn-outline-secondary btn-sm" type="submit">Cari</button></form>'
+            . '<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahProduct"><i class="fas fa-plus"></i> Input</button>'
+            . '</div>';
+        $renderer->includePartial('components/partials/page_title', [
+            'icon' => 'fas fa-box-open',
+            'title' => htmlspecialchars($title ?: 'Kelola Produk'),
+            'right' => $right,
+        ]);
+    ?>
 
-    <div class="row mb-3">
-        <div class="col-12 col-md-6">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahProduct">
-                <i class="fas fa-plus"></i> Input
-            </button>
-        </div>
-        <div class="col-12 col-md-3">
-            <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Search by name" value="<?= htmlspecialchars($search) ?>">
-                <button class="btn btn-outline-secondary" type="submit">Search</button>
-            </form>
-        </div>
-        <div class="col-12 col-md-3">
-            <form method="GET" class="d-flex">
-                <select name="category_id" class="form-select me-2">
-                    <option value="">All Categories</option>
-                    <?php foreach ($categories as $category) : ?>
-                        <option value="<?= htmlspecialchars($category['id']) ?>" <?= ($category_id == $category['id']) ? 'selected' : ''; ?>>
-                            <?= htmlspecialchars($category['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <button class="btn btn-outline-secondary" type="submit">Filter</button>
-            </form>
-        </div>
-    </div>
-
+    <div class="pm-section">
     <?php
     // Pass data to the partial
     $renderer->includePartial('components/partials/table_products', [
@@ -55,6 +46,7 @@ $base_params = [
         'base_params' => $base_params,
     ]);
     ?>
+    </div>
 </div>
 
 <!-- Data Modal Box Tambah Product -->

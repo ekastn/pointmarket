@@ -11,13 +11,16 @@ $base_params = [
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= htmlspecialchars($title ?: 'Kursus') ?></h1>
+    <?php $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-book-open',
+        'title' => htmlspecialchars($title ?: 'Kursus'),
+    ]); ?>
 
-    <div class="row mb-3">
+    <div class="row pm-section">
         <div class="col-12 col-md-6">
             <form method="GET" class="d-flex">
                 <input type="text" name="search" class="form-control me-2" placeholder="Cari judul atau slug" value="<?= htmlspecialchars($search) ?>">
-                <button class="btn btn-outline-secondary" type="submit">Search</button>
+                <button class="btn btn-outline-secondary" type="submit">Cari</button>
             </form>
         </div>
     </div>
@@ -30,49 +33,23 @@ $base_params = [
         ?>
 
         <?php if (!empty($myCourses)): ?>
-        <div class="mb-5">
+        <div class="pm-section">
             <h4 class="mb-3">Kursus Saya</h4>
             <div class="row">
                 <?php foreach ($myCourses as $course): ?>
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card card-hover h-100">
-                            <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">
-                            <div class="card-body d-flex flex-column">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="card-title"><?= $course["title"] ?></h5>
-                                </div>
-                                <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
-                                <div class="mt-auto">
-                                    <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">Lihat Kursus</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php $renderer->includePartial('components/partials/course_card', ['course' => $course]); ?>
                 <?php endforeach; ?>
             </div>
         </div>
         <?php endif; ?>
 
         <!-- Available Courses -->
-        <div>
+        <div class="pm-section">
             <h4 class="mb-3">Kursus Tersedia</h4>
             <div class="row">
                 <?php foreach ($courses as $course): ?>
                     <?php if (!$course["is_enrolled"]): ?>
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="card card-hover h-100">
-                                <img src="/public/images/product_placeholder.png" class="card-img-top" alt="<?= htmlspecialchars($course["title"]) ?>">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h5 class="card-title"><?= $course["title"] ?></h5>
-                                    </div>
-                                    <p class="card-text text-muted small"><?= $course["description"] ?? "" ?></p>
-                                    <div class="mt-auto">
-                                        <a href="/courses/<?= $course["slug"] ?>" class="btn btn-primary w-100">Lihat Kursus</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php $renderer->includePartial('components/partials/course_card', ['course' => $course]); ?>
                     <?php endif; ?>
                 <?php endforeach; ?>
             </div>
@@ -80,7 +57,7 @@ $base_params = [
     </div>
 
     <!-- Pagination -->
-    <nav class="d-flex justify-content-between align-items-center" aria-label="Page navigation">
+    <nav class="d-flex justify-content-between align-items-center pm-section" aria-label="Page navigation">
         <div class="mb-3">
             Menampilkan <?= $start; ?>–<?= $end; ?> dari <?= $total_data; ?> data
         </div>

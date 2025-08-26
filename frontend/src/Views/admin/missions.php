@@ -1,8 +1,9 @@
 <div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Missions Management</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#missionModal" id="addMissionBtn">Add New Mission</button>
-    </div>
+    <?php $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-trophy',
+        'title' => 'Kelola Misi',
+        'right' => '<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#missionModal" id="addMissionBtn"><i class="fas fa-plus"></i> Tambah Misi</button>'
+    ]); ?>
 
     <?php
     $renderer->includePartial('components/partials/table_missions', [

@@ -7,13 +7,14 @@ $mslq_score = $mslq_score ?? 'N/A';
 $ams_score = $ams_score ?? 'N/A';
 ?>
 
-<div class="hero-section text-center">
-    <h1><i class="fas fa-chart-network me-3"></i>Analisis Korelasi VARK-MSLQ-AMS</h1>
-    <p class="lead">Memahami hubungan antara gaya belajar, motivasi, dan strategi pembelajaran</p>
-</div>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-chart-network',
+    'title' => 'Analisis Korelasi VARK-MSLQ-AMS',
+]); ?>
+<p class="text-muted pm-section">Memahami hubungan antara gaya belajar, motivasi, dan strategi pembelajaran</p>
 
 <!-- VARK Scores Display -->
-<div class="correlation-card">
+<div class="correlation-card pm-section">
     <h4><i class="fas fa-eye me-2"></i>Skor VARK</h4>
     <div class="row mt-3">
         <?php foreach ($vark_data as $style => $score): ?>
@@ -39,7 +40,7 @@ $ams_score = $ams_score ?? 'N/A';
 </div>
 
 <!-- Correlation Predictions -->
-<div class="row">
+<div class="row pm-section">
     <div class="col-md-6">
         <div class="correlation-card">
             <h5><i class="fas fa-brain me-2 text-primary"></i>Korelasi MSLQ</h5>
@@ -151,7 +152,7 @@ $ams_score = $ams_score ?? 'N/A';
     </div>
 
 <!-- Recommendations -->
-<div class="correlation-card">
+<div class="correlation-card pm-section">
     <h5><i class="fas fa-lightbulb me-2 text-warning"></i>Rekomendasi Personal</h5>
     <?php if (isset($correlation_results) && $correlation_results !== null): ?>
         <h6>Strategi yang Direkomendasikan:</h6>
@@ -167,7 +168,7 @@ $ams_score = $ams_score ?? 'N/A';
     <?php endif; ?>
 </div>
 
-<div class="correlation-card mt-4">
+<div class="correlation-card pm-section">
     <h5><i class="fas fa-info-circle me-2 text-info"></i>Detail Korelasi Tambahan</h5>
     <div class="row">
         <div class="col-md-6">

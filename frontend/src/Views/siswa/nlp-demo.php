@@ -3,30 +3,25 @@
 $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-brain me-2"></i>
-        Demo NLP Analysis
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <div class="dropdown d-inline-block me-2">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="exampleDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-lightbulb me-1"></i>Gunakan Contoh
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="exampleDropdown" id="example-dropdown-menu">
-                    <!-- Examples will be dynamically loaded here -->
-                </ul>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-text">
-                <i class="fas fa-eraser me-1"></i>Clear
-            </button>
-        </div>
-    </div>
-</div>
+<?php 
+$right = '<div class="btn-group">'
+       . '<div class="dropdown d-inline-block me-2">'
+       . '<button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="exampleDropdown" data-bs-toggle="dropdown" aria-expanded="false">'
+       . '<i class="fas fa-lightbulb me-1"></i>Gunakan Contoh'
+       . '</button>'
+       . '<ul class="dropdown-menu" aria-labelledby="exampleDropdown" id="example-dropdown-menu"></ul>'
+       . '</div>'
+       . '<button type="button" class="btn btn-sm btn-outline-secondary" id="clear-text"><i class="fas fa-eraser me-1"></i>Bersihkan</button>'
+       . '</div>';
+$renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-brain',
+    'title' => 'Demo Analisis NLP',
+    'right' => $right,
+]);
+?>
 
 <!-- Info Alert -->
-<div class="alert alert-info mb-4">
+<div class="alert alert-info mb-4 pm-section">
     <h6><i class="fas fa-info-circle me-2"></i>Tentang NLP Analysis</h6>
     <p class="mb-2">Sistem NLP (Natural Language Processing) POINTMARKET menganalisis teks Anda berdasarkan beberapa faktor:</p>
     <div class="row">
@@ -48,7 +43,7 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
 </div>
 
 <!-- Demo Form -->
-<div class="card">
+<div class="card pm-section">
     <div class="card-header">
         <h5><i class="fas fa-edit me-2"></i>Coba Analisis Teks Anda</h5>
     </div>
@@ -121,7 +116,7 @@ $user = $_SESSION['user_data'] ?? ['name' => 'Guest'];
 <!-- </div> -->
 
 <!-- Examples -->
-<div class="row mt-4">
+<div class="row pm-section">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-success text-white">

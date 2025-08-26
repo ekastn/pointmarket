@@ -3,15 +3,13 @@
 // For now, we can assume no dynamic data is needed for this page
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-brain me-2"></i>
-        Cara Kerja AI dalam POINTMARKET
-    </h1>
-</div>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-brain',
+    'title' => 'Cara Kerja AI dalam POINTMARKET',
+]); ?>
 
 <!-- Introduction -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <div class="alert alert-info">
             <h5><i class="fas fa-info-circle me-2"></i>Penjelasan Sederhana</h5>
@@ -21,7 +19,7 @@
 </div>
 
 <!-- NLP Section -->
-<div class="row mb-5">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card ai-card nlp-card">
             <div class="card-header bg-info text-white">
@@ -89,7 +87,7 @@
 </div>
 
 <!-- RL Section -->
-<div class="row mb-5">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card ai-card rl-card">
             <div class="card-header bg-primary text-white">
@@ -182,7 +180,7 @@
 </div>
 
 <!-- CBF Section -->
-<div class="row mb-5">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card ai-card cbf-card">
             <div class="card-header bg-success text-white">

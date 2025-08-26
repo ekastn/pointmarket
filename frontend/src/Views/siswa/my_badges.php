@@ -1,5 +1,8 @@
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= htmlspecialchars($title ?: 'Badge Saya') ?></h1>
+    <?php $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-id-badge',
+        'title' => htmlspecialchars($title ?: 'Lencana Saya'),
+    ]); ?>
 
     <?php if (isset($_SESSION['messages'])): ?>
         <div class="alert alert-<?= key($_SESSION['messages']) ?> alert-dismissible fade show" role="alert">
@@ -9,12 +12,14 @@
         <?php unset($_SESSION['messages']); ?>
     <?php endif; ?>
 
-    <div class="row">
+    <div class="row pm-section">
         <?php if (empty($badges)) : ?>
             <div class="col-12">
-                <div class="alert alert-info" role="alert">
-                    Kamu belum mendapatkan badge.
-                </div>
+                <?php $renderer->includePartial('components/partials/empty_state', [
+                    'icon' => 'fas fa-id-badge',
+                    'title' => 'Belum ada lencana',
+                    'subtitle' => 'Kamu belum mendapatkan lencana.',
+                ]); ?>
             </div>
         <?php else : ?>
             <?php foreach ($badges as $badge) : ?>

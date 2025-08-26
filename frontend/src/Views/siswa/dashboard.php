@@ -19,26 +19,23 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
 ?>
 
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-tachometer-alt me-2"></i>
-        Dashboard
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-download me-1"></i>
-                Ekspor
-            </button>
-        </div>
-    </div>
-</div>
+<?php 
+$right = '<div class="btn-toolbar"><div class="btn-group">'
+       . '<button type="button" class="btn btn-sm btn-outline-secondary">'
+       . '<i class="fas fa-download me-1"></i>Ekspor'
+       . '</button></div></div>';
+$renderer->includePartial('components/partials/page_title', [
+  'icon' => 'fas fa-tachometer-alt',
+  'title' => 'Dashboard',
+  'right' => $right,
+]);
+?>
 
 <!-- AI Features POC -->
 <?php $renderer->includePartial('components/partials/ai_features_poc'); ?>
 
 <!-- Student Stats -->
-<div class="row mb-4">
+<div class="row pm-section">
     <?php foreach ($statsItems as $item) { ?>
         <div class="col-xl-3 col-md-6 mb-4">
             <?php $renderer->includePartial('components/partials/card_stats', $item); ?>
@@ -47,7 +44,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
 </div>
 
 <!-- VARK Learning Style Card -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card border-left-primary shadow">
             <div class="card-header py-3">
@@ -80,12 +77,12 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                                         <small class="text-muted">Skor VARK:</small>
                                         <div class="row mt-2">
                                             <div class="col-6">
-                                                <span class="badge bg-info">Visual: <?php echo htmlspecialchars($preferenceScores['Visual'] ?? 'N/A'); ?></span>
-                                                <span class="badge bg-warning">Auditory: <?php echo htmlspecialchars($preferenceScores['Auditory'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge visual">Visual: <?php echo htmlspecialchars($preferenceScores['Visual'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge auditory ms-2">Auditory: <?php echo htmlspecialchars($preferenceScores['Auditory'] ?? 'N/A'); ?></span>
                                             </div>
                                             <div class="col-6">
-                                                <span class="badge bg-success">Reading: <?php echo htmlspecialchars($preferenceScores['Reading'] ?? 'N/A'); ?></span>
-                                                <span class="badge bg-danger">Kinesthetic: <?php echo htmlspecialchars($preferenceScores['Kinesthetic'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge reading">Reading: <?php echo htmlspecialchars($preferenceScores['Reading'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge kinesthetic ms-2">Kinesthetic: <?php echo htmlspecialchars($preferenceScores['Kinesthetic'] ?? 'N/A'); ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -110,15 +107,13 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
                         </div>
                     </div>
                 <?php } else { ?>
-                    <div class="text-center">
-                        <i class="fas fa-brain fa-3x text-muted mb-3"></i>
-                        <h6 class="text-muted">Gaya Belajar Belum Dinilai</h6>
-                        <p class="text-muted">Ikuti VARK assessment untuk tahu preferensi belajar kamu dan dapat rekomendasi yang lebih personal.</p>
-                        <a href="/vark-assessment" class="btn btn-primary">
-                            <i class="fas fa-brain me-1"></i>
-                            Mulai VARK Assessment
-                        </a>
-                    </div>
+                    <?php $renderer->includePartial('components/partials/empty_state', [
+                        'icon' => 'fas fa-brain',
+                        'title' => 'Gaya Belajar Belum Dinilai',
+                        'subtitle' => 'Ikuti VARK assessment untuk tahu preferensi belajar kamu dan dapat rekomendasi yang lebih personal.',
+                        'cta_path' => '/vark-assessment',
+                        'cta_label' => 'Mulai VARK Assessment',
+                    ]); ?>
                 <?php } ?>
             </div>
         </div>
@@ -126,7 +121,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
 </div>
 
 <!-- Quick Actions -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
@@ -168,7 +163,7 @@ require_once __DIR__.'/../../Helpers/DateHelpers.php';
 </div>
 
 <!-- Weekly Evaluations -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">

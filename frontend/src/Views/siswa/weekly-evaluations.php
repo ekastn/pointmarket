@@ -6,14 +6,19 @@
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= htmlspecialchars($title ?: 'Evaluasi Mingguan') ?></h1>
+    <?php $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-calendar-check',
+        'title' => htmlspecialchars($title ?: 'Evaluasi Mingguan'),
+    ]); ?>
 
-    <div class="row">
+    <div class="row pm-section">
         <?php if (empty($evaluations)) : ?>
             <div class="col-12">
-                <div class="alert alert-info" role="alert">
-                    Belum ada evaluasi mingguan.
-                </div>
+                <?php $renderer->includePartial('components/partials/empty_state', [
+                    'icon' => 'fas fa-calendar-check',
+                    'title' => 'Belum ada evaluasi mingguan',
+                    'subtitle' => 'Evaluasi mingguan akan muncul di sini ketika dibuat untukmu.',
+                ]); ?>
             </div>
         <?php else : ?>
             <?php foreach ($evaluations as $evaluation) : ?>

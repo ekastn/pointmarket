@@ -10,23 +10,21 @@ $aiMetrics = $aiMetrics ?? [
 $sampleRecommendations = $sampleRecommendations ?? [];
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-robot me-2"></i>
-        Rekomendasi AI
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshRecommendations()">
-                <i class="fas fa-sync-alt me-1"></i>
-                Refresh
-            </button>
-        </div>
-    </div>
-</div>
+<?php 
+$right = '<div class="btn-group">'
+       . '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshRecommendations()">'
+       . '<i class="fas fa-sync-alt me-1"></i>Refresh'
+       . '</button>'
+       . '</div>';
+$renderer->includePartial('components/partials/page_title', [
+  'icon' => 'fas fa-robot',
+  'title' => 'Rekomendasi AI',
+  'right' => $right,
+]);
+?>
 
 <!-- AI Metrics Overview -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-md-4">
         <div class="card metric-card">
             <div class="card-body text-center">
@@ -75,14 +73,14 @@ $sampleRecommendations = $sampleRecommendations ?? [];
 </div>
 
 <!-- Personalized Recommendations -->
-<div class="row mb-4">
+<div class="row pm-section">
     <div class="col-12">
         <h3><i class="fas fa-user-cog me-2"></i>Rekomendasi Personal untuk <?= htmlspecialchars($user['name']) ?></h3>
         <p class="text-muted">Berdasarkan analisis AI terhadap pola belajar dan performa Anda</p>
     </div>
 </div>
 
-<div class="row mb-4">
+<div class="row pm-section">
     <?php foreach ($sampleRecommendations as $index => $rec): ?>
     <div class="col-md-4 mb-4">
         <div class="card recommendation-card h-100 <?= strtolower($rec['type']) ?>-border">
@@ -146,7 +144,7 @@ $sampleRecommendations = $sampleRecommendations ?? [];
 </div>
 
 <!-- Detailed Statistics -->
-<div class="row">
+<div class="row pm-section">
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-info text-white">

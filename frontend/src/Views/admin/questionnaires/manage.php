@@ -47,14 +47,15 @@ if ($isEditMode && !empty($questions)) {
 
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i><?= $formTitle ?></h1>
-</div>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-clipboard-list',
+    'title' => htmlspecialchars($formTitle),
+]); ?>
 
 <form id="questionnaireAdminForm">
     <input type="hidden" name="id" value="<?= htmlspecialchars($questionnaireData['id'] ?? ''); ?>">
 
-    <div class="card mb-4">
+    <div class="card mb-4 pm-section">
         <div class="card-header">
             <h5 class="mb-0">Questionnaire Details</h5>
         </div>
@@ -88,7 +89,7 @@ if ($isEditMode && !empty($questions)) {
         </div>
     </div>
 
-    <div class="card mb-4">
+    <div class="card mb-4 pm-section">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Questions</h5>
             <button type="button" class="btn btn-primary btn-sm" id="addQuestionBtn"><i class="fas fa-plus me-1"></i> Add Question</button>

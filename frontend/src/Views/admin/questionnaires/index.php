@@ -53,14 +53,11 @@ $pagination = [
 
 ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>Manage Questionnaires</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="/questionnaires/create" class="btn btn-success">
-            <i class="fas fa-plus me-1"></i> Create New Questionnaire
-        </a>
-    </div>
-</div>
+<?php $renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-clipboard-list',
+    'title' => 'Kelola Kuesioner',
+    'right' => '<a href="/questionnaires/create" class="btn btn-success"><i class="fas fa-plus me-1"></i> Buat Kuesioner Baru</a>'
+]); ?>
 
 <?php
 $renderer->includePartial('components/partials/table', [
@@ -68,7 +65,7 @@ $renderer->includePartial('components/partials/table', [
     'actions' => $actions,
     'data' => $questionnaires,
     'pagination' => $pagination,
-    'empty_message' => 'No questionnaires found. Click "Create New Questionnaire" to add one.'
+    'empty_message' => 'Belum ada kuesioner. Klik "Buat Kuesioner Baru" untuk menambahkan.'
 ]);
 ?>
 

@@ -12,19 +12,22 @@ $base_params = [
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
+    <?php $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-store',
+        'title' => htmlspecialchars($title ?: 'Produk'),
+    ]); ?>
 
-    <div class="row mb-3">
+    <div class="row pm-section">
         <div class="col-12 col-md-6">
             <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="<?= htmlspecialchars($search) ?>">
-                <button class="btn btn-outline-secondary" type="submit">Search</button>
+                <input type="text" name="search" class="form-control me-2" placeholder="Cari produk..." value="<?= htmlspecialchars($search) ?>">
+                <button class="btn btn-outline-secondary" type="submit">Cari</button>
             </form>
         </div>
         <div class="col-12 col-md-6">
             <form method="GET" class="d-flex">
                 <select name="category_id" class="form-select me-2">
-                    <option value="">All Categories</option>
+                    <option value="">Semua Kategori</option>
                     <?php foreach ($categories as $category) : ?>
                         <option value="<?= htmlspecialchars($category['id']) ?>" <?= ($category_id == $category['id']) ? 'selected' : ''; ?>>
                             <?= htmlspecialchars($category['name']) ?>
@@ -36,12 +39,14 @@ $base_params = [
         </div>
     </div>
 
-    <div class="row">
+    <div class="row pm-section">
         <?php if (empty($products)) : ?>
             <div class="col-12">
-                <div class="alert alert-info" role="alert">
-                    No products found.
-                </div>
+                <?php $renderer->includePartial('components/partials/empty_state', [
+                    'icon' => 'fas fa-box-open',
+                    'title' => 'Tidak ada produk',
+                    'subtitle' => 'Coba ubah kata kunci pencarian atau filter kategori.',
+                ]); ?>
             </div>
         <?php else : ?>
             <?php foreach ($products as $product) : ?>
@@ -51,9 +56,9 @@ $base_params = [
     </div>
 
     <!-- Pagination -->
-    <nav class="d-flex justify-content-between align-items-center" aria-label="Page navigation">
+    <nav class="d-flex justify-content-between align-items-center pm-section" aria-label="Page navigation">
         <div class="mb-3">
-            Showing <?= ($page - 1) * $limit + 1; ?> to <?= min($page * $limit, $total_data); ?> of <?= $total_data; ?> entries
+            Menampilkan <?= ($page - 1) * $limit + 1; ?>–<?= min($page * $limit, $total_data); ?> dari <?= $total_data; ?> data
         </div>
         <?php if ($total_pages > 1) : ?>
             <ul class="pagination mb-0">

@@ -47,15 +47,16 @@ type StudentLearningStyle struct {
 
 // ProfileResponse represents merged user + profile data for the current user
 type ProfileResponse struct {
-	ID        int       `json:"id"`
-	Username  string    `json:"username"`
-	Name      string    `json:"name"` // from users.display_name
-	Email     string    `json:"email"`
-	Role      string    `json:"role"`
-	Avatar    *string   `json:"avatar"`
-	Bio       *string   `json:"bio"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int         `json:"id"`
+	Username  string      `json:"username"`
+	Name      string      `json:"name"` // from users.display_name
+	Email     string      `json:"email"`
+	Role      string      `json:"role"`
+	Avatar    *string     `json:"avatar"`
+	Bio       *string     `json:"bio"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+	Student   *StudentDTO `json:"student,omitempty"`
 }
 
 // UpdateProfileRequest is a partial update payload for the current user's profile

@@ -431,7 +431,7 @@ func (h *QuizHandler) GetStudentQuizByID(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /students/{student_id}/quizzes [get]
 func (h *QuizHandler) GetStudentQuizzesList(c *gin.Context) {
-	studentID, err := strconv.ParseInt(c.Param("student_id"), 10, 64)
+	studentID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid student ID")
 		return

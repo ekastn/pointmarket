@@ -83,6 +83,7 @@ return [
             'label' => null,
             'items' => [
                 ['path' => '/users', 'label' => 'Pengguna', 'icon' => 'fas fa-users-cog'],
+                ['path' => '/students', 'label' => 'Siswa', 'icon' => 'fas fa-user-graduate'],
                 ['path' => '/missions', 'label' => 'Misi', 'icon' => 'fas fa-trophy'],
                 ['path' => '/courses', 'label' => 'Kursus', 'icon' => 'fas fa-book-open'],
                 ['path' => '/badges', 'label' => 'Lencana', 'icon' => 'fas fa-id-badge'],
@@ -108,4 +109,3 @@ return [
         ],
     ],
 ];
-

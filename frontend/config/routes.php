@@ -10,6 +10,7 @@ use App\Controllers\MissionsController;
 use App\Controllers\ProductCategoriesController;
 use App\Controllers\ProductsController;
 use App\Controllers\ProfileController;
+use App\Controllers\StudentsController;
 use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
 use App\Controllers\SettingsController;
@@ -67,6 +68,12 @@ return function (Router $router) {
             $router->put('/{id}', [UsersController::class, 'updateUser']); // Update user
             $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);
             $router->delete('/{id}', [UsersController::class, 'deleteUser']); // Delete user
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+
+        // Admin Students management
+        $router->group('/students', function (Router $router) {
+            $router->get('/', [StudentsController::class, 'index']);
+            $router->put('/{id}', [StudentsController::class, 'update']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
         // Weekly Evaluations routes

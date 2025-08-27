@@ -1,46 +1,71 @@
 <?php
-// Unified profile view for all roles
+// Unified profile view (Bahasa Indonesia) with optional student info
 $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'role' => 'guest', 'avatar' => null, 'bio' => null];
-?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-user-circle me-2"></i>Profil Saya</h1>
-  </div>
+// Page title
+$renderer->includePartial('components/partials/page_title', [
+    'icon' => 'fas fa-user-circle',
+    'title' => 'Profil Saya',
+]);
+?>
 
 <div class="row">
     <div class="col-md-4">
         <div class="card shadow-sm mb-4">
             <div class="card-body text-center">
-                <img src="<?php echo htmlspecialchars($user['avatar'] ?? '/assets/img/default-avatar.png'); ?>" class="rounded-circle mb-3" alt="Avatar" style="width: 150px; height: 150px; object-fit: cover;">
-                <h5 class="card-title mb-1"><?php echo htmlspecialchars($user['name']); ?></h5>
-                <p class="text-muted mb-0"><?php echo htmlspecialchars(ucfirst($user['role'])); ?></p>
-                <p class="text-muted"><small>@<?php echo htmlspecialchars($user['username']); ?></small></p>
+                <?php $avatar = $user['avatar'] ?? 'https://i.pravatar.cc/150?img=12'; ?>
+                <img src="<?= htmlspecialchars($avatar); ?>" class="rounded-circle mb-3" alt="Avatar" style="width: 128px; height: 128px; object-fit: cover;">
+                <h5 class="card-title mb-1"><?= htmlspecialchars($user['name']); ?></h5>
+                <p class="text-muted mb-0"><?= htmlspecialchars(ucfirst($user['role'])); ?></p>
+                <p class="text-muted"><small>@<?= htmlspecialchars($user['username']); ?></small></p>
+                <?php if (!empty($user['bio'])): ?>
+                    <p class="mt-2 mb-0">"<?= htmlspecialchars($user['bio']); ?>"</p>
+                <?php endif; ?>
             </div>
         </div>
+
+        <?php if (!empty($user['student'])): $st = $user['student']; ?>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">Informasi Akademik</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2"><strong>NIM:</strong> <?= htmlspecialchars($st['student_id'] ?? '-'); ?></div>
+                <div class="mb-2"><strong>Program:</strong> <?= htmlspecialchars($st['program']['name'] ?? '-'); ?></div>
+                <div class="mb-2"><strong>Angkatan:</strong> <?= htmlspecialchars($st['cohort_year'] ?? '-'); ?></div>
+                <div class="mb-2"><strong>Status:</strong>
+                    <?php
+                        $map = ['active' => 'Aktif', 'leave' => 'Cuti', 'graduated' => 'Lulus', 'dropped' => 'Dropout'];
+                        $label = $map[$st['status'] ?? ''] ?? ($st['status'] ?? '-');
+                    ?>
+                    <span class="badge bg-secondary"><?= htmlspecialchars($label); ?></span>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
+
     <div class="col-md-8">
         <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Edit Profil</h5>
-            </div>
+            <div class="card-header"><h6 class="mb-0">Edit Profil</h6></div>
             <div class="card-body">
                 <form action="/profile" method="POST">
                     <div class="mb-3">
                         <label for="name" class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
+                        <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($user['name']); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Alamat Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                        <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user['email']); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label for="avatar" class="form-label">URL Avatar</label>
-                        <input type="text" class="form-control" id="avatar" name="avatar" value="<?php echo htmlspecialchars($user['avatar'] ?? ''); ?>">
+                        <input type="text" class="form-control" id="avatar" name="avatar" value="<?= htmlspecialchars($user['avatar'] ?? ''); ?>">
                         <div class="form-text">Tautan ke foto profil Anda (mis. Gravatar atau layanan gambar).</div>
                     </div>
                     <div class="mb-3">
                         <label for="bio" class="form-label">Bio</label>
-                        <textarea class="form-control" id="bio" name="bio" rows="3"><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
+                        <textarea class="form-control" id="bio" name="bio" rows="3"><?= htmlspecialchars($user['bio'] ?? ''); ?></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i>Simpan Perubahan
@@ -50,9 +75,7 @@ $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'rol
         </div>
 
         <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="mb-0">Ubah Kata Sandi</h5>
-            </div>
+            <div class="card-header"><h6 class="mb-0">Ubah Kata Sandi</h6></div>
             <div class="card-body">
                 <form action="/profile/password" method="POST" onsubmit="return validatePasswordForm()">
                     <div class="mb-3">
@@ -81,10 +104,7 @@ $user = $user ?? ['name' => 'Guest', 'email' => 'N/A', 'username' => 'N/A', 'rol
 function validatePasswordForm() {
     const np = document.getElementById('new_password').value;
     const cp = document.getElementById('confirm_password').value;
-    if (np !== cp) {
-        alert('Kata sandi baru dan konfirmasi tidak cocok.');
-        return false;
-    }
+    if (np !== cp) { alert('Kata sandi baru dan konfirmasi tidak cocok.'); return false; }
     return true;
 }
 </script>

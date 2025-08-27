@@ -13,6 +13,7 @@ use App\Services\AssignmentService;
 use App\Services\QuizService;
 use App\Services\VarkCorrelationService;
 use App\Services\ProfileService;
+use App\Services\StudentService;
 use App\Services\MissionService;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\ErrorController;
@@ -49,6 +50,10 @@ return [
 
     ProfileService::class => function (ApiClient $apiClient) {
         return new ProfileService($apiClient);
+    },
+
+    StudentService::class => function (ApiClient $apiClient) {
+        return new StudentService($apiClient);
     },
 
     CourseService::class => function (ApiClient $apiClient) {

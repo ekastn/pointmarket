@@ -26,6 +26,28 @@ set @eko_id = (select id from users where username = 'eko' limit 1);
 set @fajar_id = (select id from users where username = 'fajar' limit 1);
 set @gita_id = (select id from users where username = 'gita' limit 1);
 
+-- Faculties and Programs (academic schema)
+insert ignore into faculties (name) values
+('vokasi');
+
+set @vokasi_id = (select id from faculties where name = 'vokasi' limit 1);
+
+insert ignore into programs (name, faculty_id) values
+('D4 Teknik Informatika', @vokasi_id),
+('D3 Sistem Informasi', @vokasi_id);
+
+set @prodi_ti = (select id from programs where name = 'D4 Teknik Informatika' limit 1);
+set @prodi_si = (select id from programs where name = 'D3 Sistem Informasi' limit 1);
+
+-- Map existing student users to students table with sample identities
+insert ignore into students (user_id, student_id, program_id, cohort_year, status, phone) values
+(@andi_id,  '2401001', @prodi_ti, 2024, 'active',  '081234567801'),
+(@budi_id,  '2401002', @prodi_ti, 2024, 'active',  '081234567802'),
+(@citra_id, '2401003', @prodi_si, 2023, 'active',  '081234567803'),
+(@dewi_id,  '2401004', @prodi_si, 2023, 'active',  '081234567804'),
+(@eko_id,   '2401005', @prodi_ti, 2024, 'active',  '081234567805'),
+(@gita_id,  '2401006', @prodi_ti, 2024, 'active',  '081234567806');
+
 insert ignore into user_profiles (user_id, avatar_url, bio, metadata) values
 (@andi_id, 'https://i.pravatar.cc/150?img=1', 'Siswa yang bersemangat dalam belajar matematika.', '{}'),
 (@budi_id, 'https://i.pravatar.cc/150?img=2', 'Siswa yang suka membaca dan menulis.', '{}'),

@@ -13,11 +13,12 @@ import (
 )
 
 type UserHandler struct {
-	userService services.UserService
+	userService    services.UserService
+	studentService *services.StudentService
 }
 
-func NewUserHandler(userService services.UserService) *UserHandler {
-	return &UserHandler{userService: userService}
+func NewUserHandler(userService services.UserService, studentService *services.StudentService) *UserHandler {
+	return &UserHandler{userService: userService, studentService: studentService}
 }
 
 // CreateUser handles creating a new user
@@ -74,6 +75,14 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 		}
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
+	}
+	// Attach student fragment for siswa if available
+	if h.studentService != nil {
+		if role := middleware.GetRole(c); role == "siswa" {
+			if st, err := h.studentService.GetByUserID(c.Request.Context(), int64(userID)); err == nil && st != nil {
+				prof.Student = st
+			}
+		}
 	}
 	response.Success(c, http.StatusOK, "Profile retrieved successfully", prof)
 }

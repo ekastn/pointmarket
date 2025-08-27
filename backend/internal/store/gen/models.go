@@ -398,6 +398,93 @@ func (ns NullStudentQuizzesStatus) Value() (driver.Value, error) {
 	return string(ns.StudentQuizzesStatus), nil
 }
 
+type StudentsGender string
+
+const (
+	StudentsGenderM     StudentsGender = "M"
+	StudentsGenderF     StudentsGender = "F"
+	StudentsGenderOther StudentsGender = "Other"
+)
+
+func (e *StudentsGender) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentsGender(s)
+	case string:
+		*e = StudentsGender(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentsGender: %T", src)
+	}
+	return nil
+}
+
+type NullStudentsGender struct {
+	StudentsGender StudentsGender `json:"students_gender"`
+	Valid          bool           `json:"valid"` // Valid is true if StudentsGender is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentsGender) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentsGender, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentsGender.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentsGender) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentsGender), nil
+}
+
+type StudentsStatus string
+
+const (
+	StudentsStatusActive    StudentsStatus = "active"
+	StudentsStatusLeave     StudentsStatus = "leave"
+	StudentsStatusGraduated StudentsStatus = "graduated"
+	StudentsStatusDropped   StudentsStatus = "dropped"
+)
+
+func (e *StudentsStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentsStatus(s)
+	case string:
+		*e = StudentsStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentsStatus: %T", src)
+	}
+	return nil
+}
+
+type NullStudentsStatus struct {
+	StudentsStatus StudentsStatus `json:"students_status"`
+	Valid          bool           `json:"valid"` // Valid is true if StudentsStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentsStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentsStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentsStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentsStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentsStatus), nil
+}
+
 type UserLearningStylesType string
 
 const (
@@ -558,6 +645,13 @@ type Course struct {
 	UpdatedAt   time.Time       `json:"updated_at"`
 }
 
+type Faculty struct {
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Lesson struct {
 	ID       int64           `json:"id"`
 	CourseID int64           `json:"course_id"`
@@ -630,6 +724,14 @@ type ProductMedium struct {
 	Metadata  json.RawMessage `json:"metadata"`
 }
 
+type Program struct {
+	ID        int64         `json:"id"`
+	Name      string        `json:"name"`
+	FacultyID sql.NullInt64 `json:"faculty_id"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt time.Time     `json:"updated_at"`
+}
+
 type Questionnaire struct {
 	ID             int32                    `json:"id"`
 	Type           QuestionnairesType       `json:"type"`
@@ -680,6 +782,19 @@ type QuizQuestion struct {
 	QuestionType  string          `json:"question_type"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer sql.NullString  `json:"correct_answer"`
+}
+
+type Student struct {
+	UserID     int64              `json:"user_id"`
+	StudentID  string             `json:"student_id"`
+	ProgramID  int64              `json:"program_id"`
+	CohortYear sql.NullInt32      `json:"cohort_year"`
+	Status     StudentsStatus     `json:"status"`
+	BirthDate  sql.NullTime       `json:"birth_date"`
+	Gender     NullStudentsGender `json:"gender"`
+	Phone      sql.NullString     `json:"phone"`
+	CreatedAt  time.Time          `json:"created_at"`
+	UpdatedAt  time.Time          `json:"updated_at"`
 }
 
 type StudentAssignment struct {

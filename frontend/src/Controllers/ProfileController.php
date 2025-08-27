@@ -28,7 +28,7 @@ class ProfileController extends BaseController
         $viewName = 'profile';
 
         $this->render($viewName, [
-            'title' => 'My Profile',
+            'title' => 'Profil',
             'user' => $userProfile,
             'messages' => $messages,
         ]);

@@ -26,6 +26,7 @@ func main() {
 
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
+	studentService := services.NewStudentService(querier)
 	questionnaireService := services.NewQuestionnaireService(db.DB, querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
@@ -39,7 +40,8 @@ func main() {
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
 
 	authHandler := handler.NewAuthHandler(*authService)
-	userHandler := handler.NewUserHandler(*userService)
+	userHandler := handler.NewUserHandler(*userService, studentService)
+	studentHandler := handler.NewStudentHandler(studentService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService, userService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
@@ -106,6 +108,26 @@ func main() {
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)
 		}
 
+		// Academic: programs (all roles can read)
+		programsRoutes := authRequired.Group("/programs")
+		{
+			programsRoutes.GET("", studentHandler.GetPrograms)
+		}
+
+		// Academic: students (admin-only management)
+		studentsRoutes := authRequired.Group("/students")
+		{
+			// Admin-only routes reusing admin middleware handler
+			studentsRoutes.GET("", adminRoutes.Handlers[0], studentHandler.SearchStudents)
+			studentsRoutes.GET("/:user_id", adminRoutes.Handlers[0], studentHandler.GetStudentByUserID)
+			studentsRoutes.PUT("/:user_id", adminRoutes.Handlers[0], studentHandler.UpsertStudentByUserID)
+
+			// Specific student assignments list (e.g., for a student to see their own progress)
+			authRequired.GET("/:user_id/assignments", assignmentHandler.GetStudentAssignmentsList)
+			// Specific student quizzes list (e.g., for a student to see their own progress)
+			authRequired.GET("/:user_id/quizzes", quizHandler.GetStudentQuizzesList)
+		}
+
 		productRoutes := authRequired.Group("/products")
 		{
 			productRoutes.GET("", productHandler.GetProducts)
@@ -170,9 +192,6 @@ func main() {
 			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin-only
 		}
 
-		// Specific student assignments list (e.g., for a student to see their own progress)
-		authRequired.GET("/students/:student_id/assignments", assignmentHandler.GetStudentAssignmentsList)
-
 		// NEW: Quizzes routes (general CRUD)
 		quizzesRoutes := authRequired.Group("/quizzes")
 		{
@@ -196,9 +215,6 @@ func main() {
 			quizzesRoutes.PUT("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.UpdateStudentQuiz)    // Admin/Teacher-only (grade/update specific submission)
 			quizzesRoutes.DELETE("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.DeleteStudentQuiz) // Admin-only
 		}
-
-		// Specific student quizzes list (e.g., for a student to see their own progress)
-		authRequired.GET("/students/:student_id/quizzes", quizHandler.GetStudentQuizzesList)
 
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{

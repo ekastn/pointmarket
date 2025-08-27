@@ -248,7 +248,7 @@ func (h *AssignmentHandler) GetStudentAssignmentByID(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /students/{student_id}/assignments [get]
 func (h *AssignmentHandler) GetStudentAssignmentsList(c *gin.Context) {
-	studentID, err := strconv.ParseInt(c.Param("student_id"), 10, 64)
+	studentID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid student ID") // FIX
 		return

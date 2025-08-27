@@ -19,6 +19,7 @@ type Querier interface {
 	CountProductCategories(ctx context.Context) (int64, error)
 	CountProducts(ctx context.Context) (int64, error)
 	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
+	CountStudents(ctx context.Context, arg CountStudentsParams) (int64, error)
 	// Assignments --
 	CreateAssignment(ctx context.Context, arg CreateAssignmentParams) (sql.Result, error)
 	// Badges --
@@ -105,6 +106,8 @@ type Querier interface {
 	GetStudentAssignmentByIDs(ctx context.Context, arg GetStudentAssignmentByIDsParams) (StudentAssignment, error)
 	GetStudentAssignmentsByAssignmentID(ctx context.Context, assignmentID int64) ([]GetStudentAssignmentsByAssignmentIDRow, error)
 	GetStudentAssignmentsByStudentID(ctx context.Context, studentID int64) ([]GetStudentAssignmentsByStudentIDRow, error)
+	GetStudentByStudentID(ctx context.Context, studentID string) (GetStudentByStudentIDRow, error)
+	GetStudentByUserID(ctx context.Context, userID int64) (GetStudentByUserIDRow, error)
 	GetStudentCoursesByUserID(ctx context.Context, studentID int64) ([]GetStudentCoursesByUserIDRow, error)
 	GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error)
 	GetStudentQuizByID(ctx context.Context, id int64) (StudentQuiz, error)
@@ -127,8 +130,11 @@ type Querier interface {
 	GetWeeklyEvaluationResult(ctx context.Context, weeklyEvaluationID sql.NullInt64) (GetWeeklyEvaluationResultRow, error)
 	GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]GetWeeklyEvaluationsByStudentIDRow, error)
 	GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error)
+	InsertStudent(ctx context.Context, arg InsertStudentParams) error
+	ListPrograms(ctx context.Context) ([]Program, error)
 	MarkOverdueWeeklyEvaluations(ctx context.Context) error
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error
+	SearchStudents(ctx context.Context, arg SearchStudentsParams) ([]SearchStudentsRow, error)
 	SearchUsers(ctx context.Context, arg SearchUsersParams) ([]User, error)
 	UnenrollStudentFromCourse(ctx context.Context, arg UnenrollStudentFromCourseParams) error
 	UpdateAssignment(ctx context.Context, arg UpdateAssignmentParams) error
@@ -143,6 +149,7 @@ type Querier interface {
 	UpdateQuiz(ctx context.Context, arg UpdateQuizParams) error
 	UpdateQuizQuestion(ctx context.Context, arg UpdateQuizQuestionParams) error
 	UpdateStudentAssignment(ctx context.Context, arg UpdateStudentAssignmentParams) error
+	UpdateStudentByUserID(ctx context.Context, arg UpdateStudentByUserIDParams) error
 	UpdateStudentQuiz(ctx context.Context, arg UpdateStudentQuizParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserMissionStatus(ctx context.Context, arg UpdateUserMissionStatusParams) error

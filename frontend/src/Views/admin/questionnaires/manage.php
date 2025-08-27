@@ -180,7 +180,7 @@ if ($isEditMode && !empty($questions)) {
                 </div>
                 <div class="mb-3 subscale-group ${subscaleDisplay}">
                     <label class="form-label">Subscale</label>
-                    <select class="form-select subscale-input">
+                    <select class="form-select subscale-input" ${!isVark ? 'required' : ''} ${isVark ? 'disabled' : ''}>
                         ${renderSubscaleOptions(q && q.subscale ? q.subscale : '')}
                     </select>
                 </div>
@@ -275,12 +275,15 @@ if ($isEditMode && !empty($questions)) {
         });
 
         // Refresh subscale options when switching between MSLQ/AMS
-        if (!isVark) {
-            questionsContainer.querySelectorAll('.subscale-input').forEach(select => {
-                const current = select.value || '';
+        questionsContainer.querySelectorAll('.subscale-input').forEach(select => {
+            // Toggle validation and usability
+            select.required = !isVark;
+            select.disabled = isVark;
+            const current = select.value || '';
+            if (!isVark) {
                 select.innerHTML = renderSubscaleOptions(current);
-            });
-        }
+            }
+        });
     });
 
     // Form submission

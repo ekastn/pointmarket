@@ -112,6 +112,34 @@ if ($isEditMode && !empty($questions)) {
     const addQuestionBtn = document.getElementById('addQuestionBtn');
     const questionnaireTypeSelect = document.getElementById('questionnaireType');
 
+    // Subscale options per questionnaire type
+    const SUBSCALE_OPTIONS = {
+        MSLQ: [
+            'Intrinsic & Extrinsic Goal Orientation',
+            'Task Value',
+            'Self-Efficacy',
+            'Metacognitive & Cognitive Strategy Use',
+            'Resource Management'
+        ],
+        AMS: [
+            'Intrinsic Motivation',
+            'Extrinsic Motivation',
+            'Achievement',
+            'Amotivation'
+        ]
+    };
+
+    function renderSubscaleOptions(selectedValue) {
+        const type = questionnaireTypeSelect.value;
+        const opts = SUBSCALE_OPTIONS[type] || [];
+        let html = '<option value="">Select Subscale</option>';
+        opts.forEach(o => {
+            const sel = (o === selectedValue) ? 'selected' : '';
+            html += `<option value="${htmlspecialchars(o)}" ${sel}>${htmlspecialchars(o)}</option>`;
+        });
+        return html;
+    }
+
     let questionCounter = 0;
 
     function updateQuestionNumbers() {
@@ -152,7 +180,9 @@ if ($isEditMode && !empty($questions)) {
                 </div>
                 <div class="mb-3 subscale-group ${subscaleDisplay}">
                     <label class="form-label">Subscale</label>
-                    <input type="text" class="form-control subscale-input" value="${q && q.subscale ? htmlspecialchars(q.subscale) : ''}">
+                    <select class="form-select subscale-input">
+                        ${renderSubscaleOptions(q && q.subscale ? q.subscale : '')}
+                    </select>
                 </div>
                 <div class="options-group ${optionsDisplay}">
                     <h6 class="mt-3">Options <button type="button" class="btn btn-success btn-sm add-option-btn"><i class="fas fa-plus"></i></button></h6>
@@ -243,6 +273,14 @@ if ($isEditMode && !empty($questions)) {
             questionCard.querySelector('.subscale-group').classList.toggle('d-none', isVark);
             questionCard.querySelector('.options-group').classList.toggle('d-none', !isVark);
         });
+
+        // Refresh subscale options when switching between MSLQ/AMS
+        if (!isVark) {
+            questionsContainer.querySelectorAll('.subscale-input').forEach(select => {
+                const current = select.value || '';
+                select.innerHTML = renderSubscaleOptions(current);
+            });
+        }
     });
 
     // Form submission

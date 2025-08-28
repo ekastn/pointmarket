@@ -61,12 +61,12 @@
                             <input type="hidden" name="csrf_token" value="<?php // echo generateCSRFToken(); // CSRF token will be handled by Go backend or a new PHP mechanism ?>">
                             
                             <div class="mb-3">
-                                <label for="username" class="form-label">Username</label>
+                                <label for="username" class="form-label">Username atau NIM</label>
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    <input type="text" class="form-control" id="username" name="username" placeholder="andi atau 2401001" required>
                                 </div>
                             </div>
                             

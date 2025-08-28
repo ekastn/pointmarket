@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"pointmarket/backend/internal/auth"
 	"pointmarket/backend/internal/config"
@@ -51,9 +52,24 @@ func (s *AuthService) Register(ctx context.Context, req dtos.RegisterRequest) (g
 
 // Login authenticates a user and returns a JWT token
 func (s *AuthService) Login(ctx context.Context, req dtos.LoginRequest) (gen.User, string, error) {
-	user, err := s.q.GetUserByUsername(ctx, req.Username)
+	// Try username first
+	identifier := req.Username
+	user, err := s.q.GetUserByUsername(ctx, identifier)
 	if err != nil {
-		return gen.User{}, "", err
+		if err == sql.ErrNoRows {
+			// Fallback: try resolving as NIM (students.student_id)
+			if st, err2 := s.q.GetStudentByStudentID(ctx, identifier); err2 == nil {
+				if u2, err3 := s.q.GetUserByID(ctx, st.UserID); err3 == nil {
+					user = u2
+				} else {
+					return gen.User{}, "", errors.New("invalid credentials")
+				}
+			} else {
+				return gen.User{}, "", errors.New("invalid credentials")
+			}
+		} else {
+			return gen.User{}, "", errors.New("invalid credentials")
+		}
 	}
 
 	err = utils.CheckPassword(req.Password, user.Password)

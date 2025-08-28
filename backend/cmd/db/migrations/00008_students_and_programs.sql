@@ -1,7 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
 
--- 1) Faculties (optional high-level grouping for programs)
 CREATE TABLE faculties (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -9,7 +8,6 @@ CREATE TABLE faculties (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 2) Programs (e.g., "D4 Teknik Informatika")
 CREATE TABLE programs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -21,8 +19,6 @@ CREATE TABLE programs (
 
 CREATE INDEX idx_programs_faculty ON programs (faculty_id);
 
--- 3) Students (1–1 with users)
---    Stores institutional student identity and core academic metadata.
 CREATE TABLE students (
     user_id BIGINT PRIMARY KEY,
     student_id VARCHAR(32) NOT NULL UNIQUE, -- institutional identifier (formerly NIM)

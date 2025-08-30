@@ -128,7 +128,7 @@ type ListQuizQuestionsResponseDTO struct {
 // StudentQuizDTO represents a student's quiz record for API responses
 type StudentQuizDTO struct {
 	ID          int64      `json:"id"`
-	StudentID   int64      `json:"student_id"`
+	StudentID   string     `json:"student_id"`
 	QuizID      int64      `json:"quiz_id"`
 	Score       *int32     `json:"score"`
 	Status      string     `json:"status"`

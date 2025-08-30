@@ -59,7 +59,7 @@ func (s *TextAnalyzerService) Predict(
 
 	scoreJSON, err := json.Marshal(fusedVARKScores)
 	snapshot := gen.CreateTextAnalysisSnapshotParams{
-		StudentID:                      studentID,
+		UserID:                         studentID,
 		OriginalText:                   originalText,
 		CountWords:                     int32(textStats.WordCount),
 		CountSentences:                 int32(textStats.SentenceCount),

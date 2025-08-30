@@ -313,6 +313,48 @@ func (ns NullStudentAssignmentsStatus) Value() (driver.Value, error) {
 	return string(ns.StudentAssignmentsStatus), nil
 }
 
+type StudentLearningStylesType string
+
+const (
+	StudentLearningStylesTypeDominant   StudentLearningStylesType = "dominant"
+	StudentLearningStylesTypeMultimodal StudentLearningStylesType = "multimodal"
+)
+
+func (e *StudentLearningStylesType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentLearningStylesType(s)
+	case string:
+		*e = StudentLearningStylesType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentLearningStylesType: %T", src)
+	}
+	return nil
+}
+
+type NullStudentLearningStylesType struct {
+	StudentLearningStylesType StudentLearningStylesType `json:"student_learning_styles_type"`
+	Valid                     bool                      `json:"valid"` // Valid is true if StudentLearningStylesType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentLearningStylesType) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentLearningStylesType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentLearningStylesType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentLearningStylesType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentLearningStylesType), nil
+}
+
 type StudentQuestionnaireVarkResultsVarkType string
 
 const (
@@ -483,48 +525,6 @@ func (ns NullStudentsStatus) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.StudentsStatus), nil
-}
-
-type UserLearningStylesType string
-
-const (
-	UserLearningStylesTypeDominant   UserLearningStylesType = "dominant"
-	UserLearningStylesTypeMultimodal UserLearningStylesType = "multimodal"
-)
-
-func (e *UserLearningStylesType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = UserLearningStylesType(s)
-	case string:
-		*e = UserLearningStylesType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for UserLearningStylesType: %T", src)
-	}
-	return nil
-}
-
-type NullUserLearningStylesType struct {
-	UserLearningStylesType UserLearningStylesType `json:"user_learning_styles_type"`
-	Valid                  bool                   `json:"valid"` // Valid is true if UserLearningStylesType is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullUserLearningStylesType) Scan(value interface{}) error {
-	if value == nil {
-		ns.UserLearningStylesType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.UserLearningStylesType.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullUserLearningStylesType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.UserLearningStylesType), nil
 }
 
 type UsersRole string
@@ -785,8 +785,8 @@ type QuizQuestion struct {
 }
 
 type Student struct {
-	UserID     int64              `json:"user_id"`
 	StudentID  string             `json:"student_id"`
+	UserID     int64              `json:"user_id"`
 	ProgramID  int64              `json:"program_id"`
 	CohortYear sql.NullInt32      `json:"cohort_year"`
 	Status     StudentsStatus     `json:"status"`
@@ -799,7 +799,7 @@ type Student struct {
 
 type StudentAssignment struct {
 	ID           int64                        `json:"id"`
-	StudentID    int64                        `json:"student_id"`
+	StudentID    string                       `json:"student_id"`
 	AssignmentID int64                        `json:"assignment_id"`
 	Status       NullStudentAssignmentsStatus `json:"status"`
 	Score        *float64                     `json:"score"`
@@ -811,14 +811,26 @@ type StudentAssignment struct {
 }
 
 type StudentCourse struct {
-	StudentID  int64     `json:"student_id"`
+	StudentID  string    `json:"student_id"`
 	CourseID   int64     `json:"course_id"`
 	EnrolledAt time.Time `json:"enrolled_at"`
 }
 
+type StudentLearningStyle struct {
+	ID               int64                     `json:"id"`
+	StudentID        string                    `json:"student_id"`
+	Type             StudentLearningStylesType `json:"type"`
+	Label            string                    `json:"label"`
+	ScoreVisual      *float64                  `json:"score_visual"`
+	ScoreAuditory    *float64                  `json:"score_auditory"`
+	ScoreReading     *float64                  `json:"score_reading"`
+	ScoreKinesthetic *float64                  `json:"score_kinesthetic"`
+	CreatedAt        time.Time                 `json:"created_at"`
+}
+
 type StudentQuestionnaireLikertResult struct {
 	ID                 int64           `json:"id"`
-	StudentID          int64           `json:"student_id"`
+	StudentID          string          `json:"student_id"`
 	QuestionnaireID    int32           `json:"questionnaire_id"`
 	Answers            json.RawMessage `json:"answers"`
 	TotalScore         float64         `json:"total_score"`
@@ -829,7 +841,7 @@ type StudentQuestionnaireLikertResult struct {
 
 type StudentQuestionnaireVarkResult struct {
 	ID               int64                                   `json:"id"`
-	StudentID        int64                                   `json:"student_id"`
+	StudentID        string                                  `json:"student_id"`
 	QuestionnaireID  int32                                   `json:"questionnaire_id"`
 	VarkType         StudentQuestionnaireVarkResultsVarkType `json:"vark_type"`
 	VarkLabel        string                                  `json:"vark_label"`
@@ -843,7 +855,7 @@ type StudentQuestionnaireVarkResult struct {
 
 type StudentQuiz struct {
 	ID          int64                    `json:"id"`
-	StudentID   int64                    `json:"student_id"`
+	StudentID   string                   `json:"student_id"`
 	QuizID      int64                    `json:"quiz_id"`
 	Score       sql.NullInt32            `json:"score"`
 	Status      NullStudentQuizzesStatus `json:"status"`
@@ -855,7 +867,7 @@ type StudentQuiz struct {
 
 type TextAnalysisSnapshot struct {
 	ID                             int64           `json:"id"`
-	StudentID                      int64           `json:"student_id"`
+	StudentID                      string          `json:"student_id"`
 	OriginalText                   string          `json:"original_text"`
 	AverageWordLength              float64         `json:"average_word_length"`
 	ReadingTime                    int32           `json:"reading_time"`
@@ -890,18 +902,6 @@ type UserBadge struct {
 	AwardedAt time.Time `json:"awarded_at"`
 }
 
-type UserLearningStyle struct {
-	ID               int64                  `json:"id"`
-	UserID           int64                  `json:"user_id"`
-	Type             UserLearningStylesType `json:"type"`
-	Label            string                 `json:"label"`
-	ScoreVisual      *float64               `json:"score_visual"`
-	ScoreAuditory    *float64               `json:"score_auditory"`
-	ScoreReading     *float64               `json:"score_reading"`
-	ScoreKinesthetic *float64               `json:"score_kinesthetic"`
-	CreatedAt        time.Time              `json:"created_at"`
-}
-
 type UserMission struct {
 	ID          int64           `json:"id"`
 	MissionID   int64           `json:"mission_id"`
@@ -927,7 +927,7 @@ type UserStat struct {
 
 type WeeklyEvaluation struct {
 	ID              int64                   `json:"id"`
-	StudentID       int64                   `json:"student_id"`
+	StudentID       string                  `json:"student_id"`
 	QuestionnaireID int32                   `json:"questionnaire_id"`
 	Status          WeeklyEvaluationsStatus `json:"status"`
 	DueDate         time.Time               `json:"due_date"`

@@ -97,18 +97,18 @@ const enrollStudentInCourse = `-- name: EnrollStudentInCourse :execresult
 INSERT INTO student_courses (
     student_id, course_id
 ) VALUES (
-    ?, ?
+    (SELECT student_id FROM students WHERE user_id = ?), ?
 )
 `
 
 type EnrollStudentInCourseParams struct {
-	StudentID int64 `json:"student_id"`
-	CourseID  int64 `json:"course_id"`
+	UserID   int64 `json:"user_id"`
+	CourseID int64 `json:"course_id"`
 }
 
 // Student Enrollment --
 func (q *Queries) EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, enrollStudentInCourse, arg.StudentID, arg.CourseID)
+	return q.db.ExecContext(ctx, enrollStudentInCourse, arg.UserID, arg.CourseID)
 }
 
 const getCourseByID = `-- name: GetCourseByID :one
@@ -225,7 +225,7 @@ SELECT
     c.id, c.title, c.slug, c.description, c.owner_id, c.metadata, c.created_at, c.updated_at,
     CASE WHEN sc.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_enrolled
 FROM courses AS c
-LEFT JOIN student_courses AS sc ON c.id = sc.course_id AND sc.student_id = ?
+LEFT JOIN student_courses AS sc ON c.id = sc.course_id AND sc.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 WHERE
     (c.title LIKE CONCAT('%', ?, '%') OR
      c.description LIKE CONCAT('%', ?, '%'))
@@ -235,10 +235,10 @@ LIMIT ? OFFSET ?
 `
 
 type GetCoursesWithEnrollmentStatusParams struct {
-	StudentID int64       `json:"student_id"`
-	Search    interface{} `json:"search"`
-	Limit     int32       `json:"limit"`
-	Offset    int32       `json:"offset"`
+	UserID int64       `json:"user_id"`
+	Search interface{} `json:"search"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
 }
 
 type GetCoursesWithEnrollmentStatusRow struct {
@@ -255,7 +255,7 @@ type GetCoursesWithEnrollmentStatusRow struct {
 
 func (q *Queries) GetCoursesWithEnrollmentStatus(ctx context.Context, arg GetCoursesWithEnrollmentStatusParams) ([]GetCoursesWithEnrollmentStatusRow, error) {
 	rows, err := q.db.QueryContext(ctx, getCoursesWithEnrollmentStatus,
-		arg.StudentID,
+		arg.UserID,
 		arg.Search,
 		arg.Search,
 		arg.Search,
@@ -305,12 +305,12 @@ SELECT
     c.metadata AS course_metadata
 FROM student_courses sc
 JOIN courses c ON sc.course_id = c.id
-WHERE sc.student_id = ?
+WHERE sc.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY c.title ASC
 `
 
 type GetStudentCoursesByUserIDRow struct {
-	StudentID         int64           `json:"student_id"`
+	StudentID         string          `json:"student_id"`
 	CourseID          int64           `json:"course_id"`
 	EnrolledAt        time.Time       `json:"enrolled_at"`
 	CourseTitle       string          `json:"course_title"`
@@ -320,8 +320,8 @@ type GetStudentCoursesByUserIDRow struct {
 	CourseMetadata    json.RawMessage `json:"course_metadata"`
 }
 
-func (q *Queries) GetStudentCoursesByUserID(ctx context.Context, studentID int64) ([]GetStudentCoursesByUserIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getStudentCoursesByUserID, studentID)
+func (q *Queries) GetStudentCoursesByUserID(ctx context.Context, userID int64) ([]GetStudentCoursesByUserIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentCoursesByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -354,16 +354,16 @@ func (q *Queries) GetStudentCoursesByUserID(ctx context.Context, studentID int64
 
 const unenrollStudentFromCourse = `-- name: UnenrollStudentFromCourse :exec
 DELETE FROM student_courses
-WHERE student_id = ? AND course_id = ?
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND course_id = ?
 `
 
 type UnenrollStudentFromCourseParams struct {
-	StudentID int64 `json:"student_id"`
-	CourseID  int64 `json:"course_id"`
+	UserID   int64 `json:"user_id"`
+	CourseID int64 `json:"course_id"`
 }
 
 func (q *Queries) UnenrollStudentFromCourse(ctx context.Context, arg UnenrollStudentFromCourseParams) error {
-	_, err := q.db.ExecContext(ctx, unenrollStudentFromCourse, arg.StudentID, arg.CourseID)
+	_, err := q.db.ExecContext(ctx, unenrollStudentFromCourse, arg.UserID, arg.CourseID)
 	return err
 }
 

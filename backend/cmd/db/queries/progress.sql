@@ -15,12 +15,12 @@ INSERT INTO text_analysis_snapshots (
     learning_preference_type,
     learning_preference_label,
     learning_preference_combined_vark
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );
+) VALUES ( (SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );
 
 -- name: UpdateWeeklyEvaluationStatus :exec
 UPDATE weekly_evaluations
 SET status = 'completed', completed_at = NOW()
-WHERE id = ? AND student_id = ?;
+WHERE id = ? AND student_id = (SELECT student_id FROM students WHERE user_id = ?);
 
 -- name: GetWeeklyEvaluationsByStudentID :many
 SELECT
@@ -38,7 +38,7 @@ FROM
 JOIN
     questionnaires q ON we.questionnaire_id = q.id
 WHERE
-    we.student_id = ? AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+    we.student_id = (SELECT student_id FROM students WHERE user_id = ?) AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
 ORDER BY
     we.due_date DESC;
 
@@ -51,13 +51,14 @@ SELECT
     u.id as student_id,
     u.display_name as student_name
 FROM weekly_evaluations we
-JOIN users u ON we.student_id = u.id
+JOIN students s ON we.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
 WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK);
 
 -- name: CreateWeeklyEvaluation :exec
 INSERT INTO weekly_evaluations
   (student_id, questionnaire_id, status, due_date)
-VALUES (?, ?, ?, ?);
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?);
 
 -- name: MarkOverdueWeeklyEvaluations :exec
 UPDATE weekly_evaluations
@@ -66,7 +67,7 @@ WHERE status = 'pending' AND due_date < NOW();
 
 -- name: GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate :one
 SELECT id FROM weekly_evaluations
-WHERE student_id = ? AND questionnaire_id = ? AND due_date = ?;
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND questionnaire_id = ? AND due_date = ?;
 
 -- name: GetWeeklyEvaluationResult :one
 SELECT

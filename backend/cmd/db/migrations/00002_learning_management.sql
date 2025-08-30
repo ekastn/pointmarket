@@ -46,7 +46,7 @@ CREATE TABLE quiz_questions (
 
 CREATE TABLE student_quizzes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    student_id BIGINT NOT NULL,
+    student_id VARCHAR(32) NOT NULL,
     quiz_id BIGINT NOT NULL,
     score INT,
     status ENUM('not_started', 'in_progress', 'completed') DEFAULT 'not_started',
@@ -54,7 +54,7 @@ CREATE TABLE student_quizzes (
     completed_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
 );
 
@@ -73,7 +73,7 @@ CREATE TABLE assignments (
 
 CREATE TABLE student_assignments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    student_id BIGINT NOT NULL,
+    student_id VARCHAR(32) NOT NULL,
     assignment_id BIGINT NOT NULL,
     status ENUM('not_started', 'in_progress', 'completed') DEFAULT 'not_started',
     score DECIMAL(5,2),
@@ -82,7 +82,7 @@ CREATE TABLE student_assignments (
     graded_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
 );
 
@@ -121,7 +121,7 @@ CREATE TABLE questionnaire_vark_options (
 
 create TABLE student_questionnaire_vark_results (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    student_id BIGINT NOT NULL,
+    student_id VARCHAR(32) NOT NULL,
     questionnaire_id INT NOT NULL,
     vark_type ENUM('dominant', 'multimodal') NOT NULL,
     vark_label VARCHAR(50) NOT NULL,
@@ -131,19 +131,19 @@ create TABLE student_questionnaire_vark_results (
     score_kinesthetic INT NOT NULL,
     answers JSON NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (questionnaire_id) REFERENCES questionnaires(id) ON DELETE CASCADE
 );
 
 CREATE TABLE student_questionnaire_likert_results (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    student_id BIGINT NOT NULL,
+    student_id VARCHAR(32) NOT NULL,
     questionnaire_id INT NOT NULL,
     answers JSON NOT NULL,
     total_score DECIMAL(5, 4) NOT NULL,
     subscale_scores JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (questionnaire_id) REFERENCES questionnaires(id) ON DELETE CASCADE
 );
 -- +goose StatementEnd

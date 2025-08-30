@@ -290,7 +290,7 @@ func (s *QuizService) DeleteQuizQuestion(ctx context.Context, id int64) error {
 // CreateStudentQuiz records a student starting a quiz
 func (s *QuizService) CreateStudentQuiz(ctx context.Context, req dtos.CreateStudentQuizRequestDTO) (dtos.StudentQuizDTO, error) {
 	result, err := s.q.CreateStudentQuiz(ctx, gen.CreateStudentQuizParams{
-		StudentID: req.StudentID,
+		UserID:    req.StudentID,
 		QuizID:    req.QuizID,
 		Status:    gen.NullStudentQuizzesStatus{StudentQuizzesStatus: gen.StudentQuizzesStatus(req.Status), Valid: req.Status != ""},
 		StartedAt: sql.NullTime{Time: time.Now(), Valid: true}, // Set started_at to current time

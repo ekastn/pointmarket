@@ -29,11 +29,11 @@ INSERT INTO text_analysis_snapshots (
     learning_preference_type,
     learning_preference_label,
     learning_preference_combined_vark
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+) VALUES ( (SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
 `
 
 type CreateTextAnalysisSnapshotParams struct {
-	StudentID                      int64           `json:"student_id"`
+	UserID                         int64           `json:"user_id"`
 	OriginalText                   string          `json:"original_text"`
 	AverageWordLength              float64         `json:"average_word_length"`
 	ReadingTime                    int32           `json:"reading_time"`
@@ -52,7 +52,7 @@ type CreateTextAnalysisSnapshotParams struct {
 
 func (q *Queries) CreateTextAnalysisSnapshot(ctx context.Context, arg CreateTextAnalysisSnapshotParams) error {
 	_, err := q.db.ExecContext(ctx, createTextAnalysisSnapshot,
-		arg.StudentID,
+		arg.UserID,
 		arg.OriginalText,
 		arg.AverageWordLength,
 		arg.ReadingTime,
@@ -74,11 +74,11 @@ func (q *Queries) CreateTextAnalysisSnapshot(ctx context.Context, arg CreateText
 const createWeeklyEvaluation = `-- name: CreateWeeklyEvaluation :exec
 INSERT INTO weekly_evaluations
   (student_id, questionnaire_id, status, due_date)
-VALUES (?, ?, ?, ?)
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?)
 `
 
 type CreateWeeklyEvaluationParams struct {
-	StudentID       int64                   `json:"student_id"`
+	UserID          int64                   `json:"user_id"`
 	QuestionnaireID int32                   `json:"questionnaire_id"`
 	Status          WeeklyEvaluationsStatus `json:"status"`
 	DueDate         time.Time               `json:"due_date"`
@@ -86,7 +86,7 @@ type CreateWeeklyEvaluationParams struct {
 
 func (q *Queries) CreateWeeklyEvaluation(ctx context.Context, arg CreateWeeklyEvaluationParams) error {
 	_, err := q.db.ExecContext(ctx, createWeeklyEvaluation,
-		arg.StudentID,
+		arg.UserID,
 		arg.QuestionnaireID,
 		arg.Status,
 		arg.DueDate,
@@ -96,17 +96,17 @@ func (q *Queries) CreateWeeklyEvaluation(ctx context.Context, arg CreateWeeklyEv
 
 const getWeeklyEvaluationByStudentAndQuestionnaireAndDueDate = `-- name: GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate :one
 SELECT id FROM weekly_evaluations
-WHERE student_id = ? AND questionnaire_id = ? AND due_date = ?
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND questionnaire_id = ? AND due_date = ?
 `
 
 type GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams struct {
-	StudentID       int64     `json:"student_id"`
+	UserID          int64     `json:"user_id"`
 	QuestionnaireID int32     `json:"questionnaire_id"`
 	DueDate         time.Time `json:"due_date"`
 }
 
 func (q *Queries) GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx context.Context, arg GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getWeeklyEvaluationByStudentAndQuestionnaireAndDueDate, arg.StudentID, arg.QuestionnaireID, arg.DueDate)
+	row := q.db.QueryRowContext(ctx, getWeeklyEvaluationByStudentAndQuestionnaireAndDueDate, arg.UserID, arg.QuestionnaireID, arg.DueDate)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -150,19 +150,19 @@ FROM
 JOIN
     questionnaires q ON we.questionnaire_id = q.id
 WHERE
-    we.student_id = ? AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+    we.student_id = (SELECT student_id FROM students WHERE user_id = ?) AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
 ORDER BY
     we.due_date DESC
 `
 
 type GetWeeklyEvaluationsByStudentIDParams struct {
-	StudentID int64       `json:"student_id"`
-	DATESUB   interface{} `json:"DATE_SUB"`
+	UserID  int64       `json:"user_id"`
+	DATESUB interface{} `json:"DATE_SUB"`
 }
 
 type GetWeeklyEvaluationsByStudentIDRow struct {
 	ID                       int64                   `json:"id"`
-	StudentID                int64                   `json:"student_id"`
+	StudentID                string                  `json:"student_id"`
 	QuestionnaireID          int32                   `json:"questionnaire_id"`
 	Status                   WeeklyEvaluationsStatus `json:"status"`
 	DueDate                  time.Time               `json:"due_date"`
@@ -173,7 +173,7 @@ type GetWeeklyEvaluationsByStudentIDRow struct {
 }
 
 func (q *Queries) GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]GetWeeklyEvaluationsByStudentIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getWeeklyEvaluationsByStudentID, arg.StudentID, arg.DATESUB)
+	rows, err := q.db.QueryContext(ctx, getWeeklyEvaluationsByStudentID, arg.UserID, arg.DATESUB)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,8 @@ SELECT
     u.id as student_id,
     u.display_name as student_name
 FROM weekly_evaluations we
-JOIN users u ON we.student_id = u.id
+JOIN students s ON we.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
 WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
 `
 
@@ -271,15 +272,15 @@ func (q *Queries) MarkOverdueWeeklyEvaluations(ctx context.Context) error {
 const updateWeeklyEvaluationStatus = `-- name: UpdateWeeklyEvaluationStatus :exec
 UPDATE weekly_evaluations
 SET status = 'completed', completed_at = NOW()
-WHERE id = ? AND student_id = ?
+WHERE id = ? AND student_id = (SELECT student_id FROM students WHERE user_id = ?)
 `
 
 type UpdateWeeklyEvaluationStatusParams struct {
-	ID        int64 `json:"id"`
-	StudentID int64 `json:"student_id"`
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
 }
 
 func (q *Queries) UpdateWeeklyEvaluationStatus(ctx context.Context, arg UpdateWeeklyEvaluationStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateWeeklyEvaluationStatus, arg.ID, arg.StudentID)
+	_, err := q.db.ExecContext(ctx, updateWeeklyEvaluationStatus, arg.ID, arg.UserID)
 	return err
 }

@@ -151,10 +151,10 @@ func (s *CourseService) GetStudentViewableCourses(ctx context.Context, studentID
 	offset := (page - 1) * limit
 
 	courses, err := s.q.GetCoursesWithEnrollmentStatus(ctx, gen.GetCoursesWithEnrollmentStatusParams{
-		StudentID: studentID,
-		Search:    search,
-		Limit:     int32(limit),
-		Offset:    int32(offset),
+		UserID: studentID,
+		Search: search,
+		Limit:  int32(limit),
+		Offset: int32(offset),
 	})
 	if err != nil {
 		return nil, 0, err
@@ -236,8 +236,8 @@ func (s *CourseService) DeleteCourse(ctx context.Context, id int64) error {
 // EnrollStudentInCourse enrolls a student in a course
 func (s *CourseService) EnrollStudentInCourse(ctx context.Context, req dtos.EnrollStudentRequestDTO) error {
 	_, err := s.q.EnrollStudentInCourse(ctx, gen.EnrollStudentInCourseParams{
-		StudentID: req.UserID,
-		CourseID:  req.CourseID,
+		UserID:   req.UserID,
+		CourseID: req.CourseID,
 	})
 	return err
 }
@@ -245,7 +245,7 @@ func (s *CourseService) EnrollStudentInCourse(ctx context.Context, req dtos.Enro
 // UnenrollStudentFromCourse unenrolls a student from a course
 func (s *CourseService) UnenrollStudentFromCourse(ctx context.Context, userID, courseID int64) error {
 	return s.q.UnenrollStudentFromCourse(ctx, gen.UnenrollStudentFromCourseParams{
-		StudentID: userID,
-		CourseID:  courseID,
+		UserID:   userID,
+		CourseID: courseID,
 	})
 }

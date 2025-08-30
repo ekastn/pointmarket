@@ -42,7 +42,7 @@ WHERE id = ?;
 INSERT INTO student_courses (
     student_id, course_id
 ) VALUES (
-    ?, ?
+    (SELECT student_id FROM students WHERE user_id = ?), ?
 );
 
 -- name: GetStudentCoursesByUserID :many
@@ -57,12 +57,12 @@ SELECT
     c.metadata AS course_metadata
 FROM student_courses sc
 JOIN courses c ON sc.course_id = c.id
-WHERE sc.student_id = ?
+WHERE sc.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY c.title ASC;
 
 -- name: UnenrollStudentFromCourse :exec
 DELETE FROM student_courses
-WHERE student_id = ? AND course_id = ?;
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND course_id = ?;
 
 -- name: CountCoursesByOwnerID :one
 SELECT count(*) FROM courses
@@ -73,7 +73,7 @@ SELECT
     c.*,
     CASE WHEN sc.student_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_enrolled
 FROM courses AS c
-LEFT JOIN student_courses AS sc ON c.id = sc.course_id AND sc.student_id = sqlc.arg('student_id')
+LEFT JOIN student_courses AS sc ON c.id = sc.course_id AND sc.student_id = (SELECT student_id FROM students WHERE user_id = sqlc.arg('user_id'))
 WHERE
     (c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
      c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))

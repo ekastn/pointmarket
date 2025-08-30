@@ -79,7 +79,7 @@ WHERE id = ?;
 INSERT INTO student_quizzes (
     student_id, quiz_id, status, started_at
 ) VALUES (
-    ?, ?, ?, ?
+    (SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?
 );
 
 -- name: GetStudentQuizByID :one
@@ -91,14 +91,15 @@ SELECT sq.id, sq.student_id, sq.quiz_id, sq.score, sq.status, sq.started_at, sq.
        q.title AS quiz_title, q.description AS quiz_description, q.course_id AS quiz_course_id, q.reward_points AS quiz_reward_points, q.duration_minutes AS quiz_duration_minutes
 FROM student_quizzes sq
 JOIN quizzes q ON sq.quiz_id = q.id
-WHERE sq.student_id = ?
+WHERE sq.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY sq.created_at DESC;
 
 -- name: GetStudentQuizzesByQuizID :many
 SELECT sq.id, sq.student_id, sq.quiz_id, sq.score, sq.status, sq.started_at, sq.completed_at, sq.created_at, sq.updated_at,
        u.display_name AS student_name, u.email AS student_email
 FROM student_quizzes sq
-JOIN users u ON sq.student_id = u.id
+JOIN students s ON sq.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
 WHERE sq.quiz_id = ?
 ORDER BY sq.created_at DESC;
 
@@ -117,4 +118,4 @@ WHERE id = ?;
 
 -- name: GetStudentQuizByIDs :one
 SELECT * FROM student_quizzes
-WHERE student_id = ? AND quiz_id = ?;
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND quiz_id = ?;

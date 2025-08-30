@@ -78,7 +78,7 @@ type ListAssignmentsResponseDTO struct {
 // StudentAssignmentDTO represents a student's assignment record for API responses
 type StudentAssignmentDTO struct {
 	ID           int64      `json:"id"`
-	StudentID    int64      `json:"student_id"`
+	StudentID    string     `json:"student_id"`
 	AssignmentID int64      `json:"assignment_id"`
 	Status       string     `json:"status"`
 	Score        *float64   `json:"score"`        // Use pointer for nullable

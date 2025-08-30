@@ -8,7 +8,7 @@ import (
 // WeeklyEvaluationDetailDTO represents an augmented weekly evaluation with score details
 type WeeklyEvaluationDetailDTO struct {
 	ID                       int64      `json:"id"`
-	StudentID                int64      `json:"student_id"`
+	StudentID                string     `json:"student_id"`
 	QuestionnaireID          int32      `json:"questionnaire_id"`
 	QuestionnaireTitle       string     `json:"questionnaire_title"`
 	QuestionnaireType        string     `json:"questionnaire_type"`

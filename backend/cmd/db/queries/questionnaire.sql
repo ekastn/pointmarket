@@ -31,25 +31,25 @@ WHERE question_id IN (
 -- name: CreateLikertResult :exec
 INSERT INTO student_questionnaire_likert_results
   (student_id, questionnaire_id, answers, total_score, subscale_scores, weekly_evaluation_id)
-VALUES (?, ?, ?, ?, ?, ?);
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?);
 
 -- name: CreateVarkResult :exec
 INSERT INTO student_questionnaire_vark_results
   (student_id, questionnaire_id, vark_type, vark_label, score_visual, score_auditory, score_reading, score_kinesthetic, answers)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: GetLatestLikertResultByType :one
 SELECT r.id, r.student_id, r.questionnaire_id, r.answers, r.total_score, r.subscale_scores, r.created_at, r.weekly_evaluation_id
 FROM student_questionnaire_likert_results r
 JOIN questionnaires q ON r.questionnaire_id = q.id
-WHERE r.student_id = ? AND q.type = ?
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?) AND q.type = ?
 ORDER BY r.created_at DESC
 LIMIT 1;
 
 -- name: GetLatestVarkResult :one
 SELECT r.id, r.student_id, r.questionnaire_id, r.score_visual, r.score_auditory, r.score_reading, r.score_kinesthetic, r.answers, r.created_at
 FROM student_questionnaire_vark_results r
-WHERE r.student_id = ?
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY r.created_at DESC
 LIMIT 1;
 
@@ -61,7 +61,7 @@ SELECT q.id AS questionnaire_id, q.type, q.name,
        MIN(r.total_score) AS lowest_score
 FROM questionnaires q
 LEFT JOIN student_questionnaire_likert_results r
-  ON q.id = r.questionnaire_id AND r.student_id = ?
+  ON q.id = r.questionnaire_id AND r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 WHERE q.type IN ('MSLQ','AMS') AND q.status='active'
 GROUP BY q.id, q.type, q.name
 ORDER BY q.type;

@@ -30,16 +30,16 @@ func (s *CorrelationService) GetCorrelationAnalysisForStudent(ctx context.Contex
 	}
 
 	mslqResult, err := s.q.GetLatestLikertResultByType(ctx, gen.GetLatestLikertResultByTypeParams{
-		Type:      gen.QuestionnairesTypeMSLQ,
-		StudentID: studentID,
+		Type:   gen.QuestionnairesTypeMSLQ,
+		UserID: studentID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get MSLQ result: %w", err)
 	}
 
 	amsResult, err := s.q.GetLatestLikertResultByType(ctx, gen.GetLatestLikertResultByTypeParams{
-		Type:      gen.QuestionnairesTypeAMS,
-		StudentID: studentID,
+		Type:   gen.QuestionnairesTypeAMS,
+		UserID: studentID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get AMS result: %w", err)

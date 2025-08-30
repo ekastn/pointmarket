@@ -45,12 +45,12 @@ const createStudentAssignment = `-- name: CreateStudentAssignment :execresult
 INSERT INTO student_assignments (
     student_id, assignment_id, status, submission
 ) VALUES (
-    ?, ?, ?, ?
+    (SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?
 )
 `
 
 type CreateStudentAssignmentParams struct {
-	StudentID    int64                        `json:"student_id"`
+	UserID       int64                        `json:"user_id"`
 	AssignmentID int64                        `json:"assignment_id"`
 	Status       NullStudentAssignmentsStatus `json:"status"`
 	Submission   sql.NullString               `json:"submission"`
@@ -59,7 +59,7 @@ type CreateStudentAssignmentParams struct {
 // Student Assignments --
 func (q *Queries) CreateStudentAssignment(ctx context.Context, arg CreateStudentAssignmentParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createStudentAssignment,
-		arg.StudentID,
+		arg.UserID,
 		arg.AssignmentID,
 		arg.Status,
 		arg.Submission,
@@ -278,16 +278,16 @@ func (q *Queries) GetStudentAssignmentByID(ctx context.Context, id int64) (Stude
 
 const getStudentAssignmentByIDs = `-- name: GetStudentAssignmentByIDs :one
 SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at FROM student_assignments
-WHERE student_id = ? AND assignment_id = ?
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND assignment_id = ?
 `
 
 type GetStudentAssignmentByIDsParams struct {
-	StudentID    int64 `json:"student_id"`
+	UserID       int64 `json:"user_id"`
 	AssignmentID int64 `json:"assignment_id"`
 }
 
 func (q *Queries) GetStudentAssignmentByIDs(ctx context.Context, arg GetStudentAssignmentByIDsParams) (StudentAssignment, error) {
-	row := q.db.QueryRowContext(ctx, getStudentAssignmentByIDs, arg.StudentID, arg.AssignmentID)
+	row := q.db.QueryRowContext(ctx, getStudentAssignmentByIDs, arg.UserID, arg.AssignmentID)
 	var i StudentAssignment
 	err := row.Scan(
 		&i.ID,
@@ -308,14 +308,15 @@ const getStudentAssignmentsByAssignmentID = `-- name: GetStudentAssignmentsByAss
 SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.score, sa.submission, sa.submitted_at, sa.graded_at, sa.created_at, sa.updated_at,
        u.display_name AS student_name, u.email AS student_email
 FROM student_assignments sa
-JOIN users u ON sa.student_id = u.id
+JOIN students s ON sa.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
 WHERE sa.assignment_id = ?
 ORDER BY sa.created_at DESC
 `
 
 type GetStudentAssignmentsByAssignmentIDRow struct {
 	ID           int64                        `json:"id"`
-	StudentID    int64                        `json:"student_id"`
+	StudentID    string                       `json:"student_id"`
 	AssignmentID int64                        `json:"assignment_id"`
 	Status       NullStudentAssignmentsStatus `json:"status"`
 	Score        *float64                     `json:"score"`
@@ -369,13 +370,13 @@ SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.score, sa.submissio
        a.title AS assignment_title, a.description AS assignment_description, a.course_id AS assignment_course_id, a.reward_points AS assignment_reward_points, a.due_date AS assignment_due_date
 FROM student_assignments sa
 JOIN assignments a ON sa.assignment_id = a.id
-WHERE sa.student_id = ?
+WHERE sa.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY sa.created_at DESC
 `
 
 type GetStudentAssignmentsByStudentIDRow struct {
 	ID                     int64                        `json:"id"`
-	StudentID              int64                        `json:"student_id"`
+	StudentID              string                       `json:"student_id"`
 	AssignmentID           int64                        `json:"assignment_id"`
 	Status                 NullStudentAssignmentsStatus `json:"status"`
 	Score                  *float64                     `json:"score"`
@@ -391,8 +392,8 @@ type GetStudentAssignmentsByStudentIDRow struct {
 	AssignmentDueDate      sql.NullTime                 `json:"assignment_due_date"`
 }
 
-func (q *Queries) GetStudentAssignmentsByStudentID(ctx context.Context, studentID int64) ([]GetStudentAssignmentsByStudentIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getStudentAssignmentsByStudentID, studentID)
+func (q *Queries) GetStudentAssignmentsByStudentID(ctx context.Context, userID int64) ([]GetStudentAssignmentsByStudentIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentAssignmentsByStudentID, userID)
 	if err != nil {
 		return nil, err
 	}

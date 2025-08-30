@@ -174,7 +174,7 @@ func (s *AssignmentService) DeleteAssignment(ctx context.Context, id int64) erro
 // CreateStudentAssignment records a student starting an assignment
 func (s *AssignmentService) CreateStudentAssignment(ctx context.Context, req dtos.CreateStudentAssignmentRequestDTO) (dtos.StudentAssignmentDTO, error) {
 	result, err := s.q.CreateStudentAssignment(ctx, gen.CreateStudentAssignmentParams{
-		StudentID:    req.StudentID,
+		UserID:       req.StudentID,
 		AssignmentID: req.AssignmentID,
 		Status:       gen.NullStudentAssignmentsStatus{StudentAssignmentsStatus: gen.StudentAssignmentsStatus(req.Status), Valid: req.Status != ""},
 		Submission:   sql.NullString{String: *req.Submission, Valid: req.Submission != nil},

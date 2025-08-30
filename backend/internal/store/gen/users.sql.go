@@ -64,19 +64,19 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 }
 
 const createUserLearningStyle = `-- name: CreateUserLearningStyle :exec
-INSERT INTO user_learning_styles
-  (user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO student_learning_styles
+  (student_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?, ?)
 `
 
 type CreateUserLearningStyleParams struct {
-	UserID           int64                  `json:"user_id"`
-	Type             UserLearningStylesType `json:"type"`
-	Label            string                 `json:"label"`
-	ScoreVisual      *float64               `json:"score_visual"`
-	ScoreAuditory    *float64               `json:"score_auditory"`
-	ScoreReading     *float64               `json:"score_reading"`
-	ScoreKinesthetic *float64               `json:"score_kinesthetic"`
+	UserID           int64                     `json:"user_id"`
+	Type             StudentLearningStylesType `json:"type"`
+	Label            string                    `json:"label"`
+	ScoreVisual      *float64                  `json:"score_visual"`
+	ScoreAuditory    *float64                  `json:"score_auditory"`
+	ScoreReading     *float64                  `json:"score_reading"`
+	ScoreKinesthetic *float64                  `json:"score_kinesthetic"`
 }
 
 func (q *Queries) CreateUserLearningStyle(ctx context.Context, arg CreateUserLearningStyleParams) error {
@@ -143,19 +143,20 @@ func (q *Queries) GetActiveStudents(ctx context.Context) ([]GetActiveStudentsRow
 }
 
 const getLatestUserLearningStyle = `-- name: GetLatestUserLearningStyle :one
-SELECT id, user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic, created_at
-FROM user_learning_styles
-WHERE user_id = ?
-ORDER BY created_at DESC
+SELECT sls.id, sls.student_id, sls.type, sls.label, sls.score_visual, sls.score_auditory, sls.score_reading, sls.score_kinesthetic, sls.created_at
+FROM student_learning_styles sls
+JOIN students s ON s.student_id = sls.student_id
+WHERE s.user_id = ?
+ORDER BY sls.created_at DESC
 LIMIT 1
 `
 
-func (q *Queries) GetLatestUserLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error) {
+func (q *Queries) GetLatestUserLearningStyle(ctx context.Context, userID int64) (StudentLearningStyle, error) {
 	row := q.db.QueryRowContext(ctx, getLatestUserLearningStyle, userID)
-	var i UserLearningStyle
+	var i StudentLearningStyle
 	err := row.Scan(
 		&i.ID,
-		&i.UserID,
+		&i.StudentID,
 		&i.Type,
 		&i.Label,
 		&i.ScoreVisual,
@@ -165,33 +166,6 @@ func (q *Queries) GetLatestUserLearningStyle(ctx context.Context, userID int64) 
 		&i.CreatedAt,
 	)
 	return i, err
-}
-
-const getRoles = `-- name: GetRoles :many
-SELECT role FROM users
-`
-
-func (q *Queries) GetRoles(ctx context.Context) ([]UsersRole, error) {
-	rows, err := q.db.QueryContext(ctx, getRoles)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []UsersRole
-	for rows.Next() {
-		var role UsersRole
-		if err := rows.Scan(&role); err != nil {
-			return nil, err
-		}
-		items = append(items, role)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one

@@ -38,8 +38,8 @@ func (s *WeeklyEvaluationService) GetWeeklyEvaluationsByStudentID(
 	numberOfWeeks int32,
 ) ([]dtos.WeeklyEvaluationDetailDTO, error) {
 	evaluations, err := s.q.GetWeeklyEvaluationsByStudentID(ctx, gen.GetWeeklyEvaluationsByStudentIDParams{
-		StudentID: studentID,
-		DATESUB:   numberOfWeeks,
+		UserID:  studentID,
+		DATESUB: numberOfWeeks,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get weekly evaluations for student %d: %w", studentID, err)
@@ -136,7 +136,7 @@ func (s *WeeklyEvaluationService) GenerateAndOverdueWeeklyEvaluations(ctx contex
 		for _, q := range questionnairesToAssign {
 			// Check if an evaluation already exists for this student, questionnaire, and due date
 			_, err := s.q.GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx, gen.GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams{
-				StudentID:       student.ID,
+				UserID:          student.ID,
 				QuestionnaireID: q.ID,
 				DueDate:         dueDate,
 			})
@@ -144,7 +144,7 @@ func (s *WeeklyEvaluationService) GenerateAndOverdueWeeklyEvaluations(ctx contex
 				if errors.Is(err, sql.ErrNoRows) {
 					// Evaluation does not exist, create it
 					err = s.q.CreateWeeklyEvaluation(ctx, gen.CreateWeeklyEvaluationParams{
-						StudentID:       student.ID,
+						UserID:          student.ID,
 						QuestionnaireID: q.ID,
 						Status:          gen.WeeklyEvaluationsStatusPending,
 						DueDate:         dueDate,
@@ -214,7 +214,7 @@ func (s *WeeklyEvaluationService) InitializeWeeklyEvaluations(ctx context.Contex
 		for _, q := range questionnairesToAssign {
 			// Check if an evaluation already exists for this student, questionnaire, and due date
 			_, err := s.q.GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx, gen.GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams{
-				StudentID:       student.ID,
+				UserID:          student.ID,
 				QuestionnaireID: q.ID,
 				DueDate:         dueDate,
 			})
@@ -222,7 +222,7 @@ func (s *WeeklyEvaluationService) InitializeWeeklyEvaluations(ctx context.Contex
 				if errors.Is(err, sql.ErrNoRows) {
 					// Evaluation does not exist, create it
 					err = s.q.CreateWeeklyEvaluation(ctx, gen.CreateWeeklyEvaluationParams{
-						StudentID:       student.ID,
+						UserID:          student.ID,
 						QuestionnaireID: q.ID,
 						Status:          gen.WeeklyEvaluationsStatusPending,
 						DueDate:         dueDate,
@@ -258,6 +258,12 @@ func (s *WeeklyEvaluationService) GetCurrentWeekEvaluationsByStudentID(
 
 	// Fetch all evaluations for the current week
 	// We use a large number of weeks (e.g., 1) and filter by date range to ensure we get only current week's
+	// Resolve the student's code (students.student_id) for display in placeholders
+	var studentCode string
+	if st, err := s.q.GetStudentByUserID(ctx, studentID); err == nil {
+		studentCode = st.StudentID
+	}
+
 	allEvaluations, err := s.GetWeeklyEvaluationsByStudentID(ctx, studentID, 1) // Use the augmented method
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all evaluations for current week: %w", err)
@@ -303,7 +309,7 @@ func (s *WeeklyEvaluationService) GetCurrentWeekEvaluationsByStudentID(
 				})
 			} else {
 				currentWeekDashboardEvals = append(currentWeekDashboardEvals, dtos.WeeklyEvaluationDetailDTO{
-					StudentID:                studentID,
+					StudentID:                studentCode,
 					QuestionnaireID:          questionnaire.ID,
 					QuestionnaireTitle:       questionnaire.Name,
 					QuestionnaireType:        string(questionnaire.Type),

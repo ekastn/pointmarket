@@ -222,8 +222,8 @@ func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID 
 	// 7. If the product is a course, enrolls the user in the course
 	if product.Type == "course" && product.CategoryID.Valid {
 		_, err = qtx.EnrollStudentInCourse(ctx, gen.EnrollStudentInCourseParams{ // Assuming EnrollStudentInCourse exists
-			StudentID: userID,
-			CourseID:  int64(product.CategoryID.Int32),
+			UserID:   userID,
+			CourseID: int64(product.CategoryID.Int32),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to enroll student in course: %w", err)

@@ -71,7 +71,7 @@ type LearningStyleDTO struct {
 
 type VarkSubmissionResponseDTO struct {
 	QuestionnaireID int64                 `json:"questionnaire_id"`
-	StudentID       int64                 `json:"student_id"`
+	StudentID       string                `json:"student_id"`
 	Scores          VARKScores            `json:"scores"`
 	Style           LearningStyleDTO      `json:"style"`
 	RawAnswers      []VarkAnswerDetailDTO `json:"raw_answers"`
@@ -80,8 +80,8 @@ type VarkSubmissionResponseDTO struct {
 
 type LikertResultDTO struct {
 	ID              int64              `json:"id"`
+	StudentID       string             `json:"student_id"`
 	QuestionnaireID int64              `json:"questionnaire_id"`
-	StudentID       int64              `json:"student_id"`
 	Answers         []int              `json:"answers"`
 	TotalScore      float64            `json:"total_score"`
 	SubscaleScores  map[string]float64 `json:"subscale_scores"`
@@ -90,8 +90,8 @@ type LikertResultDTO struct {
 
 type VarkResultDTO struct {
 	ID              int64                 `json:"id"`
+	StudentID       string                `json:"student_id"`
 	QuestionnaireID int64                 `json:"questionnaire_id"`
-	StudentID       int64                 `json:"student_id"`
 	Scores          VARKScores            `json:"scores"`
 	Answers         []VarkAnswerDetailDTO `json:"answers"`
 	CreatedAt       time.Time             `json:"created_at"`

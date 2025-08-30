@@ -74,12 +74,12 @@ const createStudentQuiz = `-- name: CreateStudentQuiz :execresult
 INSERT INTO student_quizzes (
     student_id, quiz_id, status, started_at
 ) VALUES (
-    ?, ?, ?, ?
+    (SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?
 )
 `
 
 type CreateStudentQuizParams struct {
-	StudentID int64                    `json:"student_id"`
+	UserID    int64                    `json:"user_id"`
 	QuizID    int64                    `json:"quiz_id"`
 	Status    NullStudentQuizzesStatus `json:"status"`
 	StartedAt sql.NullTime             `json:"started_at"`
@@ -88,7 +88,7 @@ type CreateStudentQuizParams struct {
 // Student Quizzes --
 func (q *Queries) CreateStudentQuiz(ctx context.Context, arg CreateStudentQuizParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createStudentQuiz,
-		arg.StudentID,
+		arg.UserID,
 		arg.QuizID,
 		arg.Status,
 		arg.StartedAt,
@@ -343,16 +343,16 @@ func (q *Queries) GetStudentQuizByID(ctx context.Context, id int64) (StudentQuiz
 
 const getStudentQuizByIDs = `-- name: GetStudentQuizByIDs :one
 SELECT id, student_id, quiz_id, score, status, started_at, completed_at, created_at, updated_at FROM student_quizzes
-WHERE student_id = ? AND quiz_id = ?
+WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND quiz_id = ?
 `
 
 type GetStudentQuizByIDsParams struct {
-	StudentID int64 `json:"student_id"`
-	QuizID    int64 `json:"quiz_id"`
+	UserID int64 `json:"user_id"`
+	QuizID int64 `json:"quiz_id"`
 }
 
 func (q *Queries) GetStudentQuizByIDs(ctx context.Context, arg GetStudentQuizByIDsParams) (StudentQuiz, error) {
-	row := q.db.QueryRowContext(ctx, getStudentQuizByIDs, arg.StudentID, arg.QuizID)
+	row := q.db.QueryRowContext(ctx, getStudentQuizByIDs, arg.UserID, arg.QuizID)
 	var i StudentQuiz
 	err := row.Scan(
 		&i.ID,
@@ -372,14 +372,15 @@ const getStudentQuizzesByQuizID = `-- name: GetStudentQuizzesByQuizID :many
 SELECT sq.id, sq.student_id, sq.quiz_id, sq.score, sq.status, sq.started_at, sq.completed_at, sq.created_at, sq.updated_at,
        u.display_name AS student_name, u.email AS student_email
 FROM student_quizzes sq
-JOIN users u ON sq.student_id = u.id
+JOIN students s ON sq.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
 WHERE sq.quiz_id = ?
 ORDER BY sq.created_at DESC
 `
 
 type GetStudentQuizzesByQuizIDRow struct {
 	ID           int64                    `json:"id"`
-	StudentID    int64                    `json:"student_id"`
+	StudentID    string                   `json:"student_id"`
 	QuizID       int64                    `json:"quiz_id"`
 	Score        sql.NullInt32            `json:"score"`
 	Status       NullStudentQuizzesStatus `json:"status"`
@@ -431,13 +432,13 @@ SELECT sq.id, sq.student_id, sq.quiz_id, sq.score, sq.status, sq.started_at, sq.
        q.title AS quiz_title, q.description AS quiz_description, q.course_id AS quiz_course_id, q.reward_points AS quiz_reward_points, q.duration_minutes AS quiz_duration_minutes
 FROM student_quizzes sq
 JOIN quizzes q ON sq.quiz_id = q.id
-WHERE sq.student_id = ?
+WHERE sq.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY sq.created_at DESC
 `
 
 type GetStudentQuizzesByStudentIDRow struct {
 	ID                  int64                    `json:"id"`
-	StudentID           int64                    `json:"student_id"`
+	StudentID           string                   `json:"student_id"`
 	QuizID              int64                    `json:"quiz_id"`
 	Score               sql.NullInt32            `json:"score"`
 	Status              NullStudentQuizzesStatus `json:"status"`
@@ -452,8 +453,8 @@ type GetStudentQuizzesByStudentIDRow struct {
 	QuizDurationMinutes sql.NullInt32            `json:"quiz_duration_minutes"`
 }
 
-func (q *Queries) GetStudentQuizzesByStudentID(ctx context.Context, studentID int64) ([]GetStudentQuizzesByStudentIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getStudentQuizzesByStudentID, studentID)
+func (q *Queries) GetStudentQuizzesByStudentID(ctx context.Context, userID int64) ([]GetStudentQuizzesByStudentIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentQuizzesByStudentID, userID)
 	if err != nil {
 		return nil, err
 	}

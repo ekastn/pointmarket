@@ -122,7 +122,7 @@ func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64
 	}
 
 	data := gen.CreateLikertResultParams{
-		StudentID:       studentID,
+		UserID:          studentID,
 		QuestionnaireID: questionnaireID,
 		Answers:         answersJSON,
 		TotalScore:      avgTotalScore,
@@ -141,8 +141,8 @@ func (s *QuestionnaireService) SubmitLikert(ctx context.Context, studentID int64
 	// If the submission is for a weekly evaluation, update its status
 	if weeklyEvaluationID != nil {
 		err = s.q.UpdateWeeklyEvaluationStatus(ctx, gen.UpdateWeeklyEvaluationStatusParams{
-			ID:        *weeklyEvaluationID,
-			StudentID: studentID,
+			ID:     *weeklyEvaluationID,
+			UserID: studentID,
 		})
 		if err != nil {
 			// Log the error but don't fail the whole transaction,
@@ -207,7 +207,7 @@ func (s *QuestionnaireService) SubmitVARK(
 	})
 
 	varkResult := gen.CreateVarkResultParams{
-		StudentID:        studentID,
+		UserID:           studentID,
 		QuestionnaireID:  questionnaireID,
 		VarkType:         gen.StudentQuestionnaireVarkResultsVarkType(prefType),
 		VarkLabel:        prefLabel,
@@ -234,8 +234,8 @@ func (s *QuestionnaireService) GetLatestLikertByType(ctx context.Context, studen
 	row, err := s.q.GetLatestLikertResultByType(
 		ctx,
 		gen.GetLatestLikertResultByTypeParams{
-			StudentID: studentID,
-			Type:      gen.QuestionnairesType(qType),
+			UserID: studentID,
+			Type:   gen.QuestionnairesType(qType),
 		},
 	)
 	if err != nil {

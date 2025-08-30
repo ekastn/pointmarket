@@ -14,11 +14,11 @@ import (
 const createLikertResult = `-- name: CreateLikertResult :exec
 INSERT INTO student_questionnaire_likert_results
   (student_id, questionnaire_id, answers, total_score, subscale_scores, weekly_evaluation_id)
-VALUES (?, ?, ?, ?, ?, ?)
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?)
 `
 
 type CreateLikertResultParams struct {
-	StudentID          int64           `json:"student_id"`
+	UserID             int64           `json:"user_id"`
 	QuestionnaireID    int32           `json:"questionnaire_id"`
 	Answers            json.RawMessage `json:"answers"`
 	TotalScore         float64         `json:"total_score"`
@@ -28,7 +28,7 @@ type CreateLikertResultParams struct {
 
 func (q *Queries) CreateLikertResult(ctx context.Context, arg CreateLikertResultParams) error {
 	_, err := q.db.ExecContext(ctx, createLikertResult,
-		arg.StudentID,
+		arg.UserID,
 		arg.QuestionnaireID,
 		arg.Answers,
 		arg.TotalScore,
@@ -106,11 +106,11 @@ func (q *Queries) CreateVarkOption(ctx context.Context, arg CreateVarkOptionPara
 const createVarkResult = `-- name: CreateVarkResult :exec
 INSERT INTO student_questionnaire_vark_results
   (student_id, questionnaire_id, vark_type, vark_label, score_visual, score_auditory, score_reading, score_kinesthetic, answers)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateVarkResultParams struct {
-	StudentID        int64                                   `json:"student_id"`
+	UserID           int64                                   `json:"user_id"`
 	QuestionnaireID  int32                                   `json:"questionnaire_id"`
 	VarkType         StudentQuestionnaireVarkResultsVarkType `json:"vark_type"`
 	VarkLabel        string                                  `json:"vark_label"`
@@ -123,7 +123,7 @@ type CreateVarkResultParams struct {
 
 func (q *Queries) CreateVarkResult(ctx context.Context, arg CreateVarkResultParams) error {
 	_, err := q.db.ExecContext(ctx, createVarkResult,
-		arg.StudentID,
+		arg.UserID,
 		arg.QuestionnaireID,
 		arg.VarkType,
 		arg.VarkLabel,
@@ -209,18 +209,18 @@ const getLatestLikertResultByType = `-- name: GetLatestLikertResultByType :one
 SELECT r.id, r.student_id, r.questionnaire_id, r.answers, r.total_score, r.subscale_scores, r.created_at, r.weekly_evaluation_id
 FROM student_questionnaire_likert_results r
 JOIN questionnaires q ON r.questionnaire_id = q.id
-WHERE r.student_id = ? AND q.type = ?
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?) AND q.type = ?
 ORDER BY r.created_at DESC
 LIMIT 1
 `
 
 type GetLatestLikertResultByTypeParams struct {
-	StudentID int64              `json:"student_id"`
-	Type      QuestionnairesType `json:"type"`
+	UserID int64              `json:"user_id"`
+	Type   QuestionnairesType `json:"type"`
 }
 
 func (q *Queries) GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error) {
-	row := q.db.QueryRowContext(ctx, getLatestLikertResultByType, arg.StudentID, arg.Type)
+	row := q.db.QueryRowContext(ctx, getLatestLikertResultByType, arg.UserID, arg.Type)
 	var i StudentQuestionnaireLikertResult
 	err := row.Scan(
 		&i.ID,
@@ -238,14 +238,14 @@ func (q *Queries) GetLatestLikertResultByType(ctx context.Context, arg GetLatest
 const getLatestVarkResult = `-- name: GetLatestVarkResult :one
 SELECT r.id, r.student_id, r.questionnaire_id, r.score_visual, r.score_auditory, r.score_reading, r.score_kinesthetic, r.answers, r.created_at
 FROM student_questionnaire_vark_results r
-WHERE r.student_id = ?
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY r.created_at DESC
 LIMIT 1
 `
 
 type GetLatestVarkResultRow struct {
 	ID               int64           `json:"id"`
-	StudentID        int64           `json:"student_id"`
+	StudentID        string          `json:"student_id"`
 	QuestionnaireID  int32           `json:"questionnaire_id"`
 	ScoreVisual      int32           `json:"score_visual"`
 	ScoreAuditory    int32           `json:"score_auditory"`
@@ -255,8 +255,8 @@ type GetLatestVarkResultRow struct {
 	CreatedAt        sql.NullTime    `json:"created_at"`
 }
 
-func (q *Queries) GetLatestVarkResult(ctx context.Context, studentID int64) (GetLatestVarkResultRow, error) {
-	row := q.db.QueryRowContext(ctx, getLatestVarkResult, studentID)
+func (q *Queries) GetLatestVarkResult(ctx context.Context, userID int64) (GetLatestVarkResultRow, error) {
+	row := q.db.QueryRowContext(ctx, getLatestVarkResult, userID)
 	var i GetLatestVarkResultRow
 	err := row.Scan(
 		&i.ID,
@@ -280,7 +280,7 @@ SELECT q.id AS questionnaire_id, q.type, q.name,
        MIN(r.total_score) AS lowest_score
 FROM questionnaires q
 LEFT JOIN student_questionnaire_likert_results r
-  ON q.id = r.questionnaire_id AND r.student_id = ?
+  ON q.id = r.questionnaire_id AND r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 WHERE q.type IN ('MSLQ','AMS') AND q.status='active'
 GROUP BY q.id, q.type, q.name
 ORDER BY q.type
@@ -296,8 +296,8 @@ type GetLikertStatsByStudentRow struct {
 	LowestScore     interface{}        `json:"lowest_score"`
 }
 
-func (q *Queries) GetLikertStatsByStudent(ctx context.Context, studentID int64) ([]GetLikertStatsByStudentRow, error) {
-	rows, err := q.db.QueryContext(ctx, getLikertStatsByStudent, studentID)
+func (q *Queries) GetLikertStatsByStudent(ctx context.Context, userID int64) ([]GetLikertStatsByStudentRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLikertStatsByStudent, userID)
 	if err != nil {
 		return nil, err
 	}

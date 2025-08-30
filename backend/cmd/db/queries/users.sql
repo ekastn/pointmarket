@@ -70,19 +70,19 @@ WHERE
   AND
   (role = sqlc.arg('role') OR sqlc.arg('role') = '');
 
--- name: GetRoles :many
 SELECT role FROM users;
 
 -- name: CreateUserLearningStyle :exec
-INSERT INTO user_learning_styles
-  (user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO student_learning_styles
+  (student_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic)
+VALUES ((SELECT student_id FROM students WHERE user_id = ?), ?, ?, ?, ?, ?, ?);
 
 -- name: GetLatestUserLearningStyle :one
-SELECT *
-FROM user_learning_styles
-WHERE user_id = ?
-ORDER BY created_at DESC
+SELECT sls.id, sls.student_id, sls.type, sls.label, sls.score_visual, sls.score_auditory, sls.score_reading, sls.score_kinesthetic, sls.created_at
+FROM student_learning_styles sls
+JOIN students s ON s.student_id = sls.student_id
+WHERE s.user_id = ?
+ORDER BY sls.created_at DESC
 LIMIT 1;
 
 -- name: GetActiveStudents :many

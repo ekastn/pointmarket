@@ -300,7 +300,7 @@ func (s *UserService) UpdateUserLearningStyle(
 ) error {
 	return s.q.CreateUserLearningStyle(ctx, gen.CreateUserLearningStyleParams{
 		UserID:           userID,
-		Type:             gen.UserLearningStylesType(prefType),
+		Type:             gen.StudentLearningStylesType(prefType),
 		Label:            label,
 		ScoreVisual:      &score.Visual,
 		ScoreAuditory:    &score.Auditory,
@@ -310,6 +310,6 @@ func (s *UserService) UpdateUserLearningStyle(
 }
 
 // GetLatestUserLearningStyle returns the latest learning style data for a user
-func (s *UserService) GetLatestUserLearningStyle(ctx context.Context, userID int64) (gen.UserLearningStyle, error) {
+func (s *UserService) GetLatestUserLearningStyle(ctx context.Context, userID int64) (gen.StudentLearningStyle, error) {
 	return s.q.GetLatestUserLearningStyle(ctx, userID)
 }

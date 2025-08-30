@@ -94,23 +94,24 @@ func (q *Queries) GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, 
 
 const getStudentLearningStyle = `-- name: GetStudentLearningStyle :one
 SELECT
-    id, user_id, type, label, score_visual, score_auditory, score_reading, score_kinesthetic, created_at
+    sls.id, sls.student_id, sls.type, sls.label, sls.score_visual, sls.score_auditory, sls.score_reading, sls.score_kinesthetic, sls.created_at
 FROM
-    user_learning_styles
+    student_learning_styles sls
+    JOIN students s ON s.student_id = sls.student_id
 WHERE
-    user_id = ?
+    s.user_id = ?
 ORDER BY
-    created_at DESC
+    sls.created_at DESC
 LIMIT
     1
 `
 
-func (q *Queries) GetStudentLearningStyle(ctx context.Context, userID int64) (UserLearningStyle, error) {
+func (q *Queries) GetStudentLearningStyle(ctx context.Context, userID int64) (StudentLearningStyle, error) {
 	row := q.db.QueryRowContext(ctx, getStudentLearningStyle, userID)
-	var i UserLearningStyle
+	var i StudentLearningStyle
 	err := row.Scan(
 		&i.ID,
-		&i.UserID,
+		&i.StudentID,
 		&i.Type,
 		&i.Label,
 		&i.ScoreVisual,
@@ -144,8 +145,9 @@ SELECT
                     COUNT(*)
                 FROM
                     student_assignments sa
+                    JOIN students s_sa ON s_sa.user_id = u.id
                 WHERE
-                    sa.student_id = u.id
+                    sa.student_id = s_sa.student_id
                     AND sa.status = 'completed'
             ),
             0
@@ -159,8 +161,9 @@ SELECT
 				FROM
 					student_questionnaire_likert_results sqr
 					JOIN questionnaires q ON sqr.questionnaire_id = q.id
+                    JOIN students s_mslq ON s_mslq.user_id = u.id
 				WHERE
-					sqr.student_id = u.id
+					sqr.student_id = s_mslq.student_id
 					AND q.type = 'MSLQ'
 				ORDER BY
 					sqr.created_at DESC
@@ -178,8 +181,9 @@ SELECT
 				FROM
 					student_questionnaire_likert_results sqr
 					JOIN questionnaires q ON sqr.questionnaire_id = q.id
+                    JOIN students s_ams ON s_ams.user_id = u.id
 				WHERE
-					sqr.student_id = u.id
+					sqr.student_id = s_ams.student_id
 					AND q.type = 'AMS'
 				ORDER BY
 					sqr.created_at DESC

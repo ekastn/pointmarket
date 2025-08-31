@@ -7,13 +7,23 @@ use App\Core\ApiClient;
 use App\Core\Router;
 use DI\ContainerBuilder;
 
-// Load environment variables from .env file
-if (file_exists(__DIR__.'/.env')) {
-    $env = parse_ini_file(__DIR__.'/.env');
-    define('API_BASE_URL', $env['API_BASE_URL'] ?? 'http://localhost:8080');
-} else {
-    define('API_BASE_URL', 'http://localhost:8080');
+// Resolve API_BASE_URL with precedence: env > .env file > default
+$apiBaseUrl = getenv('API_BASE_URL') ?: null;
+
+if ($apiBaseUrl === null && file_exists(__DIR__.'/.env')) {
+    // Lightweight dotenv: parse values and allow override if not set in real env
+    $env = @parse_ini_file(__DIR__.'/.env', false, INI_SCANNER_TYPED) ?: [];
+    if (isset($env['API_BASE_URL']) && is_string($env['API_BASE_URL']) && $env['API_BASE_URL'] !== '') {
+        $apiBaseUrl = $env['API_BASE_URL'];
+    }
 }
+
+if ($apiBaseUrl === null || $apiBaseUrl === '') {
+    $apiBaseUrl = 'http://localhost:8080';
+}
+
+// Normalize and expose as constant for dependency wiring
+define('API_BASE_URL', rtrim($apiBaseUrl, '/'));
 
 // Build the DI Container
 $containerBuilder = new ContainerBuilder();

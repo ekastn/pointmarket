@@ -38,7 +38,7 @@ class CoursesController extends BaseController
             if ($userRole === 'admin' || $userRole === 'guru') {
                 $this->render('admin/courses', [
                     'user' => $_SESSION['user_data'],
-                    'title' => 'Courses',
+                    'title' => 'Data Kelas',
                     'courses' => $courses,
                     'search' => $search,
                     'role' => $role,
@@ -52,7 +52,7 @@ class CoursesController extends BaseController
             } elseif ($userRole === 'siswa') {
                 $this->render('siswa/courses', [
                     'user' => $_SESSION['user_data'],
-                    'title' => 'Courses',
+                    'title' => 'Kelas',
                     'courses' => $courses,
                     'search' => $search,
                     'page' => $meta['page'],

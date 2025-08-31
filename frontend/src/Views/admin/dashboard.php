@@ -40,73 +40,76 @@ $statsItems = [
 ]
 
 ?>
+<div class="container-fluid">
 
-<?php 
-$right = '<div class="btn-group">'
-       . '<button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download me-1"></i>Ekspor</button>'
-       . '</div>';
-$renderer->includePartial('components/partials/page_title', [
-    'icon' => 'fas fa-tachometer-alt',
-    'title' => 'Admin Dashboard',
-    'right' => $right,
-]);
-?>
+    <?php 
+    $right = '<div class="btn-group">'
+           . '<button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download me-1"></i>Ekspor</button>'
+           . '</div>';
+    $renderer->includePartial('components/partials/page_title', [
+        'icon' => 'fas fa-tachometer-alt',
+        'title' => 'Admin Dashboard',
+        'right' => $right,
+    ]);
+    ?>
 
-<!-- Admin Stats -->
-<div class="row pm-section">
-    <?php foreach ($statsItems as $item): ?>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <?php $renderer->includePartial('components/partials/card_stats', $item); ?>
-        </div>
-    <?php endforeach; ?>
-</div>
-
-<!-- Quick Actions -->
-<div class="row pm-section">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>
-                    Quick Actions
-                </h5>
+    <!-- Admin Stats -->
+    <div class="row pm-section">
+        <?php foreach ($statsItems as $item): ?>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <?php $renderer->includePartial('components/partials/card_stats', $item); ?>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col mb-2">
-                        <a href="/users" class="btn btn-primary w-100 h-100">
-                            <i class="fas fa-users-cog me-2"></i>
-                            Manage Users
-                        </a>
-                    </div>
-                    <div class="col mb-2">
-                        <a href="/reports" class="btn btn-success w-100 h-100">
-                            <i class="fas fa-chart-bar me-2"></i>
-                            View Reports
-                        </a>
-                    </div>
-                    <div class="col mb-2">
-                        <a href="/settings" class="btn btn-info w-100 h-100">
-                            <i class="fas fa-cog me-2"></i>
-                            System Settings
-                        </a>
-                    </div>
-                    <div class="col mb-2">
-                        <a href="/backup" class="btn btn-warning w-100 h-100">
-                            <i class="fas fa-database me-2"></i>
-                            Backup Data
-                        </a>
-                    </div>
-                    <div class="col mb-2">
-                        <form action="/weekly-evaluations/initialize" method="post">
-                            <button type="submit" class="btn btn-danger w-100 h-100">
-                                <i class="fas fa-calendar-plus me-2"></i>
-                                Initialize Weekly Evaluations
-                            </button>
-                        </form>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row pm-section">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col mb-2">
+                            <a href="/users" class="btn btn-primary w-100 h-100">
+                                <i class="fas fa-users-cog me-2"></i>
+                                Manage Users
+                            </a>
+                        </div>
+                        <div class="col mb-2">
+                            <a href="/reports" class="btn btn-success w-100 h-100">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                View Reports
+                            </a>
+                        </div>
+                        <div class="col mb-2">
+                            <a href="/settings" class="btn btn-info w-100 h-100">
+                                <i class="fas fa-cog me-2"></i>
+                                System Settings
+                            </a>
+                        </div>
+                        <div class="col mb-2">
+                            <a href="/backup" class="btn btn-warning w-100 h-100">
+                                <i class="fas fa-database me-2"></i>
+                                Backup Data
+                            </a>
+                        </div>
+                        <div class="col mb-2">
+                            <form action="/weekly-evaluations/initialize" method="post">
+                                <button type="submit" class="btn btn-danger w-100 h-100">
+                                    <i class="fas fa-calendar-plus me-2"></i>
+                                    Initialize Weekly Evaluations
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 </div>

@@ -55,7 +55,7 @@ $pagination = [
 
 <?php $renderer->includePartial('components/partials/page_title', [
     'icon' => 'fas fa-clipboard-list',
-    'title' => 'Kelola Kuesioner',
+    'title' => 'Data Kuesioner',
     'right' => '<a href="/questionnaires/create" class="btn btn-success"><i class="fas fa-plus me-1"></i> Buat Kuesioner Baru</a>'
 ]); ?>
 

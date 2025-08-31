@@ -13,7 +13,7 @@ $base_params = [
 <div class="container-fluid">
     <?php $renderer->includePartial('components/partials/page_title', [
         'icon' => 'fas fa-book-open',
-        'title' => htmlspecialchars($title ?: 'Kursus'),
+        'title' => htmlspecialchars($title ?: 'Kelas'),
     ]); ?>
 
     <div class="row pm-section">

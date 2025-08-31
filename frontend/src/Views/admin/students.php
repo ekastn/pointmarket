@@ -1,7 +1,7 @@
 <?php
 // $students, $programs, $filters, $pagination
 ?>
-<div class="container-fluid mt-3">
+<div class="container-fluid">
     <?php 
         // Right-side: filters + add/edit via modal is inline per-row
         ob_start();

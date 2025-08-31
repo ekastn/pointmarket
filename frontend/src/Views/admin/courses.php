@@ -22,7 +22,7 @@ $base_params = [
             . '</div>';
         $renderer->includePartial('components/partials/page_title', [
             'icon' => 'fas fa-book-open',
-            'title' => htmlspecialchars($title ?: 'Kelola Kursus'),
+            'title' => "Data Kelas",
             'right' => $right,
         ]);
     ?>

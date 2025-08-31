@@ -26,7 +26,7 @@ $base_params = [
             . '</div>';
         $renderer->includePartial('components/partials/page_title', [
             'icon' => 'fas fa-box-open',
-            'title' => htmlspecialchars($title ?: 'Kelola Produk'),
+            'title' => 'Data Produk',
             'right' => $right,
         ]);
     ?>

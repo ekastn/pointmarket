@@ -21,7 +21,7 @@ $base_params = [
             . '</div>';
         $renderer->includePartial('components/partials/page_title', [
             'icon' => 'fas fa-id-badge',
-            'title' => htmlspecialchars($title ?: 'Kelola Lencana'),
+            'title' => "Data Badge",
             'right' => $right,
         ]);
     ?>

@@ -1,7 +1,7 @@
-<div class="container-fluid mt-4">
+<div class="container-fluid">
     <?php $renderer->includePartial('components/partials/page_title', [
         'icon' => 'fas fa-trophy',
-        'title' => 'Kelola Misi',
+        'title' => 'Data Misi',
         'right' => '<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#missionModal" id="addMissionBtn"><i class="fas fa-plus"></i> Tambah Misi</button>'
     ]); ?>
 

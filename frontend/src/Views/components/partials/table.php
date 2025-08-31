@@ -110,7 +110,7 @@ if (!function_exists('build_query_string')) {
     <div class="mb-3">
         Showing <?= htmlspecialchars($pagination['start_record']); ?> to <?= htmlspecialchars($pagination['end_record']); ?> of <?= htmlspecialchars($pagination['total_records']); ?> entries
     </div>
-    <ul class="pagination mb-0">
+    <ul class="pagination pagination-sm flex-wrap mb-0">
         <!-- Previous Button -->
         <li class="page-item <?= ($pagination['current_page'] <= 1) ? 'disabled' : ''; ?>">
             <a class="page-link" href="?<?= build_query_string(array_merge($pagination['base_params'], ['page' => $pagination['current_page'] - 1])); ?>" aria-label="Previous">
@@ -118,13 +118,46 @@ if (!function_exists('build_query_string')) {
             </a>
         </li>
 
-        <?php for ($p = 1; $p <= $pagination['total_pages']; $p++): ?>
-            <li class="page-item <?= ($p == $pagination['current_page']) ? 'active' : ''; ?>">
-                <a class="page-link" href="?<?= build_query_string(array_merge($pagination['base_params'], ['page' => $p])); ?>">
-                    <?= $p; ?>
-                </a>
-            </li>
-        <?php endfor; ?>
+        <?php
+            $total = (int)$pagination['total_pages'];
+            $current = (int)$pagination['current_page'];
+
+            $renderPage = function(int $p) use ($pagination, $current) {
+                $active = ($p === $current) ? 'active' : '';
+                $qs = build_query_string(array_merge($pagination['base_params'], ['page' => $p]));
+                echo '<li class="page-item ' . $active . '">';
+                echo '<a class="page-link" href="?' . $qs . '"' . ($active ? ' aria-current="page"' : '') . '>' . $p . '</a>';
+                echo '</li>';
+            };
+
+            if ($total <= 7) {
+                for ($p = 1; $p <= $total; $p++) { $renderPage($p); }
+            } else {
+                // Always show first page
+                $renderPage(1);
+
+                if ($current <= 3) {
+                    // Early pages
+                    $end = min(4, $total - 1);
+                    for ($p = 2; $p <= $end; $p++) { $renderPage($p); }
+                    if ($end < $total - 1) {
+                        echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                    }
+                    $renderPage($total);
+                } elseif ($current >= $total - 2) {
+                    // Near the end
+                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                    $start = max($total - 3, 2);
+                    for ($p = $start; $p <= $total; $p++) { $renderPage($p); }
+                } else {
+                    // Middle window
+                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                    for ($p = $current - 1; $p <= $current + 1; $p++) { $renderPage($p); }
+                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                    $renderPage($total);
+                }
+            }
+        ?>
 
         <!-- Next Button -->
         <li class="page-item <?= ($pagination['current_page'] >= $pagination['total_pages']) ? 'disabled' : ''; ?>">

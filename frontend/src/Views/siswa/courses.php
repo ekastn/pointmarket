@@ -11,19 +11,23 @@ $base_params = [
 ?>
 
 <div class="container-fluid">
-    <?php $renderer->includePartial('components/partials/page_title', [
-        'icon' => 'fas fa-book-open',
-        'title' => htmlspecialchars($title ?: 'Kelas'),
-    ]); ?>
+    <?php 
+        ob_start();
+    ?>
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <input type="text" name="search" class="form-control form-control-sm" style="max-width: 260px" placeholder="Cari judul atau slug" value="<?= htmlspecialchars($search) ?>">
+            <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="fas fa-search"></i></button>
+        </form>
+    <?php
+        $right = ob_get_clean();
+        $renderer->includePartial('components/partials/page_title', [
+            'icon' => 'fas fa-book-open',
+            'title' => htmlspecialchars($title ?: 'Kelas'),
+            'right' => $right,
+        ]);
+    ?>
 
-    <div class="row pm-section">
-        <div class="col-12 col-md-6">
-            <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Cari judul atau slug" value="<?= htmlspecialchars($search) ?>">
-                <button class="btn btn-outline-secondary" type="submit">Cari</button>
-            </form>
-        </div>
-    </div>
+    <div class="row pm-section"></div>
 
     <div class="col-md-9 col-lg-10 ">
         <?php
@@ -62,7 +66,7 @@ $base_params = [
             Menampilkan <?= $start; ?>–<?= $end; ?> dari <?= $total_data; ?> data
         </div>
         <?php if ($total_pages > 1) : ?>
-            <ul class="pagination mb-0">
+            <ul class="pagination pagination-sm flex-wrap mb-0">
                 <!-- Previous Button -->
                 <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
                     <a class="page-link" href="?<?= build_query_string(array_merge($base_params, ['page' => $page - 1])); ?>" aria-label="Previous">
@@ -70,13 +74,38 @@ $base_params = [
                     </a>
                 </li>
 
-                <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-                    <li class="page-item <?= ($i == $page) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?<?= build_query_string(array_merge($base_params, ['page' => $i])); ?>">
-                            <?= $i; ?>
-                        </a>
-                    </li>
-                <?php endfor; ?>
+                <?php
+                    $render = function(int $p) use ($page, $base_params) {
+                        $active = ($p === (int)$page) ? 'active' : '';
+                        $qs = build_query_string(array_merge($base_params, ['page' => $p]));
+                        echo '<li class="page-item ' . $active . '">';
+                        echo '<a class="page-link" href="?' . $qs . '"' . ($active ? ' aria-current="page"' : '') . '>' . $p . '</a>';
+                        echo '</li>';
+                    };
+
+                    if ($total_pages <= 7) {
+                        for ($i = 1; $i <= $total_pages; $i++) { $render($i); }
+                    } else {
+                        $render(1);
+                        if ($page <= 3) {
+                            $end = min(4, $total_pages - 1);
+                            for ($i = 2; $i <= $end; $i++) { $render($i); }
+                            if ($end < $total_pages - 1) {
+                                echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                            }
+                            $render($total_pages);
+                        } elseif ($page >= $total_pages - 2) {
+                            echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                            $start = max($total_pages - 3, 2);
+                            for ($i = $start; $i <= $total_pages; $i++) { $render($i); }
+                        } else {
+                            echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                            for ($i = $page - 1; $i <= $page + 1; $i++) { $render($i); }
+                            echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                            $render($total_pages);
+                        }
+                    }
+                ?>
 
                 <!-- Next Button -->
                 <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">

@@ -14,4 +14,4 @@ $right = $right ?? '';
       <?= $right; ?>
     </div>
   </div>
-    </div>
+</div>

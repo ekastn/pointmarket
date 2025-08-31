@@ -1,4 +1,4 @@
-<div class="container-fluid mt-3">
+<div class="container-fluid">
     <?php 
         $right = '<div class="d-flex gap-2 align-items-center">'
             . '<form method="GET" class="d-flex">'

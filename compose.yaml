@@ -1,0 +1,46 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8042:80" 
+    environment:
+      API_BASE_URL: http://backend:8041
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8041:8041" 
+    environment:
+      SERVER_PORT: 8041
+      ALLOWED_ORIGINS: "http://localhost:8042,http://localhost:8041"
+      AI_SERVICE_URL: http://localhost:8042
+      JWT_SECRET: super-secret
+      JWT_EXPIRATION_HOURS: 24
+      DB_HOST: db
+      DB_PORT: 3306 
+      DB_USER: pointmarket 
+      DB_PASSWORD: password
+      DB_NAME: pointmarket
+
+  db:
+    image: mysql:latest
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: pointmarket
+      MYSQL_USER: pointmarket
+      MYSQL_PASSWORD: password
+    volumes:
+      - pointmarket-db:/var/lib/mysql
+    healthcheck: 
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+volumes:
+  pointmarket-db:

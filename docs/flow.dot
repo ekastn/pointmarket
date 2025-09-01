@@ -1,0 +1,138 @@
+digraph POINTMARKET_HYBRID {
+  rankdir=LR;
+  labelloc="t";
+  fontsize=20;
+  label="Arsitektur Hybrid POINTMARKET – Motivational Engine dalam Ekosistem LENTERAMU";
+
+  node [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica"];
+
+  /* ===================== INPUT LAYER ===================== */
+  subgraph cluster_input {
+    label="Input Data";
+    style="rounded";
+    color="#3B82F6"; // blue-500
+    fontname="Helvetica-Bold";
+    I_VARK   [label="VARK Questionnaire"];
+    I_AMS    [label="AMS"];
+    I_MSLQ   [label="MSLQ"];
+    I_ENGAGE [label="Engagement Log\n(clicks, dwell, tasks)"];
+  }
+
+  /* ================= PREPROCESSING LAYER ================= */
+  subgraph cluster_prep {
+    label="Preprocessing";
+    style="rounded";
+    color="#22C55E"; // green-500
+    P_NORM   [label="Normalisasi &\nSkor Standar"];
+    P_NLP    [label="NLP Heuristik\n(ekstrak intent/kebutuhan dari narasi/konsultasi)"];
+  }
+
+  /* ===================== AI ENGINE CORE ===================== */
+  subgraph cluster_ai {
+    label="AI Engine (Inti)";
+    style="rounded";
+    color="#F59E0B"; // amber-500
+    fontname="Helvetica-Bold";
+
+    AI_NLP [label="NLP Profil Belajar\n(VARK+Narasi)", fillcolor="#FFF7ED"]; // warm light
+    AI_RL  [label="Reinforcement Learning\n(Adaptasi Reward & Misi)", fillcolor="#FEF3C7"];
+    subgraph cluster_cbf {
+      label="CBF (Content-Based Filtering)";
+      style="rounded,filled";
+      color="#9CA3AF"; // gray-400 border
+      fillcolor="#E5E7EB"; // gray-200 fill
+      CBF_CORE [label="Rekomendasi Produk/Misi\nberdasarkan Profil & Riwayat"];
+    }
+  }
+
+  /* ===================== GAMIFICATION LAYER ===================== */
+  subgraph cluster_gamify {
+    label="Gamifikasi (Data-Driven)";
+    style="rounded";
+    color="#8B5CF6"; // violet-500
+    G_POINTS   [label="Poin & Reward"];
+    G_MISSIONS [label="Misi/Produk Personal"];
+    G_LEADER   [label="Leaderboard"];
+    G_COUNSEL  [label="Konsultasi Akademik\n(terarah)"];
+  }
+
+  /* ===================== OUTPUT LAYER ===================== */
+  subgraph cluster_output {
+    label="Output Sistem";
+    style="rounded";
+    color="#06B6D4"; // cyan-500
+    O_REKOM [label="Rekomendasi Belajar\n(personal)"];
+    O_DASH  [label="Dashboard Motivasi"];
+    O_NOTIF [label="Notifikasi Adaptif"];
+  }
+
+  /* ===================== TECH STACK ===================== */
+  subgraph cluster_tech {
+    label="Teknologi Utama";
+    style="rounded,dashed";
+    color="#94A3B8"; // slate-400
+    T_BACK [label="Backend:\nPHP • Python • REST API\nMySQL/MariaDB • Redis", fillcolor="#F1F5F9"];
+    T_FRONT [label="Frontend:\nHTML5/CSS • JavaScript", fillcolor="#F8FAFC"];
+  }
+
+  /* ===================== INTEGRATION ===================== */
+  subgraph cluster_integration {
+    label="Integrasi Ekosistem";
+    style="rounded";
+    color="#0EA5E9"; // sky-500
+    LENTERAMU [label="LENTERAMU\n(Ekosistem Pembelajaran Adaptif)", fillcolor="#E0F2FE", style="rounded,filled,bold"];
+  }
+
+  /* ===================== EDGES (FLOW) ===================== */
+
+  // Inputs -> Preprocessing
+  I_VARK   -> P_NORM;
+  I_AMS    -> P_NORM;
+  I_MSLQ   -> P_NORM;
+  I_ENGAGE -> P_NORM;
+  I_ENGAGE -> P_NLP  [label="narasi/log"];
+
+  // Preprocessing -> AI Engine
+  P_NORM -> AI_NLP  [label="profil awal (VARK)"];
+  P_NLP  -> AI_NLP  [label="konteks & intent"];
+  P_NORM -> AI_RL   [label="state awal"];
+  P_NORM -> CBF_CORE [label="fitur konten & preferensi"];
+
+  // AI Engine internal influences
+  AI_NLP  -> CBF_CORE [label="fitur konten relevan"];
+  AI_NLP  -> AI_RL     [label="state/context update"];
+  AI_RL   -> CBF_CORE  [label="penyesuaian strategi\n(eksplorasi/eksploitasi)"];
+
+  // AI Engine -> Gamification
+  AI_RL   -> G_MISSIONS [label="misi adaptif"];
+  AI_RL   -> G_POINTS   [label="reward policy"];
+  CBF_CORE -> G_MISSIONS [label="misi sesuai minat"];
+  CBF_CORE -> G_LEADER   [label="kriteria leaderboard"];
+  AI_NLP  -> G_COUNSEL   [label="saran personal\n(konsultasi)"];
+
+  // Gamification -> Output
+  G_POINTS   -> O_DASH;
+  G_MISSIONS -> O_REKOM;
+  G_LEADER   -> O_DASH;
+  G_COUNSEL  -> O_NOTIF;
+
+  // Outputs <-> Frontend
+  O_REKOM -> T_FRONT;
+  O_DASH  -> T_FRONT;
+  O_NOTIF -> T_FRONT;
+
+  // AI/Gamification <-> Backend
+  T_BACK -> AI_NLP;
+  T_BACK -> AI_RL;
+  T_BACK -> CBF_CORE;
+  G_POINTS   -> T_BACK;
+  G_MISSIONS -> T_BACK;
+  G_LEADER   -> T_BACK;
+  G_COUNSEL  -> T_BACK;
+
+  // Frontend <-> Backend
+  T_FRONT -> T_BACK [dir=both, label="REST API"];
+
+  // Integration with LENTERAMU
+  {T_BACK T_FRONT O_REKOM O_DASH O_NOTIF} -> LENTERAMU [label="integrasi modul & data"];
+}

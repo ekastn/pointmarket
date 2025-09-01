@@ -1,0 +1,98 @@
+digraph ProgramFlow {
+  rankdir=LR;
+  graph [label="AI Services NLP Program Flow (VARK + Analysis)", labelloc=top, fontsize=20];
+  node [shape=box, fontsize=10];
+
+  subgraph cluster_api {
+    label="API Layer";
+    style=rounded;
+    a0 [label="Client -> POST /nlp/predict\nJSON: {text, strategy?, context_type?}"];
+    a1 [label="Validate JSON\n- require is_json\n- require 'text' key", shape=diamond];
+    a2 [label="Engine.get_nlp_profile(data)"];
+  }
+  a0 -> a1 -> a2;
+
+  subgraph cluster_engine {
+    label="Engine + NlpService";
+    style=rounded;
+    e0 [label="NlpService.analyze(data, strategy?)\n- Default: 'hybrid'\n- Requires: Stanza + Lexicon ready"];
+    e1 [label="Pick strategy\n- 'keyword' | 'linguistic' | 'hybrid'", shape=diamond];
+  }
+  a2 -> e0 -> e1;
+
+  subgraph cluster_keyword {
+    label="KeywordStrategy";
+    style=rounded;
+    k0 [label="Stanza parse -> lemmas of all tokens"];
+    k1 [label="Lexicon scoring\nFor each style s:\n raw_s = sum(weight[k] for k in lemmas intersect lexicon[s])"];
+    k2 [label="Normalize\nscore_s = raw_s / sum(raw)"];
+  }
+
+  subgraph cluster_linguistic {
+    label="LinguisticStrategy";
+    style=rounded;
+    l0 [label="Stanza parse -> doc"];
+    l1 [label="Extract metrics:\n- avg_sent_length = tokens / sentences\n- lexical_density = content_words / tokens\n- verb_ratio = VERB / tokens\n- adj_ratio = ADJ / tokens"];
+    l2 [label="Heuristic raw scores:\n- Read/Write = lexical_density*5 + avg_sent_length*0.1\n- Kinesthetic = verb_ratio*10\n- Visual = adj_ratio*10\n- Aural = 0.1"];
+    l3 [label="Normalize to distribution"];
+  }
+
+  subgraph cluster_hybrid {
+    label="HybridStrategy";
+    style=rounded;
+    h0 [label="Combine keyword + linguistic"];
+    h1 [label="Context bias (context_type):\n- Matematika: +Visual,+Read/Write\n- Biologi: +Visual\n- Praktikum: +Kinesthetic"];
+    h2 [label="Interaction bias (text):\n- '?' => +Aural\n- 'ringkasan' or 'catat' => +Read/Write"];
+    h3 [label="Weighted sum per style:\n 0.5*keyword + 0.3*linguistic + 0.15*context + 0.05*interaction"];
+    h4 [label="Normalize to distribution"];
+  }
+
+  e1 -> k0 [label="keyword"];
+  k0 -> k1 -> k2;
+
+  e1 -> l0 [label="linguistic"];
+  l0 -> l1 -> l2 -> l3;
+
+  e1 -> h0 [label="hybrid"];
+  h0 -> h1 -> h2 -> h3 -> h4;
+
+  subgraph cluster_text {
+    label="TextAnalysisService";
+    style=rounded;
+    t0 [label="Input: text"];
+    tk0 [label="extract_keywords:\nIf Stanza -> lemmas, filter POS {NOUN,PROPN,ADJ,VERB}, drop stopwords len>2; freq top N\nElse -> regex tokens, drop stopwords len>3; freq top N"];
+    ts0 [label="extract_key_sentences: split sentences (Stanza or regex)"];
+    ts1 [label="Precompute NLP keywords (top 10)"];
+    ts2 [label="If Stanza: compute proper noun density per sentence"];
+    ts3 [label="Score sentence:\n+ Position first+0.3 last+0.2\n+ Length 10-25:+0.2 >25:+0.1\n+ Keyword hits +0.1 cap 0.3\n+ PROPN density*0.5 cap 0.2\n+ TTR min(ttr*0.3,0.15)\n+ '?' +0.1\n+ contains {penting,utama,kesimpulan,hasil,fakta,bukti} +0.15"];
+    ts4 [label="Sort desc; take top max_sentences"];
+    tt0 [label="calculate_text_stats:\nwords=regex tokens; sentences=split\nwordCount, sentenceCount, avgWordLength, readingTime=max(1,ceil(wordCount/200))"];
+    tg0 [label="calculate_grammar_score:\nStart 100; errors from: double spaces, double punctuation, space before punctuation, lowercase sentence start, and if Stanza: 'adalah merupakan' redundancy"];
+    tg1 [label="Score = max(0, 100 - 10*errors)"];
+    tr0 [label="calculate_readability_score:\nStart 100; compute avg sentence length and avg word length"];
+    tr1 [label="Penalties: >25 words: -(len-25)*1.5; <8: -(8-len)*1.0; avg word len>8: -(len-8)*5.0; clamp 0..100"];
+    tsent0 [label="calculate_sentiment_score:\npositive/negative sets; negations={tidak,bukan,belum,jangan}"];
+    tsent1 [label="If Stanza: check negation flip; Else: regex counts"];
+    tsent3 [label="If none: 50.0; else 100*pos/(pos+neg)"];
+    tstr0 [label="calculate_structure_score:\nSplit sentences; paragraphs by blank lines; Start 100; errors/bonsus based on counts and SD"];
+    tstr2 [label="Score = clamp(0, 100 - 10*errors + bonuses)"];
+    tc0 [label="calculate_complexity_score:\nLexical diversity: TTR(lemmas)*40 (Stanza) else TTR(words)*30"];
+    tc1 [label="Syntactic proxy: if Stanza avg VERB/sent -> +min(x*10,30) else avg word len -> +min(x*5,20)"];
+    tc2 [label="Length factor: +min(wordCount/100*30,30); clamp 0..100"];
+  }
+
+  e0 -> t0 [label="Also run text analysis"];
+
+  subgraph cluster_response {
+    label="Response Assembly";
+    style=rounded;
+    r0 [label="Build response:\n- strategy_used\n- word_count = len(text.split())\n- scores: {visual,auditory,reading,kinesthetic}\n- keywords, key_sentences\n- text_stats\n- grammar/readability/sentiment/structure/complexity"];
+    r1 [label="Return JSON, 200 OK"];
+  }
+
+  k2 -> r0;
+  l3 -> r0;
+  h4 -> r0;
+  t0 -> r0 [style=dashed, label="merge analysis"];
+  r0 -> r1;
+}

@@ -38,7 +38,7 @@ $base_params = [
 
         <?php if (!empty($myCourses)): ?>
         <div class="pm-section">
-            <h4 class="mb-3">Kursus Saya</h4>
+            <h4 class="mb-3">Kelas Saya</h4>
             <div class="row">
                 <?php foreach ($myCourses as $course): ?>
                     <?php $renderer->includePartial('components/partials/course_card', ['course' => $course]); ?>
@@ -49,7 +49,7 @@ $base_params = [
 
         <!-- Available Courses -->
         <div class="pm-section">
-            <h4 class="mb-3">Kursus Tersedia</h4>
+            <h4 class="mb-3">Kelas Tersedia</h4>
             <div class="row">
                 <?php foreach ($courses as $course): ?>
                     <?php if (!$course["is_enrolled"]): ?>

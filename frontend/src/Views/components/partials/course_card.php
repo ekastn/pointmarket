@@ -8,7 +8,7 @@
       </div>
       <p class="card-text text-muted small mb-3"><?= htmlspecialchars($course['description'] ?? '') ?></p>
       <div class="mt-auto">
-        <a href="/courses/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-primary w-100">Lihat Kursus</a>
+        <a href="/courses/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-primary w-100">Lihat kelas</a>
       </div>
     </div>
   </div>

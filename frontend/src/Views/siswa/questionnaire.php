@@ -21,68 +21,6 @@ $renderer->includePartial('components/partials/page_title', [
 ]);
 ?>
 
-<!-- Statistics Overview -->
-<div class="row pm-section">
-    <div class="col-12">
-        <h4><i class="fas fa-chart-bar me-2"></i>Statistik Kamu</h4>
-    </div>
-    <?php if (!empty($stats)): ?>
-        <?php foreach ($stats as $stat): ?>
-        <div class="col-md-6 mb-3">
-            <div class="card stats-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-<?php echo $stat['type'] === 'MSLQ' ? 'brain' : ($stat['type'] === 'AMS' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
-                        <?php echo strtoupper($stat['type']); ?>
-                    </h5>
-                    <div class="row">
-                        <div class="col-6">
-                            <p class="mb-1"><strong>Selesai:</strong></p>
-                            <h4 class="text-primary"><?php echo htmlspecialchars($stat['total_completed'] ?? 0); ?></h4>
-                        </div>
-                        <div class="col-6">
-                            <?php if ($stat['type'] === 'vark'): ?>
-                                <p class="mb-1"><strong>Gaya Belajar:</strong></p>
-                                <?php if ($stat['total_completed'] > 0 && $varkResult): ?>
-                                    <h6 class="text-success"><?php echo htmlspecialchars($varkResult['dominant_style']); ?></h6>
-                                    <small class="text-muted"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></small>
-                                <?php else: ?>
-                                    <h6 class="text-muted">Belum dinilai</h6>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <p class="mb-1"><strong>Rata-rata Skor:</strong></p>
-                                <?php if ($stat['average_score'] !== null): ?>
-                                    <?php 
-                                    $avg_score = $stat['average_score'];
-                                    $scoreClass = $avg_score >= 5.5 ? 'score-high' : ($avg_score >= 4 ? 'score-medium' : 'score-low');
-                                    ?>
-                                    <h4 class="<?php echo $scoreClass; ?>"><?php echo htmlspecialchars(number_format($avg_score, 2)); ?></h4>
-                                <?php else: ?>
-                                    <h4 class="text-muted">-</h4>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php if ($stat['last_completed']): ?>
-                        <small class="text-muted">
-                            Terakhir selesai: <?php echo htmlspecialchars(date('d M Y', strtotime($stat['last_completed']))); ?>
-                        </small>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <div class="col-12">
-            <?php $renderer->includePartial('components/partials/empty_state', [
-                'icon' => 'fas fa-chart-bar',
-                'title' => 'Belum ada statistik kuesioner',
-                'subtitle' => 'Isi kuesioner dulu untuk lihat progress di sini.',
-            ]); ?>
-        </div>
-    <?php endif; ?>
-</div>
-
 <?php $renderer->includePartial('siswa/partials/available_questionnaires', ['questionnaires' => $questionnaires]); ?>
 
 <!-- Recent History -->

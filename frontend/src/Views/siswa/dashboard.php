@@ -67,7 +67,7 @@ $renderer->includePartial('components/partials/page_title', [
                                 <div class="col-sm-6">
                                     <h5 class="text-primary mb-2">
                                         <i class="<?php echo htmlspecialchars($learningTips['icon']); ?> me-2"></i>
-                                        <?php echo htmlspecialchars($learningPreference); ?>
+                                        <?php echo htmlspecialchars($dominantStyle); ?>
                                     </h5>
                                     <p class="text-muted mb-3">
                                         <?php echo htmlspecialchars($learningTips['description']); ?>
@@ -76,13 +76,11 @@ $renderer->includePartial('components/partials/page_title', [
                                     <div class="vark-scores">
                                         <small class="text-muted">Skor VARK:</small>
                                         <div class="row mt-2">
-                                            <div class="col-6">
-                                                <span class="vark-badge visual">Visual: <?php echo htmlspecialchars($preferenceScores['Visual'] ?? 'N/A'); ?></span>
-                                                <span class="vark-badge auditory ms-2">Auditory: <?php echo htmlspecialchars($preferenceScores['Auditory'] ?? 'N/A'); ?></span>
-                                            </div>
-                                            <div class="col-6">
-                                                <span class="vark-badge reading">Reading: <?php echo htmlspecialchars($preferenceScores['Reading'] ?? 'N/A'); ?></span>
-                                                <span class="vark-badge kinesthetic ms-2">Kinesthetic: <?php echo htmlspecialchars($preferenceScores['Kinesthetic'] ?? 'N/A'); ?></span>
+                                            <div class="col">
+                                                <span class="vark-badge visual">Visual: <?php echo htmlspecialchars($preferenceScores['visual'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge auditory ms-2">Auditory: <?php echo htmlspecialchars($preferenceScores['auditory'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge reading">Reading: <?php echo htmlspecialchars($preferenceScores['reading'] ?? 'N/A'); ?></span>
+                                                <span class="vark-badge kinesthetic ms-2">Kinesthetic: <?php echo htmlspecialchars($preferenceScores['kinesthetic'] ?? 'N/A'); ?></span>
                                             </div>
                                         </div>
                                     </div>

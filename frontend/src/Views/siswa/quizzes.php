@@ -10,12 +10,6 @@ $renderer->includePartial('components/partials/page_title', [
 
 <!-- Quizzes List -->
 <div class="row pm-section">
-    <div class="col-12">
-        <h4><i class="fas fa-list me-2"></i>Daftar Kuis 
-            <small class="text-muted">(<?php echo count($quizzes); ?> kuis)</small>
-        </h4>
-    </div>
-    
     <?php if (!empty($quizzes)): ?>
         <?php foreach ($quizzes as $quiz): ?>
             <?php $renderer->includePartial('components/partials/quiz_card', ['quiz' => $quiz]); ?>

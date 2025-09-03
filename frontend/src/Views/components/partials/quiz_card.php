@@ -21,7 +21,7 @@
       <div class="row text-center mb-3">
         <div class="col-6">
           <small class="text-muted">Poin</small>
-          <div class="fw-bold text-primary"><?= htmlspecialchars($quiz['points']); ?></div>
+          <div class="fw-bold text-primary"><?= htmlspecialchars($quiz['reward_points']); ?></div>
         </div>
         <div class="col-6">
           <small class="text-muted">Durasi</small>

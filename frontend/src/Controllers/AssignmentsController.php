@@ -17,108 +17,20 @@ class AssignmentsController extends BaseController
 
     public function index(): void
     {
-        session_start();
-        $user = $_SESSION['user_data'] ?? null;
-
-        // This should ideally be handled by AuthMiddleware, but as a fallback
-        if (!$user) {
-            $userProfileResponse = $this->apiClient->getUserProfile();
-            if ($userProfileResponse['success']) {
-                $user = $userProfileResponse['data'];
-                $_SESSION['user_data'] = $user;
-            } else {
-                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
-                session_destroy();
-                $this->redirect('/login');
-                return;
-            }
-        }
-
         $assignments = [];
-        $stats = [
-            'total_assignments' => 0,
-            'completed' => 0,
-            'in_progress' => 0,
-            'overdue' => 0,
-            'total_points' => 0,
-            'average_score' => 0
-        ];
-        $subjects = [];
-        $pendingEvaluations = []; // Placeholder for now
 
-        $assignmentsData = $this->assignmentService->getAssignments(null, $user['id']);
+        $data = $this->assignmentService->getAssignments(null, $_SESSION['user_data']['id']);
 
-        if ($assignmentsData !== null) {
-            $assignments = $assignmentsData ?? [];
-
-            // Calculate stats and subjects based on fetched data
-            $totalPointsSum = 0;
-            $completedCount = 0;
-            $inProgressCount = 0;
-            $overdueCount = 0;
-            $subjects = [];
-
-            foreach ($assignments as $assignment) {
-                $stats['total_assignments']++;
-                if ($assignment['student_status'] === 'completed') {
-                    $stats['completed']++;
-                    $totalPointsSum += $assignment['points'];
-                    if ($assignment['score'] !== null) {
-                        $completedCount++;
-                    }
-                } elseif ($assignment['student_status'] === 'in_progress') {
-                    $stats['in_progress']++;
-                }
-
-                if ($assignment['urgency_status'] === 'overdue') {
-                    $stats['overdue']++;
-                }
-
-                // Collect subjects and their counts
-                $subjectFound = false;
-                foreach ($subjects as &$subject) {
-                    if ($subject['subject'] === $assignment['subject']) {
-                        $subject['total_assignments']++;
-                        if ($assignment['student_status'] === 'completed') {
-                            $subject['completed_assignments']++;
-                        }
-                        $subjectFound = true;
-                        break;
-                    }
-                }
-                unset($subject); // Break the reference
-
-                if (!$subjectFound) {
-                    $subjects[] = [
-                        'subject' => $assignment['subject'],
-                        'total_assignments' => 1,
-                        'completed_assignments' => ($assignment['student_status'] === 'completed') ? 1 : 0
-                    ];
-                }
-            }
-
-            $stats['total_points'] = $totalPointsSum;
-            $stats['average_score'] = 0; // Reset or calculate based on new DTO
-
+        if ($data !== null) {
+            $assignments = $data['assignments'] ?? [];
+            error_log(print_r($assignments, true));
         } else {
             $_SESSION['messages'] = ['error' => 'Failed to fetch assignments.'];
         }
 
-        $status_filter = $_GET['status'] ?? 'all';
-        $subject_filter = $_GET['subject'] ?? 'all';
-        $messages = $_SESSION['messages'] ?? [];
-        unset($_SESSION['messages']);
-
         $this->render('siswa/assignments', [
             'title' => 'Assignments',
-            'user' => $user,
             'assignments' => $assignments,
-            'stats' => $stats,
-            'subjects' => $subjects,
-            'pendingEvaluations' => $pendingEvaluations,
-            'status_filter' => $status_filter,
-            'subject_filter' => $subject_filter,
-            'messages' => $messages,
         ]);
     }
 

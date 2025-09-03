@@ -4,6 +4,7 @@ from typing import List
 from collections import Counter
 import stanza
 from app.stores.lexicon_store import LexiconStore
+from app.utils.timing import phase
 
 class TextAnalysisService:
     """
@@ -24,7 +25,7 @@ class TextAnalysisService:
             'tahun', 'hari', 'bulan', 'minggu', 'jam', 'menit', 'detik'
         }
         
-    def extract_keywords(self, text: str, max_keywords: int = 10) -> List[str]:
+    def extract_keywords(self, text: str, max_keywords: int = 10, doc=None) -> List[str]:
         """
         Extract keywords using NLP techniques.
         """
@@ -32,7 +33,7 @@ class TextAnalysisService:
             return []
             
         # Directly use NLP techniques for keyword extraction
-        nlp_keywords = self._extract_nlp_keywords(text, max_keywords)
+        nlp_keywords = self._extract_nlp_keywords(text, max_keywords, doc)
         
         return nlp_keywords[:max_keywords]
 
@@ -77,16 +78,17 @@ class TextAnalysisService:
         """
         return []
     
-    def _extract_nlp_keywords(self, text: str, max_keywords: int) -> List[str]:
+    def _extract_nlp_keywords(self, text: str, max_keywords: int, doc=None) -> List[str]:
         """
         Extract keywords using NLP techniques with Stanza.
         """
-        if not self.stanza_pipeline or max_keywords <= 0:
+        if (not self.stanza_pipeline and doc is None) or max_keywords <= 0:
             return self._extract_frequency_keywords(text, max_keywords)
             
         try:
-            # Process text with Stanza
-            doc = self.stanza_pipeline(text)
+            # Process text with Stanza (reuse doc if provided)
+            if doc is None:
+                doc = self.stanza_pipeline(text)
             
             # Extract meaningful words (nouns, adjectives, verbs, proper nouns)
             meaningful_words = []
@@ -130,7 +132,7 @@ class TextAnalysisService:
         
         return keywords
     
-    def extract_key_sentences(self, text: str, max_sentences: int = 3) -> List[str]:
+    def extract_key_sentences(self, text: str, max_sentences: int = 3, doc=None) -> List[str]:
         """
         Extract key sentences using a combination of position, length, and keyword density.
         """
@@ -138,7 +140,7 @@ class TextAnalysisService:
             return []
             
         # Split into sentences
-        sentences = self._split_sentences(text)
+        sentences = self._split_sentences(text, doc)
         if len(sentences) <= max_sentences:
             return sentences
             
@@ -147,9 +149,10 @@ class TextAnalysisService:
 
         # Precompute proper noun density per sentence with a single Stanza pass (if available)
         proper_noun_density_by_index: List[float] = [0.0] * len(sentences)
-        if self.stanza_pipeline:
+        if (self.stanza_pipeline or doc is not None):
             try:
-                doc = self.stanza_pipeline(text)
+                if doc is None:
+                    doc = self.stanza_pipeline(text)
                 idx = 0
                 for sent in doc.sentences:
                     words = [w.text for w in sent.words]
@@ -182,11 +185,11 @@ class TextAnalysisService:
         
         return key_sentences
     
-    def _split_sentences(self, text: str) -> List[str]:
+    def _split_sentences(self, text: str, doc=None) -> List[str]:
         """
         Split text into sentences using Stanza.
         """
-        if not self.stanza_pipeline:
+        if not self.stanza_pipeline and doc is None:
             # Fallback to regex if stanza is not available
             sentences = re.split(r'[.!?]+', text)
             cleaned_sentences = []
@@ -195,8 +198,8 @@ class TextAnalysisService:
                 if len(cleaned) > 10:  # Only meaningful sentences
                     cleaned_sentences.append(cleaned)
             return cleaned_sentences
-
-        doc = self.stanza_pipeline(text)
+        if doc is None:
+            doc = self.stanza_pipeline(text)
         return [sentence.text for sentence in doc.sentences if len(sentence.text.strip()) > 10] # Filter short sentences
     
     def _split_paragraphs(self, text: str) -> List[str]:
@@ -279,7 +282,7 @@ class TextAnalysisService:
 
         return max(1, syllable_count) # Ensure at least 1 syllable for valid words
 
-    def calculate_grammar_score(self, text: str) -> float:
+    def calculate_grammar_score(self, text: str, doc=None) -> float:
         """
         Calculates a grammar score based on common grammatical errors.
         This is a simplified implementation for demonstration purposes.
@@ -302,8 +305,9 @@ class TextAnalysisService:
                 errors += 1
 
         # Check for "adalah merupakan" redundancy using Stanza
-        if self.stanza_pipeline:
-            doc = self.stanza_pipeline(text)
+        if (self.stanza_pipeline or doc is not None):
+            if doc is None:
+                doc = self.stanza_pipeline(text)
             for sentence in doc.sentences:
                 lemmas = [word.lemma.lower() for word in sentence.words]
                 # Check for "adalah merupakan" sequence
@@ -316,14 +320,14 @@ class TextAnalysisService:
             score = max(0, 100.0 - (float(errors) * 10))  # Deduct points for errors
         return score
 
-    def calculate_readability_score(self, text: str) -> float:
+    def calculate_readability_score(self, text: str, doc=None) -> float:
         """
         Calculates a simplified readability score tailored for Indonesian text.
         This heuristic is based on average sentence length and average word length.
         """
         words = re.findall(r'\b\w+\b', text)
         word_count = len(words)
-        sentences = self._split_sentences(text)
+        sentences = self._split_sentences(text, doc)
         sentence_count = len(sentences)
 
         if word_count == 0 or sentence_count == 0:
@@ -349,7 +353,7 @@ class TextAnalysisService:
         # Ensure the score is within the 0-100 range
         return max(0, min(100, score))
 
-    def calculate_sentiment_score(self, text: str) -> float:
+    def calculate_sentiment_score(self, text: str, doc=None) -> float:
         """
         Calculates a basic sentiment score based on positive and negative keywords.
         """
@@ -370,7 +374,7 @@ class TextAnalysisService:
         pos_count = 0
         neg_count = 0
 
-        if not self.stanza_pipeline:
+        if not self.stanza_pipeline and doc is None:
             # Fallback to simple regex if stanza is not available
             words = re.findall(r'\b\w+\b', text.lower())
             for word in words:
@@ -379,7 +383,8 @@ class TextAnalysisService:
                 elif word in negative_words:
                     neg_count += 1
         else:
-            doc = self.stanza_pipeline(text)
+            if doc is None:
+                doc = self.stanza_pipeline(text)
             for sentence in doc.sentences:
                 for i, word_obj in enumerate(sentence.words):
                     lemma = word_obj.lemma.lower()
@@ -407,11 +412,11 @@ class TextAnalysisService:
         score = sentiment_ratio * 100.0
         return score
 
-    def calculate_structure_score(self, text: str) -> float:
+    def calculate_structure_score(self, text: str, doc=None) -> float:
         """
         Calculates a basic structure score based on sentence count and paragraphing.
         """
-        sentences = self._split_sentences(text)
+        sentences = self._split_sentences(text, doc)
         sentence_count = len(sentences)
         
         paragraphs = self._split_paragraphs(text)
@@ -458,7 +463,7 @@ class TextAnalysisService:
         score = max(0, min(100, score))
         return score
 
-    def calculate_complexity_score(self, text: str) -> float:
+    def calculate_complexity_score(self, text: str, doc=None) -> float:
         """
         Calculates a complexity score based on lexical diversity and syntactic complexity.
         """
@@ -474,8 +479,9 @@ class TextAnalysisService:
         score = 0.0
 
         # 1. Lexical Diversity (using lemmas for TTR)
-        if self.stanza_pipeline:
-            doc = self.stanza_pipeline(text)
+        if (self.stanza_pipeline or doc is not None):
+            if doc is None:
+                doc = self.stanza_pipeline(text)
             lemmas = [word.lemma.lower() for sentence in doc.sentences for word in sentence.words if word.lemma]
             if lemmas:
                 unique_lemmas = set(lemmas)
@@ -488,13 +494,14 @@ class TextAnalysisService:
             score += ttr * 30 # Lower weight for less accurate TTR
 
         # 2. Syntactic Complexity (simplified: average verbs per sentence)
-        if self.stanza_pipeline:
-            doc = self.stanza_pipeline(text)
+        if (self.stanza_pipeline or doc is not None):
+            if doc is None:
+                doc = self.stanza_pipeline(text)
             total_verbs = 0
             sentence_count = len(doc.sentences)
             for sentence in doc.sentences:
                 for word in sentence.words:
-                    if word.upos == 'VERB':
+                    if getattr(word, 'upos', None) == 'VERB':
                         total_verbs += 1
             
             if sentence_count > 0:
@@ -516,17 +523,36 @@ class TextAnalysisService:
         score = max(0, min(100, score))
         return score
 
-    def analyze(self, text: str) -> dict:
+    def analyze(self, text: str, ctx=None) -> dict:
         """
         Perform comprehensive text analysis returning all metrics.
+        Timed phases are emitted at DEBUG level for performance profiling.
         """
+        doc = getattr(ctx, 'doc', None) if ctx is not None else None
+        with phase("ta.keywords"):
+            keywords = self.extract_keywords(text, doc=doc)
+        with phase("ta.key_sentences"):
+            key_sentences = self.extract_key_sentences(text, doc=doc)
+        with phase("ta.text_stats"):
+            text_stats = self.calculate_text_stats(text)
+        with phase("ta.grammar"):
+            grammar_score = self.calculate_grammar_score(text, doc=doc)
+        with phase("ta.readability"):
+            readability_score = self.calculate_readability_score(text, doc=doc)
+        with phase("ta.sentiment"):
+            sentiment_score = self.calculate_sentiment_score(text, doc=doc)
+        with phase("ta.structure"):
+            structure_score = self.calculate_structure_score(text, doc=doc)
+        with phase("ta.complexity"):
+            complexity_score = self.calculate_complexity_score(text, doc=doc)
+
         return {
-            'keywords': self.extract_keywords(text),
-            'key_sentences': self.extract_key_sentences(text),
-            'text_stats': self.calculate_text_stats(text),
-            'grammar_score': self.calculate_grammar_score(text),
-            'readability_score': self.calculate_readability_score(text),
-            'sentiment_score': self.calculate_sentiment_score(text),
-            'structure_score': self.calculate_structure_score(text),
-            'complexity_score': self.calculate_complexity_score(text)
+            'keywords': keywords,
+            'key_sentences': key_sentences,
+            'text_stats': text_stats,
+            'grammar_score': grammar_score,
+            'readability_score': readability_score,
+            'sentiment_score': sentiment_score,
+            'structure_score': structure_score,
+            'complexity_score': complexity_score
         }

@@ -19,7 +19,10 @@ class KeywordStrategy(BaseVarkStrategy):
         # Iterate through sentences and words to extract lemmas
         for sentence in doc.sentences:
             for word in sentence.words:
-                lemmas.append(word.lemma)
+                if getattr(word, 'lemma', None):
+                    lemmas.append(word.lemma.lower())
+                else:
+                    lemmas.append(word.text.lower())
         
         return lemmas
 
@@ -30,11 +33,19 @@ class KeywordStrategy(BaseVarkStrategy):
         """
         raw_scores = {s: 0 for s in self.lexicon.keys()}
         lemma_set = set(lemmas)
+        lemmas_text = " ".join(lemmas)
+        padded = f" {lemmas_text} " if lemmas_text else ""
         
         for style, keywords in self.lexicon.items():
             for keyword, weight in keywords.items():
-                if keyword in lemma_set:
-                    raw_scores[style] += weight
+                kw = keyword.lower()
+                if " " in kw:
+                    # Phrase match on token boundaries
+                    if padded and f" {kw} " in padded:
+                        raw_scores[style] += weight
+                else:
+                    if kw in lemma_set:
+                        raw_scores[style] += weight
         
         total_score = sum(raw_scores.values())
 
@@ -43,8 +54,11 @@ class KeywordStrategy(BaseVarkStrategy):
         
         return {s: score / total_score for s, score in raw_scores.items()}
 
-    def analyze(self, data: dict) -> dict:
+    def analyze(self, data: dict, ctx=None) -> dict:
         text = data.get('text', '')
-        lemmas = self._preprocess(text)
+        if ctx is not None and getattr(ctx, 'lemmas', None):
+            lemmas = ctx.lemmas
+        else:
+            lemmas = self._preprocess(text)
         scores = self._calculate_scores(lemmas)
         return scores

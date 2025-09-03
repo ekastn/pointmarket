@@ -17,6 +17,11 @@ class Config:
     DB_NAME = os.getenv('DB_NAME')
     SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+    # Performance-related flags
+    MAX_INPUT_CHARS = int(os.getenv('MAX_INPUT_CHARS', '0'))  # 0 = unlimited
+    PERF_TRUNCATE_ENABLED = os.getenv('PERF_TRUNCATE_ENABLED', 'false').lower() == 'true'
+    PERF_DOC_REUSE_ENABLED = os.getenv('PERF_DOC_REUSE_ENABLED', 'true').lower() == 'true'
+
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True

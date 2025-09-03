@@ -14,6 +14,8 @@ class LexiconStore:
         
         lexicon: DefaultDict[str, Dict[str, int]] = defaultdict(dict)
         for record in records:
-            lexicon[record.style][record.keyword] = record.weight
+            # Normalize keywords to lowercase for consistent matching
+            keyword = (record.keyword or "").lower()
+            lexicon[record.style][keyword] = record.weight
             
         return dict(lexicon)

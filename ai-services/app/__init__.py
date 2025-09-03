@@ -15,6 +15,13 @@ def create_app() -> Flask:
 
     with app.app_context():
         motivational_engine.init_app(app)
+        # Optional warm-up: triggers Stanza lazy loading to reduce first-request latency
+        try:
+            if getattr(motivational_engine.nlp_service, 'stanza_pipeline', None):
+                motivational_engine.nlp_service.stanza_pipeline("Pemanasan singkat.")
+                app.logger.debug("Stanza pipeline warm-up completed.")
+        except Exception:
+            app.logger.debug("Stanza warm-up skipped or failed.")
 
     from .routes import api_bp
     app.register_blueprint(api_bp)

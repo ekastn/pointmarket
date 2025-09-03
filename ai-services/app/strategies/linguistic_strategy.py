@@ -19,13 +19,13 @@ class LinguisticStrategy(BaseVarkStrategy):
 
         for sentence in doc.sentences:
             for word in sentence.words:
-                if not word.pos == 'PUNCT':
+                if getattr(word, 'upos', None) != 'PUNCT':
                     num_tokens += 1
-                if word.pos in ['NOUN', 'VERB', 'ADJ', 'ADV']:
+                if getattr(word, 'upos', None) in ['NOUN', 'VERB', 'ADJ', 'ADV']:
                     num_content_words += 1
-                if word.pos == 'VERB':
+                if getattr(word, 'upos', None) == 'VERB':
                     num_verbs += 1
-                if word.pos == 'ADJ':
+                if getattr(word, 'upos', None) == 'ADJ':
                     num_adjectives += 1
         
         num_sentences = len(doc.sentences)
@@ -46,9 +46,13 @@ class LinguisticStrategy(BaseVarkStrategy):
         raw_scores["Visual"] = metrics.get("adj_ratio", 0) * 10
         return raw_scores
 
-    def analyze(self, data: dict) -> dict:
+    def analyze(self, data: dict, ctx=None) -> dict:
         text = data.get('text', '')
-        doc = self.nlp(text)
+        doc = None
+        if ctx is not None and getattr(ctx, 'doc', None) is not None:
+            doc = ctx.doc
+        else:
+            doc = self.nlp(text)
         metrics = self._extract_metrics(doc)
         raw_scores = self._score_from_metrics(metrics)
         

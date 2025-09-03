@@ -1,6 +1,7 @@
 from .base_strategy import BaseVarkStrategy
 from .keyword_strategy import KeywordStrategy
 from .linguistic_strategy import LinguisticStrategy
+import logging
 
 class HybridStrategy(BaseVarkStrategy):
     """
@@ -13,8 +14,7 @@ class HybridStrategy(BaseVarkStrategy):
         
         # Define the weights for combining scores
         self.weights = {"keyword": 0.5, "linguistic": 0.3, "context": 0.15, "interaction": 0.05}
-        
-        print("HybridStrategy initialized.")
+        logging.getLogger(__name__).info("HybridStrategy initialized.")
 
     def _get_contextual_bias(self, context_type: str) -> dict:
         bias: dict = {'Visual': 0, 'Aural': 0, 'Read/Write': 0, 'Kinesthetic': 0}
@@ -34,13 +34,13 @@ class HybridStrategy(BaseVarkStrategy):
             bias['Read/Write'] += 0.1
         return bias
 
-    def analyze(self, data: dict) -> dict:
+    def analyze(self, data: dict, ctx=None) -> dict:
         text = data.get('text', '')
         context_type = data.get('context_type', '')
 
         # 1. Get scores from individual strategies
-        keyword_scores = self.keyword_strategy.analyze(data)
-        linguistic_scores = self.linguistic_strategy.analyze(data)
+        keyword_scores = self.keyword_strategy.analyze(data, ctx)
+        linguistic_scores = self.linguistic_strategy.analyze(data, ctx)
 
         # 2. Get biases
         context_bias = self._get_contextual_bias(context_type)

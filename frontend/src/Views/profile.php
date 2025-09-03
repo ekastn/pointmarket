@@ -14,7 +14,8 @@ $renderer->includePartial('components/partials/page_title', [
         <div class="card shadow-sm mb-4">
             <div class="card-body text-center">
                 <?php $avatar = $user['avatar'] ?? 'https://i.pravatar.cc/150?img=12'; ?>
-                <img src="<?= htmlspecialchars($avatar); ?>" class="rounded-circle mb-3" alt="Avatar" style="width: 128px; height: 128px; object-fit: cover;">
+                <?php $renderer->includePartial('components/partials/avatar_editor', ['avatar' => $avatar]); ?>
+
                 <h5 class="card-title mb-1"><?= htmlspecialchars($user['name']); ?></h5>
                 <p class="text-muted mb-0"><?= htmlspecialchars(ucfirst($user['role'])); ?></p>
                 <p class="text-muted"><small>@<?= htmlspecialchars($user['username']); ?></small></p>

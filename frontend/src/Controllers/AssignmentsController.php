@@ -23,7 +23,6 @@ class AssignmentsController extends BaseController
 
         if ($data !== null) {
             $assignments = $data['assignments'] ?? [];
-            error_log(print_r($assignments, true));
         } else {
             $_SESSION['messages'] = ['error' => 'Failed to fetch assignments.'];
         }

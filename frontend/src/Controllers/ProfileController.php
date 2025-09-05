@@ -87,18 +87,14 @@ class ProfileController extends BaseController
 
     public function uploadAvatar(): void
     {
-        error_log('Avatar upload: handler start');
-
         // Detect request too large (post_max_size exceeded) — $_FILES may be empty in this case
         if (empty($_FILES) && isset($_SERVER['CONTENT_LENGTH'])) {
-            error_log('Avatar upload: empty $_FILES with CONTENT_LENGTH=' . ($_SERVER['CONTENT_LENGTH'] ?? '')); 
             $_SESSION['messages'] = ['error' => 'Request body too large. Please upload a smaller image.'];
             $this->redirect('/profile');
             return;
         }
 
         if (!isset($_FILES['file'])) {
-            error_log('Avatar upload: no file field present');
             $_SESSION['messages'] = ['error' => 'No image file provided.'];
             $this->redirect('/profile');
             return;
@@ -126,7 +122,6 @@ class ProfileController extends BaseController
                     $msg = 'Server error storing upload. Please contact support.';
                     break;
             }
-            error_log('Avatar upload: PHP upload error code=' . $uploadError . ' message=' . $msg);
             $_SESSION['messages'] = ['error' => $msg];
             $this->redirect('/profile');
             return;
@@ -134,20 +129,17 @@ class ProfileController extends BaseController
 
         $size = $file['size'] ?? 0;
         if ($size <= 0) {
-            error_log('Avatar upload: invalid size=' . $size);
             $_SESSION['messages'] = ['error' => 'Invalid file.'];
             $this->redirect('/profile');
             return;
         }
 
         if ($size > 6 * 1024 * 1024) { // slight headroom over backend limit
-            error_log('Avatar upload: file too large size=' . $size);
             $_SESSION['messages'] = ['error' => 'File is too large. Max 5 MB.'];
             $this->redirect('/profile');
             return;
         }
 
-        error_log('Avatar upload: calling service with file name=' . ($file['name'] ?? '') . ' size=' . $size);
         $ok = $this->profileService->uploadAvatar($file);
         if ($ok) {
             $_SESSION['messages'] = ['success' => 'Profile photo updated.'];
@@ -157,7 +149,6 @@ class ProfileController extends BaseController
                 $_SESSION['user_data'] = $user;
             }
         } else {
-            error_log('Avatar upload: API call failed or returned no URL');
             $_SESSION['messages'] = ['error' => 'Failed to upload photo.'];
         }
         $this->redirect('/profile');

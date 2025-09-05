@@ -80,7 +80,6 @@ class ProfileService
     public function uploadAvatar(array $file): ?string
     {
         if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-            error_log('ProfileService: tmp file missing or not an uploaded file: ' . ($file['tmp_name'] ?? 'null'));
             return null;
         }
         $tmp = $file['tmp_name'];
@@ -88,7 +87,6 @@ class ProfileService
         $mime = function_exists('mime_content_type') ? mime_content_type($tmp) : ($file['type'] ?? 'application/octet-stream');
         $fh = fopen($tmp, 'r');
         if ($fh === false) {
-            error_log('ProfileService: fopen failed for tmp file: ' . $tmp);
             return null;
         }
         $multipart = [
@@ -108,7 +106,7 @@ class ProfileService
         if (!empty($resp['success']) && isset($resp['data']['avatar_url'])) {
             return $resp['data']['avatar_url'];
         }
-        error_log('ProfileService: upload avatar API response indicates failure or missing avatar_url');
+        
         return null;
     }
 }

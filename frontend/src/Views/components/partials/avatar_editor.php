@@ -169,7 +169,8 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
             btnSave.disabled = true;
             btnCancel.disabled = true;
             btnEdit.disabled = true;
-            fileInput.disabled = true;
+            // Do NOT disable the file input here; disabling it would
+            // exclude it from form submission and $_FILES would be empty.
         }
 
         btnSave.addEventListener('click', () => {

@@ -4,6 +4,7 @@ go 1.24.4
 
 require (
 	cloud.google.com/go/storage v1.56.1
+	github.com/disintegration/imaging v1.6.2
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-sql-driver/mysql v1.9.3
@@ -11,6 +12,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.41.0
+	golang.org/x/image v0.30.0
 )
 
 require (

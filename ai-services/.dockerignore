@@ -1,0 +1,67 @@
+# Python bytecode and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Tests and coverage
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Editors/OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitmodules
+.gitignore
+
+# Logs and temp
+logs/
+*.log
+tmp/
+*.tmp
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node (just in case)
+node_modules/
+
+# Large data/model directories (optional; uncomment as needed)
+# stanza_resources/
+# models/
+# data/
+# datasets/
+
+# Docker/Compose overrides
+docker-compose.override.yml

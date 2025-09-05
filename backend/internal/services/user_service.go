@@ -1,10 +1,12 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
 	"io"
+	imgcompress "pointmarket/backend/internal/compress"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/store/gen"
@@ -309,8 +311,14 @@ func (s *UserService) UploadUserAvatar(ctx context.Context, userID int64, r io.R
 	}
 
 	prev, _ := s.q.GetUserProfileByID(ctx, userID)
+	// Compress to a normalized square JPEG before uploading to the image store.
+	var buf bytes.Buffer
+	opts := imgcompress.DefaultOptions() // MaxEdge=360, MaxBytes=300KB, quality 10..95
+	if err := imgcompress.CompressSquareJPEG(r, &buf, opts); err != nil {
+		return "", err
+	}
 
-	publicURL, objectPath, err := s.imgStore.PutUserAvatar(ctx, userID, r)
+	publicURL, objectPath, err := s.imgStore.PutUserAvatar(ctx, userID, bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		return "", err
 	}

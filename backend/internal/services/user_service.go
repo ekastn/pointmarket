@@ -4,17 +4,29 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/store"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
 )
 
 type UserService struct {
 	q gen.Querier
+	// Optional avatar storage
+	imgStore       store.ImageStore
+	storageBaseURL string
 }
 
 func NewUserService(q gen.Querier) *UserService {
 	return &UserService{q: q}
+}
+
+// ConfigureAvatarStore injects an image store and base URL for avatar handling.
+// This avoids import cycles by accepting a minimal, structurally-compatible interface.
+func (s *UserService) ConfigureAvatarStore(imgStore store.ImageStore, publicBaseURL string) {
+	s.imgStore = imgStore
+	s.storageBaseURL = publicBaseURL
 }
 
 func (s *UserService) GetUserByID(ctx context.Context, id int64) (gen.User, error) {
@@ -266,6 +278,59 @@ func (s *UserService) UpdateUserRole(ctx context.Context, userID int64, role str
 		Role: gen.UsersRole(role),
 	}
 	return s.q.UpdateUserRole(ctx, data)
+}
+
+// UpdateUserAvatarURL updates only the avatar URL in user_profiles, preserving other fields.
+func (s *UserService) UpdateUserAvatarURL(ctx context.Context, userID int64, avatarURL string) error {
+	// Get existing profile to preserve bio
+	prof, err := s.q.GetUserProfileByID(ctx, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	// Preserve existing bio if present
+	bio := sql.NullString{}
+	if prof.Bio.Valid {
+		bio = prof.Bio
+	}
+	// Set avatar URL
+	av := sql.NullString{String: avatarURL, Valid: avatarURL != ""}
+	return s.q.UpsertUserProfile(ctx, gen.UpsertUserProfileParams{
+		UserID:    userID,
+		AvatarUrl: av,
+		Bio:       bio,
+	})
+}
+
+// UploadUserAvatar streams an avatar image to the configured image store, updates the
+// user's avatar URL, and best-effort deletes the previous object if it belongs to our bucket.
+func (s *UserService) UploadUserAvatar(ctx context.Context, userID int64, r io.Reader) (string, error) {
+	if s.imgStore == nil {
+		return "", fmt.Errorf("image store not configured")
+	}
+
+	prev, _ := s.q.GetUserProfileByID(ctx, userID)
+
+	publicURL, objectPath, err := s.imgStore.PutUserAvatar(ctx, userID, r)
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.UpdateUserAvatarURL(ctx, userID, publicURL); err != nil {
+		return "", err
+	}
+
+	if s.storageBaseURL != "" && prev.AvatarUrl.Valid {
+		prefix := s.storageBaseURL
+		if prefix[len(prefix)-1] != '/' {
+			prefix += "/"
+		}
+		if len(prev.AvatarUrl.String) > len(prefix) && prev.AvatarUrl.String[:len(prefix)] == prefix {
+			oldPath := prev.AvatarUrl.String[len(prefix):]
+			_ = s.imgStore.Delete(ctx, oldPath)
+		}
+	}
+	_ = objectPath // reserved for future logging
+	return publicURL, nil
 }
 
 // DeleteUser deletes a user (sets role to 'inactive')

@@ -57,6 +57,9 @@ Main variables:
 | `SERVER_PORT` | `8080` | HTTP port the API listens on. |
 | `ALLOWED_ORIGINS` | `http://localhost:8081` | Comma-separated origins allowed by CORS. |
 | `AI_SERVICE_URL` | `http://localhost:5000` | Base URL for the AI service. Only used by `/api/v1/text-analyzer`. |
+| `GCS_BUCKET` | (empty) | Bucket name for profile images. If empty, avatar upload is disabled. |
+| `GCS_PUBLIC_BASE_URL` | `https://storage.googleapis.com/<bucket>` | Public URL base for images (optional override). |
+| `MAX_AVATAR_MB` | `5` | Max avatar upload size (MB). |
 
 2) Prepare the database
 
@@ -111,6 +114,7 @@ Base path: `/api/v1`
 | --- | --- | --- |
 | Auth | `POST /auth/register`, `POST /auth/login` | Login returns a JWT. |
 | Profile | `GET /profile`, `PUT /profile`, `PUT /profile/password`, `GET /roles` | Requires JWT. |
+| Profile (avatar) | `PATCH /profile/avatar` | Multipart upload field `file`; updates current user's avatar (requires GCS envs). |
 | Programs | `GET /programs` | List academic programs. |
 | Students | `GET /students`, `GET /students/:user_id`, `PUT /students/:user_id` | Filters: search, program, cohort, status. Admin for write. |
 | Questionnaires | `GET /questionnaires`, `GET /questionnaires/:id`, `POST /questionnaires/likert`, `POST /questionnaires/vark`, `GET /questionnaires/correlations` | Admin CRUD also available. |

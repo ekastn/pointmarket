@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/database"
@@ -8,10 +9,13 @@ import (
 	"pointmarket/backend/internal/handler"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/services"
+	"pointmarket/backend/internal/store"
+	"pointmarket/backend/internal/store/gcs"
 	"pointmarket/backend/internal/store/gen"
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -39,8 +43,22 @@ func main() {
 	quizService := services.NewQuizService(querier)
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
 
+	var imgStore store.ImageStore
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	gClient, err := storage.NewClient(ctx)
+	if err == nil {
+		storeInst, err2 := gcs.NewGCSImageStore(gClient, cfg.GCSBucket, cfg.GCSPublicBaseURL, cfg.MaxAvatarMB)
+		if err2 == nil {
+			imgStore = storeInst
+		}
+	}
+
+	userService.ConfigureAvatarStore(imgStore, cfg.GCSPublicBaseURL)
+
 	authHandler := handler.NewAuthHandler(*authService)
-	userHandler := handler.NewUserHandler(*userService, studentService)
+	userHandler := handler.NewUserHandler(*userService, studentService, cfg.MaxAvatarMB)
 	studentHandler := handler.NewStudentHandler(studentService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService, userService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
@@ -58,7 +76,7 @@ func main() {
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     strings.Split(cfg.AllowedOrigins, ","),
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -90,12 +108,16 @@ func main() {
 	adminRoutes.Use(middleware.Authz("admin"))
 
 	{
-		authRequired.GET("/profile", userHandler.GetUserProfile)
-		authRequired.PUT("/profile", userHandler.UpdateUserProfile)
-		authRequired.PUT("/profile/password", userHandler.ChangePassword)
+		profileRoutes := authRequired.Group("/profile")
+		{
+			profileRoutes.GET("/", userHandler.GetUserProfile)
+			profileRoutes.PUT("/", userHandler.UpdateUserProfile)
+			profileRoutes.PUT("/password", userHandler.ChangePassword)
+			profileRoutes.PATCH("/avatar", userHandler.PatchUserAvatar)
+		}
+
 		authRequired.GET("/dashboard", dashboardHandler.GetDashboardData)
 		authRequired.GET("/roles", userHandler.GetRoles)
-
 		authRequired.POST("/text-analyzer", textAnalyzerHandler.PredictText)
 
 		userRoutes := adminRoutes.Group("/users")

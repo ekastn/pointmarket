@@ -15,10 +15,16 @@ import (
 type UserHandler struct {
 	userService    services.UserService
 	studentService *services.StudentService
+	maxBodyBytes   int64
 }
 
-func NewUserHandler(userService services.UserService, studentService *services.StudentService) *UserHandler {
-	return &UserHandler{userService: userService, studentService: studentService}
+func NewUserHandler(userService services.UserService, studentService *services.StudentService, maxAvatarMB int) *UserHandler {
+	maxBytes := int64(maxAvatarMB)
+	if maxBytes <= 0 {
+		maxBytes = 5
+	}
+	maxBytes = maxBytes*1024*1024 + 512*1024 // add a small overhead
+	return &UserHandler{userService: userService, studentService: studentService, maxBodyBytes: maxBytes}
 }
 
 // CreateUser handles creating a new user
@@ -247,4 +253,32 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusOK, "User updated successfully", nil)
+}
+
+// PatchUserAvatar handles updating the current user's avatar image via multipart upload.
+// Method: PATCH /profile/avatar
+func (h *UserHandler) PatchUserAvatar(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	// Enforce a hard cap on the request body to fail fast on huge uploads
+	if h.maxBodyBytes > 0 {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, h.maxBodyBytes)
+	}
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "missing file")
+		return
+	}
+	f, err := file.Open()
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid file")
+		return
+	}
+	defer f.Close()
+
+	publicURL, err := h.userService.UploadUserAvatar(c.Request.Context(), int64(userID), f)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Avatar updated", gin.H{"avatar_url": publicURL})
 }

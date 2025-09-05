@@ -5,3 +5,4 @@ tmp/
 *.pid
 *.db
 .DS_Store
+secrets/

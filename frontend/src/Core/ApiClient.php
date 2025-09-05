@@ -67,4 +67,30 @@ class ApiClient
         }
         return $response;
     }
+
+    public function requestMultipart(string $method, string $uri, array $multipart, array $headers = []): array
+    {
+        $options = [
+            'multipart' => $multipart,
+        ];
+        if (!empty($headers)) {
+            $options['headers'] = $headers;
+        }
+        if ($this->jwtToken) {
+            $options['headers']['Authorization'] = 'Bearer ' . $this->jwtToken;
+        }
+        try {
+            $response = $this->client->request($method, $uri, $options);
+            $body = json_decode($response->getBody()->getContents(), true);
+            return $body;
+        } catch (RequestException $e) {
+            $statusCode = $e->getResponse() ? $e->getResponse()->getStatusCode() : 500;
+            $errorMessage = $e->getMessage();
+            if (empty($errorMessage) && $e->hasResponse()) {
+                $responseBody = json_decode($e->getResponse()->getBody()->getContents(), true);
+                $errorMessage = $responseBody['message'] ?? $errorMessage;
+            }
+            return ['success' => false, 'error' => $errorMessage, 'status' => $statusCode];
+        }
+    }
 }

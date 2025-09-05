@@ -19,7 +19,9 @@ RUN echo '<Directory /var/www/html/frontend>\n    Options Indexes FollowSymLinks
 # Configure PHP error logging
 RUN echo "display_errors = Off" > /usr/local/etc/php/conf.d/zz-custom.ini && \
     echo "log_errors = On" >> /usr/local/etc/php/conf.d/zz-custom.ini && \
-    echo "error_log = /var/log/apache2/php_error.log" >> /usr/local/etc/php/conf.d/zz-custom.ini
+    echo "error_log = /var/log/apache2/php_error.log" >> /usr/local/etc/php/conf.d/zz-custom.ini && \
+    echo "upload_max_filesize = 8M" >> /usr/local/etc/php/conf.d/zz-custom.ini && \
+    echo "post_max_size = 10M" >> /usr/local/etc/php/conf.d/zz-custom.ini
 
 # Create storage directory and set permissions
 RUN mkdir -p /var/www/html/frontend/storage     && chown -R www-data:www-data /var/www/html/frontend     && chmod -R 755 /var/www/html/frontend/storage

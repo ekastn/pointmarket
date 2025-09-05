@@ -57,9 +57,12 @@ return function (Router $router) {
         $router->get('vark-correlation-analysis', [VarkCorrelationAnalysisController::class, 'index']);
 
         // User Profile routes
-        $router->get('profile', [ProfileController::class, 'showProfile']);
-        $router->post('profile', [ProfileController::class, 'updateProfile']);
-        $router->post('profile/password', [ProfileController::class, 'changePassword']);
+        $router->group('/profile', function (Router $router) {
+            $router->get('/', [ProfileController::class, 'showProfile']);
+            $router->post('/', [ProfileController::class, 'updateProfile']);
+            $router->post('/password', [ProfileController::class, 'changePassword']);
+            $router->post('/avatar', [ProfileController::class, 'uploadAvatar']);
+        });
 
         // Admin routes group
         $router->group('/users', function (Router $router) {

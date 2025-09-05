@@ -40,8 +40,12 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
         transition: opacity 0.15s ease;
         pointer-events: none;
     }
-    #avatar-container.editing #avatar-overlay {
+    #avatar-container.editing #avatar-overlay,
+    #avatar-container.uploading #avatar-overlay {
         opacity: 1;
+    }
+    #avatar-container.uploading #avatar-overlay {
+        background: rgba(0, 0, 0, 0.55);
     }
     #avatar-actions {
         display: flex;
@@ -64,27 +68,36 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
 <div id="avatar-container" class="position-relative mx-auto mb-3 rounded-circle">
     <img id="avatar-img" src="<?= htmlspecialchars($avatar); ?>" class="rounded-circle w-100 h-100" alt="Avatar" draggable="false">
     <div id="avatar-overlay">
-        <div>
+        <div id="overlay-content">
             <i class="fas fa-upload mb-1"></i>
             <div>Drag & drop</div>
-            <div>or click to choose</div>
+            <div>atau pilih file</div>
+        </div>
+        <div id="overlay-loading" class="d-none">
+            <div class="text-center">
+                <div class="spinner-border spinner-border-sm mb-2" role="status" aria-hidden="true"></div>
+                <div>Menyimpan...</div>
+            </div>
         </div>
     </div>
-  </div>
-  <input id="avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="d-none">
+</div>
+
+<form id="avatar-upload-form" action="/profile/avatar" method="POST" enctype="multipart/form-data">
+  <input id="avatar-file" type="file" name="file" accept="image/png,image/jpeg,image/jpg,image/webp" class="d-none">
+</form>
 
 <div id="avatar-actions" class="mb-2 text-center">
     <button id="btn-edit-avatar" type="button" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-image me-1"></i>
-        Edit Photo
+        Edit
     </button>
     <div id="edit-actions" class="d-none d-inline-flex">
         <button id="btn-save-avatar" type="button" class="btn btn-primary btn-sm">
             <i class="fas fa-save me-1"></i>
-            Save Photo
+            Simpan
         </button>
         <button id="btn-cancel-avatar" type="button" class="btn btn-light btn-sm">
-            Cancel
+            Batal
         </button>
     </div>
 </div>
@@ -100,10 +113,13 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
         const editActions = document.getElementById('edit-actions');
         const btnSave = document.getElementById('btn-save-avatar');
         const btnCancel = document.getElementById('btn-cancel-avatar');
+        const overlayContent = document.getElementById('overlay-content');
+        const overlayLoading = document.getElementById('overlay-loading');
 
         if (!container || !img || !overlay || !fileInput || !btnEdit || !editActions || !btnSave || !btnCancel) return;
 
         let editMode = false;
+        let isUploading = false;
         let selectedFile = null;
         const originalSrc = img.src;
 
@@ -126,10 +142,18 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
             if (!files || !files.length) return;
             const f = files[0];
             // Basic validations
-            const okTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            const okTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
             if (!okTypes.includes(f.type)) { alert('Unsupported format. Use JPG, PNG, or WEBP.'); return; }
             if (f.size > 5 * 1024 * 1024) { alert('Max file size is 5 MB.'); return; }
             selectedFile = f;
+            // Ensure the file input carries the selected file (for drag & drop)
+            try {
+                const dt = new DataTransfer();
+                dt.items.add(f);
+                fileInput.files = dt.files;
+            } catch (e) {
+                // DataTransfer may not be available in some older browsers; ignore.
+            }
             const url = URL.createObjectURL(f);
             img.src = url;
         }
@@ -137,20 +161,35 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
         // Events
         btnEdit.addEventListener('click', () => { enterEditMode(); });
         btnCancel.addEventListener('click', () => { exitEditMode(); });
+        function showUploading() {
+            isUploading = true;
+            container.classList.add('uploading');
+            if (overlayContent) overlayContent.classList.add('d-none');
+            if (overlayLoading) overlayLoading.classList.remove('d-none');
+            btnSave.disabled = true;
+            btnCancel.disabled = true;
+            btnEdit.disabled = true;
+            fileInput.disabled = true;
+        }
+
         btnSave.addEventListener('click', () => {
-            if (!selectedFile) { alert('No image selected.'); return; }
-            alert('Save image (demo): ' + selectedFile.name);
-            exitEditMode();
+            if (!selectedFile || !fileInput.files || fileInput.files.length === 0) {
+                alert('No image selected.');
+                return;
+            }
+            showUploading();
+            const form = document.getElementById('avatar-upload-form');
+            if (form) form.submit();
         });
 
         // Click to open file dialog when editing
-        container.addEventListener('click', () => { if (editMode) fileInput.click(); });
+        container.addEventListener('click', () => { if (editMode && !isUploading) fileInput.click(); });
         fileInput.addEventListener('change', (e) => { handleFiles(e.target.files); });
 
         // Drag & drop
         ['dragenter', 'dragover'].forEach((evt) => {
             container.addEventListener(evt, (e) => {
-                if (!editMode) return;
+                if (!editMode || isUploading) return;
                 e.preventDefault();
                 e.stopPropagation();
                 container.classList.add('editing');
@@ -158,16 +197,24 @@ $avatar = $avatar ?? 'https://i.pravatar.cc/150?img=12';
         });
         ['dragleave', 'dragend', 'drop'].forEach((evt) => {
             container.addEventListener(evt, (e) => {
-                if (!editMode) return;
+                if (!editMode || isUploading) return;
                 e.preventDefault();
                 e.stopPropagation();
                 // keep editing class; overlay visibility tied to edit mode
             });
         });
         container.addEventListener('drop', (e) => {
-            if (!editMode) return;
+            if (!editMode || isUploading) return;
             const dt = e.dataTransfer; if (!dt) return;
             handleFiles(dt.files);
         });
+
+        // Also show uploading if the form is submitted by any other means
+        const form = document.getElementById('avatar-upload-form');
+        if (form) {
+            form.addEventListener('submit', () => {
+                if (!isUploading) showUploading();
+            });
+        }
     })();
 </script>

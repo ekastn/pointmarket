@@ -93,4 +93,42 @@ class ProfileController extends BaseController
             $this->redirect('/profile');
         }
     }
+
+    public function uploadAvatar(): void
+    {
+        if (!isset($_FILES['file'])) {
+            $_SESSION['messages'] = ['error' => 'No image file provided.'];
+            $this->redirect('/profile');
+            return;
+        }
+
+        // Basic validations
+        $file = $_FILES['file'];
+        $size = $file['size'] ?? 0;
+
+        if ($size <= 0) {
+            $_SESSION['messages'] = ['error' => 'Invalid file.'];
+            $this->redirect('/profile');
+            return;
+        }
+
+        if ($size > 6 * 1024 * 1024) { // slight headroom over backend limit
+            $_SESSION['messages'] = ['error' => 'File is too large. Max 5 MB.'];
+            $this->redirect('/profile');
+            return;
+        }
+
+        $ok = $this->profileService->uploadAvatar($file);
+        if ($ok) {
+            $_SESSION['messages'] = ['success' => 'Profile photo updated.'];
+            // Refresh session user data
+            $user = $this->profileService->getUserProfile();
+            if ($user !== null) {
+                $_SESSION['user_data'] = $user;
+            }
+        } else {
+            $_SESSION['messages'] = ['error' => 'Failed to upload photo.'];
+        }
+        $this->redirect('/profile');
+    }
 }

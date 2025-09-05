@@ -76,4 +76,36 @@ class ProfileService
         ]);
         return isset($response['success']) && $response['success'] === true;
     }
+
+    public function uploadAvatar(array $file): ?string
+    {
+        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            return null;
+        }
+        $tmp = $file['tmp_name'];
+        $filename = $file['name'] ?? 'avatar';
+        $mime = function_exists('mime_content_type') ? mime_content_type($tmp) : ($file['type'] ?? 'application/octet-stream');
+        $fh = fopen($tmp, 'r');
+        if ($fh === false) {
+            return null;
+        }
+        $multipart = [
+            [
+                'name' => 'file',
+                'contents' => $fh,
+                'filename' => $filename,
+                'headers' => [
+                    'Content-Type' => $mime,
+                ],
+            ],
+        ];
+        $resp = $this->apiClient->requestMultipart('PATCH', '/api/v1/profile/avatar', $multipart);
+        if (is_resource($fh) && get_resource_type($fh) === 'stream') {
+            @fclose($fh);
+        }
+        if (!empty($resp['success']) && isset($resp['data']['avatar_url'])) {
+            return $resp['data']['avatar_url'];
+        }
+        return null;
+    }
 }

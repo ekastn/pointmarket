@@ -8,11 +8,19 @@ $columns = [
     ['label' => 'Title', 'key' => 'title'],
     ['label' => 'Description', 'key' => 'description', 'formatter' => fn($val) => $val ?? '-'],
     [
-        'label' => 'Criteria',
-        'key' => 'criteria',
-        'formatter' => fn($val) => '<pre>' . htmlspecialchars(json_encode($val, JSON_PRETTY_PRINT)) . '</pre>'
+        'label' => 'Type',
+        'key' => 'points_min',
+        'formatter' => function($val, $row) {
+            return 'points_min';
+        }
     ],
-    ['label' => 'Repeatable', 'key' => 'repeatable', 'formatter' => fn($val) => $val ? 'Yes' : 'No'],
+    [
+        'label' => 'Value',
+        'key' => 'points_min',
+        'formatter' => function($val) {
+            return htmlspecialchars((string)(int)$val);
+        }
+    ],
     ['label' => 'Created At', 'key' => 'created_at', 'formatter' => fn($val) => date('d-m-Y H:i', strtotime($val))]
 ];
 
@@ -27,8 +35,7 @@ $actions = [
             'data-badge-id' => $row['id'],
             'data-badge-title' => htmlspecialchars($row['title']),
             'data-badge-description' => htmlspecialchars($row['description'] ?? ''),
-            'data-badge-criteria' => htmlspecialchars(json_encode($row['criteria'])),
-            'data-badge-repeatable' => $row['repeatable'] ? '1' : '0'
+            'data-badge-points-min' => isset($row['points_min']) ? (int)$row['points_min'] : ''
         ]
     ],
     [
@@ -66,4 +73,3 @@ $renderer->includePartial('components/partials/table', [
     'empty_message' => 'No badges found.'
 ]);
 ?>
-

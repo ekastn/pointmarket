@@ -45,9 +45,9 @@ func (q *Queries) CountBadges(ctx context.Context) (int64, error) {
 const createBadge = `-- name: CreateBadge :execresult
 
 INSERT INTO badges (
-    title, description, criteria, repeatable
+    title, description, criteria
 ) VALUES (
-    ?, ?, ?, ?
+    ?, ?, ?
 )
 `
 
@@ -55,17 +55,11 @@ type CreateBadgeParams struct {
 	Title       string          `json:"title"`
 	Description sql.NullString  `json:"description"`
 	Criteria    json.RawMessage `json:"criteria"`
-	Repeatable  bool            `json:"repeatable"`
 }
 
 // Badges --
 func (q *Queries) CreateBadge(ctx context.Context, arg CreateBadgeParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createBadge,
-		arg.Title,
-		arg.Description,
-		arg.Criteria,
-		arg.Repeatable,
-	)
+	return q.db.ExecContext(ctx, createBadge, arg.Title, arg.Description, arg.Criteria)
 }
 
 const createMission = `-- name: CreateMission :execresult
@@ -153,7 +147,7 @@ func (q *Queries) DeleteUserMission(ctx context.Context, id int64) error {
 }
 
 const getBadgeByID = `-- name: GetBadgeByID :one
-SELECT id, title, description, criteria, repeatable, created_at FROM badges
+SELECT id, title, description, criteria, created_at FROM badges
 WHERE id = ?
 `
 
@@ -165,14 +159,13 @@ func (q *Queries) GetBadgeByID(ctx context.Context, id int64) (Badge, error) {
 		&i.Title,
 		&i.Description,
 		&i.Criteria,
-		&i.Repeatable,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getBadges = `-- name: GetBadges :many
-SELECT id, title, description, criteria, repeatable, created_at FROM badges
+SELECT id, title, description, criteria, created_at FROM badges
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?
 `
@@ -196,7 +189,6 @@ func (q *Queries) GetBadges(ctx context.Context, arg GetBadgesParams) ([]Badge, 
 			&i.Title,
 			&i.Description,
 			&i.Criteria,
-			&i.Repeatable,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -269,7 +261,7 @@ func (q *Queries) GetMissions(ctx context.Context) ([]Mission, error) {
 }
 
 const getUserBadgesByUserID = `-- name: GetUserBadgesByUserID :many
-SELECT ub.user_id, ub.badge_id, ub.awarded_at, b.title, b.description, b.criteria, b.repeatable
+SELECT ub.user_id, ub.badge_id, ub.awarded_at, b.title, b.description, b.criteria
 FROM user_badges ub
 JOIN badges b ON ub.badge_id = b.id
 WHERE ub.user_id = ?
@@ -283,7 +275,6 @@ type GetUserBadgesByUserIDRow struct {
 	Title       string          `json:"title"`
 	Description sql.NullString  `json:"description"`
 	Criteria    json.RawMessage `json:"criteria"`
-	Repeatable  bool            `json:"repeatable"`
 }
 
 func (q *Queries) GetUserBadgesByUserID(ctx context.Context, userID int64) ([]GetUserBadgesByUserIDRow, error) {
@@ -302,7 +293,6 @@ func (q *Queries) GetUserBadgesByUserID(ctx context.Context, userID int64) ([]Ge
 			&i.Title,
 			&i.Description,
 			&i.Criteria,
-			&i.Repeatable,
 		); err != nil {
 			return nil, err
 		}
@@ -408,8 +398,7 @@ UPDATE badges
 SET
     title = ?,
     description = ?,
-    criteria = ?,
-    repeatable = ?
+    criteria = ?
 WHERE id = ?
 `
 
@@ -417,7 +406,6 @@ type UpdateBadgeParams struct {
 	Title       string          `json:"title"`
 	Description sql.NullString  `json:"description"`
 	Criteria    json.RawMessage `json:"criteria"`
-	Repeatable  bool            `json:"repeatable"`
 	ID          int64           `json:"id"`
 }
 
@@ -426,7 +414,6 @@ func (q *Queries) UpdateBadge(ctx context.Context, arg UpdateBadgeParams) error 
 		arg.Title,
 		arg.Description,
 		arg.Criteria,
-		arg.Repeatable,
 		arg.ID,
 	)
 	return err

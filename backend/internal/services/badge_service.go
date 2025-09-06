@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
@@ -20,11 +21,22 @@ func NewBadgeService(q gen.Querier) *BadgeService {
 
 // CreateBadge creates a new badge
 func (s *BadgeService) CreateBadge(ctx context.Context, req dtos.CreateBadgeRequestDTO) (dtos.BadgeDTO, error) {
+	// Build criteria JSON from points_min
+	var criteria json.RawMessage
+	if req.PointsMin != nil {
+		payload := struct {
+			Type  string `json:"type"`
+			Value int32  `json:"value"`
+		}{Type: "points_min", Value: *req.PointsMin}
+		if b, err := json.Marshal(payload); err == nil {
+			criteria = b
+		}
+	}
+
 	result, err := s.q.CreateBadge(ctx, gen.CreateBadgeParams{
 		Title:       req.Title,
 		Description: utils.NullString(req.Description),
-		Criteria:    req.Criteria,
-		Repeatable:  req.Repeatable,
+		Criteria:    criteria,
 	})
 	if err != nil {
 		return dtos.BadgeDTO{}, err
@@ -114,20 +126,20 @@ func (s *BadgeService) UpdateBadge(ctx context.Context, id int64, req dtos.Updat
 	}
 
 	criteria := existingBadge.Criteria
-	if req.Criteria != nil { // Assuming Criteria is always provided if updated
-		criteria = req.Criteria
-	}
-
-	repeatable := existingBadge.Repeatable
-	if req.Repeatable != nil {
-		repeatable = *req.Repeatable
+	if req.PointsMin != nil {
+		payload := struct {
+			Type  string `json:"type"`
+			Value int32  `json:"value"`
+		}{Type: "points_min", Value: *req.PointsMin}
+		if b, err := json.Marshal(payload); err == nil {
+			criteria = b
+		}
 	}
 
 	err = s.q.UpdateBadge(ctx, gen.UpdateBadgeParams{
 		Title:       title,
 		Description: description,
 		Criteria:    criteria,
-		Repeatable:  repeatable,
 		ID:          id,
 	})
 	if err != nil {
@@ -173,8 +185,6 @@ func (s *BadgeService) GetUserBadgesByUserID(ctx context.Context, userID int64) 
 			AwardedAt:        ub.AwardedAt,
 			BadgeTitle:       ub.Title,
 			BadgeDescription: func() *string { s := ub.Description.String; return &s }(), // Convert sql.NullString to *string
-			BadgeCriteria:    ub.Criteria,
-			BadgeRepeatable:  ub.Repeatable,
 		})
 	}
 	return userBadgeDTOs, nil

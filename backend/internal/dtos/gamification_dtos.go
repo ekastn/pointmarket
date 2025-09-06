@@ -8,12 +8,11 @@ import (
 
 // BadgeDTO represents a badge for API responses
 type BadgeDTO struct {
-	ID          int64           `json:"id"`
-	Title       string          `json:"title"`
-	Description *string         `json:"description"`
-	Criteria    json.RawMessage `json:"criteria"`
-	Repeatable  bool            `json:"repeatable"`
-	CreatedAt   time.Time       `json:"created_at"`
+	ID          int64     `json:"id"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description"`
+	PointsMin   *int32    `json:"points_min,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // FromBadgeModel converts a gen.Badge model to a BadgeDTO
@@ -25,25 +24,30 @@ func (dto *BadgeDTO) FromBadgeModel(m gen.Badge) {
 	} else {
 		dto.Description = nil
 	}
-	dto.Criteria = m.Criteria
-	dto.Repeatable = m.Repeatable
+	// Derive points_min if criteria encoded as {"type":"points_min","value":N}
+	var tmp struct {
+		Type  string `json:"type"`
+		Value int32  `json:"value"`
+	}
+	if err := json.Unmarshal(m.Criteria, &tmp); err == nil && tmp.Type == "points_min" {
+		v := tmp.Value
+		dto.PointsMin = &v
+	}
 	dto.CreatedAt = m.CreatedAt
 }
 
 // CreateBadgeRequestDTO for creating a new badge
 type CreateBadgeRequestDTO struct {
-	Title       string          `json:"title" binding:"required"`
-	Description *string         `json:"description"`
-	Criteria    json.RawMessage `json:"criteria" binding:"required"`
-	Repeatable  bool            `json:"repeatable"`
+	Title       string  `json:"title" binding:"required"`
+	Description *string `json:"description"`
+	PointsMin   *int32  `json:"points_min"`
 }
 
 // UpdateBadgeRequestDTO for updating an existing badge
 type UpdateBadgeRequestDTO struct {
-	Title       *string         `json:"title"`
-	Description *string         `json:"description"`
-	Criteria    json.RawMessage `json:"criteria"`
-	Repeatable  *bool           `json:"repeatable"`
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	PointsMin   *int32  `json:"points_min"`
 }
 
 // ListBadgesResponseDTO contains a list of BadgeDTOs
@@ -106,13 +110,11 @@ type ListMissionsResponseDTO struct {
 
 // UserBadgeDTO represents a badge awarded to a user, including badge details
 type UserBadgeDTO struct {
-	UserID           int64           `json:"user_id"`
-	BadgeID          int64           `json:"badge_id"`
-	AwardedAt        time.Time       `json:"awarded_at"`
-	BadgeTitle       string          `json:"badge_title"`
-	BadgeDescription *string         `json:"badge_description"`
-	BadgeCriteria    json.RawMessage `json:"badge_criteria"`
-	BadgeRepeatable  bool            `json:"badge_repeatable"`
+	UserID           int64     `json:"user_id"`
+	BadgeID          int64     `json:"badge_id"`
+	AwardedAt        time.Time `json:"awarded_at"`
+	BadgeTitle       string    `json:"badge_title"`
+	BadgeDescription *string   `json:"badge_description"`
 }
 
 // AwardBadgeRequestDTO for awarding a badge to a user

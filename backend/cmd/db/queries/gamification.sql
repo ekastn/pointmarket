@@ -2,9 +2,9 @@
 
 -- name: CreateBadge :execresult
 INSERT INTO badges (
-    title, description, criteria, repeatable
+    title, description, criteria
 ) VALUES (
-    ?, ?, ?, ?
+    ?, ?, ?
 );
 
 -- name: GetBadgeByID :one
@@ -24,8 +24,7 @@ UPDATE badges
 SET
     title = ?,
     description = ?,
-    criteria = ?,
-    repeatable = ?
+    criteria = ?
 WHERE id = ?;
 
 -- name: DeleteBadge :exec
@@ -74,7 +73,7 @@ INSERT INTO user_badges (
 );
 
 -- name: GetUserBadgesByUserID :many
-SELECT ub.user_id, ub.badge_id, ub.awarded_at, b.title, b.description, b.criteria, b.repeatable
+SELECT ub.user_id, ub.badge_id, ub.awarded_at, b.title, b.description, b.criteria
 FROM user_badges ub
 JOIN badges b ON ub.badge_id = b.id
 WHERE ub.user_id = ?

@@ -630,7 +630,6 @@ type Badge struct {
 	Title       string          `json:"title"`
 	Description sql.NullString  `json:"description"`
 	Criteria    json.RawMessage `json:"criteria"`
-	Repeatable  bool            `json:"repeatable"`
 	CreatedAt   time.Time       `json:"created_at"`
 }
 

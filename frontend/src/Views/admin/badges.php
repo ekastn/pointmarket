@@ -13,10 +13,11 @@ $base_params = [
 <div class="container-fluid">
     <?php 
         $right = '<div class="d-flex gap-2 align-items-center">'
-            . '<form method="GET" class="d-flex">'
-            . '<input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Cari judul" value="'.htmlspecialchars($search).'">'
-            . '<button class="btn btn-outline-secondary btn-sm" type="submit">Cari</button>'
-            . '</form>'
+            // search input
+            // . '<form method="GET" class="d-flex">'
+            // . '<input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Cari judul" value="'.htmlspecialchars($search).'">'
+            // . '<button class="btn btn-outline-secondary btn-sm" type="submit">Cari</button>'
+            // . '</form>'
             . '<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahBadge"><i class="fas fa-plus"></i> Input</button>'
             . '</div>';
         $renderer->includePartial('components/partials/page_title', [
@@ -63,13 +64,11 @@ $base_params = [
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="criteria" class="form-label">Criteria (JSON)</label>
-                        <textarea class="form-control" id="criteria" name="criteria" rows="3">{}</textarea>
+                        <label for="points_min" class="form-label">Minimum Points</label>
+                        <input type="number" class="form-control" id="points_min" name="points_min" placeholder="e.g., 800">
+                        <small class="text-muted">Use -1 for Negative rank.</small>
                     </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="repeatable" name="repeatable" value="1">
-                        <label class="form-check-label" for="repeatable">Repeatable</label>
-                    </div>
+                    
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Save</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -101,13 +100,11 @@ $base_params = [
                         <textarea class="form-control" id="edit-description" name="description" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-criteria" class="form-label">Criteria (JSON)</label>
-                        <textarea class="form-control" id="edit-criteria" name="criteria" rows="3">{}</textarea>
+                        <label for="edit-points-min" class="form-label">Minimum Points</label>
+                        <input type="number" class="form-control" id="edit-points-min" name="points_min" placeholder="e.g., 800">
+                        <small class="text-muted">Use -1 for Negative rank.</small>
                     </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="edit-repeatable" name="repeatable" value="1">
-                        <label class="form-check-label" for="edit-repeatable">Repeatable</label>
-                    </div>
+                    
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Update</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

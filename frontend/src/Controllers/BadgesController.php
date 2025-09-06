@@ -59,8 +59,7 @@ class BadgesController extends BaseController
         $badgeData = [
             'title' => $_POST['title'] ?? '',
             'description' => $_POST['description'] ?? null,
-            'criteria' => $_POST['criteria'] ?? '{}',
-            'repeatable' => $_POST['repeatable'] ?? false,
+            'points_min' => isset($_POST['points_min']) && $_POST['points_min'] !== '' ? (int) $_POST['points_min'] : null,
         ];
 
         $result = $this->badgeService->createBadge($badgeData);
@@ -79,8 +78,7 @@ class BadgesController extends BaseController
         $badgeData = [
             'title' => $input['title'] ?? null,
             'description' => $input['description'] ?? null,
-            'criteria' => $input['criteria'] ?? null,
-            'repeatable' => $input['repeatable'] ?? null,
+            'points_min' => isset($input['points_min']) ? (int) $input['points_min'] : null,
         ];
 
         $result = $this->badgeService->updateBadge($id, $badgeData);

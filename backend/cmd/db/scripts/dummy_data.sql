@@ -189,12 +189,14 @@ insert ignore into quiz_questions (quiz_id, question_text, question_type, answer
 (@quiz_bahasa_inggris_id, 'They ___ playing football now.', 'multiple_choice', '{"a": "is", "b": "are", "c": "am", "d": "be"}', 'b'),
 (@quiz_bahasa_inggris_id, 'The cat is ___ the table.', 'multiple_choice', '{"a": "in", "b": "on", "c": "at", "d": "under"}', 'b');
 
--- Badges
-insert ignore into badges (title, description, criteria, repeatable) values
-('Pelajar Teladan', 'Diberikan kepada siswa dengan nilai rata-rata tinggi.', '{"type": "average_score", "value": 90}', FALSE),
-('Penyelesai Misi', 'Diberikan setelah menyelesaikan 5 misi.', '{"type": "missions_completed", "value": 5}', TRUE),
-('Juara Kuis', 'Diberikan kepada siswa yang mendapatkan nilai sempurna di kuis.', '{"type": "quiz_score", "value": 100}', TRUE),
-('Penjelajah Kursus', 'Diberikan setelah menyelesaikan 3 kursus.', '{"type": "courses_completed", "value": 3}', FALSE);
+insert ignore into badges (title, description, criteria) values
+('Negative',  'Level Negative rank.',  '{"type":"points_min","value":-1}'),
+('Silver',    'Level Silver rank.',    '{"type":"points_min","value":0}'),
+('Gold',      'Level Gold rank.',      '{"type":"points_min","value":800}'),
+('Platinum',  'Level Platinum rank.',  '{"type":"points_min","value":1200}'),
+('Diamond',   'Level Diamond rank.',   '{"type":"points_min","value":2000}'),
+('Master',    'Level Master rank.',    '{"type":"points_min","value":5000}'),
+('King',      'Level King rank.',      '{"type":"points_min","value":9000}');
 
 -- Missions
 insert ignore into missions (title, description, reward_points, metadata) values
@@ -203,15 +205,24 @@ insert ignore into missions (title, description, reward_points, metadata) values
 ('Eksperimen Fisika: Hukum Newton', 'Lakukan eksperimen sederhana tentang Hukum Newton dan buat laporan.', 250, '{}'),
 ('Misi Bahasa Inggris: Percakapan Dasar', 'Latih percakapan dasar bahasa Inggris dengan teman.', 100, '{}');
 
--- User Badges
-set @pelajar_teladan_badge_id = (select id from badges where title = 'Pelajar Teladan' limit 1);
-set @penyelesai_misi_badge_id = (select id from badges where title = 'Penyelesai Misi' limit 1);
-set @juara_kuis_badge_id = (select id from badges where title = 'Juara Kuis' limit 1);
+set @negative_badge_id  = (select id from badges where title = 'Negative'  limit 1);
+set @silver_badge_id    = (select id from badges where title = 'Silver'    limit 1);
+set @gold_badge_id      = (select id from badges where title = 'Gold'      limit 1);
+set @platinum_badge_id  = (select id from badges where title = 'Platinum'  limit 1);
+set @diamond_badge_id   = (select id from badges where title = 'Diamond'   limit 1);
+set @master_badge_id    = (select id from badges where title = 'Master'    limit 1);
+set @king_badge_id      = (select id from badges where title = 'King'      limit 1);
 
 insert ignore into user_badges (user_id, badge_id) values
-(@andi_id, @pelajar_teladan_badge_id),
-(@budi_id, @penyelesai_misi_badge_id),
-(@citra_id, @juara_kuis_badge_id);
+(@sarah_id, @silver_badge_id),
+(@ahmad_id, @silver_badge_id),
+(@dewi_id,  @silver_badge_id),
+(@fajar_id, @silver_badge_id),
+(@budi_id,  @gold_badge_id),
+(@andi_id,  @gold_badge_id),
+(@eko_id,   @gold_badge_id),
+(@gita_id,  @gold_badge_id),
+(@citra_id, @platinum_badge_id),
 
 -- User Missions
 set @misi_aljabar_id = (select id from missions where title = 'Misi Belajar Mandiri: Aljabar' limit 1);

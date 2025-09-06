@@ -14,14 +14,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 const badgeId = editButton.dataset.badgeId;
                 const badgeTitle = editButton.dataset.badgeTitle;
                 const badgeDescription = editButton.dataset.badgeDescription;
-                const badgeCriteria = editButton.dataset.badgeCriteria;
+                const badgePointsMin = editButton.dataset.badgePointsMin;
                 const badgeRepeatable = editButton.dataset.badgeRepeatable;
 
                 document.getElementById('edit-badge-id').value = badgeId;
                 document.getElementById('edit-title').value = badgeTitle;
                 document.getElementById('edit-description').value = badgeDescription;
-                document.getElementById('edit-criteria').value = badgeCriteria;
-                document.getElementById('edit-repeatable').checked = badgeRepeatable === '1';
+                const pointsInput = document.getElementById('edit-points-min');
+                if (pointsInput) pointsInput.value = (badgePointsMin !== undefined && badgePointsMin !== '') ? badgePointsMin : '';
+                // repeatable removed from UI
 
                 // Set form action for PUT request
                 editBadgeForm.action = `/badges/${badgeId}`;
@@ -54,7 +55,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     jsonData[key] = value;
                 }
             }
-            jsonData['repeatable'] = document.getElementById('edit-repeatable').checked;
+            // repeatable removed from UI
+            // Ensure points_min is numeric or omitted
+            if (jsonData['points_min'] !== undefined && jsonData['points_min'] !== '') {
+                jsonData['points_min'] = parseInt(jsonData['points_min'], 10);
+            } else {
+                delete jsonData['points_min'];
+            }
 
             try {
                 const response = await fetch(`/badges/${badgeId}`, {
@@ -90,6 +97,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             for (let [key, value] of formData.entries()) {
                 jsonData[key] = value;
+            }
+            // Ensure points_min is numeric or omitted
+            if (jsonData['points_min'] !== undefined && jsonData['points_min'] !== '') {
+                jsonData['points_min'] = parseInt(jsonData['points_min'], 10);
+            } else {
+                delete jsonData['points_min'];
             }
 
             try {

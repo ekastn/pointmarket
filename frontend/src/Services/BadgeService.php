@@ -45,7 +45,15 @@ class BadgeService
 
     public function createBadge(array $badgeData): ?array
     {
-        $response = $this->apiClient->request('POST', '/api/v1/badges', ['json' => $badgeData]);
+        // Send simplified payload with points_min when provided
+        $payload = [
+            'title' => $badgeData['title'] ?? '',
+            'description' => $badgeData['description'] ?? null,
+        ];
+        if (isset($badgeData['points_min'])) {
+            $payload['points_min'] = (int) $badgeData['points_min'];
+        }
+        $response = $this->apiClient->request('POST', '/api/v1/badges', ['json' => $payload]);
 
         if ($response['success']) {
             return $response['data'];
@@ -58,7 +66,14 @@ class BadgeService
 
     public function updateBadge(int $id, array $badgeData): ?array
     {
-        $response = $this->apiClient->request('PUT', '/api/v1/badges/' . $id, ['json' => $badgeData]);
+        $payload = [];
+        foreach (['title','description'] as $k) {
+            if (array_key_exists($k, $badgeData)) $payload[$k] = $badgeData[$k];
+        }
+        if (array_key_exists('points_min', $badgeData)) {
+            $payload['points_min'] = ($badgeData['points_min'] !== null) ? (int) $badgeData['points_min'] : null;
+        }
+        $response = $this->apiClient->request('PUT', '/api/v1/badges/' . $id, ['json' => $payload]);
 
         if ($response['success']) {
             return $response['data'];

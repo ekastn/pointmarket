@@ -54,7 +54,7 @@ $renderer->includePartial('components/partials/page_title', [
                 </h6>
             </div>
             <div class="card-body">
-                <?php if ($learningStyle && $learningStyle && $learningStyle['label'] !== null) { ?>
+                <?php if ($learningStyle && $learningStyle && $learningStyle['label'] !== null && $learningStyle['label'] !== "") { ?>
                     <?php
                     $dominantStyle = $learningStyle['label'];
                     $learningPreference = $learningStyle['type'];

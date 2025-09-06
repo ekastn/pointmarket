@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 )
 
 // AssignmentService provides business logic for assignments and student assignments
@@ -22,10 +23,10 @@ func NewAssignmentService(q gen.Querier) *AssignmentService {
 func (s *AssignmentService) CreateAssignment(ctx context.Context, req dtos.CreateAssignmentRequestDTO) (dtos.AssignmentDTO, error) {
 	result, err := s.q.CreateAssignment(ctx, gen.CreateAssignmentParams{
 		Title:        req.Title,
-		Description:  sql.NullString{String: *req.Description, Valid: req.Description != nil},
+		Description:  utils.NullString(req.Description),
 		CourseID:     req.CourseID,
 		RewardPoints: req.RewardPoints,
-		DueDate:      sql.NullTime{Time: *req.DueDate, Valid: req.DueDate != nil},
+		DueDate:      utils.NullTime(req.DueDate),
 		Status:       gen.NullAssignmentsStatus{AssignmentsStatus: gen.AssignmentsStatus(req.Status), Valid: req.Status != ""},
 	})
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 	"time"
 )
 
@@ -23,10 +24,10 @@ func NewQuizService(q gen.Querier) *QuizService {
 func (s *QuizService) CreateQuiz(ctx context.Context, req dtos.CreateQuizRequestDTO) (dtos.QuizDTO, error) {
 	result, err := s.q.CreateQuiz(ctx, gen.CreateQuizParams{
 		Title:           req.Title,
-		Description:     sql.NullString{String: *req.Description, Valid: req.Description != nil},
+		Description:     utils.NullString(req.Description),
 		CourseID:        req.CourseID,
 		RewardPoints:    req.RewardPoints,
-		DurationMinutes: sql.NullInt32{Int32: *req.DurationMinutes, Valid: req.DurationMinutes != nil},
+		DurationMinutes: utils.NullInt32(req.DurationMinutes),
 		Status:          gen.NullQuizzesStatus{QuizzesStatus: gen.QuizzesStatus(req.Status), Valid: req.Status != ""},
 	})
 	if err != nil {

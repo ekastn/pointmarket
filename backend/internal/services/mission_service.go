@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 	"time"
 )
 
@@ -23,8 +24,8 @@ func NewMissionService(q gen.Querier) *MissionService {
 func (s *MissionService) CreateMission(ctx context.Context, req dtos.CreateMissionRequestDTO) (dtos.MissionDTO, error) {
 	result, err := s.q.CreateMission(ctx, gen.CreateMissionParams{
 		Title:        req.Title,
-		Description:  sql.NullString{String: *req.Description, Valid: req.Description != nil},
-		RewardPoints: sql.NullInt32{Int32: *req.RewardPoints, Valid: req.RewardPoints != nil},
+		Description:  utils.NullString(req.Description),
+		RewardPoints: utils.NullInt32(req.RewardPoints),
 		Metadata:     req.Metadata,
 	})
 	if err != nil {

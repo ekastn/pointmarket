@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 )
 
 // CourseService provides business logic for courses and student enrollment
@@ -22,7 +23,7 @@ func (s *CourseService) CreateCourse(ctx context.Context, req dtos.CreateCourseR
 	result, err := s.q.CreateCourse(ctx, gen.CreateCourseParams{
 		Title:       req.Title,
 		Slug:        req.Slug,
-		Description: sql.NullString{String: *req.Description, Valid: req.Description != nil},
+		Description: utils.NullString(req.Description),
 		OwnerID:     req.OwnerID,
 		Metadata:    req.Metadata,
 	})

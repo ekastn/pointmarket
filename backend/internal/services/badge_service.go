@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 )
 
 // BadgeService provides business logic for badges and user badges
@@ -21,7 +22,7 @@ func NewBadgeService(q gen.Querier) *BadgeService {
 func (s *BadgeService) CreateBadge(ctx context.Context, req dtos.CreateBadgeRequestDTO) (dtos.BadgeDTO, error) {
 	result, err := s.q.CreateBadge(ctx, gen.CreateBadgeParams{
 		Title:       req.Title,
-		Description: sql.NullString{String: *req.Description, Valid: req.Description != nil},
+		Description: utils.NullString(req.Description),
 		Criteria:    req.Criteria,
 		Repeatable:  req.Repeatable,
 	})

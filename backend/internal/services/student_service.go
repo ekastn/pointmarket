@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
+	"pointmarket/backend/internal/utils"
 	"time"
 )
 
@@ -96,11 +96,11 @@ func (s *StudentService) Upsert(ctx context.Context, userID int64, req dtos.Upse
 	err := s.q.UpdateStudentByUserID(ctx, gen.UpdateStudentByUserIDParams{
 		StudentID:  req.StudentID,
 		ProgramID:  req.ProgramID,
-		CohortYear: nullInt32(req.CohortYear),
-		Status:     statusOrDefault(req.Status),
-		BirthDate:  nullTime(req.BirthDate),
-		Gender:     genderNull(req.Gender),
-		Phone:      nullString(req.Phone),
+		CohortYear: utils.NullInt32(req.CohortYear),
+		Status:     utils.StatusOrDefault(req.Status),
+		BirthDate:  utils.NullTime(req.BirthDate),
+		Gender:     utils.NullGender(req.Gender),
+		Phone:      utils.NullString(req.Phone),
 		UserID:     userID,
 	})
 	if err == nil {
@@ -111,11 +111,11 @@ func (s *StudentService) Upsert(ctx context.Context, userID int64, req dtos.Upse
 		UserID:     userID,
 		StudentID:  req.StudentID,
 		ProgramID:  req.ProgramID,
-		CohortYear: nullInt32(req.CohortYear),
-		Status:     statusOrDefault(req.Status),
-		BirthDate:  nullTime(req.BirthDate),
-		Gender:     genderNull(req.Gender),
-		Phone:      nullString(req.Phone),
+		CohortYear: utils.NullInt32(req.CohortYear),
+		Status:     utils.StatusOrDefault(req.Status),
+		BirthDate:  utils.NullTime(req.BirthDate),
+		Gender:     utils.NullGender(req.Gender),
+		Phone:      utils.NullString(req.Phone),
 	})
 }
 
@@ -156,8 +156,8 @@ func (s *StudentService) Search(ctx context.Context, req dtos.StudentSearchReque
 	// count first
 	total, err := s.q.CountStudents(ctx, gen.CountStudentsParams{
 		Search:     req.Search,
-		ProgramID:  nullInt64(req.ProgramID),
-		CohortYear: nullInt32(req.CohortYear),
+		ProgramID:  utils.NullInt64(req.ProgramID),
+		CohortYear: utils.NullInt32(req.CohortYear),
 		Status:     gen.StudentsStatus(req.Status),
 	})
 	if err != nil {
@@ -166,8 +166,8 @@ func (s *StudentService) Search(ctx context.Context, req dtos.StudentSearchReque
 
 	rows, err := s.q.SearchStudents(ctx, gen.SearchStudentsParams{
 		Search:     req.Search,
-		ProgramID:  nullInt64(req.ProgramID),
-		CohortYear: nullInt32(req.CohortYear),
+		ProgramID:  utils.NullInt64(req.ProgramID),
+		CohortYear: utils.NullInt32(req.CohortYear),
 		Status:     gen.StudentsStatus(req.Status),
 		Limit:      int32(req.Limit),
 		Offset:     int32(offset),
@@ -196,42 +196,4 @@ func (s *StudentService) Search(ctx context.Context, req dtos.StudentSearchReque
 	}
 
 	return out, total, nil
-}
-
-// helpers for nullable types
-func nullInt32(v *int32) sql.NullInt32 {
-	if v == nil {
-		return sql.NullInt32{}
-	}
-	return sql.NullInt32{Int32: *v, Valid: true}
-}
-func nullInt64(v *int64) sql.NullInt64 {
-	if v == nil {
-		return sql.NullInt64{}
-	}
-	return sql.NullInt64{Int64: *v, Valid: true}
-}
-func nullString(v *string) sql.NullString {
-	if v == nil {
-		return sql.NullString{}
-	}
-	return sql.NullString{String: *v, Valid: true}
-}
-func nullTime(v *time.Time) sql.NullTime {
-	if v == nil {
-		return sql.NullTime{}
-	}
-	return sql.NullTime{Time: *v, Valid: true}
-}
-func statusOrDefault(v *string) gen.StudentsStatus {
-	if v == nil || *v == "" {
-		return gen.StudentsStatusActive
-	}
-	return gen.StudentsStatus(*v)
-}
-func genderNull(v *string) gen.NullStudentsGender {
-	if v == nil || *v == "" {
-		return gen.NullStudentsGender{}
-	}
-	return gen.NullStudentsGender{StudentsGender: gen.StudentsGender(*v), Valid: true}
 }

@@ -1,0 +1,38 @@
+FROM python:3.11-slim-bullseye
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Minimal OS deps first (and keep layers small)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+
+# Install a lean CPU-only PyTorch before stanza to avoid pulling triton/nvidia packages
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.1.2+cpu
+
+# Install stanza without auto-deps and only the minimal numeric stack explicitly
+RUN pip install --no-cache-dir stanza==1.10.1 --no-deps numpy==1.26.4
+
+# Install remaining app dependencies. requirements.txt explicitly lists top-level deps.
+RUN pip install --no-cache-dir -r requirements.txt --no-deps
+
+COPY . /app
+
+EXPOSE 5000
+ENV FLASK_APP=run.py
+
+# Strip shared libs and prune caches to reduce size
+RUN apt-get update && apt-get install -y --no-install-recommends binutils && \
+    find /usr/local/lib/python3.11/site-packages -name "*.so" -exec strip --strip-unneeded {} + || true && \
+    apt-get purge -y binutils && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+RUN find /usr/local/lib/python3.11/site-packages -type d -name tests -prune -exec rm -rf {} + && \
+    find /usr/local/lib/python3.11/site-packages -type d -name "__pycache__" -prune -exec rm -rf {} + && \
+    rm -rf /root/.cache/pip
+
+CMD ["python", "run.py"]
+

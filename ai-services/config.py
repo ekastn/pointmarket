@@ -6,7 +6,7 @@ if os.getenv('APP_SETTING', 'dev') != 'prod':
 
 
 class Config:
-    SERVER_NAME = os.getenv('SERVER_NAME', 'localhost:5000')
+    SERVER_NAME = os.getenv('SERVER_NAME', '0.0.0.0:5000')
     SECRET_KEY = os.getenv('SECRET_KEY', 'super-secret')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

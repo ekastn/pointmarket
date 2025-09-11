@@ -1,0 +1,19 @@
+version: '3'
+
+output: prefixed
+
+tasks:
+  backend:
+    dir: ./backend
+    cmds:
+      - air
+
+  frontend:
+    dir: ./frontend
+    cmds:
+      - php -S localhost:8082
+
+  dev:
+    deps:
+      - backend
+      - frontend

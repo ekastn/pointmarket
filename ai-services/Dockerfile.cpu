@@ -34,5 +34,4 @@ RUN find /usr/local/lib/python3.11/site-packages -type d -name tests -prune -exe
     find /usr/local/lib/python3.11/site-packages -type d -name "__pycache__" -prune -exec rm -rf {} + && \
     rm -rf /root/.cache/pip
 
-CMD ["python", "run.py"]
-
+CMD ["sh","-c","exec gunicorn -b :${PORT:-5000} -w 1 --threads 2 --timeout 600 --access-logfile - run:app"]

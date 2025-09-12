@@ -22,6 +22,8 @@ steps:
     - --region=${_REGION}
     - --port=5000
     - --set-env-vars=APP_SETTING=${_APP_SETTING},DB_USER=${_DB_USER},DB_PASSWORD=${_DB_PASSWORD},DB_HOST=${_DB_HOST},DB_PORT=${_DB_PORT},DB_NAME=${_DB_NAME}
+    - --memory=${_MEMORY}
+    - --max-instances=${_MAX_INSTANCES}
     - --platform=managed
     - --allow-unauthenticated
 

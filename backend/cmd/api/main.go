@@ -40,6 +40,7 @@ func main() {
 	pointsService := services.NewPointsService(db.DB, querier)
 	missionService := services.NewMissionService(querier, pointsService)
 	courseService := services.NewCourseService(querier)
+	lessonService := services.NewLessonService(querier)
 	assignmentService := services.NewAssignmentService(querier, pointsService)
 	quizService := services.NewQuizService(querier, pointsService)
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
@@ -71,6 +72,7 @@ func main() {
 	missionHandler := handler.NewMissionHandler(*missionService)
 	courseHandler := handler.NewCourseHandler(*courseService)
 	assignmentHandler := handler.NewAssignmentHandler(assignmentService)
+	lessonHandler := handler.NewLessonHandler(lessonService, querier)
 	quizHandler := handler.NewQuizHandler(quizService)
 	scoringHandler := handler.NewScoringHandler()
 
@@ -218,6 +220,16 @@ func main() {
 			assignmentsRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], assignmentHandler.GetStudentAssignmentsByAssignmentID)               // Admin/Teacher-only
 			assignmentsRoutes.PUT("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.UpdateStudentAssignment)    // Admin/Teacher-only (grade/update specific submission)
 			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin-only
+		}
+
+		// Lessons routes (top-level resource)
+		lessonsRoutes := authRequired.Group("/lessons")
+		{
+			lessonsRoutes.GET("", lessonHandler.GetLessons)
+			lessonsRoutes.GET("/:id", lessonHandler.GetLessonByID)
+			lessonsRoutes.POST("", lessonHandler.CreateLesson)
+			lessonsRoutes.PUT("/:id", lessonHandler.UpdateLesson)
+			lessonsRoutes.DELETE("/:id", lessonHandler.DeleteLesson)
 		}
 
 		// NEW: Quizzes routes (general CRUD)

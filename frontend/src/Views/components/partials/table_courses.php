@@ -15,6 +15,15 @@ $columns = [
 
 $actions = [
     [
+        'label' => 'Detail',
+        'icon' => 'fas fa-eye',
+        'class' => 'btn-primary',
+        'attributes' => fn($row) => [
+            'href' => '/courses/' . $row['slug'],
+            'title' => 'Lihat detail kelas'
+        ]
+    ],
+    [
         'label' => 'Edit',
         'icon' => 'fas fa-edit',
         'class' => 'btn-warning btn-edit-course',
@@ -53,4 +62,3 @@ $renderer->includePartial('components/partials/table', [
     'empty_message' => 'No courses found.'
 ]);
 ?>
-

@@ -31,33 +31,37 @@ $base_params = [
 
     <div class="col-md-9 col-lg-10 ">
         <?php
-        $myCourses = array_filter($courses, function($course) {
-            return $course["is_enrolled"];
-        });
+        // Detect if courses have is_enrolled flag
+        $hasEnrollFlag = false;
+        foreach (($courses ?? []) as $c) { if (isset($c['is_enrolled'])) { $hasEnrollFlag = true; break; } }
+
+        if ($hasEnrollFlag) {
+            $myCourses = array_filter($courses, function($course) {
+                return !empty($course['is_enrolled']);
+            });
+            if (!empty($myCourses)) {
+                echo '<div class="pm-section">';
+                echo '<h4 class="mb-3">Kelas Saya</h4>';
+                echo '<div class="row">';
+                foreach ($myCourses as $course) { $renderer->includePartial('components/partials/course_card', ['course' => $course]); }
+                echo '</div></div>';
+            }
+
+            echo '<div class="pm-section">';
+            echo '<h4 class="mb-3">Kelas Tersedia</h4>';
+            echo '<div class="row">';
+            foreach ($courses as $course) {
+                if (empty($course['is_enrolled'])) { $renderer->includePartial('components/partials/course_card', ['course' => $course]); }
+            }
+            echo '</div></div>';
+        } else {
+            // Teacher view (no enrollment flag): show all as cards
+            echo '<div class="pm-section">';
+            echo '<div class="row">';
+            foreach ($courses as $course) { $renderer->includePartial('components/partials/course_card', ['course' => $course]); }
+            echo '</div></div>';
+        }
         ?>
-
-        <?php if (!empty($myCourses)): ?>
-        <div class="pm-section">
-            <h4 class="mb-3">Kelas Saya</h4>
-            <div class="row">
-                <?php foreach ($myCourses as $course): ?>
-                    <?php $renderer->includePartial('components/partials/course_card', ['course' => $course]); ?>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <!-- Available Courses -->
-        <div class="pm-section">
-            <h4 class="mb-3">Kelas Tersedia</h4>
-            <div class="row">
-                <?php foreach ($courses as $course): ?>
-                    <?php if (!$course["is_enrolled"]): ?>
-                        <?php $renderer->includePartial('components/partials/course_card', ['course' => $course]); ?>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        </div>
     </div>
 
     <!-- Pagination -->

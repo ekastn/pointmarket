@@ -16,6 +16,7 @@ type Querier interface {
 	CountCourses(ctx context.Context) (int64, error)
 	CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int64, error)
 	CountCoursesWithEnrollmentStatus(ctx context.Context, arg CountCoursesWithEnrollmentStatusParams) (int64, error)
+	CountLessonsByCourseID(ctx context.Context, courseID int64) (int64, error)
 	CountProductCategories(ctx context.Context) (int64, error)
 	CountProducts(ctx context.Context) (int64, error)
 	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
@@ -25,6 +26,7 @@ type Querier interface {
 	// Badges --
 	CreateBadge(ctx context.Context, arg CreateBadgeParams) (sql.Result, error)
 	CreateCourse(ctx context.Context, arg CreateCourseParams) (sql.Result, error)
+	CreateLesson(ctx context.Context, arg CreateLessonParams) (sql.Result, error)
 	CreateLikertResult(ctx context.Context, arg CreateLikertResultParams) error
 	// Missions --
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
@@ -55,6 +57,7 @@ type Querier interface {
 	DeleteAssignment(ctx context.Context, id int64) error
 	DeleteBadge(ctx context.Context, id int64) error
 	DeleteCourse(ctx context.Context, id int64) error
+	DeleteLesson(ctx context.Context, id int64) error
 	DeleteMission(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteProductCategory(ctx context.Context, id int32) error
@@ -87,6 +90,8 @@ type Querier interface {
 	GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error)
 	GetLatestUserLearningStyle(ctx context.Context, userID int64) (StudentLearningStyle, error)
 	GetLatestVarkResult(ctx context.Context, userID int64) (GetLatestVarkResultRow, error)
+	GetLessonByID(ctx context.Context, id int64) (Lesson, error)
+	GetLessonsByCourseID(ctx context.Context, arg GetLessonsByCourseIDParams) ([]Lesson, error)
 	GetLikertStatsByStudent(ctx context.Context, userID int64) ([]GetLikertStatsByStudentRow, error)
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
 	GetMissions(ctx context.Context) ([]Mission, error)
@@ -148,6 +153,7 @@ type Querier interface {
 	UpdateAssignment(ctx context.Context, arg UpdateAssignmentParams) error
 	UpdateBadge(ctx context.Context, arg UpdateBadgeParams) error
 	UpdateCourse(ctx context.Context, arg UpdateCourseParams) error
+	UpdateLesson(ctx context.Context, arg UpdateLessonParams) error
 	UpdateMission(ctx context.Context, arg UpdateMissionParams) error
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
 	UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) error

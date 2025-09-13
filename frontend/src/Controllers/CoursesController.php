@@ -35,7 +35,7 @@ class CoursesController extends BaseController
 
             // Determine which view to render based on user role
             $userRole = $_SESSION['user_data']['role'] ?? '';
-            if ($userRole === 'admin' || $userRole === 'guru') {
+            if ($userRole === 'admin') {
                 $this->render('admin/courses', [
                     'user' => $_SESSION['user_data'],
                     'title' => 'Data Kelas',
@@ -49,7 +49,7 @@ class CoursesController extends BaseController
                     'start' => $start,
                     'end' => $end,
                 ]);
-            } elseif ($userRole === 'siswa') {
+            } elseif ($userRole === 'guru' || $userRole === 'siswa') {
                 $this->render('siswa/courses', [
                     'user' => $_SESSION['user_data'],
                     'title' => 'Kelas',
@@ -241,10 +241,18 @@ class CoursesController extends BaseController
             return;
         }
 
+        // Fetch lessons for this course
+        $lessonsResp = $this->apiClient->request('GET', '/api/v1/lessons', ['query' => ['course_id' => (int)$course['id'], 'limit' => 100, 'page' => 1]]);
+        $lessons = [];
+        if ($lessonsResp['success']) {
+            $lessons = $lessonsResp['data'] ?? [];
+        }
+
         $this->render('courses/show', [
             'user' => $_SESSION['user_data'] ?? null,
             'title' => $course['title'] ?? 'Course',
             'course' => $course,
+            'lessons' => $lessons,
         ]);
     }
 }

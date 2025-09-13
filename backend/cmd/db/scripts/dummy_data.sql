@@ -105,16 +105,7 @@ insert ignore into products (category_id, name, description, points_price, type,
 (@merchandise_id, 'Kaos PointMarket', 'Kaos eksklusif dengan logo PointMarket.', 150, 'physical', 30, TRUE, '{}'),
 (@merchandise_id, 'Tumbler PointMarket', 'Tumbler stainless steel dengan desain modern.', 120, 'physical', 40, TRUE, '{}');
 
--- Lessons for existing courses
-insert ignore into lessons (course_id, title, ordinal, content) values
-(@matematika_course_id, 'Pengantar Aljabar', 1, '{"type": "text", "value": "Mempelajari konsep dasar aljabar."}'),
-(@matematika_course_id, 'Persamaan Linear', 2, '{"type": "text", "value": "Memahami cara menyelesaikan persamaan linear."}'),
-(@bahasa_indonesia_course_id, 'Struktur Kalimat Efektif', 1, '{"type": "text", "value": "Mempelajari kaidah penulisan kalimat yang efektif."}'),
-(@bahasa_indonesia_course_id, 'Menulis Paragraf Deskriptif', 2, '{"type": "text", "value": "Latihan menulis paragraf yang mendeskripsikan sesuatu."}'),
-(@fisika_course_id, 'Hukum Newton I', 1, '{"type": "text", "value": "Memahami konsep inersia dan Hukum Newton pertama."}'),
-(@fisika_course_id, 'Hukum Newton II', 2, '{"type": "text", "value": "Mempelajari hubungan antara gaya, massa, dan percepatan."}'),
-(@bahasa_inggris_course_id, 'Basic Greetings', 1, '{"type": "text", "value": "Learn common English greetings."}'),
-(@bahasa_inggris_course_id, 'Introducing Yourself', 2, '{"type": "text", "value": "Practice introducing yourself in English."}');
+-- (moved lessons insert later after courses are created)
 
 -- insert questionnaires (mslq, ams, vark)
 insert ignore into questionnaires (id, type, name, description, total_questions, status) values
@@ -134,13 +125,47 @@ insert ignore into courses (title, slug, description, owner_id, metadata) values
 ('matematika dasar', 'matematika-dasar', 'kursus dasar matematika', @sarah_id, '{}'),
 ('bahasa indonesia dasar', 'bahasa-indonesia-dasar', 'kursus dasar bahasa indonesia', @sarah_id, '{}'),
 ('fisika dasar', 'fisika-dasar', 'kursus dasar fisika', @ahmad_id, '{}'),
-('bahasa inggris dasar', 'bahasa-inggris-dasar', 'kursus dasar bahasa inggris', @ahmad_id, '{}');
+('bahasa inggris dasar', 'bahasa-inggris-dasar', 'kursus dasar bahasa inggris', @ahmad_id, '{}'),
+('python dasar', 'python-dasar', 'kursus pemrograman python dasar', @fajar_id, '{}'),
+('desain grafis fundamental', 'desain-grafis-fundamental', 'kursus desain grafis untuk pemula', @fajar_id, '{}');
 
 -- get course ids for linking assignments, quizzes, materials
 set @matematika_course_id = (select id from courses where slug = 'matematika-dasar' limit 1);
 set @bahasa_indonesia_course_id = (select id from courses where slug = 'bahasa-indonesia-dasar' limit 1);
 set @fisika_course_id = (select id from courses where slug = 'fisika-dasar' limit 1);
 set @bahasa_inggris_course_id = (select id from courses where slug = 'bahasa-inggris-dasar' limit 1);
+set @python_course_id = (select id from courses where slug = 'python-dasar' limit 1);
+set @desain_grafis_course_id = (select id from courses where slug = 'desain-grafis-fundamental' limit 1);
+
+-- Lessons for existing courses
+insert ignore into lessons (course_id, title, ordinal, content) values
+(@matematika_course_id, 'Pengantar Aljabar', 1, '{"type": "text", "value": "Mempelajari konsep dasar aljabar."}'),
+(@matematika_course_id, 'Persamaan Linear', 2, '{"type": "text", "value": "Memahami cara menyelesaikan persamaan linear."}'),
+(@matematika_course_id, 'Sistem Persamaan Linear', 3, '{"type": "text", "value": "Menyelesaikan sistem persamaan dua variabel."}'),
+(@bahasa_indonesia_course_id, 'Struktur Kalimat Efektif', 1, '{"type": "text", "value": "Mempelajari kaidah penulisan kalimat yang efektif."}'),
+(@bahasa_indonesia_course_id, 'Menulis Paragraf Deskriptif', 2, '{"type": "text", "value": "Latihan menulis paragraf yang mendeskripsikan sesuatu."}'),
+(@fisika_course_id, 'Hukum Newton I', 1, '{"type": "text", "value": "Memahami konsep inersia dan Hukum Newton pertama."}'),
+(@fisika_course_id, 'Hukum Newton II', 2, '{"type": "text", "value": "Mempelajari hubungan antara gaya, massa, dan percepatan."}'),
+(@fisika_course_id, 'Hukum Newton III', 3, '{"type": "text", "value": "Tindakan dan reaksi dalam interaksi gaya."}'),
+(@bahasa_inggris_course_id, 'Basic Greetings', 1, '{"type": "text", "value": "Learn common English greetings."}'),
+(@bahasa_inggris_course_id, 'Introducing Yourself', 2, '{"type": "text", "value": "Practice introducing yourself in English."}'),
+(@python_course_id, 'Getting Started with Python', 1, '{"type": "text", "value": "Instalasi dan hello world."}'),
+(@python_course_id, 'Variables and Data Types', 2, '{"type": "text", "value": "Memahami tipe data dasar dan variabel."}'),
+(@python_course_id, 'Control Flow', 3, '{"type": "text", "value": "Percabangan dan perulangan."}'),
+(@desain_grafis_course_id, 'Pengenalan Desain Grafis', 1, '{"type": "text", "value": "Konsep dasar desain grafis."}'),
+(@desain_grafis_course_id, 'Tipografi Dasar', 2, '{"type": "text", "value": "Memilih dan mengatur huruf."}'),
+(@desain_grafis_course_id, 'Warna dan Komposisi', 3, '{"type": "text", "value": "Teori warna dan komposisi visual."}');
+
+-- Enroll students to courses for demo
+insert ignore into student_courses (student_id, course_id) values
+(@andi_sid, @matematika_course_id),
+(@andi_sid, @python_course_id),
+(@budi_sid, @bahasa_indonesia_course_id),
+(@budi_sid, @desain_grafis_course_id),
+(@citra_sid, @fisika_course_id),
+(@dewi_sid, @bahasa_inggris_course_id),
+(@eko_sid, @matematika_course_id),
+(@gita_sid, @desain_grafis_course_id);
 
 -- insert assignments
 insert ignore into assignments (title, description, course_id, reward_points, due_date, status) values
@@ -190,10 +215,9 @@ insert ignore into quiz_questions (quiz_id, question_text, question_type, answer
 (@quiz_bahasa_inggris_id, 'The cat is ___ the table.', 'multiple_choice', '{"a": "in", "b": "on", "c": "at", "d": "under"}', 'b');
 
 insert ignore into badges (title, description, criteria) values
-('Negative',  'Level Negative rank.',  '{"type":"points_min","value":-1}'),
-('Silver',    'Level Silver rank.',    '{"type":"points_min","value":0}'),
-('Gold',      'Level Gold rank.',      '{"type":"points_min","value":800}'),
-('Platinum',  'Level Platinum rank.',  '{"type":"points_min","value":1200}'),
+('Silver',    'Level Silver rank.',    '{"type":"points_min","value":1000}'),
+('Gold',      'Level Gold rank.',      '{"type":"points_min","value":1200}'),
+('Platinum',  'Level Platinum rank.',  '{"type":"points_min","value":1500}'),
 ('Diamond',   'Level Diamond rank.',   '{"type":"points_min","value":2000}'),
 ('Master',    'Level Master rank.',    '{"type":"points_min","value":5000}'),
 ('King',      'Level King rank.',      '{"type":"points_min","value":9000}');
@@ -205,24 +229,12 @@ insert ignore into missions (title, description, reward_points, metadata) values
 ('Eksperimen Fisika: Hukum Newton', 'Lakukan eksperimen sederhana tentang Hukum Newton dan buat laporan.', 250, '{}'),
 ('Misi Bahasa Inggris: Percakapan Dasar', 'Latih percakapan dasar bahasa Inggris dengan teman.', 100, '{}');
 
-set @negative_badge_id  = (select id from badges where title = 'Negative'  limit 1);
-set @silver_badge_id    = (select id from badges where title = 'Silver'    limit 1);
-set @gold_badge_id      = (select id from badges where title = 'Gold'      limit 1);
-set @platinum_badge_id  = (select id from badges where title = 'Platinum'  limit 1);
-set @diamond_badge_id   = (select id from badges where title = 'Diamond'   limit 1);
-set @master_badge_id    = (select id from badges where title = 'Master'    limit 1);
-set @king_badge_id      = (select id from badges where title = 'King'      limit 1);
-
-insert ignore into user_badges (user_id, badge_id) values
-(@sarah_id, @silver_badge_id),
-(@ahmad_id, @silver_badge_id),
-(@dewi_id,  @silver_badge_id),
-(@fajar_id, @silver_badge_id),
-(@budi_id,  @gold_badge_id),
-(@andi_id,  @gold_badge_id),
-(@eko_id,   @gold_badge_id),
-(@gita_id,  @gold_badge_id),
-(@citra_id, @platinum_badge_id),
+-- set @silver_badge_id    = (select id from badges where title = 'Silver'    limit 1);
+-- set @gold_badge_id      = (select id from badges where title = 'Gold'      limit 1);
+-- set @platinum_badge_id  = (select id from badges where title = 'Platinum'  limit 1);
+-- set @diamond_badge_id   = (select id from badges where title = 'Diamond'   limit 1);
+-- set @master_badge_id    = (select id from badges where title = 'Master'    limit 1);
+-- set @king_badge_id      = (select id from badges where title = 'King'      limit 1);
 
 -- User Missions
 set @misi_aljabar_id = (select id from missions where title = 'Misi Belajar Mandiri: Aljabar' limit 1);
@@ -242,10 +254,16 @@ insert ignore into points_transactions (user_id, amount, reason, reference_type,
 -- Orders
 set @buku_matematika_id = (select id from products where name = 'Buku Matematika SMA Kelas X' limit 1);
 set @kursus_python_id = (select id from products where name = 'Kursus Pemrograman Python Dasar' limit 1);
+set @kursus_desain_id = (select id from products where name = 'Kursus Desain Grafis Fundamental' limit 1);
 
 insert ignore into orders (user_id, product_id, points_spent, status) values
 (@andi_id, @buku_matematika_id, 250, 'completed'),
 (@budi_id, @kursus_python_id, 500, 'completed');
+
+-- Link course products to courses for enrollment on purchase
+insert ignore into product_course_details (product_id, course_id, access_duration_days, enrollment_behavior) values
+(@kursus_python_id, @python_course_id, 90, 'immediate'),
+(@kursus_desain_id, @desain_grafis_course_id, 60, 'immediate');
 
 -- insert vark questionnaire questions (questionnaire_id = 3)
 insert ignore into questionnaire_questions (questionnaire_id, question_number, question_text, subscale) values

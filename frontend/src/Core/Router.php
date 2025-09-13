@@ -124,9 +124,8 @@ class Router
 
                 // Convert route path to a regex pattern
                 $pattern = preg_quote($routePath, '#'); // Escapes / to \/ and { to \{
-                // Now, replace the escaped placeholder pattern (e.g., \{id\}) with the capture group
-                // We need to match the literal backslash before the curly brace (\\)
-                $pattern = preg_replace('#\\\{([a-zA-Z0-9_]+)\\\\}#', '([a-zA-Z0-9_]+)', $pattern);
+                // Replace escaped placeholders like \{param\} with a path segment matcher (allow hyphens via [^/]+)
+                $pattern = preg_replace('#\\\{([a-zA-Z0-9_]+)\\\\}#', '([^/]+)', $pattern);
                 $pattern = '#^'.$pattern.'$#';
 
                 if (preg_match($pattern, $path, $matches)) {

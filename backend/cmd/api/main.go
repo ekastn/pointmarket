@@ -37,11 +37,13 @@ func main() {
 	correlationService := services.NewCorrelationService(querier)
 	productService := services.NewProductService(db.DB, querier)
 	badgeService := services.NewBadgeService(querier)
-	missionService := services.NewMissionService(querier)
+	pointsService := services.NewPointsService(db.DB, querier)
+	missionService := services.NewMissionService(querier, pointsService)
 	courseService := services.NewCourseService(querier)
-	assignmentService := services.NewAssignmentService(querier)
-	quizService := services.NewQuizService(querier)
+	assignmentService := services.NewAssignmentService(querier, pointsService)
+	quizService := services.NewQuizService(querier, pointsService)
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
+	pointsHandler := handler.NewPointsHandler(pointsService, querier)
 
 	var imgStore store.ImageStore
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -128,6 +130,10 @@ func main() {
 			userRoutes.PUT("/:id", userHandler.UpdateUser)
 			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)
+
+			// Admin user stats management
+			userRoutes.GET("/:id/stats", pointsHandler.GetUserStats)
+			userRoutes.POST("/:id/stats", pointsHandler.AdjustUserStats)
 		}
 
 		// Academic: programs (all roles can read)

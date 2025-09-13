@@ -88,6 +88,34 @@ func (q *Queries) CreateMission(ctx context.Context, arg CreateMissionParams) (s
 	)
 }
 
+const createPointsTransaction = `-- name: CreatePointsTransaction :execresult
+
+INSERT INTO points_transactions (
+    user_id, amount, reason, reference_type, reference_id
+) VALUES (
+    ?, ?, ?, ?, ?
+)
+`
+
+type CreatePointsTransactionParams struct {
+	UserID        int64          `json:"user_id"`
+	Amount        int32          `json:"amount"`
+	Reason        sql.NullString `json:"reason"`
+	ReferenceType sql.NullString `json:"reference_type"`
+	ReferenceID   sql.NullInt64  `json:"reference_id"`
+}
+
+// Points Transactions and Stats Helpers --
+func (q *Queries) CreatePointsTransaction(ctx context.Context, arg CreatePointsTransactionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createPointsTransaction,
+		arg.UserID,
+		arg.Amount,
+		arg.Reason,
+		arg.ReferenceType,
+		arg.ReferenceID,
+	)
+}
+
 const createUserMission = `-- name: CreateUserMission :execresult
 
 INSERT INTO user_missions (
@@ -307,6 +335,48 @@ func (q *Queries) GetUserBadgesByUserID(ctx context.Context, userID int64) ([]Ge
 	return items, nil
 }
 
+const getUserMissionByID = `-- name: GetUserMissionByID :one
+SELECT um.id, um.mission_id, um.user_id, um.status, um.started_at, um.completed_at, um.progress,
+       m.title, m.description, m.reward_points, m.metadata
+FROM user_missions um
+JOIN missions m ON um.mission_id = m.id
+WHERE um.id = ?
+`
+
+type GetUserMissionByIDRow struct {
+	ID           int64           `json:"id"`
+	MissionID    int64           `json:"mission_id"`
+	UserID       int64           `json:"user_id"`
+	Status       string          `json:"status"`
+	StartedAt    time.Time       `json:"started_at"`
+	CompletedAt  sql.NullTime    `json:"completed_at"`
+	Progress     json.RawMessage `json:"progress"`
+	Title        string          `json:"title"`
+	Description  sql.NullString  `json:"description"`
+	RewardPoints sql.NullInt32   `json:"reward_points"`
+	Metadata     json.RawMessage `json:"metadata"`
+}
+
+// Fetch single user mission with mission detail by ID
+func (q *Queries) GetUserMissionByID(ctx context.Context, id int64) (GetUserMissionByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserMissionByID, id)
+	var i GetUserMissionByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.MissionID,
+		&i.UserID,
+		&i.Status,
+		&i.StartedAt,
+		&i.CompletedAt,
+		&i.Progress,
+		&i.Title,
+		&i.Description,
+		&i.RewardPoints,
+		&i.Metadata,
+	)
+	return i, err
+}
+
 const getUserMissionsByUserID = `-- name: GetUserMissionsByUserID :many
 SELECT um.id, um.mission_id, um.user_id, um.status, um.started_at, um.completed_at, um.progress, m.title, m.description, m.reward_points, m.metadata
 FROM user_missions um
@@ -376,6 +446,62 @@ func (q *Queries) GetUserStats(ctx context.Context, userID int64) (UserStat, err
 	var i UserStat
 	err := row.Scan(&i.UserID, &i.TotalPoints, &i.UpdatedAt)
 	return i, err
+}
+
+const initUserStatsIfMissing = `-- name: InitUserStatsIfMissing :exec
+INSERT INTO user_stats (user_id, total_points, updated_at)
+VALUES (?, 0, CURRENT_TIMESTAMP)
+ON DUPLICATE KEY UPDATE user_id = user_id
+`
+
+func (q *Queries) InitUserStatsIfMissing(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, initUserStatsIfMissing, userID)
+	return err
+}
+
+const listPointsTransactionsByUserID = `-- name: ListPointsTransactionsByUserID :many
+SELECT id, user_id, amount, reason, reference_type, reference_id, created_at
+FROM points_transactions
+WHERE user_id = ?
+ORDER BY created_at DESC, id DESC
+LIMIT ? OFFSET ?
+`
+
+type ListPointsTransactionsByUserIDParams struct {
+	UserID int64 `json:"user_id"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListPointsTransactionsByUserID(ctx context.Context, arg ListPointsTransactionsByUserIDParams) ([]PointsTransaction, error) {
+	rows, err := q.db.QueryContext(ctx, listPointsTransactionsByUserID, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PointsTransaction
+	for rows.Next() {
+		var i PointsTransaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Amount,
+			&i.Reason,
+			&i.ReferenceType,
+			&i.ReferenceID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const revokeBadgeFromUser = `-- name: RevokeBadgeFromUser :exec

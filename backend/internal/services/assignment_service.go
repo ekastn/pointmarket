@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
@@ -11,12 +12,13 @@ import (
 
 // AssignmentService provides business logic for assignments and student assignments
 type AssignmentService struct {
-	q gen.Querier
+	q      gen.Querier
+	points *PointsService
 }
 
 // NewAssignmentService creates a new AssignmentService
-func NewAssignmentService(q gen.Querier) *AssignmentService {
-	return &AssignmentService{q: q}
+func NewAssignmentService(q gen.Querier, ps *PointsService) *AssignmentService {
+	return &AssignmentService{q: q, points: ps}
 }
 
 // CreateAssignment creates a new assignment
@@ -299,6 +301,27 @@ func (s *AssignmentService) UpdateStudentAssignment(ctx context.Context, id int6
 	updatedSA, err := s.q.GetStudentAssignmentByID(ctx, id)
 	if err != nil {
 		return dtos.StudentAssignmentDTO{}, err
+	}
+
+	// Award points on transition to completed
+	if s.points != nil {
+		prevCompleted := existingSA.Status.Valid && string(existingSA.Status.StudentAssignmentsStatus) == "completed"
+		nowCompleted := updatedSA.Status.Valid && string(updatedSA.Status.StudentAssignmentsStatus) == "completed"
+		if !prevCompleted && nowCompleted {
+			// Load assignment to get reward points
+			asg, err2 := s.q.GetAssignmentByID(ctx, updatedSA.AssignmentID)
+			if err2 == nil && asg.RewardPoints > 0 {
+				refID := id
+				// Resolve userID from student_id
+				if stRow, err3 := s.q.GetStudentByStudentID(ctx, updatedSA.StudentID); err3 == nil {
+					if _, err4 := s.points.Add(ctx, stRow.UserID, int64(asg.RewardPoints), "assignment_completed", "assignment", &refID); err4 != nil {
+						log.Printf("points award failed: context=assignment_completed user_id=%d ref_id=%d error=%v", stRow.UserID, refID, err4)
+					}
+				} else if err3 != nil {
+					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updatedSA.StudentID, err3)
+				}
+			}
+		}
 	}
 
 	var studentAssignmentDTO dtos.StudentAssignmentDTO

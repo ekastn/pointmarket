@@ -55,6 +55,50 @@ func (ns NullAssignmentsStatus) Value() (driver.Value, error) {
 	return string(ns.AssignmentsStatus), nil
 }
 
+type NlpLexiconStyle string
+
+const (
+	NlpLexiconStyleVisual      NlpLexiconStyle = "Visual"
+	NlpLexiconStyleAural       NlpLexiconStyle = "Aural"
+	NlpLexiconStyleReadWrite   NlpLexiconStyle = "Read/Write"
+	NlpLexiconStyleKinesthetic NlpLexiconStyle = "Kinesthetic"
+)
+
+func (e *NlpLexiconStyle) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = NlpLexiconStyle(s)
+	case string:
+		*e = NlpLexiconStyle(s)
+	default:
+		return fmt.Errorf("unsupported scan type for NlpLexiconStyle: %T", src)
+	}
+	return nil
+}
+
+type NullNlpLexiconStyle struct {
+	NlpLexiconStyle NlpLexiconStyle `json:"nlp_lexicon_style"`
+	Valid           bool            `json:"valid"` // Valid is true if NlpLexiconStyle is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullNlpLexiconStyle) Scan(value interface{}) error {
+	if value == nil {
+		ns.NlpLexiconStyle, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.NlpLexiconStyle.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullNlpLexiconStyle) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.NlpLexiconStyle), nil
+}
+
 type OrdersStatus string
 
 const (
@@ -667,6 +711,15 @@ type Mission struct {
 	Metadata     json.RawMessage `json:"metadata"`
 	CreatedAt    time.Time       `json:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at"`
+}
+
+type NlpLexicon struct {
+	ID        int32           `json:"id"`
+	Keyword   string          `json:"keyword"`
+	Style     NlpLexiconStyle `json:"style"`
+	Weight    int32           `json:"weight"`
+	CreatedAt sql.NullTime    `json:"created_at"`
+	UpdatedAt sql.NullTime    `json:"updated_at"`
 }
 
 type Order struct {

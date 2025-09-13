@@ -4,6 +4,7 @@ if (userTable) {
     userTable.addEventListener('click', function (event) {
         const deleteButton = event.target.closest('.btn-hapus');
         const editButton = event.target.closest('.btn-edit-user');
+        const statsButton = event.target.closest('.btn-user-stats');
 
         // Handle delete button clicks
         if (deleteButton) {
@@ -29,6 +30,25 @@ if (userTable) {
             document.getElementById('edit-username').value = editButton.dataset.userUsername;
             document.getElementById('edit-email').value = editButton.dataset.userEmail;
             document.getElementById('edit-role').value = editButton.dataset.userRole;
+        } else if (statsButton) {
+            const userId = statsButton.dataset.userId;
+            document.getElementById('stats-user-id').value = userId;
+            fetch(`/users/${userId}/stats`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stats-total-points').value = data.data.total_points ?? '-';
+                } else {
+                    alert(data.message || 'Failed to fetch user stats');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to fetch user stats');
+            });
         }
     });
 }
@@ -63,6 +83,42 @@ if (editUserForm) {
         .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while updating the user.');
+        });
+    });
+}
+
+// Adjust stats form
+const adjustForm = document.getElementById('formAdjustStats');
+if (adjustForm) {
+    adjustForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const userId = document.getElementById('stats-user-id').value;
+        const delta = parseInt(document.getElementById('stats-delta').value || '0', 10);
+        const reason = document.getElementById('stats-reason').value || undefined;
+        if (!delta || delta === 0) {
+            alert('Delta must be non-zero');
+            return;
+        }
+        fetch(`/users/${userId}/stats`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ delta, reason })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('stats-total-points').value = data.data.total_points ?? '-';
+                adjustForm.reset();
+            } else {
+                alert(data.message || 'Failed to adjust user stats');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to adjust user stats');
         });
     });
 }

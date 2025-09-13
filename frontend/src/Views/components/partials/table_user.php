@@ -38,6 +38,16 @@ $columns = [
 
 $actions = [
     [
+        'label' => 'Points',
+        'icon' => 'fas fa-coins',
+        'class' => 'btn-primary btn-user-stats',
+        'attributes' => fn($row) => [
+            'data-user-id' => $row['id'],
+            'data-bs-toggle' => 'modal',
+            'data-bs-target' => '#modalUserStats'
+        ]
+    ],
+    [
         'label' => 'Detail',
         'icon' => 'fas fa-eye',
         'class' => 'btn-info',

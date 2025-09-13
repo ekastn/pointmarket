@@ -20,8 +20,10 @@
         ]);
     ?>
 
-    <?php $renderer->includePartial('components/partials/table_user', ['users' => $users, 'roles' => $roles, 'page' => $page, 'limit' => $limit, 'total_data' => $total_data, 'total_pages' => $total_pages, 'start' => $start, 'end' => $end]); ?>
+<?php $renderer->includePartial('components/partials/table_user', ['users' => $users, 'roles' => $roles, 'page' => $page, 'limit' => $limit, 'total_data' => $total_data, 'total_pages' => $total_pages, 'start' => $start, 'end' => $end]); ?>
 </div>
+
+<script defer src="/public/assets/js/admin-users.js"></script>
 
 <!--Data Modal Box Tambah User-->
 <div class="modal fade" id="modalTambahUser" tabindex="-1" aria-labelledby="modalTambahUserLabel" aria-hidden="true">
@@ -111,4 +113,35 @@
     </div>
 </div>
 
-<script src="/public/assets/js/admin-users.js"></script>
+<!-- User Stats Modal -->
+<div class="modal fade" id="modalUserStats" tabindex="-1" aria-labelledby="modalUserStatsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalUserStatsLabel">User Points</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Total Points</label>
+          <input type="text" class="form-control" id="stats-total-points" readonly value="-" />
+        </div>
+        <form id="formAdjustStats">
+          <input type="hidden" id="stats-user-id" />
+          <div class="mb-2">
+            <label class="form-label">Delta (use negative to deduct)</label>
+            <input type="number" class="form-control" id="stats-delta" required />
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Reason (optional)</label>
+            <input type="text" class="form-control" id="stats-reason" maxlength="255" />
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

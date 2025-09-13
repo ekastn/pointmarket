@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
@@ -12,12 +13,13 @@ import (
 
 // MissionService provides business logic for missions and user missions
 type MissionService struct {
-	q gen.Querier
+	q      gen.Querier
+	points *PointsService
 }
 
 // NewMissionService creates a new MissionService
-func NewMissionService(q gen.Querier) *MissionService {
-	return &MissionService{q: q}
+func NewMissionService(q gen.Querier, ps *PointsService) *MissionService {
+	return &MissionService{q: q, points: ps}
 }
 
 // CreateMission creates a new mission
@@ -254,15 +256,48 @@ func (s *MissionService) UpdateUserMissionStatus(ctx context.Context, userMissio
 		return dtos.UserMissionDTO{}, err
 	}
 
-	// Re-fetch the updated user mission to return full details
-	// This requires a GetUserMissionByID query, which we don't have yet.
-	// For now, we'll return a placeholder or re-fetch all user missions and find it.
-	// Let's assume we can fetch it by ID for now.
-	// This will require adding a GetUserMissionByID query to gamification.sql
-	// and a corresponding method in the service.
+	// Fetch the updated user mission with mission details
+	um, err := s.q.GetUserMissionByID(ctx, userMissionID)
+	if err != nil {
+		return dtos.UserMissionDTO{}, err
+	}
 
-	// For now, returning an empty DTO or handling error
-	return dtos.UserMissionDTO{}, nil // Placeholder
+	// Award points on transition to completed
+	if s.points != nil {
+		// We don't have previous status here; rely on requested status == completed to trigger
+		if req.Status == "completed" {
+			if um.RewardPoints.Valid && um.RewardPoints.Int32 > 0 {
+				refID := userMissionID
+				if _, err4 := s.points.Add(ctx, um.UserID, int64(um.RewardPoints.Int32), "mission_completed", "mission", &refID); err4 != nil {
+					log.Printf("points award failed: context=mission_completed user_id=%d ref_id=%d error=%v", um.UserID, refID, err4)
+				}
+			}
+		}
+	}
+
+	// Map to DTO
+	var dto dtos.UserMissionDTO
+	dto.ID = um.ID
+	dto.MissionID = um.MissionID
+	dto.UserID = um.UserID
+	dto.Status = um.Status
+	dto.StartedAt = um.StartedAt
+	if um.CompletedAt.Valid {
+		t := um.CompletedAt.Time
+		dto.CompletedAt = &t
+	}
+	dto.Progress = um.Progress
+	dto.MissionTitle = um.Title
+	if um.Description.Valid {
+		s := um.Description.String
+		dto.MissionDescription = &s
+	}
+	if um.RewardPoints.Valid {
+		i := um.RewardPoints.Int32
+		dto.MissionRewardPoints = &i
+	}
+	dto.MissionMetadata = um.Metadata
+	return dto, nil
 }
 
 // DeleteUserMission deletes a user's mission instance

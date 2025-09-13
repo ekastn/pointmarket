@@ -148,4 +148,38 @@ class UsersController extends BaseController
 
         $this->userService->updateUser($id, $userData);
     }
+
+    public function getStats(int $id): void
+    {
+        $stats = $this->userService->getUserStats($id);
+        if ($stats !== null) {
+            echo json_encode(['success' => true, 'data' => $stats]);
+        } else {
+            $msg = $_SESSION['api_error_message'] ?? 'Failed to fetch user stats.';
+            echo json_encode(['success' => false, 'message' => $msg]);
+        }
+    }
+
+    public function adjustStats(int $id): void
+    {
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        if (!isset($input['delta']) || (int)$input['delta'] === 0) {
+            echo json_encode(['success' => false, 'message' => 'delta must be non-zero']);
+            return;
+        }
+        $payload = [
+            'delta' => (int)$input['delta'],
+        ];
+        if (isset($input['reason'])) $payload['reason'] = (string)$input['reason'];
+        if (isset($input['reference_type'])) $payload['reference_type'] = (string)$input['reference_type'];
+        if (isset($input['reference_id'])) $payload['reference_id'] = (int)$input['reference_id'];
+
+        $res = $this->userService->adjustUserStats($id, $payload);
+        if ($res !== null) {
+            echo json_encode(['success' => true, 'data' => $res]);
+        } else {
+            $msg = $_SESSION['api_error_message'] ?? 'Failed to adjust user stats.';
+            echo json_encode(['success' => false, 'message' => $msg]);
+        }
+    }
 }

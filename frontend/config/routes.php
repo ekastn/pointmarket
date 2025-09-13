@@ -71,6 +71,8 @@ return function (Router $router) {
             $router->put('/{id}', [UsersController::class, 'updateUser']); // Update user
             $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);
             $router->delete('/{id}', [UsersController::class, 'deleteUser']); // Delete user
+            $router->get('/{id}/stats', [UsersController::class, 'getStats']);
+            $router->post('/{id}/stats', [UsersController::class, 'adjustStats']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
         // Admin Students management

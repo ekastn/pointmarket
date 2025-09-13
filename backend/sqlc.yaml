@@ -2,7 +2,17 @@ version: "2"
 
 sql:
   - engine: "mysql"
-    schema: "cmd/db/migrations"
+    schema:
+      - cmd/db/migrations/00001_initial_schema.sql
+      - cmd/db/migrations/00002_learning_management.sql
+      - cmd/db/migrations/00003_gamification.sql
+      - cmd/db/migrations/00004_marketplace.sql
+      - cmd/db/migrations/00005_progress.sql
+      - cmd/db/migrations/00006_student_courses.sql
+      - cmd/db/migrations/00007_create_orders_table.sql
+      - cmd/db/migrations/00008_remove_badges_repeatable.sql
+      - cmd/db/migrations/00009_nlp_lexicon.sql
+      - cmd/db/migrations/00010_points_tx_unique_index.sql
     queries: "cmd/db/queries"
     gen:
       go:

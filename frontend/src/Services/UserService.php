@@ -95,4 +95,26 @@ class UserService
             throw new \Exception($response['message']);
         }
     }
+
+    public function getUserStats(int $id): ?array
+    {
+        $response = $this->apiClient->request('GET', '/api/v1/users/' . $id . '/stats');
+        if ($response['success']) {
+            return $response['data'];
+        }
+        return null;
+    }
+
+    public function adjustUserStats(int $id, array $payload): ?array
+    {
+        // Expecting payload: [ 'delta' => int, 'reason' => ?string, 'reference_type' => ?string, 'reference_id' => ?int ]
+        $response = $this->apiClient->request('POST', '/api/v1/users/' . $id . '/stats', [
+            'json' => $payload,
+        ]);
+        if ($response['success']) {
+            return $response['data'];
+        }
+        $_SESSION['api_error_message'] = $response['message'] ?? 'Failed to adjust user stats.';
+        return null;
+    }
 }

@@ -50,7 +50,7 @@ class BadgesController extends BaseController
         $this->render('siswa/my_badges', [
             'user' => $_SESSION['user_data'],
             'title' => 'My Badges',
-            'badges' => $badges ?? [],
+            'badges' => $badges['user_badges'] ?? [],
         ]);
     }
 

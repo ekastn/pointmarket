@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
@@ -12,12 +13,13 @@ import (
 
 // QuizService provides business logic for quizzes, quiz questions, and student quizzes
 type QuizService struct {
-	q gen.Querier
+	q      gen.Querier
+	points *PointsService
 }
 
 // NewQuizService creates a new QuizService
-func NewQuizService(q gen.Querier) *QuizService {
-	return &QuizService{q: q}
+func NewQuizService(q gen.Querier, ps *PointsService) *QuizService {
+	return &QuizService{q: q, points: ps}
 }
 
 // CreateQuiz creates a new quiz
@@ -406,6 +408,26 @@ func (s *QuizService) UpdateStudentQuiz(ctx context.Context, id int64, req dtos.
 	updatedSQ, err := s.q.GetStudentQuizByID(ctx, id)
 	if err != nil {
 		return dtos.StudentQuizDTO{}, err
+	}
+
+	// Award points on transition to completed
+	if s.points != nil {
+		prevCompleted := existingSQ.Status.Valid && string(existingSQ.Status.StudentQuizzesStatus) == "completed"
+		nowCompleted := updatedSQ.Status.Valid && string(updatedSQ.Status.StudentQuizzesStatus) == "completed"
+		if !prevCompleted && nowCompleted {
+			qz, err2 := s.q.GetQuizByID(ctx, updatedSQ.QuizID)
+			if err2 == nil && qz.RewardPoints > 0 {
+				refID := id
+				// Resolve userID from student_id
+				if stRow, err3 := s.q.GetStudentByStudentID(ctx, updatedSQ.StudentID); err3 == nil {
+					if _, err4 := s.points.Add(ctx, stRow.UserID, int64(qz.RewardPoints), "quiz_completed", "quiz", &refID); err4 != nil {
+						log.Printf("points award failed: context=quiz_completed user_id=%d ref_id=%d error=%v", stRow.UserID, refID, err4)
+					}
+				} else if err3 != nil {
+					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updatedSQ.StudentID, err3)
+				}
+			}
+		}
 	}
 
 	var studentQuizDTO dtos.StudentQuizDTO

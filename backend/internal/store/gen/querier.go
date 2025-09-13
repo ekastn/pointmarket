@@ -29,6 +29,8 @@ type Querier interface {
 	// Missions --
 	CreateMission(ctx context.Context, arg CreateMissionParams) (sql.Result, error)
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (sql.Result, error)
+	// Points Transactions and Stats Helpers --
+	CreatePointsTransaction(ctx context.Context, arg CreatePointsTransactionParams) (sql.Result, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error)
 	// Product Categories --
 	CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (sql.Result, error)
@@ -119,6 +121,8 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	// Fetch single user mission with mission detail by ID
+	GetUserMissionByID(ctx context.Context, id int64) (GetUserMissionByIDRow, error)
 	GetUserMissionsByUserID(ctx context.Context, userID int64) ([]GetUserMissionsByUserIDRow, error)
 	GetUserProfileByID(ctx context.Context, id int64) (GetUserProfileByIDRow, error)
 	// User Stats --
@@ -129,7 +133,9 @@ type Querier interface {
 	GetWeeklyEvaluationResult(ctx context.Context, weeklyEvaluationID sql.NullInt64) (GetWeeklyEvaluationResultRow, error)
 	GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWeeklyEvaluationsByStudentIDParams) ([]GetWeeklyEvaluationsByStudentIDRow, error)
 	GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error)
+	InitUserStatsIfMissing(ctx context.Context, userID int64) error
 	InsertStudent(ctx context.Context, arg InsertStudentParams) error
+	ListPointsTransactionsByUserID(ctx context.Context, arg ListPointsTransactionsByUserIDParams) ([]PointsTransaction, error)
 	ListPrograms(ctx context.Context) ([]Program, error)
 	MarkOverdueWeeklyEvaluations(ctx context.Context) error
 	RevokeBadgeFromUser(ctx context.Context, arg RevokeBadgeFromUserParams) error

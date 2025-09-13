@@ -122,3 +122,33 @@ UPDATE user_stats
 SET
     total_points = ?
 WHERE user_id = ?;
+
+-- Fetch single user mission with mission detail by ID
+-- name: GetUserMissionByID :one
+SELECT um.id, um.mission_id, um.user_id, um.status, um.started_at, um.completed_at, um.progress,
+       m.title, m.description, m.reward_points, m.metadata
+FROM user_missions um
+JOIN missions m ON um.mission_id = m.id
+WHERE um.id = ?;
+
+
+-- Points Transactions and Stats Helpers --
+
+-- name: CreatePointsTransaction :execresult
+INSERT INTO points_transactions (
+    user_id, amount, reason, reference_type, reference_id
+) VALUES (
+    ?, ?, ?, ?, ?
+);
+
+-- name: ListPointsTransactionsByUserID :many
+SELECT *
+FROM points_transactions
+WHERE user_id = ?
+ORDER BY created_at DESC, id DESC
+LIMIT ? OFFSET ?;
+
+-- name: InitUserStatsIfMissing :exec
+INSERT INTO user_stats (user_id, total_points, updated_at)
+VALUES (?, 0, CURRENT_TIMESTAMP)
+ON DUPLICATE KEY UPDATE user_id = user_id;

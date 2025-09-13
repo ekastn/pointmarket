@@ -227,4 +227,24 @@ class CoursesController extends BaseController
         }
         $this->redirect('/my-courses');
     }
+
+    public function show(string $slug): void
+    {
+        $course = $this->courseService->getCourseBySlug($slug);
+        if ($course === null) {
+            http_response_code(404);
+            $this->render('errors/404', [
+                'user' => $_SESSION['user_data'] ?? null,
+                'title' => 'Course Not Found',
+                'message' => 'Course not found.'
+            ]);
+            return;
+        }
+
+        $this->render('courses/show', [
+            'user' => $_SESSION['user_data'] ?? null,
+            'title' => $course['title'] ?? 'Course',
+            'course' => $course,
+        ]);
+    }
 }

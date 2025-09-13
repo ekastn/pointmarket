@@ -96,6 +96,7 @@ return function (Router $router) {
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdminOrTeacher']]);
 
         // General courses listing (accessible by Admin, Teacher, Student)
+        $router->get('/courses/{slug}', [CoursesController::class, 'show']);
         $router->get('/courses', [CoursesController::class, 'index']);
         $router->get('/my-courses', [CoursesController::class, 'index'], [[AuthMiddleware::class, 'requireStudent']]);
         $router->post('/courses/{id}/enroll', [CoursesController::class, 'enroll'], [[AuthMiddleware::class, 'requireStudent']]);

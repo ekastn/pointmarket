@@ -46,6 +46,21 @@ class CourseService
         return null;
     }
 
+    public function getCourseBySlug(string $slug): ?array
+    {
+        $response = $this->apiClient->request('GET', '/api/v1/courses', ['query' => ['slug' => $slug, 'limit' => 1, 'page' => 1]]);
+
+        if ($response['success']) {
+            $items = $response['data'] ?? [];
+            if (is_array($items) && count($items) > 0) {
+                return $items[0];
+            }
+            return null;
+        }
+
+        return null;
+    }
+
     public function createCourse(array $courseData): ?array
     {
         $response = $this->apiClient->request('POST', '/api/v1/courses', ['json' => $courseData]);

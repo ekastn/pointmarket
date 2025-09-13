@@ -7,10 +7,16 @@
         <h5 class="card-title mb-0"><?= htmlspecialchars($course['title']) ?></h5>
       </div>
       <p class="card-text text-muted small mb-3"><?= htmlspecialchars($course['description'] ?? '') ?></p>
-      <div class="mt-auto">
-        <a href="/courses/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-primary w-100">Lihat kelas</a>
+      <div class="mt-auto d-grid gap-2">
+        <a href="/courses/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-primary">Lihat kelas</a>
+        <?php if (isset($course['is_enrolled'])): ?>
+          <?php if ($course['is_enrolled']): ?>
+            <button class="btn btn-outline-danger btn-unenroll" data-course-id="<?= (int)$course['id'] ?>">Batalkan</button>
+          <?php else: ?>
+            <button class="btn btn-success btn-enroll" data-course-id="<?= (int)$course['id'] ?>">Daftar</button>
+          <?php endif; ?>
+        <?php endif; ?>
       </div>
     </div>
   </div>
   </div>
-

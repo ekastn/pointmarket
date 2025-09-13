@@ -94,7 +94,7 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 
 	switch userRole {
 	case "guru":
-		courses, totalCourses, err := h.courseService.GetCoursesByOwnerID(c.Request.Context(), authUserID, page, limit)
+		courses, totalCourses, err := h.courseService.GetCoursesByOwnerID(c.Request.Context(), authUserID, page, limit, search)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
 			return
@@ -239,6 +239,10 @@ func (h *CourseHandler) EnrollStudent(c *gin.Context) {
 
 	err = h.courseService.EnrollStudentInCourse(c.Request.Context(), req)
 	if err != nil {
+		if err == services.ErrAlreadyEnrolled {
+			response.Error(c, http.StatusConflict, "Student is already enrolled in this course")
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, "Failed to enroll student: "+err.Error())
 		return
 	}

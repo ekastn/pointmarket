@@ -3,9 +3,12 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
+	mysql "github.com/go-sql-driver/mysql"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
+	"strings"
 )
 
 // CourseService provides business logic for courses and student enrollment
@@ -85,6 +88,16 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 			if sc.CourseDescription.Valid {
 				courseDesc = &sc.CourseDescription.String
 			}
+			if search != "" {
+				title := strings.ToLower(sc.CourseTitle)
+				var descVal string
+				if courseDesc != nil {
+					descVal = strings.ToLower(*courseDesc)
+				}
+				if !strings.Contains(title, strings.ToLower(search)) && (courseDesc == nil || !strings.Contains(descVal, strings.ToLower(search))) {
+					continue
+				}
+			}
 			courseDTOs = append(courseDTOs, dtos.CourseDTO{
 				ID:          sc.CourseID,
 				Title:       sc.CourseTitle,
@@ -96,10 +109,53 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 				// This means we might need to fetch full course details if needed
 			})
 		}
-		totalCourses = int64(len(courseDTOs)) // Count of enrolled courses for this student
-		return courseDTOs, totalCourses, nil
+		totalCourses = int64(len(courseDTOs))
+		// Manual pagination post-filter
+		start := offset
+		if start > len(courseDTOs) {
+			start = len(courseDTOs)
+		}
+		end := start + limit
+		if end > len(courseDTOs) {
+			end = len(courseDTOs)
+		}
+		return courseDTOs[start:end], totalCourses, nil
 	} else {
-		// Admin getting all courses with pagination and search
+		// Admin getting all courses
+		if search != "" {
+			rows, err2 := s.q.GetCoursesWithEnrollmentStatus(ctx, gen.GetCoursesWithEnrollmentStatusParams{
+				UserID: 0,
+				Search: search,
+				Limit:  int32(limit),
+				Offset: int32(offset),
+			})
+			if err2 != nil {
+				return nil, 0, err2
+			}
+			total, err2 := s.q.CountCoursesWithEnrollmentStatus(ctx, gen.CountCoursesWithEnrollmentStatusParams{Search: search})
+			if err2 != nil {
+				return nil, 0, err2
+			}
+			totalCourses = total
+			var courseDTOs []dtos.CourseDTO
+			for _, r := range rows {
+				var desc *string
+				if r.Description.Valid {
+					desc = &r.Description.String
+				}
+				courseDTOs = append(courseDTOs, dtos.CourseDTO{
+					ID:          r.ID,
+					Title:       r.Title,
+					Slug:        r.Slug,
+					Description: desc,
+					OwnerID:     r.OwnerID,
+					Metadata:    r.Metadata,
+					CreatedAt:   r.CreatedAt,
+					UpdatedAt:   r.UpdatedAt,
+				})
+			}
+			return courseDTOs, totalCourses, nil
+		}
 		courses, err = s.q.GetCourses(ctx, listParams)
 		if err != nil {
 			return nil, 0, err
@@ -121,30 +177,69 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 }
 
 // GetCoursesByOwnerID retrieves a list of courses owned by a specific user
-func (s *CourseService) GetCoursesByOwnerID(ctx context.Context, ownerID int64, page, limit int) ([]dtos.CourseDTO, int64, error) {
+func (s *CourseService) GetCoursesByOwnerID(ctx context.Context, ownerID int64, page, limit int, search string) ([]dtos.CourseDTO, int64, error) {
 	offset := (page - 1) * limit
-
-	courses, err := s.q.GetCoursesByOwnerID(ctx, gen.GetCoursesByOwnerIDParams{
-		OwnerID: ownerID,
-		Limit:   int32(limit),
-		Offset:  int32(offset),
+	if search == "" {
+		courses, err := s.q.GetCoursesByOwnerID(ctx, gen.GetCoursesByOwnerIDParams{
+			OwnerID: ownerID,
+			Limit:   int32(limit),
+			Offset:  int32(offset),
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+		totalCourses, err := s.q.CountCoursesByOwnerID(ctx, ownerID)
+		if err != nil {
+			return nil, 0, err
+		}
+		var courseDTOs []dtos.CourseDTO
+		for _, course := range courses {
+			var courseDTO dtos.CourseDTO
+			courseDTO.FromCourseModel(course)
+			courseDTOs = append(courseDTOs, courseDTO)
+		}
+		return courseDTOs, totalCourses, nil
+	}
+	// With search: reuse search-enabled query then filter by owner and paginate in memory
+	rows, err := s.q.GetCoursesWithEnrollmentStatus(ctx, gen.GetCoursesWithEnrollmentStatusParams{
+		UserID: 0,
+		Search: search,
+		Limit:  int32(10000),
+		Offset: 0,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
-
-	totalCourses, err := s.q.CountCoursesByOwnerID(ctx, ownerID)
-	if err != nil {
-		return nil, 0, err
+	var filtered []dtos.CourseDTO
+	for _, r := range rows {
+		if r.OwnerID != ownerID {
+			continue
+		}
+		var desc *string
+		if r.Description.Valid {
+			desc = &r.Description.String
+		}
+		filtered = append(filtered, dtos.CourseDTO{
+			ID:          r.ID,
+			Title:       r.Title,
+			Slug:        r.Slug,
+			Description: desc,
+			OwnerID:     r.OwnerID,
+			Metadata:    r.Metadata,
+			CreatedAt:   r.CreatedAt,
+			UpdatedAt:   r.UpdatedAt,
+		})
 	}
-
-	var courseDTOs []dtos.CourseDTO
-	for _, course := range courses {
-		var courseDTO dtos.CourseDTO
-		courseDTO.FromCourseModel(course)
-		courseDTOs = append(courseDTOs, courseDTO)
+	total := int64(len(filtered))
+	start := offset
+	if start > len(filtered) {
+		start = len(filtered)
 	}
-	return courseDTOs, totalCourses, nil
+	end := start + limit
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+	return filtered[start:end], total, nil
 }
 
 // GetStudentViewableCourses retrieves a list of courses for students with enrollment status
@@ -240,7 +335,14 @@ func (s *CourseService) EnrollStudentInCourse(ctx context.Context, req dtos.Enro
 		UserID:   req.UserID,
 		CourseID: req.CourseID,
 	})
-	return err
+	if err != nil {
+		var me *mysql.MySQLError
+		if errors.As(err, &me) && me.Number == 1062 {
+			return ErrAlreadyEnrolled
+		}
+		return err
+	}
+	return nil
 }
 
 // UnenrollStudentFromCourse unenrolls a student from a course
@@ -250,3 +352,6 @@ func (s *CourseService) UnenrollStudentFromCourse(ctx context.Context, userID, c
 		CourseID: courseID,
 	})
 }
+
+// ErrAlreadyEnrolled is returned when attempting to enroll a student who is already enrolled
+var ErrAlreadyEnrolled = errors.New("student already enrolled in course")

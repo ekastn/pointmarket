@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	mysql "github.com/go-sql-driver/mysql"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 )
@@ -219,14 +220,24 @@ func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID 
 		}
 	}
 
-	// 7. If the product is a course, enrolls the user in the course
-	if product.Type == "course" && product.CategoryID.Valid {
-		_, err = qtx.EnrollStudentInCourse(ctx, gen.EnrollStudentInCourseParams{ // Assuming EnrollStudentInCourse exists
-			UserID:   userID,
-			CourseID: int64(product.CategoryID.Int32),
-		})
-		if err != nil {
-			return fmt.Errorf("failed to enroll student in course: %w", err)
+	// 7. If the product is a course, enroll the user in the linked course via product_course_details
+	if product.Type == "course" {
+		detail, err := qtx.GetProductCourseDetailByProductID(ctx, productID)
+		if err != nil && err != sql.ErrNoRows {
+			return fmt.Errorf("failed to fetch product course detail: %w", err)
+		}
+		if err == nil { // detail found
+			_, err = qtx.EnrollStudentInCourse(ctx, gen.EnrollStudentInCourseParams{
+				UserID:   userID,
+				CourseID: detail.CourseID,
+			})
+			if err != nil {
+				if me, ok := err.(*mysql.MySQLError); ok && me.Number == 1062 {
+					// already enrolled; ignore
+				} else {
+					return fmt.Errorf("failed to enroll student in course: %w", err)
+				}
+			}
 		}
 	}
 

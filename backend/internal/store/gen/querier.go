@@ -80,6 +80,7 @@ type Querier interface {
 	GetBadgeByID(ctx context.Context, id int64) (Badge, error)
 	GetBadges(ctx context.Context, arg GetBadgesParams) ([]Badge, error)
 	GetCourseByID(ctx context.Context, id int64) (Course, error)
+	GetCourseBySlug(ctx context.Context, slug string) (Course, error)
 	GetCourses(ctx context.Context, arg GetCoursesParams) ([]Course, error)
 	GetCoursesByOwnerID(ctx context.Context, arg GetCoursesByOwnerIDParams) ([]Course, error)
 	GetCoursesWithEnrollmentStatus(ctx context.Context, arg GetCoursesWithEnrollmentStatusParams) ([]GetCoursesWithEnrollmentStatusRow, error)
@@ -92,6 +93,8 @@ type Querier interface {
 	GetProductByID(ctx context.Context, id int64) (GetProductByIDRow, error)
 	GetProductCategories(ctx context.Context, arg GetProductCategoriesParams) ([]ProductCategory, error)
 	GetProductCategoryByID(ctx context.Context, id int32) (ProductCategory, error)
+	// Course Details for Course-type Products --
+	GetProductCourseDetailByProductID(ctx context.Context, productID int64) (ProductCourseDetail, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]GetProductsRow, error)
 	GetQuestionnaireByID(ctx context.Context, id int32) (Questionnaire, error)
 	GetQuestionnaireByType(ctx context.Context, type_ QuestionnairesType) (Questionnaire, error)

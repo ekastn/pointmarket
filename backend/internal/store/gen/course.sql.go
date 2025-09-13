@@ -132,6 +132,28 @@ func (q *Queries) GetCourseByID(ctx context.Context, id int64) (Course, error) {
 	return i, err
 }
 
+const getCourseBySlug = `-- name: GetCourseBySlug :one
+SELECT id, title, slug, description, owner_id, metadata, created_at, updated_at FROM courses
+WHERE slug = ?
+LIMIT 1
+`
+
+func (q *Queries) GetCourseBySlug(ctx context.Context, slug string) (Course, error) {
+	row := q.db.QueryRowContext(ctx, getCourseBySlug, slug)
+	var i Course
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Slug,
+		&i.Description,
+		&i.OwnerID,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getCourses = `-- name: GetCourses :many
 SELECT id, title, slug, description, owner_id, metadata, created_at, updated_at FROM courses
 ORDER BY created_at DESC

@@ -355,3 +355,17 @@ func (s *CourseService) UnenrollStudentFromCourse(ctx context.Context, userID, c
 
 // ErrAlreadyEnrolled is returned when attempting to enroll a student who is already enrolled
 var ErrAlreadyEnrolled = errors.New("student already enrolled in course")
+
+// GetCourseBySlug retrieves a course by its slug; returns empty DTO if not found
+func (s *CourseService) GetCourseBySlug(ctx context.Context, slug string) (dtos.CourseDTO, error) {
+	course, err := s.q.GetCourseBySlug(ctx, slug)
+	if err == sql.ErrNoRows {
+		return dtos.CourseDTO{}, nil
+	}
+	if err != nil {
+		return dtos.CourseDTO{}, err
+	}
+	var dto dtos.CourseDTO
+	dto.FromCourseModel(course)
+	return dto, nil
+}

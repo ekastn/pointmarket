@@ -89,3 +89,8 @@ WHERE
     (c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
      c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))
     OR sqlc.arg('search') = '';
+
+-- name: GetCourseBySlug :one
+SELECT * FROM courses
+WHERE slug = ?
+LIMIT 1;

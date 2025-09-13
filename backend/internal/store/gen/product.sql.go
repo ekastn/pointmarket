@@ -219,6 +219,26 @@ func (q *Queries) GetProductCategoryByID(ctx context.Context, id int32) (Product
 	return i, err
 }
 
+const getProductCourseDetailByProductID = `-- name: GetProductCourseDetailByProductID :one
+
+SELECT product_id, course_id, access_duration_days, enrollment_behavior
+FROM product_course_details
+WHERE product_id = ?
+`
+
+// Course Details for Course-type Products --
+func (q *Queries) GetProductCourseDetailByProductID(ctx context.Context, productID int64) (ProductCourseDetail, error) {
+	row := q.db.QueryRowContext(ctx, getProductCourseDetailByProductID, productID)
+	var i ProductCourseDetail
+	err := row.Scan(
+		&i.ProductID,
+		&i.CourseID,
+		&i.AccessDurationDays,
+		&i.EnrollmentBehavior,
+	)
+	return i, err
+}
+
 const getProducts = `-- name: GetProducts :many
 SELECT
     p.id, p.category_id, p.name, p.description, p.points_price, p.type, p.stock_quantity, p.is_active, p.metadata, p.created_at, p.updated_at,

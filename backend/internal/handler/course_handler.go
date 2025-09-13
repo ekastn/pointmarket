@@ -84,6 +84,27 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
+	slug := c.Query("slug")
+
+	// If slug query is provided, return exact match as a single-item list (or empty)
+	if slug != "" {
+		course, err := h.courseService.GetCourseBySlug(c.Request.Context(), slug)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "Failed to retrieve course by slug: "+err.Error())
+			return
+		}
+		var courses []dtos.CourseDTO
+		var total int64 = 0
+		if course.ID != 0 {
+			courses = []dtos.CourseDTO{course}
+			total = 1
+		} else {
+			courses = []dtos.CourseDTO{}
+			total = 0
+		}
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, total, page, limit)
+		return
+	}
 
 	var filterUserID *int64
 	userIDStr := c.Query("user_id")

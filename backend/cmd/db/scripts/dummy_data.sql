@@ -320,3 +320,9 @@ insert into `questionnaire_questions` (`questionnaire_id`, `question_number`, `q
 (2, 8, 'karena saya ingin menunjukkan kepada diri saya sendiri bahwa saya adalah orang yang cerdas.', 'extrinsic motivation - introjected'),
 (2, 9, 'saya tidak tahu; saya tidak dapat memahami apa yang saya lakukan di sekolah.', 'amotivation'),
 (2, 10, 'jujur, saya tidak tahu; saya benar-benar merasa bahwa saya membuang-buang waktu di sekolah.', 'amotivation');
+
+
+-- Additional demo questions for more variety
+insert ignore into quiz_questions (quiz_id, question_text, question_type, answer_options, correct_answer) values
+(@quiz_matematika_id, 'cos(60°) bernilai ...', 'multiple_choice', '{"a":"0.5","b":"0.866","c":"1","d":"0"}', 'a'),
+(@quiz_bahasa_inggris_id, 'Choose the correct article: I saw ___ elephant.', 'multiple_choice', '{"a":"a","b":"an","c":"the","d":"-"}', 'b');

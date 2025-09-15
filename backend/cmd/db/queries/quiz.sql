@@ -45,9 +45,9 @@ WHERE id = ?;
 
 -- name: CreateQuizQuestion :execresult
 INSERT INTO quiz_questions (
-    quiz_id, question_text, question_type, answer_options, correct_answer
+    quiz_id, question_text, question_type, answer_options, correct_answer, ordinal
 ) VALUES (
-    ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?
 );
 
 -- name: GetQuizQuestionByID :one
@@ -57,7 +57,7 @@ WHERE id = ?;
 -- name: GetQuizQuestionsByQuizID :many
 SELECT * FROM quiz_questions
 WHERE quiz_id = ?
-ORDER BY created_at ASC;
+ORDER BY ordinal ASC, id ASC;
 
 -- name: UpdateQuizQuestion :exec
 UPDATE quiz_questions
@@ -66,7 +66,8 @@ SET
     question_text = ?,
     question_type = ?,
     answer_options = ?,
-    correct_answer = ?
+    correct_answer = ?,
+    ordinal = ?
 WHERE id = ?;
 
 -- name: DeleteQuizQuestion :exec
@@ -119,3 +120,6 @@ WHERE id = ?;
 -- name: GetStudentQuizByIDs :one
 SELECT * FROM student_quizzes
 WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND quiz_id = ?;
+
+-- name: GetMaxOrdinalForQuiz :one
+SELECT COALESCE(MAX(ordinal), 0) AS max_ordinal FROM quiz_questions WHERE quiz_id = ?;

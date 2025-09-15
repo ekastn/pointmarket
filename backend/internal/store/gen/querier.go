@@ -93,6 +93,7 @@ type Querier interface {
 	GetLessonByID(ctx context.Context, id int64) (Lesson, error)
 	GetLessonsByCourseID(ctx context.Context, arg GetLessonsByCourseIDParams) ([]Lesson, error)
 	GetLikertStatsByStudent(ctx context.Context, userID int64) ([]GetLikertStatsByStudentRow, error)
+	GetMaxOrdinalForQuiz(ctx context.Context, quizID int64) (interface{}, error)
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
 	GetMissions(ctx context.Context) ([]Mission, error)
 	GetProductByID(ctx context.Context, id int64) (GetProductByIDRow, error)

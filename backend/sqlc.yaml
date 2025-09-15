@@ -13,6 +13,7 @@ sql:
       - cmd/db/migrations/00008_remove_badges_repeatable.sql
       - cmd/db/migrations/00009_nlp_lexicon.sql
       - cmd/db/migrations/00010_points_tx_unique_index.sql
+      - cmd/db/migrations/00014_quiz_questions_ordinal.sql
     queries: "cmd/db/queries"
     gen:
       go:

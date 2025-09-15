@@ -834,6 +834,7 @@ type QuizQuestion struct {
 	QuestionType  string          `json:"question_type"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer sql.NullString  `json:"correct_answer"`
+	Ordinal       int32           `json:"ordinal"`
 }
 
 type Student struct {

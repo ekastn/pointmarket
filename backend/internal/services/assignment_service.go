@@ -3,12 +3,15 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
+	"time"
 )
+import mysql "github.com/go-sql-driver/mysql"
 
 // AssignmentService provides business logic for assignments and student assignments
 type AssignmentService struct {
@@ -176,13 +179,22 @@ func (s *AssignmentService) DeleteAssignment(ctx context.Context, id int64) erro
 
 // CreateStudentAssignment records a student starting an assignment
 func (s *AssignmentService) CreateStudentAssignment(ctx context.Context, req dtos.CreateStudentAssignmentRequestDTO) (dtos.StudentAssignmentDTO, error) {
+	// Idempotency: check if already started
+	if existing, err := s.q.GetStudentAssignmentByIDs(ctx, gen.GetStudentAssignmentByIDsParams{UserID: req.StudentID, AssignmentID: req.AssignmentID}); err == nil && existing.ID != 0 {
+		return dtos.StudentAssignmentDTO{}, ErrAlreadyStarted
+	}
+
 	result, err := s.q.CreateStudentAssignment(ctx, gen.CreateStudentAssignmentParams{
 		UserID:       req.StudentID,
 		AssignmentID: req.AssignmentID,
 		Status:       gen.NullStudentAssignmentsStatus{StudentAssignmentsStatus: gen.StudentAssignmentsStatus(req.Status), Valid: req.Status != ""},
-		Submission:   sql.NullString{String: *req.Submission, Valid: req.Submission != nil},
+		Submission:   sql.NullString{String: "", Valid: false},
 	})
 	if err != nil {
+		var me *mysql.MySQLError
+		if errors.As(err, &me) && me.Number == 1062 {
+			return dtos.StudentAssignmentDTO{}, ErrAlreadyStarted
+		}
 		return dtos.StudentAssignmentDTO{}, err
 	}
 
@@ -191,7 +203,6 @@ func (s *AssignmentService) CreateStudentAssignment(ctx context.Context, req dto
 		return dtos.StudentAssignmentDTO{}, err
 	}
 
-	// Fetch the created student assignment to return full details
 	createdSA, err := s.q.GetStudentAssignmentByID(ctx, newlyCreatedID)
 	if err != nil {
 		return dtos.StudentAssignmentDTO{}, err
@@ -332,4 +343,72 @@ func (s *AssignmentService) UpdateStudentAssignment(ctx context.Context, id int6
 // DeleteStudentAssignment deletes a student's assignment record
 func (s *AssignmentService) DeleteStudentAssignment(ctx context.Context, id int64) error {
 	return s.q.DeleteStudentAssignment(ctx, id)
+}
+
+// SubmitOwnAssignment updates the current user's assignment record by assignment ID
+func (s *AssignmentService) SubmitOwnAssignment(ctx context.Context, userID, assignmentID int64, req dtos.UpdateStudentAssignmentRequestDTO) (dtos.StudentAssignmentDTO, error) {
+	sa, err := s.q.GetStudentAssignmentByIDs(ctx, gen.GetStudentAssignmentByIDsParams{UserID: userID, AssignmentID: assignmentID})
+	if err == sql.ErrNoRows {
+		return dtos.StudentAssignmentDTO{}, nil
+	}
+	if err != nil {
+		return dtos.StudentAssignmentDTO{}, err
+	}
+	// Enforce completed status and submitted_at if not provided
+	status := sa.Status
+	if req.Status != nil {
+		status = gen.NullStudentAssignmentsStatus{StudentAssignmentsStatus: gen.StudentAssignmentsStatus(*req.Status), Valid: *req.Status != ""}
+	} else {
+		status = gen.NullStudentAssignmentsStatus{StudentAssignmentsStatus: gen.StudentAssignmentsStatus("completed"), Valid: true}
+	}
+	submittedAt := sa.SubmittedAt
+	if req.SubmittedAt != nil {
+		submittedAt = sql.NullTime{Time: *req.SubmittedAt, Valid: true}
+	} else {
+		submittedAt = sql.NullTime{Time: time.Now(), Valid: true}
+	}
+	submission := sa.Submission
+	if req.Submission != nil {
+		submission = sql.NullString{String: *req.Submission, Valid: true}
+	}
+
+	err = s.q.UpdateStudentAssignment(ctx, gen.UpdateStudentAssignmentParams{
+		Status:      status,
+		Score:       sa.Score,
+		Submission:  submission,
+		SubmittedAt: submittedAt,
+		GradedAt:    sa.GradedAt,
+		ID:          sa.ID,
+	})
+	if err != nil {
+		return dtos.StudentAssignmentDTO{}, err
+	}
+
+	updated, err := s.q.GetStudentAssignmentByID(ctx, sa.ID)
+	if err != nil {
+		return dtos.StudentAssignmentDTO{}, err
+	}
+
+	// Award points handled by UpdateStudentAssignment; but we bypassed it here.
+	// Duplicate logic: award on transition to completed
+	if s.points != nil {
+		prevCompleted := sa.Status.Valid && string(sa.Status.StudentAssignmentsStatus) == "completed"
+		nowCompleted := updated.Status.Valid && string(updated.Status.StudentAssignmentsStatus) == "completed"
+		if !prevCompleted && nowCompleted {
+			if asg, err2 := s.q.GetAssignmentByID(ctx, updated.AssignmentID); err2 == nil && asg.RewardPoints > 0 {
+				refID := updated.ID
+				if stRow, err3 := s.q.GetStudentByStudentID(ctx, updated.StudentID); err3 == nil {
+					if _, err4 := s.points.Add(ctx, stRow.UserID, int64(asg.RewardPoints), "assignment_completed", "assignment", &refID); err4 != nil {
+						log.Printf("points award failed: context=assignment_completed user_id=%d ref_id=%d error=%v", stRow.UserID, refID, err4)
+					}
+				} else if err3 != nil {
+					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updated.StudentID, err3)
+				}
+			}
+		}
+	}
+
+	var dto dtos.StudentAssignmentDTO
+	dto.FromStudentAssignmentModel(updated)
+	return dto, nil
 }

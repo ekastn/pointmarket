@@ -13,6 +13,8 @@ use App\Controllers\ProfileController;
 use App\Controllers\StudentsController;
 use App\Controllers\QuestionnaireController;
 use App\Controllers\QuizController;
+use App\Controllers\TeacherAssignmentsController;
+use App\Controllers\TeacherQuizzesController;
 use App\Controllers\SettingsController;
 use App\Controllers\UsersController;
 use App\Controllers\VarkCorrelationAnalysisController;
@@ -39,6 +41,26 @@ return function (Router $router) {
 
         $router->get('assignments', [AssignmentsController::class, 'index']);
         $router->get('quiz', [QuizController::class, 'index']);
+        $router->get('quiz/{id}', [QuizController::class, 'show']);
+
+        // Teacher management routes
+        $router->group('/guru', function (Router $router) {
+            // Assignments
+            $router->get('/assignments', [TeacherAssignmentsController::class, 'index']);
+            $router->get('/assignments/create', [TeacherAssignmentsController::class, 'create']);
+            $router->post('/assignments', [TeacherAssignmentsController::class, 'store']);
+            $router->get('/assignments/{id}/edit', [TeacherAssignmentsController::class, 'edit']);
+            $router->post('/assignments/{id}', [TeacherAssignmentsController::class, 'update']);
+            $router->post('/assignments/{id}/delete', [TeacherAssignmentsController::class, 'destroy']);
+
+            // Quizzes
+            $router->get('/quizzes', [TeacherQuizzesController::class, 'index']);
+            $router->get('/quizzes/create', [TeacherQuizzesController::class, 'create']);
+            $router->post('/quizzes', [TeacherQuizzesController::class, 'store']);
+            $router->get('/quizzes/{id}/edit', [TeacherQuizzesController::class, 'edit']);
+            $router->post('/quizzes/{id}', [TeacherQuizzesController::class, 'update']);
+            $router->post('/quizzes/{id}/delete', [TeacherQuizzesController::class, 'destroy']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdminOrTeacher']]);
 
         $router->group('questionnaires', function (Router $router) {
             $router->get('/', [QuestionnaireController::class, 'index']);

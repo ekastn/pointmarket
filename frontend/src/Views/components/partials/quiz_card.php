@@ -55,3 +55,8 @@
   </div>
 </div>
 
+<script>
+function viewQuizDetails(id){
+  window.location.href = '/quiz/' + id;
+}
+</script>

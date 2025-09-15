@@ -53,4 +53,33 @@ class QuizController extends BaseController
             'messages' => $messages,
         ]);
     }
+
+    public function show(int $id): void
+    {
+        session_start();
+        $user = $_SESSION['user_data'] ?? null;
+        if (!$user) {
+            $userProfileResponse = $this->apiClient->getUserProfile();
+            if ($userProfileResponse['success']) {
+                $user = $userProfileResponse['data'];
+                $_SESSION['user_data'] = $user;
+            } else {
+                $_SESSION['messages'] = ['error' => $userProfileResponse['error'] ?? 'Gagal memuat profil pengguna.'];
+                session_destroy();
+                $this->redirect('/login');
+                return;
+            }
+        }
+
+        $quizData = $this->quizService->getQuizById($id) ?? [];
+        $quiz = $quizData ?: [];
+        $questions = $this->quizService->getQuestions($id) ?? [];
+
+        $this->render('siswa/quiz_detail', [
+            'title' => 'Detail Kuis',
+            'user' => $user,
+            'quiz' => $quiz,
+            'questions' => $questions,
+        ]);
+    }
 }

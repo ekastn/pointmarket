@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"pointmarket/backend/internal/dtos"
@@ -10,6 +11,7 @@ import (
 	"pointmarket/backend/internal/utils"
 	"time"
 )
+import mysql "github.com/go-sql-driver/mysql"
 
 // QuizService provides business logic for quizzes, quiz questions, and student quizzes
 type QuizService struct {
@@ -171,14 +173,25 @@ func (s *QuizService) DeleteQuiz(ctx context.Context, id int64) error {
 
 // CreateQuizQuestion creates a new quiz question
 func (s *QuizService) CreateQuizQuestion(ctx context.Context, req dtos.CreateQuizQuestionRequestDTO) (dtos.QuizQuestionDTO, error) {
+	// Use provided ordinal if present; otherwise 0 to let trigger assign max+1
+	ordinal := int32(0)
+	if req.Ordinal != nil {
+		ordinal = *req.Ordinal
+	}
+
 	result, err := s.q.CreateQuizQuestion(ctx, gen.CreateQuizQuestionParams{
 		QuizID:        req.QuizID,
 		QuestionText:  req.QuestionText,
 		QuestionType:  req.QuestionType,
 		AnswerOptions: req.AnswerOptions,
-		CorrectAnswer: sql.NullString{String: *req.CorrectAnswer, Valid: req.CorrectAnswer != nil},
+		CorrectAnswer: utils.NullString(req.CorrectAnswer),
+		Ordinal:       ordinal,
 	})
 	if err != nil {
+		var me *mysql.MySQLError
+		if errors.As(err, &me) && me.Number == 1062 {
+			return dtos.QuizQuestionDTO{}, ErrDuplicateOrdinal
+		}
 		return dtos.QuizQuestionDTO{}, err
 	}
 
@@ -263,15 +276,25 @@ func (s *QuizService) UpdateQuizQuestion(ctx context.Context, id int64, req dtos
 		correctAnswer = sql.NullString{String: *req.CorrectAnswer, Valid: true}
 	}
 
+	ordinal := existingQuestion.Ordinal
+	if req.Ordinal != nil {
+		ordinal = *req.Ordinal
+	}
+
 	err = s.q.UpdateQuizQuestion(ctx, gen.UpdateQuizQuestionParams{
 		QuizID:        quizID,
 		QuestionText:  questionText,
 		QuestionType:  questionType,
 		AnswerOptions: answerOptions,
 		CorrectAnswer: correctAnswer,
+		Ordinal:       ordinal,
 		ID:            id,
 	})
 	if err != nil {
+		var me *mysql.MySQLError
+		if errors.As(err, &me) && me.Number == 1062 {
+			return dtos.QuizQuestionDTO{}, ErrDuplicateOrdinal
+		}
 		return dtos.QuizQuestionDTO{}, err
 	}
 
@@ -292,13 +315,22 @@ func (s *QuizService) DeleteQuizQuestion(ctx context.Context, id int64) error {
 
 // CreateStudentQuiz records a student starting a quiz
 func (s *QuizService) CreateStudentQuiz(ctx context.Context, req dtos.CreateStudentQuizRequestDTO) (dtos.StudentQuizDTO, error) {
+	// Idempotency: if exists, report conflict
+	if existing, err := s.q.GetStudentQuizByIDs(ctx, gen.GetStudentQuizByIDsParams{UserID: req.StudentID, QuizID: req.QuizID}); err == nil && existing.ID != 0 {
+		return dtos.StudentQuizDTO{}, ErrAlreadyStarted
+	}
+
 	result, err := s.q.CreateStudentQuiz(ctx, gen.CreateStudentQuizParams{
 		UserID:    req.StudentID,
 		QuizID:    req.QuizID,
 		Status:    gen.NullStudentQuizzesStatus{StudentQuizzesStatus: gen.StudentQuizzesStatus(req.Status), Valid: req.Status != ""},
-		StartedAt: sql.NullTime{Time: time.Now(), Valid: true}, // Set started_at to current time
+		StartedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	})
 	if err != nil {
+		var me *mysql.MySQLError
+		if errors.As(err, &me) && me.Number == 1062 {
+			return dtos.StudentQuizDTO{}, ErrAlreadyStarted
+		}
 		return dtos.StudentQuizDTO{}, err
 	}
 
@@ -438,4 +470,71 @@ func (s *QuizService) UpdateStudentQuiz(ctx context.Context, id int64, req dtos.
 // DeleteStudentQuiz deletes a student's quiz record
 func (s *QuizService) DeleteStudentQuiz(ctx context.Context, id int64) error {
 	return s.q.DeleteStudentQuiz(ctx, id)
+}
+
+// SubmitOwnQuiz updates the current user's quiz record by quiz ID
+func (s *QuizService) SubmitOwnQuiz(ctx context.Context, userID, quizID int64, req dtos.UpdateStudentQuizRequestDTO) (dtos.StudentQuizDTO, error) {
+	sq, err := s.q.GetStudentQuizByIDs(ctx, gen.GetStudentQuizByIDsParams{UserID: userID, QuizID: quizID})
+	if err == sql.ErrNoRows {
+		return dtos.StudentQuizDTO{}, nil
+	}
+	if err != nil {
+		return dtos.StudentQuizDTO{}, err
+	}
+
+	status := sq.Status
+	if req.Status != nil {
+		status = gen.NullStudentQuizzesStatus{StudentQuizzesStatus: gen.StudentQuizzesStatus(*req.Status), Valid: *req.Status != ""}
+	} else {
+		status = gen.NullStudentQuizzesStatus{StudentQuizzesStatus: gen.StudentQuizzesStatus("completed"), Valid: true}
+	}
+	startedAt := sq.StartedAt
+	if req.StartedAt != nil {
+		startedAt = sql.NullTime{Time: *req.StartedAt, Valid: true}
+	}
+	completedAt := sq.CompletedAt
+	if req.CompletedAt != nil {
+		completedAt = sql.NullTime{Time: *req.CompletedAt, Valid: true}
+	} else {
+		completedAt = sql.NullTime{Time: time.Now(), Valid: true}
+	}
+
+	err = s.q.UpdateStudentQuiz(ctx, gen.UpdateStudentQuizParams{
+		Score:       sq.Score,
+		Status:      status,
+		StartedAt:   startedAt,
+		CompletedAt: completedAt,
+		ID:          sq.ID,
+	})
+	if err != nil {
+		return dtos.StudentQuizDTO{}, err
+	}
+
+	updated, err := s.q.GetStudentQuizByID(ctx, sq.ID)
+	if err != nil {
+		return dtos.StudentQuizDTO{}, err
+	}
+
+	// Award points on transition to completed (mirror existing logic)
+	if s.points != nil {
+		prevCompleted := sq.Status.Valid && string(sq.Status.StudentQuizzesStatus) == "completed"
+		nowCompleted := updated.Status.Valid && string(updated.Status.StudentQuizzesStatus) == "completed"
+		if !prevCompleted && nowCompleted {
+			qz, err2 := s.q.GetQuizByID(ctx, updated.QuizID)
+			if err2 == nil && qz.RewardPoints > 0 {
+				refID := updated.ID
+				if stRow, err3 := s.q.GetStudentByStudentID(ctx, updated.StudentID); err3 == nil {
+					if _, err4 := s.points.Add(ctx, stRow.UserID, int64(qz.RewardPoints), "quiz_completed", "quiz", &refID); err4 != nil {
+						log.Printf("points award failed: context=quiz_completed user_id=%d ref_id=%d error=%v", stRow.UserID, refID, err4)
+					}
+				} else if err3 != nil {
+					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updated.StudentID, err3)
+				}
+			}
+		}
+	}
+
+	var dto dtos.StudentQuizDTO
+	dto.FromStudentQuizModel(updated)
+	return dto, nil
 }

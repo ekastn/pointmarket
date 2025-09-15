@@ -83,6 +83,7 @@ type QuizQuestionDTO struct {
 	QuestionType  string          `json:"question_type"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer *string         `json:"correct_answer"`
+	Ordinal       int32           `json:"ordinal"`
 }
 
 // FromQuizQuestionModel converts a gen.QuizQuestion model to a QuizQuestionDTO
@@ -97,6 +98,7 @@ func (dto *QuizQuestionDTO) FromQuizQuestionModel(m gen.QuizQuestion) {
 	} else {
 		dto.CorrectAnswer = nil
 	}
+	dto.Ordinal = m.Ordinal
 }
 
 // CreateQuizQuestionRequestDTO for creating a new quiz question
@@ -106,6 +108,7 @@ type CreateQuizQuestionRequestDTO struct {
 	QuestionType  string          `json:"question_type" binding:"required"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer *string         `json:"correct_answer"`
+	Ordinal       *int32          `json:"ordinal"` // optional; if omitted, appended via trigger
 }
 
 // UpdateQuizQuestionRequestDTO for updating an existing quiz question
@@ -115,6 +118,7 @@ type UpdateQuizQuestionRequestDTO struct {
 	QuestionType  *string         `json:"question_type"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer *string         `json:"correct_answer"`
+	Ordinal       *int32          `json:"ordinal"`
 }
 
 // ListQuizQuestionsResponseDTO contains a list of QuizQuestionDTOs

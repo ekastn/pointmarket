@@ -44,9 +44,9 @@ func (q *Queries) CreateQuiz(ctx context.Context, arg CreateQuizParams) (sql.Res
 const createQuizQuestion = `-- name: CreateQuizQuestion :execresult
 
 INSERT INTO quiz_questions (
-    quiz_id, question_text, question_type, answer_options, correct_answer
+    quiz_id, question_text, question_type, answer_options, correct_answer, ordinal
 ) VALUES (
-    ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?
 )
 `
 
@@ -56,6 +56,7 @@ type CreateQuizQuestionParams struct {
 	QuestionType  string          `json:"question_type"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer sql.NullString  `json:"correct_answer"`
+	Ordinal       int32           `json:"ordinal"`
 }
 
 // Quiz Questions --
@@ -66,6 +67,7 @@ func (q *Queries) CreateQuizQuestion(ctx context.Context, arg CreateQuizQuestion
 		arg.QuestionType,
 		arg.AnswerOptions,
 		arg.CorrectAnswer,
+		arg.Ordinal,
 	)
 }
 
@@ -125,6 +127,17 @@ func (q *Queries) DeleteStudentQuiz(ctx context.Context, id int64) error {
 	return err
 }
 
+const getMaxOrdinalForQuiz = `-- name: GetMaxOrdinalForQuiz :one
+SELECT COALESCE(MAX(ordinal), 0) AS max_ordinal FROM quiz_questions WHERE quiz_id = ?
+`
+
+func (q *Queries) GetMaxOrdinalForQuiz(ctx context.Context, quizID int64) (interface{}, error) {
+	row := q.db.QueryRowContext(ctx, getMaxOrdinalForQuiz, quizID)
+	var max_ordinal interface{}
+	err := row.Scan(&max_ordinal)
+	return max_ordinal, err
+}
+
 const getQuizByID = `-- name: GetQuizByID :one
 SELECT id, title, description, course_id, reward_points, duration_minutes, status, created_at, updated_at FROM quizzes
 WHERE id = ?
@@ -148,7 +161,7 @@ func (q *Queries) GetQuizByID(ctx context.Context, id int64) (Quiz, error) {
 }
 
 const getQuizQuestionByID = `-- name: GetQuizQuestionByID :one
-SELECT id, quiz_id, question_text, question_type, answer_options, correct_answer FROM quiz_questions
+SELECT id, quiz_id, question_text, question_type, answer_options, correct_answer, ordinal FROM quiz_questions
 WHERE id = ?
 `
 
@@ -162,14 +175,15 @@ func (q *Queries) GetQuizQuestionByID(ctx context.Context, id int64) (QuizQuesti
 		&i.QuestionType,
 		&i.AnswerOptions,
 		&i.CorrectAnswer,
+		&i.Ordinal,
 	)
 	return i, err
 }
 
 const getQuizQuestionsByQuizID = `-- name: GetQuizQuestionsByQuizID :many
-SELECT id, quiz_id, question_text, question_type, answer_options, correct_answer FROM quiz_questions
+SELECT id, quiz_id, question_text, question_type, answer_options, correct_answer, ordinal FROM quiz_questions
 WHERE quiz_id = ?
-ORDER BY created_at ASC
+ORDER BY ordinal ASC, id ASC
 `
 
 func (q *Queries) GetQuizQuestionsByQuizID(ctx context.Context, quizID int64) ([]QuizQuestion, error) {
@@ -188,6 +202,7 @@ func (q *Queries) GetQuizQuestionsByQuizID(ctx context.Context, quizID int64) ([
 			&i.QuestionType,
 			&i.AnswerOptions,
 			&i.CorrectAnswer,
+			&i.Ordinal,
 		); err != nil {
 			return nil, err
 		}
@@ -533,7 +548,8 @@ SET
     question_text = ?,
     question_type = ?,
     answer_options = ?,
-    correct_answer = ?
+    correct_answer = ?,
+    ordinal = ?
 WHERE id = ?
 `
 
@@ -543,6 +559,7 @@ type UpdateQuizQuestionParams struct {
 	QuestionType  string          `json:"question_type"`
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer sql.NullString  `json:"correct_answer"`
+	Ordinal       int32           `json:"ordinal"`
 	ID            int64           `json:"id"`
 }
 
@@ -553,6 +570,7 @@ func (q *Queries) UpdateQuizQuestion(ctx context.Context, arg UpdateQuizQuestion
 		arg.QuestionType,
 		arg.AnswerOptions,
 		arg.CorrectAnswer,
+		arg.Ordinal,
 		arg.ID,
 	)
 	return err

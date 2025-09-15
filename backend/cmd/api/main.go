@@ -71,9 +71,10 @@ func main() {
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
 	missionHandler := handler.NewMissionHandler(*missionService)
 	courseHandler := handler.NewCourseHandler(*courseService)
-	assignmentHandler := handler.NewAssignmentHandler(assignmentService)
+	authzService := services.NewAuthzService(querier)
+	assignmentHandler := handler.NewAssignmentHandler(assignmentService, authzService)
 	lessonHandler := handler.NewLessonHandler(lessonService, querier)
-	quizHandler := handler.NewQuizHandler(quizService)
+	quizHandler := handler.NewQuizHandler(quizService, authzService)
 	scoringHandler := handler.NewScoringHandler()
 
 	r := gin.Default()

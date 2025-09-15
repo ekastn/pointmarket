@@ -15,11 +15,12 @@ import (
 // AssignmentHandler handles HTTP requests for assignments
 type AssignmentHandler struct {
 	assignmentService *services.AssignmentService
+	authz             *services.AuthzService
 }
 
 // NewAssignmentHandler creates a new AssignmentHandler
-func NewAssignmentHandler(assignmentService *services.AssignmentService) *AssignmentHandler {
-	return &AssignmentHandler{assignmentService: assignmentService}
+func NewAssignmentHandler(assignmentService *services.AssignmentService, authz *services.AuthzService) *AssignmentHandler {
+	return &AssignmentHandler{assignmentService: assignmentService, authz: authz}
 }
 
 // CreateAssignment handles the creation of a new assignment
@@ -38,6 +39,20 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error()) // FIX
 		return
+	}
+
+	// Authorization: admin allowed; teacher must own the course
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckCourseOwner(c.Request.Context(), userID, req.CourseID); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	assignment, err := h.assignmentService.CreateAssignment(c.Request.Context(), req)
@@ -142,6 +157,20 @@ func (h *AssignmentHandler) UpdateAssignment(c *gin.Context) {
 		return
 	}
 
+	// Authorization: admin allowed; teacher must own the assignment
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckAssignmentOwner(c.Request.Context(), userID, id); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	assignment, err := h.assignmentService.UpdateAssignment(c.Request.Context(), id, req)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
@@ -172,6 +201,20 @@ func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
 		return
 	}
 
+	// Authorization
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckAssignmentOwner(c.Request.Context(), userID, id); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	err = h.assignmentService.DeleteAssignment(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
@@ -193,15 +236,34 @@ func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /student-assignments [post]
 func (h *AssignmentHandler) CreateStudentAssignment(c *gin.Context) {
-	var req dtos.CreateStudentAssignmentRequestDTO
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error()) // FIX
+	// Path: /assignments/:id/start → :id is assignment_id
+	assignmentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid assignment ID")
 		return
 	}
 
+	// Derive current user (student) from JWT
+	userID := middleware.GetUserID(c)
+
+	var req dtos.CreateStudentAssignmentRequestDTO
+	// Body is optional; we ignore any provided IDs for safety
+	_ = c.ShouldBindJSON(&req)
+	req.AssignmentID = assignmentID
+	req.StudentID = userID
+	if req.Status == "" {
+		req.Status = "in_progress"
+	}
+	// Submission should be nil on start
+	req.Submission = nil
+
 	studentAssignment, err := h.assignmentService.CreateStudentAssignment(c.Request.Context(), req)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
+		if err == services.ErrAlreadyStarted {
+			response.Error(c, http.StatusConflict, "assignment already started")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -282,6 +344,20 @@ func (h *AssignmentHandler) GetStudentAssignmentsByAssignmentID(c *gin.Context) 
 		return
 	}
 
+	// Authorization: admin or owning teacher
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckAssignmentOwner(c.Request.Context(), userID, assignmentID); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	studentAssignments, err := h.assignmentService.GetStudentAssignmentsByAssignmentID(c.Request.Context(), assignmentID)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
@@ -308,29 +384,82 @@ func (h *AssignmentHandler) GetStudentAssignmentsByAssignmentID(c *gin.Context) 
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /student-assignments/{id} [put]
 func (h *AssignmentHandler) UpdateStudentAssignment(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid student assignment ID") // FIX
+	// Two route patterns call this handler:
+	// 1) POST /assignments/:id/submit            → :id is assignment_id (student self-submit)
+	// 2) PUT /assignments/:id/submissions/:student_assignment_id → grading by admin/teacher; use :student_assignment_id
+
+	// If student_assignment_id path param exists, treat as grading update
+	if sid := c.Param("student_assignment_id"); sid != "" {
+		studentAssignmentID, err := strconv.ParseInt(sid, 10, 64)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "Invalid student assignment ID")
+			return
+		}
+
+		// Authorization for grading: admin or owning teacher
+		role := middleware.GetRole(c)
+		userID := middleware.GetUserID(c)
+		if role == "guru" {
+			// assignment id is present in route as :id
+			assignmentID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+			if assignmentID > 0 {
+				if err := h.authz.CheckAssignmentOwner(c.Request.Context(), userID, assignmentID); err != nil {
+					if err == services.ErrForbidden {
+						response.Error(c, http.StatusForbidden, "forbidden")
+						return
+					}
+					response.Error(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+		}
+		var req dtos.UpdateStudentAssignmentRequestDTO
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		studentAssignment, err := h.assignmentService.UpdateStudentAssignment(c.Request.Context(), studentAssignmentID, req)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if studentAssignment.ID == 0 {
+			response.Error(c, http.StatusNotFound, "Student assignment not found")
+			return
+		}
+		response.Success(c, http.StatusOK, "Student assignment updated successfully", studentAssignment)
 		return
 	}
+
+	// Otherwise, it's student submit by assignment ID
+	assignmentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid assignment ID")
+		return
+	}
+	userID := middleware.GetUserID(c)
 
 	var req dtos.UpdateStudentAssignmentRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error()) // FIX
+		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	// Force status to completed on submit if not provided
+	completed := "completed"
+	if req.Status == nil {
+		req.Status = &completed
+	}
 
-	studentAssignment, err := h.assignmentService.UpdateStudentAssignment(c.Request.Context(), id, req)
+	studentAssignment, err := h.assignmentService.SubmitOwnAssignment(c.Request.Context(), userID, assignmentID, req)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
+		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if studentAssignment.ID == 0 { // Assuming ID will be 0 if not found
-		response.Error(c, http.StatusNotFound, "Student assignment not found") // FIX
+	if studentAssignment.ID == 0 {
+		response.Error(c, http.StatusNotFound, "Student assignment not found")
 		return
 	}
-
-	response.Success(c, http.StatusOK, "Student assignment updated successfully", studentAssignment)
+	response.Success(c, http.StatusOK, "Assignment submitted successfully", studentAssignment)
 }
 
 // DeleteStudentAssignment handles the deletion of a student's assignment record

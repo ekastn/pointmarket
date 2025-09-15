@@ -15,11 +15,12 @@ import (
 // QuizHandler handles HTTP requests for quizzes
 type QuizHandler struct {
 	quizService *services.QuizService
+	authz       *services.AuthzService
 }
 
 // NewQuizHandler creates a new QuizHandler
-func NewQuizHandler(quizService *services.QuizService) *QuizHandler {
-	return &QuizHandler{quizService: quizService}
+func NewQuizHandler(quizService *services.QuizService, authz *services.AuthzService) *QuizHandler {
+	return &QuizHandler{quizService: quizService, authz: authz}
 }
 
 // CreateQuiz handles the creation of a new quiz
@@ -38,6 +39,20 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	// Authorization: admin allowed; teacher must own course
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckCourseOwner(c.Request.Context(), userID, req.CourseID); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	quiz, err := h.quizService.CreateQuiz(c.Request.Context(), req)
@@ -141,6 +156,20 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 		return
 	}
 
+	// Authorization: admin allowed; teacher must own quiz
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckQuizOwner(c.Request.Context(), userID, id); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	quiz, err := h.quizService.UpdateQuiz(c.Request.Context(), id, req)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
@@ -171,6 +200,20 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 		return
 	}
 
+	// Authorization
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckQuizOwner(c.Request.Context(), userID, id); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	err = h.quizService.DeleteQuiz(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
@@ -193,10 +236,25 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /quizzes/{quiz_id}/questions [post]
 func (h *QuizHandler) CreateQuizQuestion(c *gin.Context) {
-	quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64)
+	// Route: /quizzes/:id/questions → use :id as quiz_id
+	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 		return
+	}
+
+	// Authorization: admin or owning teacher
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckQuizOwner(c.Request.Context(), userID, quizID); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	var req dtos.CreateQuizQuestionRequestDTO
@@ -208,6 +266,10 @@ func (h *QuizHandler) CreateQuizQuestion(c *gin.Context) {
 
 	question, err := h.quizService.CreateQuizQuestion(c.Request.Context(), req)
 	if err != nil {
+		if err == services.ErrDuplicateOrdinal {
+			response.Error(c, http.StatusConflict, "duplicate ordinal for quiz question")
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -227,7 +289,7 @@ func (h *QuizHandler) CreateQuizQuestion(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /quizzes/{quiz_id}/questions/{question_id} [get]
 func (h *QuizHandler) GetQuizQuestionByID(c *gin.Context) {
-	// quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64) // Not strictly needed for GetByID
+	// quizID, err := strconv.ParseInt(c.Param("id"), 10, 64) // Not strictly needed for GetByID
 	// if err != nil {
 	// 	response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 	// 	return
@@ -262,7 +324,8 @@ func (h *QuizHandler) GetQuizQuestionByID(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /quizzes/{quiz_id}/questions [get]
 func (h *QuizHandler) GetQuizQuestionsByQuizID(c *gin.Context) {
-	quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64)
+	// Route: /quizzes/:id/questions → use :id as quiz_id
+	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 		return
@@ -292,7 +355,7 @@ func (h *QuizHandler) GetQuizQuestionsByQuizID(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /quizzes/{quiz_id}/questions/{question_id} [put]
 func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
-	// quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64) // Not strictly needed for UpdateByID
+	// quizID, err := strconv.ParseInt(c.Param("id"), 10, 64) // Not strictly needed for UpdateByID
 	// if err != nil {
 	// 	response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 	// 	return
@@ -304,6 +367,23 @@ func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
 		return
 	}
 
+	// Authorization: admin or owning teacher based on quiz_id
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		quizID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+		if quizID > 0 {
+			if err := h.authz.CheckQuizOwner(c.Request.Context(), userID, quizID); err != nil {
+				if err == services.ErrForbidden {
+					response.Error(c, http.StatusForbidden, "forbidden")
+					return
+				}
+				response.Error(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+	}
+
 	var req dtos.UpdateQuizQuestionRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
@@ -312,6 +392,10 @@ func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
 
 	question, err := h.quizService.UpdateQuizQuestion(c.Request.Context(), questionID, req)
 	if err != nil {
+		if err == services.ErrDuplicateOrdinal {
+			response.Error(c, http.StatusConflict, "duplicate ordinal for quiz question")
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -335,7 +419,7 @@ func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /quizzes/{quiz_id}/questions/{question_id} [delete]
 func (h *QuizHandler) DeleteQuizQuestion(c *gin.Context) {
-	// quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64) // Not strictly needed for DeleteByID
+	// quizID, err := strconv.ParseInt(c.Param("id"), 10, 64) // Not strictly needed for DeleteByID
 	// if err != nil {
 	// 	response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 	// 	return
@@ -345,6 +429,23 @@ func (h *QuizHandler) DeleteQuizQuestion(c *gin.Context) {
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid question ID")
 		return
+	}
+
+	// Authorization: admin or owning teacher based on quiz_id
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		quizID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+		if quizID > 0 {
+			if err := h.authz.CheckQuizOwner(c.Request.Context(), userID, quizID); err != nil {
+				if err == services.ErrForbidden {
+					response.Error(c, http.StatusForbidden, "forbidden")
+					return
+				}
+				response.Error(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
 	}
 
 	err = h.quizService.DeleteQuizQuestion(c.Request.Context(), questionID)
@@ -369,21 +470,27 @@ func (h *QuizHandler) DeleteQuizQuestion(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /quizzes/{quiz_id}/start [post]
 func (h *QuizHandler) CreateStudentQuiz(c *gin.Context) {
-	quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64)
+	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 		return
 	}
 
 	var req dtos.CreateStudentQuizRequestDTO
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
-		return
-	}
+	_ = c.ShouldBindJSON(&req)
+	// Derive student from JWT; ignore any provided student_id
+	req.StudentID = middleware.GetUserID(c)
 	req.QuizID = quizID // Ensure quizID from path is used
+	if req.Status == "" {
+		req.Status = "in_progress"
+	}
 
 	studentQuiz, err := h.quizService.CreateStudentQuiz(c.Request.Context(), req)
 	if err != nil {
+		if err == services.ErrAlreadyStarted {
+			response.Error(c, http.StatusConflict, "quiz already started")
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -465,6 +572,20 @@ func (h *QuizHandler) GetStudentQuizzesByQuizID(c *gin.Context) {
 		return
 	}
 
+	// Authorization for teacher
+	role := middleware.GetRole(c)
+	userID := middleware.GetUserID(c)
+	if role == "guru" {
+		if err := h.authz.CheckQuizOwner(c.Request.Context(), userID, quizID); err != nil {
+			if err == services.ErrForbidden {
+				response.Error(c, http.StatusForbidden, "forbidden")
+				return
+			}
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	studentQuizzes, err := h.quizService.GetStudentQuizzesByQuizID(c.Request.Context(), quizID)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
@@ -491,29 +612,63 @@ func (h *QuizHandler) GetStudentQuizzesByQuizID(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /student-quizzes/{id} [put]
 func (h *QuizHandler) UpdateStudentQuiz(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid student quiz ID")
+	// Two route patterns call this handler:
+	// 1) POST /quizzes/:id/submit            → :id is quiz_id (student self-submit)
+	// 2) PUT /quizzes/:id/submissions/:student_quiz_id → grading by admin/teacher
+
+	if sqid := c.Param("student_quiz_id"); sqid != "" {
+		studentQuizID, err := strconv.ParseInt(sqid, 10, 64)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "Invalid student quiz ID")
+			return
+		}
+		var req dtos.UpdateStudentQuizRequestDTO
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		studentQuiz, err := h.quizService.UpdateStudentQuiz(c.Request.Context(), studentQuizID, req)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if studentQuiz.ID == 0 {
+			response.Error(c, http.StatusNotFound, "Student quiz not found")
+			return
+		}
+		response.Success(c, http.StatusOK, "Student quiz updated successfully", studentQuiz)
 		return
 	}
+
+	// Student submit path by quiz ID
+	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
+		return
+	}
+	userID := middleware.GetUserID(c)
 
 	var req dtos.UpdateStudentQuizRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	// Default to completed on submit
+	completed := "completed"
+	if req.Status == nil {
+		req.Status = &completed
+	}
 
-	studentQuiz, err := h.quizService.UpdateStudentQuiz(c.Request.Context(), id, req)
+	studentQuiz, err := h.quizService.SubmitOwnQuiz(c.Request.Context(), userID, quizID, req)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if studentQuiz.ID == 0 { // Assuming ID will be 0 if not found
+	if studentQuiz.ID == 0 {
 		response.Error(c, http.StatusNotFound, "Student quiz not found")
 		return
 	}
-
-	response.Success(c, http.StatusOK, "Student quiz updated successfully", studentQuiz)
+	response.Success(c, http.StatusOK, "Quiz submitted successfully", studentQuiz)
 }
 
 // DeleteStudentQuiz handles the deletion of a student's quiz record

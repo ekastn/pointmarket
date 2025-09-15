@@ -8,25 +8,32 @@ $renderer->includePartial('components/partials/page_title', [
 <!-- Assignments List -->
 <div class="row pm-section">
     <?php if (!empty($assignments)): ?>
-        <?php foreach ($assignments as $assignment): ?>
-            <?php $renderer->includePartial('components/partials/assignment_card', ['assignment' => $assignment]); ?>
+        <?php foreach ($assignments as $a): ?>
+            <div class="col-md-6 col-lg-4 mb-4">
+              <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-secondary"><?php echo htmlspecialchars($a['status'] ?? ''); ?></span>
+                    <small class="text-muted">Poin: <?php echo htmlspecialchars($a['reward_points'] ?? 0); ?></small>
+                  </div>
+                  <h5 class="card-title mb-1"><?php echo htmlspecialchars($a['title'] ?? ''); ?></h5>
+                  <p class="card-text text-muted small flex-grow-1"><?php echo htmlspecialchars($a['description'] ?? ''); ?></p>
+                  <div class="mb-2 small text-muted"><i class="fas fa-calendar me-1"></i>Jatuh tempo: <?php echo !empty($a['due_date']) ? htmlspecialchars(date('Y-m-d', strtotime($a['due_date']))) : '-'; ?></div>
+                  <div class="d-flex justify-content-between align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-primary flex-fill" onclick="startAssignment(<?php echo (int)($a['id'] ?? 0); ?>)"><i class="fas fa-play me-1"></i> Mulai</button>
+                    <button class="btn btn-sm btn-success flex-fill" onclick="submitAssignment(<?php echo (int)($a['id'] ?? 0); ?>, '<?php echo htmlspecialchars($a['title'] ?? ''); ?>')"><i class="fas fa-upload me-1"></i> Submit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
         <?php endforeach; ?>
     <?php else: ?>
         <div class="col-12">
             <?php $renderer->includePartial('components/partials/empty_state', [
                 'icon' => 'fas fa-tasks',
                 'title' => 'Tidak ada tugas',
-                'subtitle' => ($status_filter !== 'all' || $subject_filter !== 'all') 
-                    ? 'Coba ubah filter untuk melihat tugas lainnya.'
-                    : 'Tugas baru akan muncul di sini saat guru membuatnya.',
+                'subtitle' => 'Tugas baru akan muncul di sini saat guru membuatnya.',
             ]); ?>
-            <?php if ($status_filter !== 'all' || $subject_filter !== 'all'): ?>
-                <div class="text-center mb-4">
-                    <a href="/assignments" class="btn btn-primary">
-                        <i class="fas fa-undo me-1"></i> Reset Filter
-                    </a>
-                </div>
-            <?php endif; ?>
         </div>
     <?php endif; ?>
 </div>
@@ -50,26 +57,7 @@ $renderer->includePartial('components/partials/page_title', [
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Filter change handlers
-    document.getElementById('statusFilter').addEventListener('change', function() {
-        updateFilters();
-    });
-
-    document.getElementById('subjectFilter').addEventListener('change', function() {
-        updateFilters();
-    });
-
-    function updateFilters() {
-        const status = document.getElementById('statusFilter').value;
-        const subject = document.getElementById('subjectFilter').value;
-        
-        const params = new URLSearchParams();
-        if (status !== 'all') params.append('status', status);
-        if (subject !== 'all') params.append('subject', subject);
-        
-        const newUrl = '/assignments' + (params.toString() ? '?' + params.toString() : '');
-        window.location.href = newUrl;
-    }
+    // Removed unused filter handlers for cleaner UI
 
     async function startAssignment(assignmentId) {
         if (!confirm('Yakin mulai tugas ini?')) {
@@ -160,7 +148,7 @@ $renderer->includePartial('components/partials/page_title', [
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + JWT_TOKEN
             },
-            body: JSON.stringify({ submission_content: submissionText })
+            body: JSON.stringify({ submission: submissionText })
         });
         const data = await response.json();
 

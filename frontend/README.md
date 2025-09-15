@@ -112,3 +112,14 @@ Some routes are grouped and require role checks. The Router and controllers enfo
   - In Docker, prefer `http://backend:8041` for `API_BASE_URL`.
 - Pretty URLs are not working locally:
   - Use the built-in server command shown above, or configure rewrite to `index.php` in your web server.
+
+
+- 👨‍🏫 Teacher Management (Assignments & Quizzes)
+  - Access via sidebar: Kelola Tugas and Kelola Kuis.
+  - Create/edit/delete assignments and quizzes. Course selection is provided via a dropdown of owned courses.
+  - Manage quiz questions on the quiz detail page (/quiz/{id}) with add/edit/delete and up/down ordering.
+
+- 🧑‍🎓 Student Quiz Flow
+  - Open /quiz to see available quizzes; click Lihat to view details.
+  - Start quiz and answer multiple-choice questions with Next/Prev navigation and a soft timer.
+  - Submit to mark completion (points awarded per backend rules when applicable).

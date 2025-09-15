@@ -16,14 +16,7 @@ class AssignmentService
     public function getAssignments(?int $teacherId = null, ?int $studentId = null): ?array
     {
         $uri = '/api/v1/assignments';
-        $options = [];
-        if ($teacherId !== null) {
-            $options['query']['teacher_id'] = $teacherId;
-        }
-        if ($studentId !== null) {
-            $options['query']['student_id'] = $studentId;
-        }
-        $response = $this->apiClient->request('GET', $uri, $options);
+        $response = $this->apiClient->request('GET', $uri);
         if ($response['success']) {
             return $response['data'];
         }
@@ -57,7 +50,7 @@ class AssignmentService
     {
         $response = $this->apiClient->request('POST', '/api/v1/assignments/' . $assignmentId . '/submit', [
             'json' => [
-                'submission_content' => $submissionContent,
+                'submission' => $submissionContent,
             ],
         ]);
         if ($response['success']) {

@@ -23,6 +23,16 @@ class AssignmentService
         return null;
     }
 
+    public function getStudentAssignments(int $userId): ?array
+    {
+        $response = $this->apiClient->request('GET', '/api/v1/students/' . $userId . '/assignments');
+        error_log(print_r($response, true));
+        if ($response['success']) {
+            return $response['data'];
+        }
+        return null;
+    }
+
     public function getAssignmentByID(int $id, ?int $studentId = null): ?array
     {
         $uri = '/api/v1/assignments/' . $id;
@@ -57,6 +67,26 @@ class AssignmentService
             return $response['data'];
         }
         return null;
+    }
+
+    public function getSubmissions(int $assignmentId): ?array
+    {
+        $response = $this->apiClient->request('GET', '/api/v1/assignments/' . $assignmentId . '/submissions');
+        if ($response['success']) {
+            return $response['data'];
+        }
+        return null;
+    }
+
+    public function gradeSubmission(int $assignmentId, int $studentAssignmentId, ?float $score, ?string $feedback): bool
+    {
+        $payload = [];
+        if ($score !== null) { $payload['score'] = $score; }
+        if ($feedback !== null) { $payload['feedback'] = $feedback; }
+        $response = $this->apiClient->request('PUT', '/api/v1/assignments/' . $assignmentId . '/submissions/' . $studentAssignmentId, [
+            'json' => $payload,
+        ]);
+        return $response['success'] === true;
     }
 
     public function createAssignment(array $data): ?array

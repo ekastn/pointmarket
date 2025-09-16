@@ -40,6 +40,7 @@ return function (Router $router) {
         $router->post('nlp-demo/analyze', [DemoController::class, 'analyzeNLP']);
 
         $router->get('assignments', [AssignmentsController::class, 'index']);
+        $router->get('assignments/{id}', [AssignmentsController::class, 'show']);
         $router->get('quiz', [QuizController::class, 'index']);
         $router->get('quiz/{id}', [QuizController::class, 'show']);
 
@@ -52,6 +53,8 @@ return function (Router $router) {
             $router->get('/assignments/{id}/edit', [TeacherAssignmentsController::class, 'edit']);
             $router->post('/assignments/{id}', [TeacherAssignmentsController::class, 'update']);
             $router->post('/assignments/{id}/delete', [TeacherAssignmentsController::class, 'destroy']);
+            $router->get('/assignments/{id}/submissions', [TeacherAssignmentsController::class, 'submissions']);
+            $router->post('/assignments/{id}/submissions/{studentAssignmentId}/grade', [TeacherAssignmentsController::class, 'grade']);
 
             // Quizzes
             $router->get('/quizzes', [TeacherQuizzesController::class, 'index']);

@@ -26,6 +26,30 @@ class TeacherAssignmentsController extends BaseController
         ]);
     }
 
+    public function submissions(int $id): void
+    {
+        $resp = $this->assignmentService->getSubmissions($id) ?? [];
+        $submissions = $resp['student_assignments'] ?? [];
+        $this->render('guru/assignment_submissions', [
+            'title' => 'Submissions',
+            'assignment_id' => $id,
+            'submissions' => $submissions,
+        ]);
+    }
+
+    public function grade(int $id, int $studentAssignmentId): void
+    {
+        $score = isset($_POST['score']) && $_POST['score'] !== '' ? (float)$_POST['score'] : null;
+        $feedback = $_POST['feedback'] ?? null;
+        $ok = $this->assignmentService->gradeSubmission($id, $studentAssignmentId, $score, $feedback);
+        if ($ok) {
+            $_SESSION['messages']['success'] = 'Nilai tersimpan.';
+        } else {
+            $_SESSION['messages']['error'] = 'Gagal menyimpan nilai';
+        }
+        $this->redirect('/guru/assignments/' . $id . '/submissions');
+    }
+
     public function create(): void
     {
         $coursesResp = $this->courseService->getAllCourses('', 'guru', 1, 100);

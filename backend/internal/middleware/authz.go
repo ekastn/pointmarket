@@ -10,10 +10,19 @@ import (
 // Authz checks if the authenticated user has the required role.
 func Authz(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userRole, exists := c.Get("role")
+		userRoleVal, exists := c.Get("role")
 		if !exists {
 			response.Error(c, http.StatusForbidden, "User role not found in context")
 			c.Abort()
+			return
+		}
+
+		// Normalize to string
+		userRole, _ := userRoleVal.(string)
+
+		// Admin bypass: admin can access routes guarded by any role
+		if userRole == "admin" {
+			c.Next()
 			return
 		}
 

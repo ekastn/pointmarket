@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/middleware"
@@ -116,9 +117,9 @@ func (h *AssignmentHandler) GetAssignments(c *gin.Context) {
 
 	// Get user ID and role from context (set by authentication middleware)
 	userID := middleware.GetUserID(c)
-
 	userRole := middleware.GetRole(c)
 
+	// Return general assignments list for all roles; service applies visibility filter for students
 	assignments, err := h.assignmentService.GetAssignments(c.Request.Context(), userID, userRole, courseIDFilter)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error()) // FIX
@@ -305,10 +306,10 @@ func (h *AssignmentHandler) GetStudentAssignmentByID(c *gin.Context) {
 // @Description Retrieves a list of all assignments for a specific student, including their progress.
 // @Tags Student Assignments
 // @Produce json
-// @Param student_id path int true "Student ID"
+// @Param user_id path int true "User ID"
 // @Success 200 {object} dtos.ListStudentAssignmentsResponseDTO
 // @Failure 500 {object} dtos.ErrorResponse
-// @Router /students/{student_id}/assignments [get]
+// @Router /students/{user_id}/assignments [get]
 func (h *AssignmentHandler) GetStudentAssignmentsList(c *gin.Context) {
 	studentID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
@@ -338,7 +339,8 @@ func (h *AssignmentHandler) GetStudentAssignmentsList(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /assignments/{assignment_id}/submissions [get]
 func (h *AssignmentHandler) GetStudentAssignmentsByAssignmentID(c *gin.Context) {
-	assignmentID, err := strconv.ParseInt(c.Param("assignment_id"), 10, 64)
+	// Route uses /assignments/:id/submissions
+	assignmentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid assignment ID") // FIX
 		return
@@ -418,6 +420,16 @@ func (h *AssignmentHandler) UpdateStudentAssignment(c *gin.Context) {
 			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
+		// Set grader_user_id from JWT if not provided
+		if req.GraderUserID == nil {
+			u := middleware.GetUserID(c)
+			req.GraderUserID = &u
+		}
+		// Default graded_at to now on grading if not provided
+		if req.GradedAt == nil {
+			now := time.Now()
+			req.GradedAt = &now
+		}
 		studentAssignment, err := h.assignmentService.UpdateStudentAssignment(c.Request.Context(), studentAssignmentID, req)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, err.Error())
@@ -473,7 +485,12 @@ func (h *AssignmentHandler) UpdateStudentAssignment(c *gin.Context) {
 // @Failure 500 {object} dtos.ErrorResponse
 // @Router /student-assignments/{id} [delete]
 func (h *AssignmentHandler) DeleteStudentAssignment(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	// Support both top-level delete (/student-assignments/:id) and submissions route delete (/assignments/:id/submissions/:student_assignment_id)
+	idStr := c.Param("student_assignment_id")
+	if idStr == "" {
+		idStr = c.Param("id")
+	}
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid student assignment ID") // FIX
 		return

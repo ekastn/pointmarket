@@ -18,18 +18,33 @@ class AssignmentsController extends BaseController
     public function index(): void
     {
         $assignments = [];
+        $statusMap = [];
 
-        $data = $this->assignmentService->getAssignments(null, $_SESSION['user_data']['id']);
+        $userId = $_SESSION['user_data']['id'] ?? null;
+        $data = $this->assignmentService->getAssignments(null, $userId);
 
         if ($data !== null) {
-            $assignments = $data['assignments'] ?? [];
+            $assignments = $data['assignments'] ?? ($data['student_assignments'] ?? []);
         } else {
             $_SESSION['messages'] = ['error' => 'Failed to fetch assignments.'];
+        }
+
+        // Build student assignment status map keyed by assignment_id
+        if ($userId) {
+            $saData = $this->assignmentService->getStudentAssignments($userId);
+            $studentAssignments = $saData['student_assignments'] ?? [];
+            foreach ($studentAssignments as $sa) {
+                $aid = (int)($sa['assignment_id'] ?? 0);
+                if ($aid > 0 && !empty($sa['status'])) {
+                    $statusMap[$aid] = $sa['status'];
+                }
+            }
         }
 
         $this->render('siswa/assignments', [
             'title' => 'Assignments',
             'assignments' => $assignments,
+            'studentStatusMap' => $statusMap,
         ]);
     }
 
@@ -60,6 +75,31 @@ class AssignmentsController extends BaseController
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to start assignment.']);
         }
+    }
+
+    public function show(int $id): void
+    {
+        $userId = $_SESSION['user_data']['id'] ?? null;
+        $assignment = $this->assignmentService->getAssignmentByID($id, $userId);
+
+        // student status map (single assignment)
+        $status = null;
+        if ($userId) {
+            $saData = $this->assignmentService->getStudentAssignments($userId);
+            $studentAssignments = $saData['student_assignments'] ?? [];
+            foreach ($studentAssignments as $sa) {
+                if ((int)($sa['assignment_id'] ?? 0) === $id) {
+                    $status = $sa['status'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $this->render('siswa/assignment_detail', [
+            'title' => ($assignment['title'] ?? $assignment['data']['title'] ?? 'Detail Tugas'),
+            'assignment' => $assignment,
+            'status' => $status,
+        ]);
     }
 
     public function submitAssignment(): void

@@ -10,8 +10,9 @@ import (
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
 	"time"
+
+	mysql "github.com/go-sql-driver/mysql"
 )
-import mysql "github.com/go-sql-driver/mysql"
 
 // AssignmentService provides business logic for assignments and student assignments
 type AssignmentService struct {
@@ -87,8 +88,7 @@ func (s *AssignmentService) GetAssignments(ctx context.Context, userID int64, us
 		// Teachers get assignments for courses they own
 		assignments, err = s.q.GetAssignmentsByOwnerID(ctx, userID)
 	case "siswa": // Student
-		// Students get all general assignments.
-		// For student-specific assignment details (status, score), use GetStudentAssignmentsList.
+		// Students get assignments filtered by visibility rules (minimal: published only)
 		assignments, err = s.q.GetAssignments(ctx)
 	default:
 		return nil, fmt.Errorf("unsupported user role: %s", userRole)
@@ -99,12 +99,27 @@ func (s *AssignmentService) GetAssignments(ctx context.Context, userID int64, us
 	}
 
 	var assignmentDTOs []dtos.AssignmentDTO
+	now := time.Now()
 	for _, assignment := range assignments {
 		var assignmentDTO dtos.AssignmentDTO
 		assignmentDTO.FromAssignmentModel(assignment)
+		if userRole == "siswa" {
+			if !s.isAssignmentVisible(now, assignment) {
+				continue
+			}
+		}
 		assignmentDTOs = append(assignmentDTOs, assignmentDTO)
 	}
 	return assignmentDTOs, nil
+}
+
+// isAssignmentVisible determines if an assignment is visible to students
+func (s *AssignmentService) isAssignmentVisible(now time.Time, a gen.Assignment) bool {
+	// Minimal rule: status must be published; due_date ignored for M1
+	if a.Status.Valid && string(a.Status.AssignmentsStatus) == "published" {
+		return true
+	}
+	return false
 }
 
 // UpdateAssignment updates an existing assignment
@@ -297,13 +312,25 @@ func (s *AssignmentService) UpdateStudentAssignment(ctx context.Context, id int6
 		gradedAt = sql.NullTime{Time: *req.GradedAt, Valid: true}
 	}
 
+	feedback := existingSA.Feedback
+	if req.Feedback != nil {
+		feedback = sql.NullString{String: *req.Feedback, Valid: true}
+	}
+
+	graderUserID := existingSA.GraderUserID
+	if req.GraderUserID != nil {
+		graderUserID = sql.NullInt64{Int64: *req.GraderUserID, Valid: true}
+	}
+
 	err = s.q.UpdateStudentAssignment(ctx, gen.UpdateStudentAssignmentParams{
-		Status:      status,
-		Score:       score,
-		Submission:  submission,
-		SubmittedAt: submittedAt,
-		GradedAt:    gradedAt,
-		ID:          id,
+		Status:       status,
+		Score:        score,
+		Submission:   submission,
+		Feedback:     feedback,
+		SubmittedAt:  submittedAt,
+		GradedAt:     gradedAt,
+		GraderUserID: graderUserID,
+		ID:           id,
 	})
 	if err != nil {
 		return dtos.StudentAssignmentDTO{}, err
@@ -372,43 +399,19 @@ func (s *AssignmentService) SubmitOwnAssignment(ctx context.Context, userID, ass
 		submission = sql.NullString{String: *req.Submission, Valid: true}
 	}
 
-	err = s.q.UpdateStudentAssignment(ctx, gen.UpdateStudentAssignmentParams{
-		Status:      status,
-		Score:       sa.Score,
-		Submission:  submission,
-		SubmittedAt: submittedAt,
-		GradedAt:    sa.GradedAt,
-		ID:          sa.ID,
-	})
-	if err != nil {
-		return dtos.StudentAssignmentDTO{}, err
+	// Reuse UpdateStudentAssignment to centralize awarding logic
+	// Build payload with available values
+	st := string(status.StudentAssignmentsStatus)
+	payload := dtos.UpdateStudentAssignmentRequestDTO{Status: &st}
+	// carry score
+	payload.Score = sa.Score
+	if submission.Valid {
+		sub := submission.String
+		payload.Submission = &sub
 	}
-
-	updated, err := s.q.GetStudentAssignmentByID(ctx, sa.ID)
-	if err != nil {
-		return dtos.StudentAssignmentDTO{}, err
+	if submittedAt.Valid {
+		t := submittedAt.Time
+		payload.SubmittedAt = &t
 	}
-
-	// Award points handled by UpdateStudentAssignment; but we bypassed it here.
-	// Duplicate logic: award on transition to completed
-	if s.points != nil {
-		prevCompleted := sa.Status.Valid && string(sa.Status.StudentAssignmentsStatus) == "completed"
-		nowCompleted := updated.Status.Valid && string(updated.Status.StudentAssignmentsStatus) == "completed"
-		if !prevCompleted && nowCompleted {
-			if asg, err2 := s.q.GetAssignmentByID(ctx, updated.AssignmentID); err2 == nil && asg.RewardPoints > 0 {
-				refID := updated.ID
-				if stRow, err3 := s.q.GetStudentByStudentID(ctx, updated.StudentID); err3 == nil {
-					if _, err4 := s.points.Add(ctx, stRow.UserID, int64(asg.RewardPoints), "assignment_completed", "assignment", &refID); err4 != nil {
-						log.Printf("points award failed: context=assignment_completed user_id=%d ref_id=%d error=%v", stRow.UserID, refID, err4)
-					}
-				} else if err3 != nil {
-					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updated.StudentID, err3)
-				}
-			}
-		}
-	}
-
-	var dto dtos.StudentAssignmentDTO
-	dto.FromStudentAssignmentModel(updated)
-	return dto, nil
+	return s.UpdateStudentAssignment(ctx, sa.ID, payload)
 }

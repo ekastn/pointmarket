@@ -154,9 +154,9 @@ func main() {
 			studentsRoutes.PUT("/:user_id", adminRoutes.Handlers[0], studentHandler.UpsertStudentByUserID)
 
 			// Specific student assignments list (e.g., for a student to see their own progress)
-			authRequired.GET("/:user_id/assignments", assignmentHandler.GetStudentAssignmentsList)
+			studentsRoutes.GET("/:user_id/assignments", assignmentHandler.GetStudentAssignmentsList)
 			// Specific student quizzes list (e.g., for a student to see their own progress)
-			authRequired.GET("/:user_id/quizzes", quizHandler.GetStudentQuizzesList)
+			studentsRoutes.GET("/:user_id/quizzes", quizHandler.GetStudentQuizzesList)
 		}
 
 		productRoutes := authRequired.Group("/products")
@@ -216,10 +216,10 @@ func main() {
 			assignmentsRoutes.DELETE("/:id", adminRoutes.Handlers[0], assignmentHandler.DeleteAssignment) // Admin/Teacher-only, owner only
 
 			// Student-specific actions on assignments
-			assignmentsRoutes.POST("/:id/start", assignmentHandler.CreateStudentAssignment)                                                         // Auth required (student starts an assignment)
-			assignmentsRoutes.POST("/:id/submit", assignmentHandler.UpdateStudentAssignment)                                                        // Auth required (student submits an assignment - updates status/submission)
-			assignmentsRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], assignmentHandler.GetStudentAssignmentsByAssignmentID)               // Admin/Teacher-only
-			assignmentsRoutes.PUT("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.UpdateStudentAssignment)    // Admin/Teacher-only (grade/update specific submission)
+			assignmentsRoutes.POST("/:id/start", assignmentHandler.CreateStudentAssignment)  // Auth required (student starts an assignment)
+			assignmentsRoutes.POST("/:id/submit", assignmentHandler.UpdateStudentAssignment) // Auth required (student submits an assignment - updates status/submission)
+			assignmentsRoutes.GET("/:id/submissions", middleware.Authz("guru"), assignmentHandler.GetStudentAssignmentsByAssignmentID)              // Teacher/Admin
+			assignmentsRoutes.PUT("/:id/submissions/:student_assignment_id", middleware.Authz("guru"), assignmentHandler.UpdateStudentAssignment)   // Teacher/Admin
 			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin-only
 		}
 

@@ -187,12 +187,6 @@ set @assignment_aljabar_id = (select id from assignments where title = 'tugas ma
 set @assignment_essay_id = (select id from assignments where title = 'essay bahasa indonesia' limit 1);
 set @assignment_laporan_id = (select id from assignments where title = 'laporan praktikum fisika' limit 1);
 
-insert ignore into student_assignments (student_id, assignment_id, score, status, submitted_at) values
-(@andi_sid, @assignment_aljabar_id, 85, 'completed', '2025-07-10 14:30:00'),
-(@andi_sid, @assignment_essay_id, 90, 'completed', '2025-07-12 16:45:00'),
-(@budi_sid, @assignment_aljabar_id, 75, 'completed', '2025-07-11 10:20:00'),
-(@citra_sid, @assignment_aljabar_id, 95, 'completed', '2025-07-09 20:15:00');
-
 -- insert student quizzes (requires quiz_id and student_id lookups)
 set @quiz_matematika_id = (select id from quizzes where title = 'quiz matematika - trigonometri' limit 1);
 set @quiz_bahasa_inggris_id = (select id from quizzes where title = 'quiz bahasa inggris - grammar' limit 1);

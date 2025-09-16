@@ -1,6 +1,7 @@
 package dtos
 
 import (
+	"encoding/json"
 	"time"
 
 	"pointmarket/backend/internal/store/gen" // Import the sqlc generated models
@@ -77,16 +78,20 @@ type ListAssignmentsResponseDTO struct {
 
 // StudentAssignmentDTO represents a student's assignment record for API responses
 type StudentAssignmentDTO struct {
-	ID           int64      `json:"id"`
-	StudentID    string     `json:"student_id"`
-	AssignmentID int64      `json:"assignment_id"`
-	Status       string     `json:"status"`
-	Score        *float64   `json:"score"`        // Use pointer for nullable
-	Submission   *string    `json:"submission"`   // Use pointer for nullable
-	SubmittedAt  *time.Time `json:"submitted_at"` // Use pointer for nullable
-	GradedAt     *time.Time `json:"graded_at"`    // Use pointer for nullable
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+	ID           int64            `json:"id"`
+	StudentID    string           `json:"student_id"`
+	AssignmentID int64            `json:"assignment_id"`
+	Status       string           `json:"status"`
+	Attempt      int32            `json:"attempt"`
+	Score        *float64         `json:"score"`      // Use pointer for nullable
+	Submission   *string          `json:"submission"` // Use pointer for nullable
+	Feedback     *string          `json:"feedback"`
+	SubmittedAt  *time.Time       `json:"submitted_at"` // Use pointer for nullable
+	GradedAt     *time.Time       `json:"graded_at"`    // Use pointer for nullable
+	GraderUserID *int64           `json:"grader_user_id"`
+	Attachments  *json.RawMessage `json:"attachments"`
+	CreatedAt    time.Time        `json:"created_at"`
+	UpdatedAt    time.Time        `json:"updated_at"`
 
 	// Joined assignment details
 	AssignmentTitle        string     `json:"assignment_title"`
@@ -112,11 +117,18 @@ func (dto *StudentAssignmentDTO) FromStudentAssignmentModel(m gen.StudentAssignm
 	} else {
 		dto.Status = "" // Or a default status string
 	}
+	// Attempt (non-nullable with default 1)
+	dto.Attempt = m.Attempt
 	dto.Score = m.Score
 	if m.Submission.Valid {
 		dto.Submission = &m.Submission.String
 	} else {
 		dto.Submission = nil
+	}
+	if m.Feedback.Valid {
+		dto.Feedback = &m.Feedback.String
+	} else {
+		dto.Feedback = nil
 	}
 	if m.SubmittedAt.Valid {
 		dto.SubmittedAt = &m.SubmittedAt.Time
@@ -127,6 +139,17 @@ func (dto *StudentAssignmentDTO) FromStudentAssignmentModel(m gen.StudentAssignm
 		dto.GradedAt = &m.GradedAt.Time
 	} else {
 		dto.GradedAt = nil
+	}
+	if m.GraderUserID.Valid {
+		dto.GraderUserID = &m.GraderUserID.Int64
+	} else {
+		dto.GraderUserID = nil
+	}
+	if m.Attachments != nil && len(m.Attachments) > 0 {
+		rm := json.RawMessage(m.Attachments)
+		dto.Attachments = &rm
+	} else {
+		dto.Attachments = nil
 	}
 	// Handle sql.NullTime for CreatedAt and UpdatedAt
 	if m.CreatedAt.Valid {
@@ -152,11 +175,17 @@ func (dto *StudentAssignmentDTO) FromGetStudentAssignmentsByStudentIDRow(m gen.G
 	} else {
 		dto.Status = "" // Or a default status string
 	}
+	dto.Attempt = m.Attempt
 	dto.Score = m.Score
 	if m.Submission.Valid {
 		dto.Submission = &m.Submission.String
 	} else {
 		dto.Submission = nil
+	}
+	if m.Feedback.Valid {
+		dto.Feedback = &m.Feedback.String
+	} else {
+		dto.Feedback = nil
 	}
 	if m.SubmittedAt.Valid {
 		dto.SubmittedAt = &m.SubmittedAt.Time
@@ -167,6 +196,17 @@ func (dto *StudentAssignmentDTO) FromGetStudentAssignmentsByStudentIDRow(m gen.G
 		dto.GradedAt = &m.GradedAt.Time
 	} else {
 		dto.GradedAt = nil
+	}
+	if m.GraderUserID.Valid {
+		dto.GraderUserID = &m.GraderUserID.Int64
+	} else {
+		dto.GraderUserID = nil
+	}
+	if m.Attachments != nil && len(m.Attachments) > 0 {
+		rm := json.RawMessage(m.Attachments)
+		dto.Attachments = &rm
+	} else {
+		dto.Attachments = nil
 	}
 	// Handle sql.NullTime for CreatedAt and UpdatedAt
 	if m.CreatedAt.Valid {
@@ -207,11 +247,17 @@ func (dto *StudentAssignmentDTO) FromGetStudentAssignmentsByAssignmentIDRow(m ge
 	} else {
 		dto.Status = "" // Or a default status string
 	}
+	dto.Attempt = m.Attempt
 	dto.Score = m.Score
 	if m.Submission.Valid {
 		dto.Submission = &m.Submission.String
 	} else {
 		dto.Submission = nil
+	}
+	if m.Feedback.Valid {
+		dto.Feedback = &m.Feedback.String
+	} else {
+		dto.Feedback = nil
 	}
 	if m.SubmittedAt.Valid {
 		dto.SubmittedAt = &m.SubmittedAt.Time
@@ -222,6 +268,17 @@ func (dto *StudentAssignmentDTO) FromGetStudentAssignmentsByAssignmentIDRow(m ge
 		dto.GradedAt = &m.GradedAt.Time
 	} else {
 		dto.GradedAt = nil
+	}
+	if m.GraderUserID.Valid {
+		dto.GraderUserID = &m.GraderUserID.Int64
+	} else {
+		dto.GraderUserID = nil
+	}
+	if m.Attachments != nil && len(m.Attachments) > 0 {
+		rm := json.RawMessage(m.Attachments)
+		dto.Attachments = &rm
+	} else {
+		dto.Attachments = nil
 	}
 	// Handle sql.NullTime for CreatedAt and UpdatedAt
 	if m.CreatedAt.Valid {
@@ -250,11 +307,14 @@ type CreateStudentAssignmentRequestDTO struct {
 
 // UpdateStudentAssignmentRequestDTO for updating a student assignment record (e.g., submission, score)
 type UpdateStudentAssignmentRequestDTO struct {
-	Status      *string    `json:"status"` // e.g., "in_progress", "completed"
-	Score       *float64   `json:"score"`
-	Submission  *string    `json:"submission"`
-	SubmittedAt *time.Time `json:"submitted_at"`
-	GradedAt    *time.Time `json:"graded_at"`
+	Status       *string          `json:"status"` // e.g., "in_progress", "completed"
+	Score        *float64         `json:"score"`
+	Submission   *string          `json:"submission"`
+	Feedback     *string          `json:"feedback"`
+	SubmittedAt  *time.Time       `json:"submitted_at"`
+	GradedAt     *time.Time       `json:"graded_at"`
+	GraderUserID *int64           `json:"grader_user_id"`
+	Attachments  *json.RawMessage `json:"attachments"`
 }
 
 // ListStudentAssignmentsResponseDTO contains a list of StudentAssignmentDTOs

@@ -8,6 +8,7 @@ package gen
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 )
 
 const createAssignment = `-- name: CreateAssignment :execresult
@@ -254,7 +255,9 @@ func (q *Queries) GetAssignmentsByOwnerID(ctx context.Context, ownerID int64) ([
 }
 
 const getStudentAssignmentByID = `-- name: GetStudentAssignmentByID :one
-SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at FROM student_assignments
+SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at,
+       attempt, feedback, grader_user_id, COALESCE(attachments, JSON_ARRAY()) AS attachments
+FROM student_assignments
 WHERE id = ?
 `
 
@@ -272,12 +275,18 @@ func (q *Queries) GetStudentAssignmentByID(ctx context.Context, id int64) (Stude
 		&i.GradedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Attempt,
+		&i.Feedback,
+		&i.GraderUserID,
+		&i.Attachments,
 	)
 	return i, err
 }
 
 const getStudentAssignmentByIDs = `-- name: GetStudentAssignmentByIDs :one
-SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at FROM student_assignments
+SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at,
+       attempt, feedback, grader_user_id, COALESCE(attachments, JSON_ARRAY()) AS attachments
+FROM student_assignments
 WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND assignment_id = ?
 `
 
@@ -300,12 +309,17 @@ func (q *Queries) GetStudentAssignmentByIDs(ctx context.Context, arg GetStudentA
 		&i.GradedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Attempt,
+		&i.Feedback,
+		&i.GraderUserID,
+		&i.Attachments,
 	)
 	return i, err
 }
 
 const getStudentAssignmentsByAssignmentID = `-- name: GetStudentAssignmentsByAssignmentID :many
-SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.score, sa.submission, sa.submitted_at, sa.graded_at, sa.created_at, sa.updated_at,
+SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.attempt, sa.score, sa.submission, sa.feedback, sa.submitted_at, sa.graded_at, sa.grader_user_id,
+       COALESCE(sa.attachments, JSON_ARRAY()) AS attachments, sa.created_at, sa.updated_at,
        u.display_name AS student_name, u.email AS student_email
 FROM student_assignments sa
 JOIN students s ON sa.student_id = s.student_id
@@ -319,10 +333,14 @@ type GetStudentAssignmentsByAssignmentIDRow struct {
 	StudentID    string                       `json:"student_id"`
 	AssignmentID int64                        `json:"assignment_id"`
 	Status       NullStudentAssignmentsStatus `json:"status"`
+	Attempt      int32                        `json:"attempt"`
 	Score        *float64                     `json:"score"`
 	Submission   sql.NullString               `json:"submission"`
+	Feedback     sql.NullString               `json:"feedback"`
 	SubmittedAt  sql.NullTime                 `json:"submitted_at"`
 	GradedAt     sql.NullTime                 `json:"graded_at"`
+	GraderUserID sql.NullInt64                `json:"grader_user_id"`
+	Attachments  json.RawMessage              `json:"attachments"`
 	CreatedAt    sql.NullTime                 `json:"created_at"`
 	UpdatedAt    sql.NullTime                 `json:"updated_at"`
 	StudentName  string                       `json:"student_name"`
@@ -343,10 +361,14 @@ func (q *Queries) GetStudentAssignmentsByAssignmentID(ctx context.Context, assig
 			&i.StudentID,
 			&i.AssignmentID,
 			&i.Status,
+			&i.Attempt,
 			&i.Score,
 			&i.Submission,
+			&i.Feedback,
 			&i.SubmittedAt,
 			&i.GradedAt,
+			&i.GraderUserID,
+			&i.Attachments,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.StudentName,
@@ -366,7 +388,8 @@ func (q *Queries) GetStudentAssignmentsByAssignmentID(ctx context.Context, assig
 }
 
 const getStudentAssignmentsByStudentID = `-- name: GetStudentAssignmentsByStudentID :many
-SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.score, sa.submission, sa.submitted_at, sa.graded_at, sa.created_at, sa.updated_at,
+SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.attempt, sa.score, sa.submission, sa.feedback, sa.submitted_at, sa.graded_at, sa.grader_user_id,
+       COALESCE(sa.attachments, JSON_ARRAY()) AS attachments, sa.created_at, sa.updated_at,
        a.title AS assignment_title, a.description AS assignment_description, a.course_id AS assignment_course_id, a.reward_points AS assignment_reward_points, a.due_date AS assignment_due_date
 FROM student_assignments sa
 JOIN assignments a ON sa.assignment_id = a.id
@@ -379,10 +402,14 @@ type GetStudentAssignmentsByStudentIDRow struct {
 	StudentID              string                       `json:"student_id"`
 	AssignmentID           int64                        `json:"assignment_id"`
 	Status                 NullStudentAssignmentsStatus `json:"status"`
+	Attempt                int32                        `json:"attempt"`
 	Score                  *float64                     `json:"score"`
 	Submission             sql.NullString               `json:"submission"`
+	Feedback               sql.NullString               `json:"feedback"`
 	SubmittedAt            sql.NullTime                 `json:"submitted_at"`
 	GradedAt               sql.NullTime                 `json:"graded_at"`
+	GraderUserID           sql.NullInt64                `json:"grader_user_id"`
+	Attachments            json.RawMessage              `json:"attachments"`
 	CreatedAt              sql.NullTime                 `json:"created_at"`
 	UpdatedAt              sql.NullTime                 `json:"updated_at"`
 	AssignmentTitle        string                       `json:"assignment_title"`
@@ -406,10 +433,14 @@ func (q *Queries) GetStudentAssignmentsByStudentID(ctx context.Context, userID i
 			&i.StudentID,
 			&i.AssignmentID,
 			&i.Status,
+			&i.Attempt,
 			&i.Score,
 			&i.Submission,
+			&i.Feedback,
 			&i.SubmittedAt,
 			&i.GradedAt,
+			&i.GraderUserID,
+			&i.Attachments,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.AssignmentTitle,
@@ -472,18 +503,22 @@ SET
     status = ?,
     score = ?,
     submission = ?,
+    feedback = ?,
     submitted_at = ?,
-    graded_at = ?
+    graded_at = ?,
+    grader_user_id = ?
 WHERE id = ?
 `
 
 type UpdateStudentAssignmentParams struct {
-	Status      NullStudentAssignmentsStatus `json:"status"`
-	Score       *float64                     `json:"score"`
-	Submission  sql.NullString               `json:"submission"`
-	SubmittedAt sql.NullTime                 `json:"submitted_at"`
-	GradedAt    sql.NullTime                 `json:"graded_at"`
-	ID          int64                        `json:"id"`
+	Status       NullStudentAssignmentsStatus `json:"status"`
+	Score        *float64                     `json:"score"`
+	Submission   sql.NullString               `json:"submission"`
+	Feedback     sql.NullString               `json:"feedback"`
+	SubmittedAt  sql.NullTime                 `json:"submitted_at"`
+	GradedAt     sql.NullTime                 `json:"graded_at"`
+	GraderUserID sql.NullInt64                `json:"grader_user_id"`
+	ID           int64                        `json:"id"`
 }
 
 func (q *Queries) UpdateStudentAssignment(ctx context.Context, arg UpdateStudentAssignmentParams) error {
@@ -491,8 +526,10 @@ func (q *Queries) UpdateStudentAssignment(ctx context.Context, arg UpdateStudent
 		arg.Status,
 		arg.Score,
 		arg.Submission,
+		arg.Feedback,
 		arg.SubmittedAt,
 		arg.GradedAt,
+		arg.GraderUserID,
 		arg.ID,
 	)
 	return err

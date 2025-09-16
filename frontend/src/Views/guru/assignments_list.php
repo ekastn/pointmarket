@@ -23,6 +23,12 @@ $actions = [
         'attributes' => function($row){ return ['href' => '/guru/assignments/' . (int)$row['id'] . '/edit']; }
     ],
     [
+        'label' => 'Submissions',
+        'icon' => 'fas fa-list',
+        'class' => 'btn-outline-secondary',
+        'attributes' => function($row){ return ['href' => '/guru/assignments/' . (int)$row['id'] . '/submissions']; }
+    ],
+    [
         'label' => 'Hapus',
         'icon' => 'fas fa-trash',
         'class' => 'btn-outline-danger',

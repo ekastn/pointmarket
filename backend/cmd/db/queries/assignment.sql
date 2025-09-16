@@ -56,11 +56,14 @@ INSERT INTO student_assignments (
 );
 
 -- name: GetStudentAssignmentByID :one
-SELECT * FROM student_assignments
+SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at,
+       attempt, feedback, grader_user_id, COALESCE(attachments, JSON_ARRAY()) AS attachments
+FROM student_assignments
 WHERE id = ?;
 
 -- name: GetStudentAssignmentsByStudentID :many
-SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.score, sa.submission, sa.submitted_at, sa.graded_at, sa.created_at, sa.updated_at,
+SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.attempt, sa.score, sa.submission, sa.feedback, sa.submitted_at, sa.graded_at, sa.grader_user_id,
+       COALESCE(sa.attachments, JSON_ARRAY()) AS attachments, sa.created_at, sa.updated_at,
        a.title AS assignment_title, a.description AS assignment_description, a.course_id AS assignment_course_id, a.reward_points AS assignment_reward_points, a.due_date AS assignment_due_date
 FROM student_assignments sa
 JOIN assignments a ON sa.assignment_id = a.id
@@ -68,7 +71,8 @@ WHERE sa.student_id = (SELECT student_id FROM students WHERE user_id = ?)
 ORDER BY sa.created_at DESC;
 
 -- name: GetStudentAssignmentsByAssignmentID :many
-SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.score, sa.submission, sa.submitted_at, sa.graded_at, sa.created_at, sa.updated_at,
+SELECT sa.id, sa.student_id, sa.assignment_id, sa.status, sa.attempt, sa.score, sa.submission, sa.feedback, sa.submitted_at, sa.graded_at, sa.grader_user_id,
+       COALESCE(sa.attachments, JSON_ARRAY()) AS attachments, sa.created_at, sa.updated_at,
        u.display_name AS student_name, u.email AS student_email
 FROM student_assignments sa
 JOIN students s ON sa.student_id = s.student_id
@@ -82,8 +86,10 @@ SET
     status = ?,
     score = ?,
     submission = ?,
+    feedback = ?,
     submitted_at = ?,
-    graded_at = ?
+    graded_at = ?,
+    grader_user_id = ?
 WHERE id = ?;
 
 -- name: DeleteStudentAssignment :exec
@@ -91,5 +97,7 @@ DELETE FROM student_assignments
 WHERE id = ?;
 
 -- name: GetStudentAssignmentByIDs :one
-SELECT * FROM student_assignments
+SELECT id, student_id, assignment_id, status, score, submission, submitted_at, graded_at, created_at, updated_at,
+       attempt, feedback, grader_user_id, COALESCE(attachments, JSON_ARRAY()) AS attachments
+FROM student_assignments
 WHERE student_id = (SELECT student_id FROM students WHERE user_id = ?) AND assignment_id = ?;

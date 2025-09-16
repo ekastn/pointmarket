@@ -861,6 +861,10 @@ type StudentAssignment struct {
 	GradedAt     sql.NullTime                 `json:"graded_at"`
 	CreatedAt    sql.NullTime                 `json:"created_at"`
 	UpdatedAt    sql.NullTime                 `json:"updated_at"`
+	Attempt      int32                        `json:"attempt"`
+	Feedback     sql.NullString               `json:"feedback"`
+	GraderUserID sql.NullInt64                `json:"grader_user_id"`
+	Attachments  json.RawMessage              `json:"attachments"`
 }
 
 type StudentCourse struct {

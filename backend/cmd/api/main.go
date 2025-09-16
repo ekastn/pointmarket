@@ -27,6 +27,7 @@ func main() {
 	querier := gen.New(db)
 
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
+	recGateway := gateway.NewRecommendationGateway(cfg.RecommendationServiceURL, "")
 
 	authService := services.NewAuthService(cfg, querier)
 	userService := services.NewUserService(querier)
@@ -44,6 +45,7 @@ func main() {
 	assignmentService := services.NewAssignmentService(querier, pointsService)
 	quizService := services.NewQuizService(querier, pointsService)
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
+	recommendationService := services.NewRecommendationService(recGateway, studentService)
 	pointsHandler := handler.NewPointsHandler(pointsService, querier)
 
 	var imgStore store.ImageStore
@@ -66,6 +68,7 @@ func main() {
 	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService, userService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
+	recommendationHandler := handler.NewRecommendationHandler(recommendationService, studentService)
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
 	productHandler := handler.NewProductHandler(*productService)
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
@@ -153,10 +156,10 @@ func main() {
 			studentsRoutes.GET("/:user_id", adminRoutes.Handlers[0], studentHandler.GetStudentByUserID)
 			studentsRoutes.PUT("/:user_id", adminRoutes.Handlers[0], studentHandler.UpsertStudentByUserID)
 
-			// Specific student assignments list (e.g., for a student to see their own progress)
 			studentsRoutes.GET("/:user_id/assignments", assignmentHandler.GetStudentAssignmentsList)
-			// Specific student quizzes list (e.g., for a student to see their own progress)
 			studentsRoutes.GET("/:user_id/quizzes", quizHandler.GetStudentQuizzesList)
+
+			studentsRoutes.GET("/:user_id/recommendations", recommendationHandler.GetStudentRecommendations)
 		}
 
 		productRoutes := authRequired.Group("/products")
@@ -216,8 +219,8 @@ func main() {
 			assignmentsRoutes.DELETE("/:id", adminRoutes.Handlers[0], assignmentHandler.DeleteAssignment) // Admin/Teacher-only, owner only
 
 			// Student-specific actions on assignments
-			assignmentsRoutes.POST("/:id/start", assignmentHandler.CreateStudentAssignment)  // Auth required (student starts an assignment)
-			assignmentsRoutes.POST("/:id/submit", assignmentHandler.UpdateStudentAssignment) // Auth required (student submits an assignment - updates status/submission)
+			assignmentsRoutes.POST("/:id/start", assignmentHandler.CreateStudentAssignment)                                                         // Auth required (student starts an assignment)
+			assignmentsRoutes.POST("/:id/submit", assignmentHandler.UpdateStudentAssignment)                                                        // Auth required (student submits an assignment - updates status/submission)
 			assignmentsRoutes.GET("/:id/submissions", middleware.Authz("guru"), assignmentHandler.GetStudentAssignmentsByAssignmentID)              // Teacher/Admin
 			assignmentsRoutes.PUT("/:id/submissions/:student_assignment_id", middleware.Authz("guru"), assignmentHandler.UpdateStudentAssignment)   // Teacher/Admin
 			assignmentsRoutes.DELETE("/:id/submissions/:student_assignment_id", adminRoutes.Handlers[0], assignmentHandler.DeleteStudentAssignment) // Admin-only

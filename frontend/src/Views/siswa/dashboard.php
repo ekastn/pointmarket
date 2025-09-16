@@ -46,7 +46,7 @@ $renderer->includePartial('components/partials/page_title', [
 <!-- VARK Learning Style Card -->
 <div class="row pm-section">
     <div class="col-12">
-        <div class="card border-left-primary shadow">
+        <div class="card border-left-primary">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-brain me-2"></i>
@@ -256,4 +256,201 @@ $renderer->includePartial('components/partials/page_title', [
     </div>
 </div>
 
+<?php if (!empty($recommendations) || !empty($missingAssessments)) : ?>
+<div class="row pm-section">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Rekomendasi
+                </h5>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($recommendations)) : ?>
+                    <?php
+                    // Normalize structure: backend returns an object with 'actions'
+                    $hasStructured = is_array($recommendations) && isset($recommendations['actions']) && is_array($recommendations['actions']);
+                    ?>
+                    <?php if ($hasStructured): ?>
+                        <?php $actions = $recommendations['actions']; ?>
+                        <?php if (empty($actions)): ?>
+                            <div class="text-muted small">Belum ada rekomendasi tersedia.</div>
+                        <?php else: ?>
+                            <div class="row" id="pmRecoSection">
+                                <?php
+                                $qValues = array_map(function($a){return isset($a['q_value']) ? (float)$a['q_value'] : 0;}, $actions);
+                                $maxQ = max($qValues ?: [0]);
+                                // Color palette similar to weekly evaluations (rotating)
+                                $actionColorPalette = ['primary','success','warning','info','secondary','danger'];
+                                ?>
+                                <?php foreach ($actions as $aIndex => $action): ?>
+                                    <?php
+                                    $q = isset($action['q_value']) ? (float)$action['q_value'] : null;
+                                    $itemCount = isset($action['items']) && is_array($action['items']) ? count($action['items']) : 0;
+                                    $items = $action['items'] ?? [];
+                                    $preview = array_slice($items, 0, 3);
+                                    $color = $actionColorPalette[$aIndex % count($actionColorPalette)];
+                                    // Colors needing dark text for readability
+                                    $needsDark = in_array($color, ['warning','info','light']);
+                                    $textClass = $needsDark ? 'text-dark' : 'text-white';
+                                    ?>
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="card h-100 shadow-sm border-0" data-reco-action="<?php echo $aIndex; ?>">
+                                            <div class="card-header py-2 d-flex justify-content-between align-items-center bg-<?php echo htmlspecialchars($color); ?> <?php echo $textClass; ?>">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fas fa-bolt"></i>
+                                                    <strong class="small mb-0"><?php echo htmlspecialchars($action['action_name'] ?? ('Aksi '.($aIndex+1))); ?></strong>
+                                                </div>
+                                                <span class="badge <?php echo $needsDark ? 'bg-light text-dark' : 'bg-white text-'.$color; ?> border"><i class="fas fa-layer-group me-1"></i><?php echo $itemCount; ?></span>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <?php if ($q !== null): ?>
+                                                    <div class="small text-muted mb-1">Q: <?php echo htmlspecialchars(number_format($q,3)); ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($items)): ?>
+                                                    <ul class="list-unstyled mb-2 small" data-preview-list="<?php echo $aIndex; ?>">
+                                                        <?php foreach ($preview as $it): ?>
+                                                            <li class="mb-1 d-flex align-items-start">
+                                                                <i class="fas fa-chevron-right text-muted me-2" style="font-size:.6rem; margin-top:.25rem;"></i>
+                                                                <span class="text-truncate" style="max-width: 150px;"><?php echo htmlspecialchars($it['title'] ?? 'Item'); ?></span>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                        <?php if ($itemCount > count($preview)): ?>
+                                                            <li class="text-muted fst-italic">+<?php echo $itemCount - count($preview); ?> lainnya</li>
+                                                        <?php endif; ?>
+                                                    </ul>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary w-100" data-toggle-items="<?php echo $aIndex; ?>">Detail</button>
+                                                    <div class="mt-2 d-none" data-full-list="<?php echo $aIndex; ?>">
+                                                        <ul class="list-group list-group-flush small">
+                                                            <?php $itemCounter=1; foreach ($items as $it): ?>
+                                                                <?php
+                                                                $diffRaw = isset($it['difficulty_level']) ? trim((string)$it['difficulty_level']) : '';
+                                                                ?>
+                                                                <li class="list-group-item px-2 py-2">
+                                                                    <div class="d-flex">
+                                                                        <div class="me-2 text-primary fw-bold" style="width:1.5rem;">#<?php echo $itemCounter++; ?></div>
+                                                                        <div class="flex-grow-1">
+                                                                            <div class="fw-semibold small mb-1"><?php echo htmlspecialchars($it['title'] ?? 'Item'); ?></div>
+                                                                            <?php if (!empty($it['description'])): ?>
+                                                                                <div class="text-muted small mb-1"><?php echo htmlspecialchars($it['description']); ?></div>
+                                                                            <?php endif; ?>
+                                                                            <div class="small text-muted d-flex flex-wrap gap-2">
+                                                                                <?php if (!empty($it['category'])): ?><span><i class="fas fa-tag me-1"></i><?php echo htmlspecialchars($it['category']); ?></span><?php endif; ?>
+                                                                                <?php if ($diffRaw !== ''): ?><span><i class="fas fa-signal me-1"></i><?php echo htmlspecialchars($diffRaw); ?></span><?php endif; ?>
+                                                                                <?php if (!empty($it['estimated_duration'])): ?><span><i class="fas fa-clock me-1"></i><?php echo htmlspecialchars($it['estimated_duration']); ?></span><?php endif; ?>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="text-muted small">Tidak ada item.</div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                Sumber: <?php echo htmlspecialchars($recommendations['source'] ?? 'unknown'); ?> · Aksi: <?php echo htmlspecialchars($recommendations['total_actions'] ?? 0); ?> · Item: <?php echo htmlspecialchars($recommendations['total_items'] ?? 0); ?>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <ul class="list-group list-group-flush">
+                            <?php foreach (array_slice((array)$recommendations, 0, 6) as $idx => $rec): ?>
+                                <?php if (!is_array($rec)) continue; ?>
+                                <li class="list-group-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 me-3 mt-1 text-primary fw-bold"><?php echo (is_int($idx) ? $idx + 1 : 1); ?>.</div>
+                                        <div class="flex-grow-1">
+                                            <strong><?php echo htmlspecialchars($rec['title'] ?? $rec['name'] ?? 'Item'); ?></strong>
+                                            <?php if (!empty($rec['description'])): ?>
+                                                <div class="small text-muted mt-1"><?php echo htmlspecialchars($rec['description']); ?></div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                <?php elseif (!empty($missingAssessments)) : ?>
+                    <h6 class="mb-3">
+                        Lengkapi assessment (VARK, MSLQ, AMS) supaya kami bisa menampilkan rekomendasi yang dipersonalisasi untuk kamu.
+                    </h6>
+                    <ul class="small mb-3">
+                        <?php foreach ($missingAssessments as $miss): ?>
+                            <li><strong><?php echo htmlspecialchars($miss); ?></strong> belum ada / belum lengkap.</li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <a href="/questionnaires" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-clipboard-list me-1"></i>Lengkapi Sekarang
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php $renderer->includePartial('components/partials/ai_simulations_section'); ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        // (Removed q-bar animation logic)
+
+            // Legacy (pm-reco-expand-toggle) expand (if still present)
+        document.querySelectorAll('.pm-reco-expand-toggle[data-toggle-action]').forEach(function(t){
+            t.addEventListener('click', function(){
+                const idx = this.getAttribute('data-toggle-action');
+                const host = document.querySelector('.pm-reco-action[data-action-index="'+idx+'"]');
+                const list = document.querySelector('.pm-reco-items[data-items-list="'+idx+'"]');
+                if (!host || !list) return;
+                const expanded = host.classList.toggle('expanded');
+                list.style.display = expanded ? 'flex' : 'none';
+                this.innerHTML = expanded ? '<i class="fas fa-chevron-up"></i> Tutup' : '<i class="fas fa-chevron-down"></i> Detail';
+                if (expanded) {
+                    list.style.animation = 'pmFadeUp .35s ease';
+                }
+            });
+        });
+
+            // New card grid Detail buttons (data-toggle-items)
+            document.querySelectorAll('button[data-toggle-items]').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const idx = this.getAttribute('data-toggle-items');
+                    const card = document.querySelector('[data-reco-action="'+idx+'"]');
+                    if (!card) return;
+                    const preview = card.querySelector('[data-preview-list="'+idx+'"]');
+                    const full = card.querySelector('[data-full-list="'+idx+'"]');
+                    if (!full) return;
+                    const expanded = !full.classList.contains('d-none');
+                    if (expanded) {
+                        // collapse
+                        full.classList.add('d-none');
+                        if (preview) preview.classList.remove('d-none');
+                        this.innerHTML = 'Detail';
+                    } else {
+                        full.classList.remove('d-none');
+                        if (preview) preview.classList.add('d-none');
+                        this.innerHTML = 'Tutup';
+                    }
+                });
+            });
+
+        // Auto-collapse if section height grows too large after expansions
+        const clamp = document.getElementById('pmRecoSection');
+        if (clamp) {
+            const enforceClamp = () => {
+                if (clamp.scrollHeight > 1200) { // safety threshold
+                    // collapse all except first
+                    const actions = clamp.querySelectorAll('.pm-reco-action');
+                    actions.forEach((a,i)=>{ if(i>0) { a.classList.remove('expanded'); const l=a.querySelector('.pm-reco-items'); if(l) l.style.display='none'; const toggle=a.querySelector('.pm-reco-expand-toggle'); if(toggle) toggle.innerHTML='<i class="fas fa-chevron-down"></i> Detail'; }});
+                }
+            };
+            setTimeout(enforceClamp, 600);
+        }
+});
+</script>

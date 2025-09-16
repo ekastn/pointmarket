@@ -10,19 +10,20 @@ import (
 
 // Config holds the application configuration
 type Config struct {
-	DBHost           string
-	DBPort           int
-	DBUser           string
-	DBPassword       string
-	DBName           string
-	JWTSecret        string
-	JWTExpiration    int
-	ServerPort       int
-	AllowedOrigins   string
-	AIServiceURL     string
-	GCSBucket        string
-	GCSPublicBaseURL string
-	MaxAvatarMB      int
+	DBHost                   string
+	DBPort                   int
+	DBUser                   string
+	DBPassword               string
+	DBName                   string
+	JWTSecret                string
+	JWTExpiration            int
+	ServerPort               int
+	AllowedOrigins           string
+	AIServiceURL             string
+	RecommendationServiceURL string
+	GCSBucket                string
+	GCSPublicBaseURL         string
+	MaxAvatarMB              int
 }
 
 // Init loads the configuration from environment variables
@@ -32,19 +33,20 @@ func Init() *Config {
 	}
 
 	return &Config{
-		DBHost:           env.GetString("DB_HOST", "localhost"),
-		DBPort:           env.GetInt("DB_PORT", 3306),
-		DBUser:           env.GetString("DB_USER", "root"),
-		DBPassword:       env.GetString("DB_PASSWORD", ""),
-		DBName:           env.GetString("DB_NAME", "pointmarket"),
-		JWTSecret:        env.GetString("JWT_SECRET", "your-secret-key"),
-		JWTExpiration:    env.GetInt("JWT_EXPIRATION_HOURS", 72),
-		ServerPort:       env.GetInt("SERVER_PORT", 8080),
-		AllowedOrigins:   env.GetString("ALLOWED_ORIGINS", "http://localhost:8081"),
-		AIServiceURL:     env.GetString("AI_SERVICE_URL", "http://localhost:5000"),
-		GCSBucket:        env.GetString("GCS_BUCKET", ""),
-		GCSPublicBaseURL: env.GetString("GCS_PUBLIC_BASE_URL", ""),
-		MaxAvatarMB:      env.GetInt("MAX_AVATAR_MB", 5),
+		DBHost:                   env.GetString("DB_HOST", "localhost"),
+		DBPort:                   env.GetInt("DB_PORT", 3306),
+		DBUser:                   env.GetString("DB_USER", "root"),
+		DBPassword:               env.GetString("DB_PASSWORD", ""),
+		DBName:                   env.GetString("DB_NAME", "pointmarket"),
+		JWTSecret:                env.GetString("JWT_SECRET", "your-secret-key"),
+		JWTExpiration:            env.GetInt("JWT_EXPIRATION_HOURS", 72),
+		ServerPort:               env.GetInt("SERVER_PORT", 8080),
+		AllowedOrigins:           env.GetString("ALLOWED_ORIGINS", "http://localhost:8081"),
+		AIServiceURL:             env.GetString("AI_SERVICE_URL", "http://localhost:5000"),
+		RecommendationServiceURL: env.GetString("RECOMMENDATION_SERVICE_URL", "http://localhost:5001"),
+		GCSBucket:                env.GetString("GCS_BUCKET", ""),
+		GCSPublicBaseURL:         env.GetString("GCS_PUBLIC_BASE_URL", ""),
+		MaxAvatarMB:              env.GetInt("MAX_AVATAR_MB", 5),
 	}
 }
 

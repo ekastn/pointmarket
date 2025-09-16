@@ -18,6 +18,7 @@ use App\Services\MissionService;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\ErrorController;
 use App\Services\WeeklyEvaluationService;
+use App\Services\RecommendationService;
 use Psr\Container\ContainerInterface;
 
 return [
@@ -78,6 +79,10 @@ return [
 
     WeeklyEvaluationService::class => function (ApiClient $apiClient) {
         return new WeeklyEvaluationService($apiClient);
+    },
+
+    RecommendationService::class => function (ApiClient $apiClient) {
+        return new RecommendationService($apiClient);
     },
 
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {

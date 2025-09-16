@@ -20,13 +20,15 @@ type RecommendationAction struct {
 
 // StudentRecommendationsDTO full recommendation payload consumed by the frontend.
 type StudentRecommendationsDTO struct {
-	StudentID    string                 `json:"student_id"`
-	State        string                 `json:"state"`
-	Source       string                 `json:"source"` // trained | persisted | default | fallback
-	ModelVersion string                 `json:"model_version"`
-	Actions      []RecommendationAction `json:"actions"`
-	TotalActions int                    `json:"total_actions"`
-	TotalItems   int                    `json:"total_items"`
+	StudentID       string                 `json:"student_id"`
+	State           string                 `json:"state"`
+	Source          string                 `json:"source"` // trained | persisted | default | fallback
+	ModelVersion    string                 `json:"model_version"`
+	Actions         []RecommendationAction `json:"actions"`
+	TotalActions    int                    `json:"total_actions"`
+	TotalItems      int                    `json:"total_items"`
+	TrainingPending bool                   `json:"training_pending"`
+	EmptyReason     string                 `json:"empty_reason,omitempty"` // untrained | trained_but_empty | fallback_error
 }
 
 // TrainRecommendationsResponse wraps training trigger output.

@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,6 +24,41 @@ func NewRecommendationGateway(baseURL, token string) *RecommendationGateway {
 		Token:   token,
 		Client:  &http.Client{Timeout: 5 * time.Second},
 	}
+}
+
+// TrainRequest represents payload to start training.
+type TrainRequest struct {
+	Episodes int `json:"episodes"`
+}
+
+// Train triggers model training upstream (global training, not per student).
+func (g *RecommendationGateway) Train(ctx context.Context, episodes int) error {
+	if episodes <= 0 {
+		episodes = 50 // sensible default
+	}
+	payload := TrainRequest{Episodes: episodes}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	endpoint := fmt.Sprintf("%s/train", g.BaseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if g.Token != "" {
+		req.Header.Set("X-Internal-Token", g.Token)
+	}
+	resp, err := g.Client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("upstream train status %d", resp.StatusCode)
+	}
+	return nil
 }
 
 // raw structures mirroring upstream JSON (only what we need)

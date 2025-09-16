@@ -43,6 +43,49 @@ $renderer->includePartial('components/partials/page_title', [
     <?php } ?>
 </div>
 
+<!-- Quick Actions -->
+<div class="row pm-section">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="/assignments" class="btn btn-primary w-100">
+                            <i class="fas fa-tasks me-2"></i>
+                            Lihat Tugas
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/quiz" class="btn btn-success w-100">
+                            <i class="fas fa-question-circle me-2"></i>
+                            Ikuti Kuis
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/questionnaires" class="btn btn-info w-100">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            Kuesioner
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/materials" class="btn btn-warning w-100">
+                            <i class="fas fa-book me-2"></i>
+                            Materi Belajar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- VARK Learning Style Card -->
 <div class="row pm-section">
     <div class="col-12">
@@ -113,48 +156,6 @@ $renderer->includePartial('components/partials/page_title', [
                         'cta_label' => 'Mulai VARK Assessment',
                     ]); ?>
                 <?php } ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row pm-section">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>
-                    Aksi Cepat
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-2">
-                        <a href="/assignments" class="btn btn-primary w-100">
-                            <i class="fas fa-tasks me-2"></i>
-                            Lihat Tugas
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/quiz" class="btn btn-success w-100">
-                            <i class="fas fa-question-circle me-2"></i>
-                            Ikuti Kuis
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/questionnaires" class="btn btn-info w-100">
-                            <i class="fas fa-clipboard-list me-2"></i>
-                            Kuesioner
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/materials" class="btn btn-warning w-100">
-                            <i class="fas fa-book me-2"></i>
-                            Materi Belajar
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -271,12 +272,27 @@ $renderer->includePartial('components/partials/page_title', [
                     <?php
                     // Normalize structure: backend returns an object with 'actions'
                     $hasStructured = is_array($recommendations) && isset($recommendations['actions']) && is_array($recommendations['actions']);
+                    $trainingPending = !empty($recommendations['training_pending']);
+                    $emptyReason = $recommendations['empty_reason'] ?? '';
+                    $totalItems = $recommendations['total_items'] ?? 0;
                     ?>
                     <?php if ($hasStructured): ?>
                         <?php $actions = $recommendations['actions']; ?>
-                        <?php if (empty($actions)): ?>
+                        <?php if ($trainingPending || ($emptyReason && $totalItems == 0)): ?>
+                            <div class="p-3 text-center border rounded mb-3 bg-light">
+                                <?php if ($trainingPending): ?>
+                                    <div class="mb-2">
+                                        <strong>Sedang mempersiapkan rekomendasi...</strong>
+                                    </div>
+                                    <p class="small text-muted mb-2">Coba refresh dalam beberapa detik.</p>
+                                <?php endif; ?>
+                                <a href="" class="btn btn-sm btn-outline-secondary"><i class="fas fa-rotate-right me-1"></i>Refresh</a>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (empty($actions) && !$trainingPending && $totalItems == 0 && !$emptyReason): ?>
                             <div class="text-muted small">Belum ada rekomendasi tersedia.</div>
                         <?php else: ?>
+                            <?php if (!$trainingPending && $totalItems > 0): ?>
                             <div class="row" id="pmRecoSection">
                                 <?php
                                 $qValues = array_map(function($a){return isset($a['q_value']) ? (float)$a['q_value'] : 0;}, $actions);
@@ -354,8 +370,14 @@ $renderer->includePartial('components/partials/page_title', [
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <div class="small text-muted mt-2">
-                                Sumber: <?php echo htmlspecialchars($recommendations['source'] ?? 'unknown'); ?> · Aksi: <?php echo htmlspecialchars($recommendations['total_actions'] ?? 0); ?> · Item: <?php echo htmlspecialchars($recommendations['total_items'] ?? 0); ?>
+                            <?php endif; ?>
+                            <div class="small text-muted mt-2 d-flex flex-wrap gap-3 align-items-center">
+                                <span>Sumber: <strong><?php echo htmlspecialchars($recommendations['source'] ?? 'unknown'); ?></strong></span>
+                                <span>Aksi: <strong><?php echo htmlspecialchars($recommendations['total_actions'] ?? 0); ?></strong></span>
+                                <span>Item: <strong><?php echo htmlspecialchars($recommendations['total_items'] ?? 0); ?></strong></span>
+                                <?php if ($trainingPending): ?><span class="badge bg-warning text-dark">Training Pending</span><?php endif; ?>
+                                <?php if ($emptyReason === 'trained_but_empty'): ?><span class="badge bg-secondary">Data Minim</span><?php endif; ?>
+                                <?php if ($emptyReason === 'untrained' && !$trainingPending): ?><span class="badge bg-info text-dark">Untrained</span><?php endif; ?>
                             </div>
                         <?php endif; ?>
                     <?php else: ?>

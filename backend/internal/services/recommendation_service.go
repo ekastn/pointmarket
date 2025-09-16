@@ -8,6 +8,7 @@ import (
 	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/store/gen"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -15,10 +16,14 @@ import (
 type RecommendationService struct {
 	gateway    *gateway.RecommendationGateway
 	studentSvc *StudentService
+	// training control
+	trainMux       sync.Mutex
+	lastTrainStart time.Time
+	trainCooldown  time.Duration
 }
 
 func NewRecommendationService(gw *gateway.RecommendationGateway, studentSvc *StudentService) *RecommendationService {
-	return &RecommendationService{gateway: gw, studentSvc: studentSvc}
+	return &RecommendationService{gateway: gw, studentSvc: studentSvc, trainCooldown: 5 * time.Minute}
 }
 
 // GetStudentRecommendations returns mapped recommendations with fallback heuristics.
@@ -38,7 +43,42 @@ func (s *RecommendationService) GetStudentRecommendations(ctx context.Context, s
 	mapped := s.mapUpstream(up)
 	mapped.Source = s.detectSource(up)
 
+	// Detect cold start: no trained Q-values AND zero items overall
+	isUntrained := mapped.Source != "trained"
+	empty := mapped.TotalItems == 0
+	if isUntrained && empty {
+		mapped.EmptyReason = "untrained"
+		// Attempt to trigger training (non-blocking) with cooldown
+		if s.maybeTriggerTraining() {
+			mapped.TrainingPending = true
+			mapped.Source = "training"
+		}
+	} else if !isUntrained && empty {
+		mapped.EmptyReason = "trained_but_empty"
+	}
+
 	return mapped, nil
+}
+
+// maybeTriggerTraining ensures we don't spam /train. Returns true if a trigger was started.
+func (s *RecommendationService) maybeTriggerTraining() bool {
+	s.trainMux.Lock()
+	defer s.trainMux.Unlock()
+	now := time.Now()
+	if !s.lastTrainStart.IsZero() && now.Sub(s.lastTrainStart) < s.trainCooldown {
+		return false
+	}
+	s.lastTrainStart = now
+	go func(start time.Time) {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		if err := s.gateway.Train(ctx, 50); err != nil {
+			log.Printf("recommendation training trigger failed: %v", err)
+			return
+		}
+		log.Printf("recommendation training triggered successfully at %s", start.Format(time.RFC3339))
+	}(now)
+	return true
 }
 
 // mapUpstream converts upstream response into internal DTO.

@@ -43,7 +43,7 @@ func Init() *Config {
 		ServerPort:               env.GetInt("SERVER_PORT", 8080),
 		AllowedOrigins:           env.GetString("ALLOWED_ORIGINS", "http://localhost:8081"),
 		AIServiceURL:             env.GetString("AI_SERVICE_URL", "http://localhost:5000"),
-		RecommendationServiceURL: env.GetString("RECOMMENDATION_SERVICE_URL", "http://localhost:5001"),
+		RecommendationServiceURL: env.GetString("RECOMMENDATION_SERVICE_URL", "http://localhost:5000"),
 		GCSBucket:                env.GetString("GCS_BUCKET", ""),
 		GCSPublicBaseURL:         env.GetString("GCS_PUBLIC_BASE_URL", ""),
 		MaxAvatarMB:              env.GetInt("MAX_AVATAR_MB", 5),

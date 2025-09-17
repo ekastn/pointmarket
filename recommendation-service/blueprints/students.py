@@ -9,7 +9,7 @@ from services.qlearning import ql_system
 bp = Blueprint("students", __name__)
 
 
-@bp.get("/")
+@bp.get("")
 def list_students():
     query = """
     SELECT s.siswa_id, s.vark, s.mslq, s.ams, s.engagement,
@@ -158,7 +158,7 @@ def get_student(siswa_id):
         return jsonify({"error": f"Failed to get student: {str(e)}"})
 
 
-@bp.post("/")
+@bp.post("")
 def add_student():
     try:
         data = request.get_json()

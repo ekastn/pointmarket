@@ -33,15 +33,15 @@ type StudentDashboardStatsDTO struct {
 
 // BadgeProgressDTO conveys a student's progress toward a badge threshold.
 type BadgeProgressDTO struct {
-	ID              int64    `json:"id"`
-	Title           string   `json:"title"`
-	Description     *string  `json:"description"`
-	PointsRequired  int32    `json:"points_required"`
-	CurrentPoints   int64    `json:"current_points"`
-	Percent         float64  `json:"percent"`
-	Achieved        bool     `json:"achieved"`
-	RemainingPoints int64    `json:"remaining_points"`
-	AwardedAt       *string  `json:"awarded_at,omitempty"`
+	ID              int64   `json:"id"`
+	Title           string  `json:"title"`
+	Description     *string `json:"description"`
+	PointsRequired  int32   `json:"points_required"`
+	CurrentPoints   int64   `json:"current_points"`
+	Percent         float64 `json:"percent"`
+	Achieved        bool    `json:"achieved"`
+	RemainingPoints int64   `json:"remaining_points"`
+	AwardedAt       *string `json:"awarded_at,omitempty"`
 }
 
 // TeacherDashboardStatsDTO holds counts for the teacher dashboard.

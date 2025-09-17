@@ -5,7 +5,7 @@ from services.qlearning import ql_system
 bp = Blueprint("recommendations", __name__)
 
 
-@bp.get("/")
+@bp.get("")
 def get_recommendations_query():
     siswa_id = request.args.get("student_id")
     if not siswa_id:
@@ -28,7 +28,6 @@ def get_action_items_query():
     return get_action_recommendations(siswa_id, action_code)
 
 
-@bp.get("/<siswa_id>")
 def get_recommendations(siswa_id):
     try:
         current_state = ql_system.get_student_current_state(siswa_id)
@@ -130,7 +129,6 @@ def get_recommendations(siswa_id):
         return jsonify({"error": f"Failed to get recommendations: {str(e)}"})
 
 
-@bp.get("/<siswa_id>/action/<int:action_code>")
 def get_action_recommendations(siswa_id, action_code):
     try:
         if action_code not in ql_system.action_space:

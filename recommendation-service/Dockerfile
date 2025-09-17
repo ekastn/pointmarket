@@ -19,7 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV FLASK_APP=run.py
-ENV FLASK_ENV=prod
 ENV APP_SETTING=prod
 
 EXPOSE 5001

@@ -13,12 +13,9 @@ class Config:
     MYSQL_USER = os.environ.get('DB_USER') or 'lab'
     MYSQL_PASSWORD = os.environ.get('DB_PASSWORD') or 'password'
     MYSQL_DATABASE = os.environ.get('DB_NAME') or 'pointmarket_qlearning'
+    DEBUG = False
 
     # Q-Learning hyperparameters
     LEARNING_RATE = float(os.environ.get('LEARNING_RATE', '0.1'))
     DISCOUNT_FACTOR = float(os.environ.get('DISCOUNT_FACTOR', '0.9'))
     DEFAULT_EPISODES = int(os.environ.get('DEFAULT_EPISODES', '300'))
-
-
-class ProductionConfig(Config):
-    DEBUG = False

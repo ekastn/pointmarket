@@ -2,11 +2,16 @@ import os
 
 from flask import Flask, jsonify
 
-from config import Config
+from config import Config, ProductionConfig
 
 
 def create_app(config_class=Config) -> Flask:
     app = Flask(__name__)
+    config_type = os.getenv("APP_SETTING", "dev")
+
+    if config_type == "prod":
+        app.config.from_object(ProductionConfig)
+
     app.config.from_object(Config)
 
     # Lazy imports to avoid circular dependencies

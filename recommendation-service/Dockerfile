@@ -1,12 +1,7 @@
 FROM python:3.11-slim-bullseye
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-		PYTHONUNBUFFERED=1 \
-		PIP_NO_CACHE_DIR=1 \
-		APP_SETTING=dev \
-		FLASK_ENV=development \
-		PORT=5001 \
-		PYTHONPATH=/app
+		PYTHONUNBUFFERED=1 
 
 WORKDIR /app
 
@@ -21,6 +16,6 @@ COPY . .
 ENV FLASK_APP=run.py
 ENV APP_SETTING=prod
 
-EXPOSE 5001
+EXPOSE 5000
 
 CMD ["python", "run.py"]

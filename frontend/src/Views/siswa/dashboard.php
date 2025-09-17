@@ -417,6 +417,77 @@ $renderer->includePartial('components/partials/page_title', [
 </div>
 <?php endif; ?>
 
+<!-- Badge Progress Timeline -->
+<?php if (!empty($studentStats['badges_progress'])): ?>
+<div class="row pm-section">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-shield-alt me-2"></i>Progress Badge</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-stretch">
+                    <?php
+                    $progressList = $studentStats['badges_progress'];
+                    $currentPoints = $studentStats['total_points'] ?? 0;
+                    foreach ($progressList as $bp):
+                        $pct = number_format($bp['percent'], 1);
+                        $achieved = !empty($bp['achieved']);
+                        $remaining = $bp['remaining_points'];
+                        $req = $bp['points_required'];
+                        $barClass = $achieved ? 'bg-success' : 'bg-info';
+                        $statusLabel = $achieved ? 'Tercapai' : 'Proses';
+                        $icon = $achieved ? 'fas fa-crown text-success' : 'fas fa-flag text-muted';
+                    ?>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="badge-progress card h-100 shadow-sm <?php echo $achieved ? 'border-success' : 'border-light'; ?>">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="me-2 <?php echo $icon; ?>"></i>
+                                    <h6 class="mb-0 flex-grow-1 text-truncate"><?php echo htmlspecialchars($bp['title']); ?></h6>
+                                    <?php if ($achieved): ?><span class="badge bg-success">✔</span><?php endif; ?>
+                                </div>
+                                <p class="small text-muted mb-2" style="min-height:2.6em;">
+                                    <?php echo htmlspecialchars($bp['description'] ?? ''); ?>
+                                </p>
+                                <div class="progress mb-2" style="height:6px;">
+                                    <div class="progress-bar <?php echo $barClass; ?>" role="progressbar" style="width: <?php echo $pct; ?>%" aria-valuenow="<?php echo $pct; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="small d-flex justify-content-between text-muted mb-1">
+                                    <span><?php echo $currentPoints; ?> / <?php echo $req; ?> pts</span>
+                                    <span><?php echo $pct; ?>%</span>
+                                </div>
+                                <?php if (!$achieved): ?>
+                                    <div class="small text-muted mb-2">Sisa: <?php echo $remaining; ?> poin</div>
+                                <?php else: ?>
+                                    <div class="small text-success mb-2">Selesai</div>
+                                <?php endif; ?>
+                                <?php if (!empty($bp['awarded_at'])): ?>
+                                    <div class="mt-auto small text-success">Awarded: <?php echo htmlspecialchars(date('d M Y', strtotime($bp['awarded_at']))); ?></div>
+                                <?php else: ?>
+                                    <div class="mt-auto small text-<?php echo $achieved ? 'success' : 'secondary'; ?>"><?php echo $statusLabel; ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php
+                // Next target highlight
+                $pending = array_filter($progressList, function($p){ return empty($p['achieved']); });
+                if (!empty($pending)) {
+                usort($pending, function($a,$b){ return $a['points_required'] <=> $b['points_required']; });
+                $next = $pending[0];
+                $need = $next['remaining_points'];
+                echo '<div class="mt-4 mb-0"><i class="fas fa-arrow-up me-2"></i>Butuh <strong>'.intval($need).'</strong> poin lagi untuk mencapai <strong>'.htmlspecialchars($next['title']).'</strong>.</div>';
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php $renderer->includePartial('components/partials/ai_simulations_section'); ?>
 
 <script>

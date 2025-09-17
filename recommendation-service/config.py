@@ -18,3 +18,7 @@ class Config:
     LEARNING_RATE = float(os.environ.get('LEARNING_RATE', '0.1'))
     DISCOUNT_FACTOR = float(os.environ.get('DISCOUNT_FACTOR', '0.9'))
     DEFAULT_EPISODES = int(os.environ.get('DEFAULT_EPISODES', '300'))
+
+
+class ProductionConfig(Config):
+    DEBUG = False

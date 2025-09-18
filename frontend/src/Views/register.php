@@ -26,50 +26,65 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Right Side - Login Form -->
+
+        <!-- Right Side - Register Form -->
         <div class="col-lg-6 d-flex align-items-center justify-content-center">
-            <div class="login-form-container w-100" style="max-width: 400px;">
+            <div class="login-form-container w-100" style="max-width: 420px;">
                 <div class="text-center mb-4 d-lg-none">
                     <i class="fas fa-graduation-cap fa-3x text-primary mb-3"></i>
                     <h2 class="fw-bold">POINTMARKET</h2>
                 </div>
-                
+
                 <div class="card shadow-lg border-0">
                     <div class="card-body p-5">
-                        <h3 class="card-title text-center mb-4 fw-bold">Masuk ke Pointmarket</h3>
-                        
-                        <?php
-                        // This file is now a view, it should receive data from a controller.
-                        // The global functions like getMessages() will be replaced by controller logic.
-                        $messages = $messages ?? []; // Ensure $messages is defined
-                        if (!empty($messages['error'])): ?>
+                        <h3 class="card-title text-center mb-4 fw-bold">Daftar Akun Siswa</h3>
+
+                        <?php $messages = $messages ?? []; ?>
+                        <?php if (!empty($messages['error'])): ?>
                             <div class="alert alert-danger" role="alert">
                                 <i class="fas fa-exclamation-circle me-2"></i>
                                 <?php echo htmlspecialchars($messages['error']); ?>
                             </div>
                         <?php endif; ?>
-                        
+
                         <?php if (!empty($messages['success'])): ?>
                             <div class="alert alert-success" role="alert">
                                 <i class="fas fa-check-circle me-2"></i>
                                 <?php echo htmlspecialchars($messages['success']); ?>
                             </div>
                         <?php endif; ?>
-                        
-                        <form method="POST" action="/login">
-                            <input type="hidden" name="csrf_token" value="<?php // echo generateCSRFToken(); // CSRF token will be handled by Go backend or a new PHP mechanism ?>">
-                            
+
+                        <form method="POST" action="/register">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Username atau NIM</label>
+                                <label for="name" class="form-label">Nama Lengkap</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-id-card"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="name" name="name" placeholder="Andi Setiawan" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="andi@example.com" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="username" name="username" placeholder="andi atau 2401001" required>
+                                    <input type="text" class="form-control" id="username" name="username" placeholder="andi" required>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
                                 <div class="input-group">
@@ -82,19 +97,30 @@
                                     </button>
                                 </div>
                             </div>
-                            
-                            
-                            
+
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">Konfirmasi Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirm">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-sign-in-alt me-2"></i>
-                                    Login
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Daftar & Masuk
                                 </button>
                             </div>
                         </form>
 
                         <div class="text-center mt-4">
-                            <small class="text-muted">Belum punya akun? <a href="/register">Daftar di sini</a></small>
+                            <small class="text-muted">Sudah punya akun? <a href="/login">Masuk di sini</a></small>
                         </div>
                     </div>
                 </div>
@@ -103,29 +129,29 @@
     </div>
 
     <script>
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const password = document.getElementById('password');
-            const icon = this.querySelector('i');
-            
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                password.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-        
-        // Auto-dismiss alerts after 5 seconds
+        const toggle = (inputId, btnId) => {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            btn.addEventListener('click', function () {
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            });
+        };
+        toggle('password', 'togglePassword');
+        toggle('confirm_password', 'toggleConfirm');
+
         setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
+            document.querySelectorAll('.alert').forEach(function(alert) {
                 const bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             });
         }, 5000);
     </script>
 </div>
+

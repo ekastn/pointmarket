@@ -26,7 +26,10 @@ return function (Router $router) {
     // Public routes
     $router->get('/', [AuthController::class, 'showLoginForm']);
     $router->get('/login', [AuthController::class, 'showLoginForm']);
+    $router->get('/register', [AuthController::class, 'showRegisterForm']);
     $router->post('/login', [AuthController::class, 'processLogin']);
+    // Registration (user-only) from login page; auto-login handled in controller
+    $router->post('/register', [AuthController::class, 'processRegister']);
     $router->get('/logout', [AuthController::class, 'logout']);
 
     // Authenticated routes group

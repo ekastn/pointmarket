@@ -162,15 +162,15 @@ func main() {
 			studentsRoutes.GET("/:user_id/recommendations", recommendationHandler.GetStudentRecommendations)
 		}
 
-        productRoutes := authRequired.Group("/products")
-        {
-            productRoutes.GET("", productHandler.GetProducts)
-            productRoutes.GET("/:id", productHandler.GetProductByID)
-            productRoutes.POST("", adminRoutes.Handlers[0], productHandler.CreateProduct)       // Admin-only
-            productRoutes.PUT("/:id", adminRoutes.Handlers[0], productHandler.UpdateProduct)    // Admin-only
-            productRoutes.DELETE("/:id", adminRoutes.Handlers[0], productHandler.DeleteProduct) // Admin-only
-            productRoutes.POST("/:id/purchase", middleware.Authz("siswa"), productHandler.PurchaseProduct) // Students only
-        }
+		productRoutes := authRequired.Group("/products")
+		{
+			productRoutes.GET("", productHandler.GetProducts)
+			productRoutes.GET("/:id", productHandler.GetProductByID)
+			productRoutes.POST("", adminRoutes.Handlers[0], productHandler.CreateProduct)                  // Admin-only
+			productRoutes.PUT("/:id", adminRoutes.Handlers[0], productHandler.UpdateProduct)               // Admin-only
+			productRoutes.DELETE("/:id", adminRoutes.Handlers[0], productHandler.DeleteProduct)            // Admin-only
+			productRoutes.POST("/:id/purchase", middleware.Authz("siswa"), productHandler.PurchaseProduct) // Students only
+		}
 
 		badgesRoutes := authRequired.Group("/badges")
 		{

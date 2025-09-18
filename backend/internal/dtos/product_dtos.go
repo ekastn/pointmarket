@@ -79,7 +79,7 @@ func (dto *ProductDTO) FromProductModel(m interface{}) {
 		} else {
 			dto.CategoryName = nil
 		}
-    // Row type for GetProducts is mapped in service to avoid tight coupling with sqlc row names.
+		// Row type for GetProducts is mapped in service to avoid tight coupling with sqlc row names.
 	}
 }
 

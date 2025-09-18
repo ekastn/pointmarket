@@ -29,12 +29,13 @@ func (s *AuthService) Register(ctx context.Context, req dtos.RegisterRequest) (g
 		return gen.User{}, err
 	}
 
+	// Enforce public self-registration role to 'siswa' regardless of client input
 	data := gen.CreateUserParams{
 		Email:       req.Email,
 		Username:    req.Username,
 		Password:    hashedPassword,
 		DisplayName: req.Name,
-		Role:        gen.UsersRole(req.Role),
+		Role:        gen.UsersRole("siswa"),
 	}
 
 	res, err := s.q.CreateUser(ctx, data)

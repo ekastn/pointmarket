@@ -37,7 +37,7 @@
                 
                 <div class="card shadow-lg border-0">
                     <div class="card-body p-5">
-                        <h3 class="card-title text-center mb-4 fw-bold">Masuk ke Akun</h3>
+                        <h3 class="card-title text-center mb-4 fw-bold">Masuk ke Pointmarket</h3>
                         
                         <?php
                         // This file is now a view, it should receive data from a controller.
@@ -88,27 +88,10 @@
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="fas fa-sign-in-alt me-2"></i>
-                                    Masuk
+                                    Login
                                 </button>
                             </div>
                         </form>
-                        
-                        <hr class="my-4">
-                        
-                        <div class="text-center">
-                            <h6 class="text-muted mb-3">Demo Login Credentials:</h6>
-                            <div class="row text-sm">
-                                <div class="col-12 mb-2">
-                                    <strong>Siswa:</strong> andi/password | budi/password
-                                </div>
-                                <div class="col-12 mb-2">
-                                    <strong>Guru:</strong> sarah/password | ahmad/password
-                                </div>
-                                <div class="col-12 mb-2">
-                                    <strong>Admin:</strong> admin/password
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

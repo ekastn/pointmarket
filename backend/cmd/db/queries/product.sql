@@ -13,11 +13,24 @@ SELECT
 FROM products p
 LEFT JOIN product_categories pc ON p.category_id = pc.id
 WHERE (sqlc.arg('category_id') IS NULL OR p.category_id = sqlc.arg('category_id'))
+  AND (sqlc.arg('only_active') = FALSE OR p.is_active = TRUE)
+  AND (
+    sqlc.arg('search') = '' OR
+    p.name LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    p.description LIKE CONCAT('%', sqlc.arg('search'), '%')
+  )
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?;
 
 -- name: CountProducts :one
-SELECT count(*) FROM products;
+SELECT count(*) FROM products p
+WHERE (sqlc.arg('category_id') IS NULL OR p.category_id = sqlc.arg('category_id'))
+  AND (sqlc.arg('only_active') = FALSE OR p.is_active = TRUE)
+  AND (
+    sqlc.arg('search') = '' OR
+    p.name LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    p.description LIKE CONCAT('%', sqlc.arg('search'), '%')
+  );
 
 -- name: CreateProduct :execresult
 INSERT INTO products (
@@ -55,6 +68,12 @@ UPDATE products
 SET
     stock_quantity = ?
 WHERE id = ?;
+
+-- Atomically decrement stock if available (non-null and > 0)
+-- name: DecrementProductStockIfAvailable :execresult
+UPDATE products
+SET stock_quantity = stock_quantity - 1
+WHERE id = ? AND stock_quantity IS NOT NULL AND stock_quantity > 0;
 
 -- Product Categories --
 

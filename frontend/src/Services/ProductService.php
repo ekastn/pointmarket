@@ -13,7 +13,7 @@ class ProductService
         $this->apiClient = $apiClient;
     }
 
-    public function getAllProducts(string $search = '', ?int $categoryId = null, int $page = 1, int $limit = 10): ?array
+    public function getAllProducts(string $search = '', ?int $categoryId = null, int $page = 1, int $limit = 10, ?bool $onlyActive = null): ?array
     {
         $queryParams = [
             'page' => $page,
@@ -24,6 +24,9 @@ class ProductService
         }
         if ($categoryId !== null) {
             $queryParams['category_id'] = $categoryId;
+        }
+        if ($onlyActive !== null) {
+            $queryParams['only_active'] = $onlyActive ? 1 : 0;
         }
 
         $response = $this->apiClient->request('GET', '/api/v1/products', ['query' => $queryParams]);
@@ -99,6 +102,7 @@ class ProductService
     public function purchaseProduct(int $productId): ?bool
     {
         $response = $this->apiClient->request('POST', '/api/v1/products/' . $productId . '/purchase');
+        error_log(print_r($response, true));
 
         if ($response['success']) {
             return true;

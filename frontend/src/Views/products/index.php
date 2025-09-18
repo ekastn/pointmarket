@@ -49,6 +49,7 @@ $base_params = [
             </div>
         <?php else : ?>
             <?php foreach ($products as $product) : ?>
+                <?php if (!(isset($_SESSION['user_data']['role']) && $_SESSION['user_data']['role'] === 'admin') && isset($product['is_active']) && !$product['is_active']) { continue; } ?>
                 <?php $renderer->includePartial('components/partials/product_card', ['product' => $product]); ?>
             <?php endforeach; ?>
         <?php endif; ?>

@@ -79,35 +79,7 @@ func (dto *ProductDTO) FromProductModel(m interface{}) {
 		} else {
 			dto.CategoryName = nil
 		}
-	case gen.GetProductsRow:
-		dto.ID = p.ID
-		if p.CategoryID.Valid {
-			dto.CategoryID = &p.CategoryID.Int32
-		} else {
-			dto.CategoryID = nil
-		}
-		if p.StockQuantity.Valid {
-			dto.StockQuantity = &p.StockQuantity.Int32
-		} else {
-			dto.StockQuantity = nil
-		}
-		dto.Name = p.Name
-		if p.Description.Valid {
-			dto.Description = &p.Description.String
-		} else {
-			dto.Description = nil
-		}
-		dto.PointsPrice = p.PointsPrice
-		dto.Type = p.Type
-		dto.IsActive = p.IsActive
-		dto.Metadata = p.Metadata
-		dto.CreatedAt = p.CreatedAt
-		dto.UpdatedAt = p.UpdatedAt
-		if p.CategoryName.Valid {
-			dto.CategoryName = &p.CategoryName.String
-		} else {
-			dto.CategoryName = nil
-		}
+    // Row type for GetProducts is mapped in service to avoid tight coupling with sqlc row names.
 	}
 }
 

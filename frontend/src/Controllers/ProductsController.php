@@ -22,7 +22,9 @@ class ProductsController extends BaseController
         $page = (int) ($_GET['page'] ?? 1);
         $limit = 10;
 
-        $productsResponse = $this->productService->getAllProducts($search, $categoryId, $page, $limit);
+        $userRole = $_SESSION['user_data']['role'] ?? '';
+        $onlyActive = $userRole === 'admin' ? false : true;
+        $productsResponse = $this->productService->getAllProducts($search, $categoryId, $page, $limit, $onlyActive);
         $categoriesResponse = $this->productService->getAllProductCategories(); // Fetch all categories
 
         if ($productsResponse !== null && $categoriesResponse !== null) {

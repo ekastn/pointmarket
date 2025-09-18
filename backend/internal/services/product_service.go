@@ -33,38 +33,66 @@ func (s *ProductService) GetProductByID(ctx context.Context, id int64) (dtos.Pro
 	return productDTO, nil
 }
 
-// GetProducts retrieves a list of products with pagination
-func (s *ProductService) GetProducts(ctx context.Context, page, limit int, search string, categoryID *int32) ([]dtos.ProductDTO, int64, error) {
-	offset := (page - 1) * limit
+// GetProducts retrieves a list of products with pagination and filters
+func (s *ProductService) GetProducts(ctx context.Context, page, limit int, search string, categoryID *int32, onlyActive bool) ([]dtos.ProductDTO, int64, error) {
+    offset := (page - 1) * limit
 
-	// Get total count of products
-	totalProducts, err := s.q.CountProducts(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
+    // Get total count of products
+    var cIDParams sql.NullInt32
+    if categoryID != nil {
+        cIDParams = sql.NullInt32{Int32: *categoryID, Valid: true}
+    }
 
-	var cIDParams sql.NullInt32
+    totalProducts, err := s.q.CountProducts(ctx, gen.CountProductsParams{
+        CategoryID: cIDParams,
+        OnlyActive: onlyActive,
+        Search:     search,
+    })
+    if err != nil {
+        return nil, 0, err
+    }
 
-	if categoryID != nil {
-		cIDParams = sql.NullInt32{Int32: *categoryID, Valid: true}
-	}
+    // Get the paginated list of products
+    products, err := s.q.GetProducts(ctx, gen.GetProductsParams{
+        Limit:      int32(limit),
+        Offset:     int32(offset),
+        CategoryID: cIDParams,
+        OnlyActive: onlyActive,
+        Search:     search,
+    })
+    if err != nil {
+        return nil, 0, err
+    }
 
-	// Get the paginated list of products
-	products, err := s.q.GetProducts(ctx, gen.GetProductsParams{
-		Limit:      int32(limit),
-		Offset:     int32(offset),
-		CategoryID: cIDParams,
-	})
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var productDTOs []dtos.ProductDTO
-	for _, product := range products {
-		var productDTO dtos.ProductDTO
-		productDTO.FromProductModel(product)
-		productDTOs = append(productDTOs, productDTO)
-	}
+    var productDTOs []dtos.ProductDTO
+    for _, p := range products {
+        var dto dtos.ProductDTO
+        dto.ID = p.ID
+        if p.CategoryID.Valid {
+            v := p.CategoryID.Int32
+            dto.CategoryID = &v
+        }
+        if p.StockQuantity.Valid {
+            v := p.StockQuantity.Int32
+            dto.StockQuantity = &v
+        }
+        dto.Name = p.Name
+        if p.Description.Valid {
+            s := p.Description.String
+            dto.Description = &s
+        }
+        dto.PointsPrice = p.PointsPrice
+        dto.Type = p.Type
+        dto.IsActive = p.IsActive
+        dto.Metadata = p.Metadata
+        dto.CreatedAt = p.CreatedAt
+        dto.UpdatedAt = p.UpdatedAt
+        if p.CategoryName.Valid {
+            s := p.CategoryName.String
+            dto.CategoryName = &s
+        }
+        productDTOs = append(productDTOs, dto)
+    }
 	return productDTOs, totalProducts, nil
 }
 
@@ -163,17 +191,17 @@ func (s *ProductService) DeleteProduct(ctx context.Context, id int64) error {
 
 // PurchaseProduct handles the purchase of a product by a user
 func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID int64) error {
-	// 1. Get product details
-	product, err := s.q.GetProductByID(ctx, productID)
-	if err != nil {
-		return fmt.Errorf("failed to get product: %w", err)
-	}
+    // 1. Get product details
+    product, err := s.q.GetProductByID(ctx, productID)
+    if err != nil {
+        return fmt.Errorf("failed to get product: %w", err)
+    }
 
-	// 2. Get user's current points
-	userStats, err := s.q.GetUserStats(ctx, userID) // Assuming GetUserStats exists
-	if err != nil {
-		return fmt.Errorf("failed to get user stats: %w", err)
-	}
+    // 2. Get user's current points
+    userStats, err := s.q.GetUserStats(ctx, userID)
+    if err != nil {
+        return fmt.Errorf("failed to get user stats: %w", err)
+    }
 
 	// 3. Check if user has enough points
 	if userStats.TotalPoints < int64(product.PointsPrice) {
@@ -187,38 +215,66 @@ func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID 
 	}
 	defer tx.Rollback() // Rollback on error
 
-	qtx := gen.New(tx) // Create new querier with transaction
+    qtx := gen.New(tx) // Create new querier with transaction
 
-	// 4. Create an order record
-	_, err = qtx.CreateOrder(ctx, gen.CreateOrderParams{
-		UserID:      userID,
-		ProductID:   productID,
-		PointsSpent: product.PointsPrice,
-		Status:      "completed", // Assuming immediate completion
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create order: %w", err)
-	}
+    // 4. Create an order record
+    orderRes, err := qtx.CreateOrder(ctx, gen.CreateOrderParams{
+        UserID:      userID,
+        ProductID:   productID,
+        PointsSpent: product.PointsPrice,
+        Status:      "completed", // Assuming immediate completion
+    })
+    if err != nil {
+        return fmt.Errorf("failed to create order: %w", err)
+    }
 
-	// 5. Decrement user's points
-	err = qtx.UpdateUserStatsPoints(ctx, gen.UpdateUserStatsPointsParams{ // Assuming UpdateUserStatsPoints exists
-		UserID:      userID,
-		TotalPoints: userStats.TotalPoints - int64(product.PointsPrice),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to update user points: %w", err)
-	}
+    // Get order ID for ledger reference
+    orderID, err := orderRes.LastInsertId()
+    if err != nil {
+        return fmt.Errorf("failed to get order id: %w", err)
+    }
 
-	// 6. Decrement product stock if applicable
-	if product.StockQuantity.Valid && product.StockQuantity.Int32 > 0 {
-		err = qtx.UpdateProductStock(ctx, gen.UpdateProductStockParams{ // Assuming UpdateProductStock exists
-			ID:            productID,
-			StockQuantity: sql.NullInt32{Int32: product.StockQuantity.Int32 - 1, Valid: true},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to update product stock: %w", err)
-		}
-	}
+    // 5. Ledgered points deduction inside tx (idempotent by order reference)
+    statsInside, err := qtx.GetUserStats(ctx, userID)
+    if err != nil {
+        return fmt.Errorf("failed to get user stats in tx: %w", err)
+    }
+    if statsInside.TotalPoints < int64(product.PointsPrice) {
+        return errors.New("not enough points to purchase this product")
+    }
+
+    if _, err := qtx.CreatePointsTransaction(ctx, gen.CreatePointsTransactionParams{
+        UserID:        userID,
+        Amount:        int32(-product.PointsPrice),
+        Reason:        sql.NullString{},
+        ReferenceType: sql.NullString{String: "order", Valid: true},
+        ReferenceID:   sql.NullInt64{Int64: orderID, Valid: true},
+    }); err != nil {
+        if me, ok := err.(*mysql.MySQLError); ok && me.Number == 1062 {
+            // duplicate transaction (idempotent) → continue
+        } else {
+            return fmt.Errorf("failed to record points transaction: %w", err)
+        }
+    }
+
+    newTotal := statsInside.TotalPoints - int64(product.PointsPrice)
+    if err := qtx.UpdateUserStatsPoints(ctx, gen.UpdateUserStatsPointsParams{
+        TotalPoints: newTotal,
+        UserID:      userID,
+    }); err != nil {
+        return fmt.Errorf("failed to update user points: %w", err)
+    }
+
+    // 6. Decrement product stock atomically if stock is managed
+    if product.StockQuantity.Valid {
+        res, err := qtx.DecrementProductStockIfAvailable(ctx, productID)
+        if err != nil {
+            return fmt.Errorf("failed to decrement product stock: %w", err)
+        }
+        if rows, _ := res.RowsAffected(); rows == 0 {
+            return errors.New("out of stock")
+        }
+    }
 
 	// 7. If the product is a course, enroll the user in the linked course via product_course_details
 	if product.Type == "course" {

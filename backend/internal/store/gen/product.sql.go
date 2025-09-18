@@ -25,11 +25,31 @@ func (q *Queries) CountProductCategories(ctx context.Context) (int64, error) {
 }
 
 const countProducts = `-- name: CountProducts :one
-SELECT count(*) FROM products
+SELECT count(*) FROM products p
+WHERE (? IS NULL OR p.category_id = ?)
+  AND (? = FALSE OR p.is_active = TRUE)
+  AND (
+    ? = '' OR
+    p.name LIKE CONCAT('%', ?, '%') OR
+    p.description LIKE CONCAT('%', ?, '%')
+  )
 `
 
-func (q *Queries) CountProducts(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countProducts)
+type CountProductsParams struct {
+	CategoryID sql.NullInt32 `json:"category_id"`
+	OnlyActive interface{}   `json:"only_active"`
+	Search     interface{}   `json:"search"`
+}
+
+func (q *Queries) CountProducts(ctx context.Context, arg CountProductsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countProducts,
+		arg.CategoryID,
+		arg.CategoryID,
+		arg.OnlyActive,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -108,6 +128,17 @@ type CreateProductCategoryParams struct {
 // Product Categories --
 func (q *Queries) CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createProductCategory, arg.Name, arg.Description)
+}
+
+const decrementProductStockIfAvailable = `-- name: DecrementProductStockIfAvailable :execresult
+UPDATE products
+SET stock_quantity = stock_quantity - 1
+WHERE id = ? AND stock_quantity IS NOT NULL AND stock_quantity > 0
+`
+
+// Atomically decrement stock if available (non-null and > 0)
+func (q *Queries) DecrementProductStockIfAvailable(ctx context.Context, id int64) (sql.Result, error) {
+	return q.db.ExecContext(ctx, decrementProductStockIfAvailable, id)
 }
 
 const deleteProduct = `-- name: DeleteProduct :exec
@@ -247,12 +278,20 @@ SELECT
 FROM products p
 LEFT JOIN product_categories pc ON p.category_id = pc.id
 WHERE (? IS NULL OR p.category_id = ?)
+  AND (? = FALSE OR p.is_active = TRUE)
+  AND (
+    ? = '' OR
+    p.name LIKE CONCAT('%', ?, '%') OR
+    p.description LIKE CONCAT('%', ?, '%')
+  )
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?
 `
 
 type GetProductsParams struct {
 	CategoryID sql.NullInt32 `json:"category_id"`
+	OnlyActive interface{}   `json:"only_active"`
+	Search     interface{}   `json:"search"`
 	Limit      int32         `json:"limit"`
 	Offset     int32         `json:"offset"`
 }
@@ -276,6 +315,10 @@ func (q *Queries) GetProducts(ctx context.Context, arg GetProductsParams) ([]Get
 	rows, err := q.db.QueryContext(ctx, getProducts,
 		arg.CategoryID,
 		arg.CategoryID,
+		arg.OnlyActive,
+		arg.Search,
+		arg.Search,
+		arg.Search,
 		arg.Limit,
 		arg.Offset,
 	)

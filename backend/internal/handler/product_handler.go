@@ -40,29 +40,50 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 
 // GetProducts handles fetching a list of products
 func (h *ProductHandler) GetProducts(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	search := c.Query("search") // Assuming search by name or description
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+    search := c.Query("search") // Assuming search by name or description
 
-	var categoryID *int32
-	categoryIDStr := c.Query("category_id")
-	if categoryIDStr != "" {
-		parsedCategoryID, err := strconv.ParseInt(categoryIDStr, 10, 32)
-		if err != nil {
-			response.Error(c, http.StatusBadRequest, "Invalid category ID parameter")
-			return
-		}
-		val := int32(parsedCategoryID)
-		categoryID = &val
-	}
+    var categoryID *int32
+    categoryIDStr := c.Query("category_id")
+    if categoryIDStr != "" {
+        parsedCategoryID, err := strconv.ParseInt(categoryIDStr, 10, 32)
+        if err != nil {
+            response.Error(c, http.StatusBadRequest, "Invalid category ID parameter")
+            return
+        }
+        val := int32(parsedCategoryID)
+        categoryID = &val
+    }
 
-	products, totalProducts, err := h.productService.GetProducts(c.Request.Context(), page, limit, search, categoryID)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to retrieve products: "+err.Error())
-		return
-	}
+    // only_active: default true for non-admin; allow override via query param
+    onlyActiveParam := c.Query("only_active")
+    roleVal, _ := c.Get("role")
+    role := ""
+    if roleVal != nil {
+        role = roleVal.(string)
+    }
+    onlyActive := true
+    if role == "admin" {
+        onlyActive = false
+    }
+    if onlyActiveParam != "" {
+        // accept 1/0/true/false
+        switch onlyActiveParam {
+        case "0", "false", "False", "FALSE":
+            onlyActive = false
+        case "1", "true", "True", "TRUE":
+            onlyActive = true
+        }
+    }
 
-	response.Paginated(c, http.StatusOK, "Products retrieved successfully", products, totalProducts, page, limit)
+    products, totalProducts, err := h.productService.GetProducts(c.Request.Context(), page, limit, search, categoryID, onlyActive)
+    if err != nil {
+        response.Error(c, http.StatusInternalServerError, "Failed to retrieve products: "+err.Error())
+        return
+    }
+
+    response.Paginated(c, http.StatusOK, "Products retrieved successfully", products, totalProducts, page, limit)
 }
 
 // CreateProduct handles creating a new product

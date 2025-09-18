@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"sort"
@@ -138,7 +138,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 			return out, int64(len(out)), nil
 		}()
 		if err != nil {
-			fmt.Printf("warning: failed to load badges for dashboard: %v\n", err)
+			log.Printf("warning: failed to load badges for dashboard: %v\n", err)
 		} else {
 			// Fetch user awarded badges to mark achieved and awarded time
 			userBadges, err2 := s.q.GetUserBadgesByUserID(ctx, userID)
@@ -192,7 +192,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 		// Fetch current week's evaluations
 		currentWeekEvals, err := s.weeklyEvaluationService.GetCurrentWeekEvaluationsByStudentID(ctx, userID)
 		if err != nil {
-			fmt.Printf("Warning: Failed to get current week evaluations for dashboard: %v\n", err)
+			log.Printf("Warning: Failed to get current week evaluations for dashboard: %v\n", err)
 			// Decide how to handle error: return error, or proceed with empty slice
 			studentStatsDTO.WeeklyEvaluations = []dtos.WeeklyEvaluationDetailDTO{}
 		} else {

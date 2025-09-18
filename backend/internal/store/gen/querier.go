@@ -18,7 +18,7 @@ type Querier interface {
 	CountCoursesWithEnrollmentStatus(ctx context.Context, arg CountCoursesWithEnrollmentStatusParams) (int64, error)
 	CountLessonsByCourseID(ctx context.Context, courseID int64) (int64, error)
 	CountProductCategories(ctx context.Context) (int64, error)
-	CountProducts(ctx context.Context) (int64, error)
+	CountProducts(ctx context.Context, arg CountProductsParams) (int64, error)
 	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
 	CountStudents(ctx context.Context, arg CountStudentsParams) (int64, error)
 	// Assignments --
@@ -54,6 +54,8 @@ type Querier interface {
 	CreateVarkOption(ctx context.Context, arg CreateVarkOptionParams) (sql.Result, error)
 	CreateVarkResult(ctx context.Context, arg CreateVarkResultParams) error
 	CreateWeeklyEvaluation(ctx context.Context, arg CreateWeeklyEvaluationParams) error
+	// Atomically decrement stock if available (non-null and > 0)
+	DecrementProductStockIfAvailable(ctx context.Context, id int64) (sql.Result, error)
 	DeleteAssignment(ctx context.Context, id int64) error
 	DeleteBadge(ctx context.Context, id int64) error
 	DeleteCourse(ctx context.Context, id int64) error

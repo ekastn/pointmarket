@@ -20,6 +20,20 @@
                     <?= htmlspecialchars($product["category_name"]) ?>
                 </span>
             </div>
+            <?php
+                $hasStock = isset($product['stock_quantity']) && $product['stock_quantity'] !== null;
+                $inStock = $hasStock ? ((int)$product['stock_quantity'] > 0) : true; // null means unlimited
+            ?>
+            <div class="mb-2">
+                <?php if ($hasStock): ?>
+                    <span class="badge <?= $inStock ? 'bg-success' : 'bg-secondary' ?>">
+                        <?= $inStock ? ('Stock: '.(int)$product['stock_quantity']) : 'Out of stock' ?>
+                    </span>
+                <?php endif; ?>
+                <?php if (!$product['is_active']): ?>
+                    <span class="badge bg-warning text-dark">Inactive</span>
+                <?php endif; ?>
+            </div>
             <p class="card-text text-muted small flex-grow-1">
                 <?= htmlspecialchars($product["description"]) ?>
             </p>
@@ -30,11 +44,10 @@
                         <?= htmlspecialchars($product["points_price"]) ?>
                     </strong>
                 </div>
-                <button class="btn btn-sm btn-primary">
+                <button class="btn btn-sm btn-primary btn-purchase" data-product-id="<?= htmlspecialchars($product['id']) ?>" <?= (!$inStock || !$product['is_active']) ? 'disabled' : '' ?>>
                     Redeem
                 </button>
             </div>
         </div>
     </div>
 </div>
-

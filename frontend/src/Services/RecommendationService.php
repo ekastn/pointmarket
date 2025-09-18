@@ -25,7 +25,6 @@ class RecommendationService
     public function getStudentRecommendations(int $userId): ?array
     {
         $resp = $this->apiClient->request('GET', '/api/v1/students/' . $userId . '/recommendations');
-        error_log(print_r($resp, true));
         if (!empty($resp['success']) && isset($resp['data'])) {
             return $resp['data'];
         }

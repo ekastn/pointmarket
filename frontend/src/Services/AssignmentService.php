@@ -26,7 +26,6 @@ class AssignmentService
     public function getStudentAssignments(int $userId): ?array
     {
         $response = $this->apiClient->request('GET', '/api/v1/students/' . $userId . '/assignments');
-        error_log(print_r($response, true));
         if ($response['success']) {
             return $response['data'];
         }

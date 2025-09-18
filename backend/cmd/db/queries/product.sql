@@ -94,3 +94,20 @@ WHERE id = ?;
 SELECT product_id, course_id, access_duration_days, enrollment_behavior
 FROM product_course_details
 WHERE product_id = ?;
+
+-- name: GetProductsByIDs :many
+SELECT 
+  id,
+  category_id,
+  name,
+  description,
+  points_price,
+  `type`,
+  stock_quantity,
+  is_active,
+  metadata,
+  created_at,
+  updated_at
+FROM products
+WHERE is_active = 1
+  AND id IN (sqlc.slice('ids'));

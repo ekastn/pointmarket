@@ -19,5 +19,7 @@ class Config:
     DISCOUNT_FACTOR = float(os.environ.get('DISCOUNT_FACTOR', '0.9'))
     DEFAULT_EPISODES = int(os.environ.get('DEFAULT_EPISODES', '300'))
 
+    DEBUG = True
+
 class ProductionConfig(Config):
     DEBUG = False

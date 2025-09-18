@@ -2,6 +2,7 @@ import math
 import random
 
 from .db import execute_query, get_connection 
+from services import items_repo
 
 from config import Config
 
@@ -141,6 +142,7 @@ class QLearningRecommendationSystem:
         states_rows = execute_query("SELECT state FROM unique_states ORDER BY state")
         available_states = [r["state"] for r in states_rows]
 
+        # Build training log dataset (as before) for Q-learning.
         logs_query = """
         SELECT l.*, s.vark, s.mslq, s.ams,
                l.interaction_frequency, l.time_spent, l.completion_rate
@@ -183,25 +185,17 @@ class QLearningRecommendationSystem:
             if row.get("generated_state") in available_states:
                 validated.append(row)
 
-        states_data = execute_query(
-            "SELECT state, description FROM unique_states ORDER BY state"
-        )
-        misi_data = execute_query("SELECT * FROM data_misi_fullstate")
-        reward_data = execute_query("SELECT * FROM data_reward_fullstate")
-        produk_data = execute_query("SELECT * FROM data_produk_fullstate")
-        hukuman_data = execute_query("SELECT * FROM data_hukuman_fullstate")
-        coaching_data = execute_query("SELECT * FROM data_coaching_fullstate")
-
-        return {
-            "log_data": validated,
-            "states_data": states_data,
+        # Provide minimal context and SQLAlchemy session for item selection.
+        data = {
             "available_states": available_states,
-            "misi_data": misi_data,
-            "reward_data": reward_data,
-            "produk_data": produk_data,
-            "hukuman_data": hukuman_data,
-            "coaching_data": coaching_data,
+            "log_data": validated,
         }
+        try:
+            session = items_repo.get_session()
+            data["session"] = session
+        except Exception:
+            data["session"] = None
+        return data
 
     def train_q_learning(self, log_data, episodes=300):
         for _ in range(episodes):
@@ -278,37 +272,23 @@ class QLearningRecommendationSystem:
     def get_multiple_recommendations(
         self, action_code, intervention_data, num_items=3, student_state=None
     ):
-        recommendations = []
+        """Return items as reference tuples for backend materialization.
+        Shape: [ { 'ref_type': str, 'ref_id': int } ]
+        """
         try:
-            if action_code == 101 and intervention_data["reward_data"]:
-                data_list = intervention_data["reward_data"]
-            elif action_code == 102 and intervention_data["produk_data"]:
-                data_list = intervention_data["produk_data"]
-            elif action_code == 103 and intervention_data["hukuman_data"]:
-                data_list = intervention_data["hukuman_data"]
-            elif action_code == 105 and intervention_data["misi_data"]:
-                data_list = intervention_data["misi_data"]
-            elif action_code == 106 and intervention_data["coaching_data"]:
-                data_list = intervention_data["coaching_data"]
-            else:
-                data_list = []
-
-            sample_size = min(num_items, len(data_list))
-            sampled = random.sample(data_list, sample_size) if sample_size > 0 else []
-            for item in sampled:
-                rec = {
-                    "judul": item.get("judul", ""),
-                    "deskripsi": item.get("deskripsi", ""),
-                    "kategori": item.get("kategori", ""),
-                    "target_audience": item.get("target_audience", ""),
-                    "difficulty_level": item.get("difficulty_level", ""),
-                    "estimated_duration": item.get("estimated_duration", ""),
-                    "action_type": self.action_labels.get(action_code, "Unknown"),
-                }
-                recommendations.append(rec)
+            session = intervention_data.get("session") if isinstance(intervention_data, dict) else None
+            if session is None:
+                return []
+            refs = items_repo.get_items_for_state_action(session, student_state or "", action_code, num_items)
+            if not refs:
+                refs = items_repo.get_fallback_items_for_action(session, action_code, num_items)
+            out = []
+            for it in refs:
+                out.append({"ref_type": it.ref_type.value if hasattr(it.ref_type, "value") else str(it.ref_type), "ref_id": int(it.ref_id)})
+            return out
         except Exception as e:
             print(f"Error get_multiple_recommendations: {e}")
-        return recommendations
+            return []
 
     def get_default_recommendations(self, state):
         # Simple subset of default logic focusing on engagement and MSLQ

@@ -55,6 +55,49 @@ func (ns NullAssignmentsStatus) Value() (driver.Value, error) {
 	return string(ns.AssignmentsStatus), nil
 }
 
+type CoachingsModality string
+
+const (
+	CoachingsModalityOnline  CoachingsModality = "online"
+	CoachingsModalityOffline CoachingsModality = "offline"
+	CoachingsModalityHybrid  CoachingsModality = "hybrid"
+)
+
+func (e *CoachingsModality) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CoachingsModality(s)
+	case string:
+		*e = CoachingsModality(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CoachingsModality: %T", src)
+	}
+	return nil
+}
+
+type NullCoachingsModality struct {
+	CoachingsModality CoachingsModality `json:"coachings_modality"`
+	Valid             bool              `json:"valid"` // Valid is true if CoachingsModality is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCoachingsModality) Scan(value interface{}) error {
+	if value == nil {
+		ns.CoachingsModality, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CoachingsModality.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCoachingsModality) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CoachingsModality), nil
+}
+
 type NlpLexiconStyle string
 
 const (
@@ -571,6 +614,139 @@ func (ns NullStudentsStatus) Value() (driver.Value, error) {
 	return string(ns.StudentsStatus), nil
 }
 
+type UserCoachingStatus string
+
+const (
+	UserCoachingStatusRequested UserCoachingStatus = "requested"
+	UserCoachingStatusScheduled UserCoachingStatus = "scheduled"
+	UserCoachingStatusCompleted UserCoachingStatus = "completed"
+	UserCoachingStatusCanceled  UserCoachingStatus = "canceled"
+)
+
+func (e *UserCoachingStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserCoachingStatus(s)
+	case string:
+		*e = UserCoachingStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserCoachingStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUserCoachingStatus struct {
+	UserCoachingStatus UserCoachingStatus `json:"user_coaching_status"`
+	Valid              bool               `json:"valid"` // Valid is true if UserCoachingStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserCoachingStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserCoachingStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserCoachingStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserCoachingStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserCoachingStatus), nil
+}
+
+type UserPunishmentsStatus string
+
+const (
+	UserPunishmentsStatusAssigned     UserPunishmentsStatus = "assigned"
+	UserPunishmentsStatusAcknowledged UserPunishmentsStatus = "acknowledged"
+	UserPunishmentsStatusActive       UserPunishmentsStatus = "active"
+	UserPunishmentsStatusCompleted    UserPunishmentsStatus = "completed"
+	UserPunishmentsStatusLifted       UserPunishmentsStatus = "lifted"
+	UserPunishmentsStatusAppealed     UserPunishmentsStatus = "appealed"
+)
+
+func (e *UserPunishmentsStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserPunishmentsStatus(s)
+	case string:
+		*e = UserPunishmentsStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserPunishmentsStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUserPunishmentsStatus struct {
+	UserPunishmentsStatus UserPunishmentsStatus `json:"user_punishments_status"`
+	Valid                 bool                  `json:"valid"` // Valid is true if UserPunishmentsStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserPunishmentsStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserPunishmentsStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserPunishmentsStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserPunishmentsStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserPunishmentsStatus), nil
+}
+
+type UserRewardsStatus string
+
+const (
+	UserRewardsStatusClaimed UserRewardsStatus = "claimed"
+	UserRewardsStatusApplied UserRewardsStatus = "applied"
+	UserRewardsStatusRevoked UserRewardsStatus = "revoked"
+)
+
+func (e *UserRewardsStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserRewardsStatus(s)
+	case string:
+		*e = UserRewardsStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserRewardsStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUserRewardsStatus struct {
+	UserRewardsStatus UserRewardsStatus `json:"user_rewards_status"`
+	Valid             bool              `json:"valid"` // Valid is true if UserRewardsStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserRewardsStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserRewardsStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserRewardsStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserRewardsStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserRewardsStatus), nil
+}
+
 type UsersRole string
 
 const (
@@ -675,6 +851,18 @@ type Badge struct {
 	Description sql.NullString  `json:"description"`
 	Criteria    json.RawMessage `json:"criteria"`
 	CreatedAt   time.Time       `json:"created_at"`
+}
+
+type Coaching struct {
+	ID              int64                 `json:"id"`
+	Title           string                `json:"title"`
+	Description     sql.NullString        `json:"description"`
+	DurationMinutes sql.NullInt32         `json:"duration_minutes"`
+	Sessions        sql.NullInt32         `json:"sessions"`
+	Modality        NullCoachingsModality `json:"modality"`
+	IsActive        bool                  `json:"is_active"`
+	CreatedAt       time.Time             `json:"created_at"`
+	UpdatedAt       time.Time             `json:"updated_at"`
 }
 
 type Course struct {
@@ -784,6 +972,17 @@ type Program struct {
 	UpdatedAt time.Time     `json:"updated_at"`
 }
 
+type Punishment struct {
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Description sql.NullString  `json:"description"`
+	Severity    sql.NullInt16   `json:"severity"`
+	Metadata    json.RawMessage `json:"metadata"`
+	IsActive    bool            `json:"is_active"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+}
+
 type Questionnaire struct {
 	ID             int32                    `json:"id"`
 	Type           QuestionnairesType       `json:"type"`
@@ -835,6 +1034,17 @@ type QuizQuestion struct {
 	AnswerOptions json.RawMessage `json:"answer_options"`
 	CorrectAnswer sql.NullString  `json:"correct_answer"`
 	Ordinal       int32           `json:"ordinal"`
+}
+
+type Reward struct {
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Description sql.NullString  `json:"description"`
+	Type        string          `json:"type"`
+	Metadata    json.RawMessage `json:"metadata"`
+	IsActive    bool            `json:"is_active"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
 }
 
 type Student struct {
@@ -959,6 +1169,19 @@ type UserBadge struct {
 	AwardedAt time.Time `json:"awarded_at"`
 }
 
+type UserCoaching struct {
+	ID          int64              `json:"id"`
+	UserID      int64              `json:"user_id"`
+	CoachingID  int64              `json:"coaching_id"`
+	Status      UserCoachingStatus `json:"status"`
+	ScheduledAt sql.NullTime       `json:"scheduled_at"`
+	CompletedAt sql.NullTime       `json:"completed_at"`
+	Notes       sql.NullString     `json:"notes"`
+	CreatedBy   sql.NullInt64      `json:"created_by"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+}
+
 type UserMission struct {
 	ID          int64           `json:"id"`
 	MissionID   int64           `json:"mission_id"`
@@ -974,6 +1197,28 @@ type UserProfile struct {
 	AvatarUrl sql.NullString  `json:"avatar_url"`
 	Bio       sql.NullString  `json:"bio"`
 	Metadata  json.RawMessage `json:"metadata"`
+}
+
+type UserPunishment struct {
+	ID            int64                 `json:"id"`
+	UserID        int64                 `json:"user_id"`
+	PunishmentID  int64                 `json:"punishment_id"`
+	Status        UserPunishmentsStatus `json:"status"`
+	EffectiveFrom sql.NullTime          `json:"effective_from"`
+	EffectiveTo   sql.NullTime          `json:"effective_to"`
+	Reason        sql.NullString        `json:"reason"`
+	IssuedBy      sql.NullInt64         `json:"issued_by"`
+	CreatedAt     time.Time             `json:"created_at"`
+}
+
+type UserReward struct {
+	ID        int64             `json:"id"`
+	UserID    int64             `json:"user_id"`
+	RewardID  int64             `json:"reward_id"`
+	Status    UserRewardsStatus `json:"status"`
+	AppliedAt sql.NullTime      `json:"applied_at"`
+	Metadata  json.RawMessage   `json:"metadata"`
+	CreatedAt time.Time         `json:"created_at"`
 }
 
 type UserStat struct {

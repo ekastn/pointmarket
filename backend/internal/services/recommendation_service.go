@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"pointmarket/backend/internal/dtos"
@@ -88,20 +89,190 @@ func (s *RecommendationService) mapUpstream(up *gateway.UpstreamResponseExportSh
 		actionNames = append(actionNames, name)
 	}
 	sort.Strings(actionNames)
+
+	// Collect refs by type across actions
+	coachIDsSet := map[int64]struct{}{}
+	rewardIDsSet := map[int64]struct{}{}
+	punishIDsSet := map[int64]struct{}{}
+	missionIDsSet := map[int64]struct{}{}
+	productIDsSet := map[int64]struct{}{}
+
+	for _, name := range actionNames {
+		ua := up.ActionRecommendations[name]
+		if len(ua.ItemsRefs) > 0 {
+			for _, ref := range ua.ItemsRefs {
+				switch ref.RefType {
+				case "coaching":
+					coachIDsSet[ref.RefID] = struct{}{}
+				case "reward":
+					rewardIDsSet[ref.RefID] = struct{}{}
+				case "punishment":
+					punishIDsSet[ref.RefID] = struct{}{}
+				case "mission":
+					missionIDsSet[ref.RefID] = struct{}{}
+				case "product":
+					productIDsSet[ref.RefID] = struct{}{}
+				}
+			}
+		}
+	}
+
+	// Convert sets to slices
+	coachIDs := make([]int64, 0, len(coachIDsSet))
+	for id := range coachIDsSet {
+		coachIDs = append(coachIDs, id)
+	}
+	rewardIDs := make([]int64, 0, len(rewardIDsSet))
+	for id := range rewardIDsSet {
+		rewardIDs = append(rewardIDs, id)
+	}
+	punishIDs := make([]int64, 0, len(punishIDsSet))
+	for id := range punishIDsSet {
+		punishIDs = append(punishIDs, id)
+	}
+	missionIDs := make([]int64, 0, len(missionIDsSet))
+	for id := range missionIDsSet {
+		missionIDs = append(missionIDs, id)
+	}
+	productIDs := make([]int64, 0, len(productIDsSet))
+	for id := range productIDsSet {
+		productIDs = append(productIDs, id)
+	}
+
+	// Batch fetch by type (skip empty slices)
+	cByID := map[int64]gen.Coaching{}
+	rByID := map[int64]gen.Reward{}
+	pByID := map[int64]gen.Punishment{}
+	mByID := map[int64]gen.Mission{}
+	prByID := map[int64]gen.Product{}
+
+	if len(coachIDs) > 0 {
+		if rows, err := s.studentSvc.q.GetCoachingsByIDs(context.Background(), coachIDs); err == nil {
+			for _, r := range rows {
+				cByID[r.ID] = r
+			}
+		} else {
+			log.Printf("GetCoachingsByIDs error: %v", err)
+		}
+	}
+	if len(rewardIDs) > 0 {
+		if rows, err := s.studentSvc.q.GetRewardsByIDs(context.Background(), rewardIDs); err == nil {
+			for _, r := range rows {
+				rByID[r.ID] = r
+			}
+		} else {
+			log.Printf("GetRewardsByIDs error: %v", err)
+		}
+	}
+	if len(punishIDs) > 0 {
+		if rows, err := s.studentSvc.q.GetPunishmentsByIDs(context.Background(), punishIDs); err == nil {
+			for _, r := range rows {
+				pByID[r.ID] = r
+			}
+		} else {
+			log.Printf("GetPunishmentsByIDs error: %v", err)
+		}
+	}
+	if len(missionIDs) > 0 {
+		if rows, err := s.studentSvc.q.GetMissionsByIDs(context.Background(), missionIDs); err == nil {
+			for _, r := range rows {
+				mByID[r.ID] = r
+			}
+		} else {
+			log.Printf("GetMissionsByIDs error: %v", err)
+		}
+	}
+	if len(productIDs) > 0 {
+		if rows, err := s.studentSvc.q.GetProductsByIDs(context.Background(), productIDs); err == nil {
+			for _, r := range rows {
+				prByID[r.ID] = r
+			}
+		} else {
+			log.Printf("GetProductsByIDs error: %v", err)
+		}
+	}
+
+	// Build actions preserving order; prefer items_refs; fallback to legacy items text if provided
 	resActions := make([]dtos.RecommendationAction, 0, len(actionNames))
 	for _, name := range actionNames {
 		ua := up.ActionRecommendations[name]
-		items := make([]dtos.RecommendationItem, 0, len(ua.Items))
-		for _, it := range ua.Items {
-			items = append(items, dtos.RecommendationItem{
-				Title:             it.Title,
-				Description:       it.Description,
-				Category:          it.Category,
-				TargetAudience:    it.TargetAudience,
-				DifficultyLevel:   it.DifficultyLevel.Value,
-				EstimatedDuration: it.EstimatedDuration,
-			})
+		items := make([]dtos.RecommendationItem, 0)
+		if len(ua.ItemsRefs) > 0 {
+			for _, ref := range ua.ItemsRefs {
+				switch ref.RefType {
+				case "coaching":
+					if c, ok := cByID[ref.RefID]; ok {
+						items = append(items, dtos.RecommendationItem{
+							Title:             c.Title,
+							Description:       nsToString(c.Description),
+							Category:          "",
+							TargetAudience:    "",
+							DifficultyLevel:   "",
+							EstimatedDuration: niToDurationStr(c.DurationMinutes),
+						})
+					}
+				case "reward":
+					if r, ok := rByID[ref.RefID]; ok {
+						items = append(items, dtos.RecommendationItem{
+							Title:             r.Title,
+							Description:       nsToString(r.Description),
+							Category:          r.Type,
+							TargetAudience:    "",
+							DifficultyLevel:   "",
+							EstimatedDuration: "",
+						})
+					}
+				case "punishment":
+					if p, ok := pByID[ref.RefID]; ok {
+						items = append(items, dtos.RecommendationItem{
+							Title:             p.Title,
+							Description:       nsToString(p.Description),
+							Category:          "",
+							TargetAudience:    "",
+							DifficultyLevel:   "",
+							EstimatedDuration: "",
+						})
+					}
+				case "mission":
+					if m, ok := mByID[ref.RefID]; ok {
+						items = append(items, dtos.RecommendationItem{
+							Title:             m.Title,
+							Description:       nsToString(m.Description),
+							Category:          "",
+							TargetAudience:    "",
+							DifficultyLevel:   "",
+							EstimatedDuration: "",
+						})
+					}
+				case "product":
+					if pr, ok := prByID[ref.RefID]; ok {
+						items = append(items, dtos.RecommendationItem{
+							Title:             pr.Name,
+							Description:       nsToString(pr.Description),
+							Category:          pr.Type,
+							TargetAudience:    "",
+							DifficultyLevel:   "",
+							EstimatedDuration: "",
+						})
+					}
+				default:
+					// Ignore unsupported ref types for now
+				}
+			}
+		} else if len(ua.Items) > 0 {
+			// Legacy path: map textual items as before
+			for _, it := range ua.Items {
+				items = append(items, dtos.RecommendationItem{
+					Title:             it.Title,
+					Description:       it.Description,
+					Category:          it.Category,
+					TargetAudience:    it.TargetAudience,
+					DifficultyLevel:   it.DifficultyLevel.Value,
+					EstimatedDuration: it.EstimatedDuration,
+				})
+			}
 		}
+
 		resActions = append(resActions, dtos.RecommendationAction{
 			ActionCode: ua.ActionCode,
 			ActionName: name,
@@ -109,6 +280,7 @@ func (s *RecommendationService) mapUpstream(up *gateway.UpstreamResponseExportSh
 			Items:      items,
 		})
 	}
+
 	return &dtos.StudentRecommendationsDTO{
 		StudentID:    up.StudentID,
 		State:        up.CurrentState,
@@ -117,6 +289,20 @@ func (s *RecommendationService) mapUpstream(up *gateway.UpstreamResponseExportSh
 		TotalActions: len(resActions),
 		TotalItems:   totalItems(resActions),
 	}
+}
+
+func nsToString(ns sql.NullString) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
+}
+
+func niToDurationStr(n sql.NullInt32) string {
+	if n.Valid && n.Int32 > 0 {
+		return fmt.Sprintf("%dm", n.Int32)
+	}
+	return ""
 }
 
 // detectSource interprets upstream summary for a source label.

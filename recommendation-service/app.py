@@ -11,8 +11,8 @@ def create_app(config_class=Config) -> Flask:
 
     if config_type == "prod":
         app.config.from_object(ProductionConfig)
-
-    app.config.from_object(Config)
+    else:
+        app.config.from_object(config_class)
 
     # Lazy imports to avoid circular dependencies
     from blueprints.recommendations import bp as recommendations_bp

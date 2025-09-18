@@ -105,6 +105,10 @@ type upstreamAction struct {
 		DifficultyLevel   FlexibleString `json:"difficulty_level"`
 		EstimatedDuration string         `json:"estimated_duration"`
 	} `json:"items"`
+	ItemsRefs []struct {
+		RefType string `json:"ref_type"`
+		RefID   int64  `json:"ref_id"`
+	} `json:"items_refs"`
 }
 
 type upstreamResponse struct {

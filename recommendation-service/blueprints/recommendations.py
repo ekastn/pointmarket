@@ -36,7 +36,6 @@ def get_recommendations(siswa_id):
                 {"error": "Unable to determine student state or student not found"}
             )
 
-        recommendations = []
         action_recs = {}
         key = (siswa_id, current_state)
         data = None
@@ -59,39 +58,30 @@ def get_recommendations(siswa_id):
                 data = ql_system.load_data_from_db()
                 if not data:
                     return jsonify({"error": "Failed to load intervention data"})
-            for action_code, q_value in actions:
-                items = ql_system.get_multiple_recommendations(
-                    action_code, data, num_items=3, student_state=current_state
-                )
-                if items:
+            try:
+                for action_code, q_value in actions:
+                    items_refs = ql_system.get_multiple_recommendations(
+                        action_code, data, num_items=3, student_state=current_state
+                    )
                     action_name = ql_system.action_labels.get(action_code, "Unknown")
                     action_recs[action_name] = {
                         "action_code": action_code,
                         "q_value": round(q_value, 4),
-                        "items": items,
-                        "item_count": len(items),
+                        "items_refs": items_refs,
+                        "items": [],  # legacy field kept for compatibility (empty)
+                        "item_count": len(items_refs),
                     }
-                    for i, rec in enumerate(items):
-                        recommendations.append(
-                            {
-                                "state": current_state,
-                                "action": action_name,
-                                "action_code": action_code,
-                                "confidence": round(q_value, 4),
-                                "recommendation": rec["judul"],
-                                "description": rec.get("deskripsi", ""),
-                                "category": rec.get("kategori", ""),
-                                "target_audience": rec.get("target_audience", ""),
-                                "difficulty_level": rec.get("difficulty_level", ""),
-                                "estimated_duration": rec.get("estimated_duration", ""),
-                                "item_index": i + 1,
-                                "total_items_for_action": len(items),
-                            }
-                        )
+            finally:
+                # best-effort close the session if present
+                try:
+                    sess = data.get("session")
+                    if sess is not None:
+                        sess.close()
+                except Exception:
+                    pass
 
-        if not recommendations:
+        if all(len(v.get("items_refs", [])) == 0 for v in action_recs.values()):
             defaults = ql_system.get_default_recommendations(current_state)
-            recommendations = defaults
             message = "Showing default recommendations - no trained Q-values available"
             for rec in defaults:
                 action_name = rec["action"]
@@ -99,7 +89,8 @@ def get_recommendations(siswa_id):
                 if action_name not in action_recs:
                     action_recs[action_name] = {
                         "action_code": action_code,
-                        "q_value": rec["confidence"],
+                        "q_value": rec.get("confidence", 0.0),
+                        "items_refs": [],
                         "items": [],
                         "item_count": 0,
                     }
@@ -110,13 +101,13 @@ def get_recommendations(siswa_id):
             {
                 "siswa_id": siswa_id,
                 "current_state": current_state,
-                "total_recommendations": len(recommendations),
-                "recommendations": recommendations,
+                "total_recommendations": sum(v.get("item_count", 0) for v in action_recs.values()),
+                "recommendations": [],
                 "action_recommendations": action_recs,
                 "message": message,
                 "summary": {
                     "actions_with_recommendations": len(action_recs),
-                    "total_items": sum(a["item_count"] for a in action_recs.values()),
+                    "total_items": sum(a.get("item_count", 0) for a in action_recs.values()),
                     "has_trained_q_values": (
                         key in ql_system.q_records if key else False
                     ),
@@ -172,9 +163,17 @@ def get_action_recommendations(siswa_id, action_code):
         data = ql_system.load_data_from_db()
         if not data:
             return jsonify({"error": "Failed to load intervention data"})
-        items = ql_system.get_multiple_recommendations(
-            action_code, data, num_items=5, student_state=current_state
-        )
+        try:
+            items_refs = ql_system.get_multiple_recommendations(
+                action_code, data, num_items=5, student_state=current_state
+            )
+        finally:
+            try:
+                sess = data.get("session")
+                if sess is not None:
+                    sess.close()
+            except Exception:
+                pass
         action_name = ql_system.action_labels.get(action_code, "Unknown")
         return jsonify(
             {
@@ -183,8 +182,9 @@ def get_action_recommendations(siswa_id, action_code):
                 "action": action_name,
                 "action_code": action_code,
                 "q_value": round(q_value, 4),
-                "total_items": len(items),
-                "recommendations": items,
+                "total_items": len(items_refs),
+                "items_refs": items_refs,
+                "recommendations": [],
                 "has_trained_q_value": True,
             }
         )

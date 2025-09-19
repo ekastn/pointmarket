@@ -21,5 +21,14 @@ class Config:
 
     DEBUG = True
 
+    # CBF (Content-Based Filtering) reranker
+    CBF_ENABLED = os.environ.get('CBF_ENABLED', 'true').lower() in ['1', 'true', 'yes']
+    CBF_ALPHA = float(os.environ.get('CBF_ALPHA', '0.7'))  # weight on RL q-score when applicable
+    CBF_WEIGHTS_VARK = float(os.environ.get('CBF_WEIGHTS_VARK', '0.35'))
+    CBF_WEIGHTS_AMS = float(os.environ.get('CBF_WEIGHTS_AMS', '0.25'))
+    CBF_WEIGHTS_MSLQ = float(os.environ.get('CBF_WEIGHTS_MSLQ', '0.20'))
+    CBF_WEIGHTS_ENG = float(os.environ.get('CBF_WEIGHTS_ENG', '0.20'))
+    CBF_DEBUG = os.environ.get('CBF_DEBUG', 'false').lower() in ['1', 'true', 'yes']
+
 class ProductionConfig(Config):
     DEBUG = False

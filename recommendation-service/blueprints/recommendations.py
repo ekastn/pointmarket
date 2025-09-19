@@ -61,7 +61,7 @@ def get_recommendations(siswa_id):
             try:
                 for action_code, q_value in actions:
                     items_refs = ql_system.get_multiple_recommendations(
-                        action_code, data, num_items=3, student_state=current_state
+                        siswa_id, action_code, data, num_items=3, student_state=current_state
                     )
                     action_name = ql_system.action_labels.get(action_code, "Unknown")
                     action_recs[action_name] = {
@@ -165,7 +165,7 @@ def get_action_recommendations(siswa_id, action_code):
             return jsonify({"error": "Failed to load intervention data"})
         try:
             items_refs = ql_system.get_multiple_recommendations(
-                action_code, data, num_items=5, student_state=current_state
+                siswa_id, action_code, data, num_items=5, student_state=current_state
             )
         finally:
             try:

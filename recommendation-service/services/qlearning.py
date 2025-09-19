@@ -1,7 +1,15 @@
 import math
+import logging
 import random
 
 from .db import execute_query, get_connection 
+from services.cbf import (
+    build_user_vector,
+    parse_item_state,
+    score as cbf_score_fn,
+    fetch_user_scores,
+    map_engagement_label_to_score,
+)
 from services import items_repo
 
 from config import Config
@@ -20,6 +28,7 @@ class QLearningRecommendationSystem:
             105: "Misi",
             106: "Coaching",
         }
+        self._logger = logging.getLogger(__name__)
 
     # --- helpers ---
     def is_null_or_nan(self, value):
@@ -270,21 +279,116 @@ class QLearningRecommendationSystem:
             return False
 
     def get_multiple_recommendations(
-        self, action_code, intervention_data, num_items=3, student_state=None
+        self, siswa_id, action_code, intervention_data, num_items=3, student_state=None
     ):
-        """Return items as reference tuples for backend materialization.
+        """Return items as reference tuples for backend materialization with CBF reranking.
         Shape: [ { 'ref_type': str, 'ref_id': int } ]
         """
         try:
-            session = intervention_data.get("session") if isinstance(intervention_data, dict) else None
+            session = (
+                intervention_data.get("session") if isinstance(intervention_data, dict) else None
+            )
             if session is None:
                 return []
-            refs = items_repo.get_items_for_state_action(session, student_state or "", action_code, num_items)
-            if not refs:
-                refs = items_repo.get_fallback_items_for_action(session, action_code, num_items)
+
+            # Fetch a pool for state+action (or action fallback) larger than num_items
+            pool_limit = max(50, num_items)
+            refs_pool = items_repo.get_items_for_state_action(
+                session, student_state or "", action_code, pool_limit
+            )
+            if not refs_pool:
+                refs_pool = items_repo.get_fallback_items_for_action(
+                    session, action_code, pool_limit
+                )
+            if not refs_pool:
+                return []
+
+            # Build user vector from scores_siswa (if available)
+            from config import Config
+
+            cbf_enabled = getattr(Config, "CBF_ENABLED", True)
+            if cbf_enabled:
+                scores = fetch_user_scores(str(siswa_id))
+            else:
+                scores = None
+
+            ranked = []
+            if scores:
+                weights = {
+                    "vark": getattr(Config, "CBF_WEIGHTS_VARK", 0.35),
+                    "ams": getattr(Config, "CBF_WEIGHTS_AMS", 0.25),
+                    "mslq": getattr(Config, "CBF_WEIGHTS_MSLQ", 0.20),
+                    "eng": getattr(Config, "CBF_WEIGHTS_ENG", 0.20),
+                }
+                uvec = build_user_vector(
+                    scores.get("vark", 0.0),
+                    scores.get("ams", 0.0),
+                    scores.get("mslq", 0.0),
+                    scores.get("engagement", "medium"),
+                    weights,
+                )
+                for it in refs_pool:
+                    istate = parse_item_state(getattr(it, "state", None))
+                    s = cbf_score_fn(uvec, istate, weights)
+                    ranked.append((s, it))
+                # Since RL q_value is per-action and constant across items, CBF alone orders the pool.
+                ranked.sort(key=lambda x: x[0], reverse=True)
+                # Debug/metrics logging
+                try:
+                    if getattr(Config, "CBF_DEBUG", False):
+                        logging.basicConfig(level=logging.INFO, force=False)
+                        scores_only = [sc for sc, _ in ranked]
+                        top3 = [round(sc, 4) for sc in scores_only[:3]]
+                        min_sc = round(min(scores_only), 4) if scores_only else None
+                        max_sc = round(max(scores_only), 4) if scores_only else None
+                        avg_sc = round(sum(scores_only) / len(scores_only), 4) if scores_only else None
+                        self._logger.info(
+                            "CBF applied | siswa=%s action=%s state=%s pool=%d top3=%s min=%.4f max=%.4f avg=%.4f",
+                            str(siswa_id),
+                            str(action_code),
+                            str(student_state or ""),
+                            len(refs_pool),
+                            top3,
+                            (min_sc or 0.0),
+                            (max_sc or 0.0),
+                            (avg_sc or 0.0),
+                        )
+                except Exception:
+                    pass
+                chosen = [it for _, it in ranked[: num_items]]
+            else:
+                # Fallback to original behavior (random sample if needed)
+                if len(refs_pool) <= num_items:
+                    chosen = list(refs_pool)
+                else:
+                    import random
+
+                    chosen = random.sample(list(refs_pool), num_items)
+                # Debug fallback log
+                try:
+                    if getattr(Config, "CBF_DEBUG", False):
+                        logging.basicConfig(level=logging.INFO, force=False)
+                        self._logger.info(
+                            "CBF skipped | siswa=%s action=%s state=%s pool=%d reason=%s",
+                            str(siswa_id),
+                            str(action_code),
+                            str(student_state or ""),
+                            len(refs_pool),
+                            "no-user-scores-or-disabled",
+                        )
+                except Exception:
+                    pass
+
             out = []
-            for it in refs:
-                out.append({"ref_type": it.ref_type.value if hasattr(it.ref_type, "value") else str(it.ref_type), "ref_id": int(it.ref_id)})
+            for it in chosen:
+                out.append(
+                    {
+                        "ref_type": it.ref_type.value
+                        if hasattr(it.ref_type, "value")
+                        else str(it.ref_type),
+                        "ref_id": int(it.ref_id),
+                    }
+                )
             return out
         except Exception as e:
             print(f"Error get_multiple_recommendations: {e}")

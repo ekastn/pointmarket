@@ -34,12 +34,12 @@ return [
                 ['path' => '/nlp-demo', 'label' => 'Demo NLP', 'icon' => 'fas fa-brain'],
             ],
         ],
-        [
-            'label' => 'Support',
-            'items' => [
-                ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle'],
-            ],
-        ],
+        // [
+        //     'label' => 'Support',
+        //     'items' => [
+        //         ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle'],
+        //     ],
+        // ],
     ],
     'guru' => [
         [
@@ -58,20 +58,20 @@ return [
                 ['path' => '/weekly-evaluations', 'label' => 'Monitoring Evaluasi', 'icon' => 'fas fa-chart-line'],
             ],
         ],
-        [
-            'label' => 'Fitur AI',
-            'items' => [
-                ['path' => '/ai-explanation', 'label' => 'Cara Kerja AI', 'icon' => 'fas fa-graduation-cap'],
-                ['path' => '/ai-recommendations', 'label' => 'Rekomendasi AI', 'icon' => 'fas fa-robot'],
-                ['path' => '/nlp-demo', 'label' => 'Demo NLP', 'icon' => 'fas fa-brain'],
-            ],
-        ],
-        [
-            'label' => 'Support',
-            'items' => [
-                ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle'],
-            ],
-        ],
+        // [
+        //     'label' => 'Fitur AI',
+        //     'items' => [
+        //         ['path' => '/ai-explanation', 'label' => 'Cara Kerja AI', 'icon' => 'fas fa-graduation-cap'],
+        //         ['path' => '/ai-recommendations', 'label' => 'Rekomendasi AI', 'icon' => 'fas fa-robot'],
+        //         ['path' => '/nlp-demo', 'label' => 'Demo NLP', 'icon' => 'fas fa-brain'],
+        //     ],
+        // ],
+        // [
+        //     'label' => 'Support',
+        //     'items' => [
+        //         ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle'],
+        //     ],
+        // ],
     ],
     'admin' => [
         [
@@ -94,19 +94,19 @@ return [
                 ['path' => '/questionnaires', 'label' => 'Kuesioner', 'icon' => 'fas fa-clipboard-list'],
             ],
         ],
-        [
-            'label' => 'Fitur AI',
-            'items' => [
-                ['path' => '/ai-explanation', 'label' => 'Cara Kerja AI', 'icon' => 'fas fa-graduation-cap'],
-                ['path' => '/ai-recommendations', 'label' => 'Rekomendasi AI', 'icon' => 'fas fa-robot'],
-                ['path' => '/nlp-demo', 'label' => 'Demo NLP', 'icon' => 'fas fa-brain'],
-            ],
-        ],
-        [
-            'label' => 'Support',
-            'items' => [
-                ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle'],
-            ],
-        ],
+        // [
+        //     'label' => 'Fitur AI',
+        //     'items' => [
+        //         ['path' => '/ai-explanation', 'label' => 'Cara Kerja AI', 'icon' => 'fas fa-graduation-cap'],
+        //         ['path' => '/ai-recommendations', 'label' => 'Rekomendasi AI', 'icon' => 'fas fa-robot'],
+        //         ['path' => '/nlp-demo', 'label' => 'Demo NLP', 'icon' => 'fas fa-brain'],
+        //     ],
+        // ],
+        // [
+        //     'label' => 'Support',
+        //     'items' => [
+        //         ['path' => '/help', 'label' => 'Bantuan', 'icon' => 'fas fa-info-circle'],
+        //     ],
+        // ],
     ],
 ];

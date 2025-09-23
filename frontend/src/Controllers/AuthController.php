@@ -13,13 +13,6 @@ class AuthController extends BaseController
 
     public function showLoginForm(): void
     {
-        session_start();
-        // If user is already logged in, redirect to dashboard
-        if (isset($_SESSION['jwt_token'])) {
-            $this->redirect('/dashboard');
-            return;
-        }
-
         // Messages will be handled by the session and passed to the view
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']); // Clear messages after displaying
@@ -43,8 +36,6 @@ class AuthController extends BaseController
 
     public function processLogin(): void
     {
-        session_start();
-        // Basic input validation
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
 
@@ -67,7 +58,7 @@ class AuthController extends BaseController
             $_SESSION['messages'] = ['success' => 'Login berhasil! Selamat datang.'];
             $this->redirect('/dashboard');
         } else {
-            $_SESSION['messages'] = ['error' => $response['error'] ?? 'Login failed. Please check your credentials.'];
+            $_SESSION['messages'] = ['error' => 'Username atau password salah. Silakan coba lagi.'];
             $this->redirect('/login');
         }
     }

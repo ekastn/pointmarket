@@ -101,7 +101,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 		}
 
 		if learningStyle.ScoreKinesthetic != nil {
-			scoreKinesthetic = *learningStyle.ScoreReading
+			scoreKinesthetic = *learningStyle.ScoreKinesthetic
 		}
 
 		studentStatsDTO := &dtos.StudentDashboardStatsDTO{

@@ -5,17 +5,37 @@ namespace App\Controllers;
 use App\Core\ApiClient;
 use App\Services\DashboardService;
 use App\Services\RecommendationService;
+use App\Services\AssignmentService;
+use App\Services\QuizService;
+use App\Services\WeeklyEvaluationService;
+use App\Services\AnalyticsService;
 
 class DashboardController extends BaseController
 {
     protected DashboardService $dashboardService;
     protected RecommendationService $recommendationService;
+    protected AssignmentService $assignmentService;
+    protected QuizService $quizService;
+    protected WeeklyEvaluationService $weeklyEvaluationService;
+    protected AnalyticsService $analyticsService;
 
-    public function __construct(ApiClient $apiClient, DashboardService $dashboardService, RecommendationService $recommendationService = null)
+    public function __construct(
+        ApiClient $apiClient,
+        DashboardService $dashboardService,
+        RecommendationService $recommendationService = null,
+        AssignmentService $assignmentService = null,
+        QuizService $quizService = null,
+        WeeklyEvaluationService $weeklyEvaluationService = null,
+        AnalyticsService $analyticsService = null,
+    )
     {
         parent::__construct($apiClient);
         $this->dashboardService = $dashboardService;
         $this->recommendationService = $recommendationService ?? new RecommendationService($apiClient);
+        $this->assignmentService = $assignmentService ?? new AssignmentService($apiClient);
+        $this->quizService = $quizService ?? new QuizService($apiClient);
+        $this->weeklyEvaluationService = $weeklyEvaluationService ?? new WeeklyEvaluationService($apiClient);
+        $this->analyticsService = $analyticsService ?? new AnalyticsService($apiClient);
     }
 
     public function showDashboard(): void
@@ -37,9 +57,52 @@ class DashboardController extends BaseController
                 ]);
                 return;
             case 'guru':
-                $teacherStats = $dashboardData['teacher_stats'] ?? null;
+                $teacherStats = $dashboardData['teacher_stats'] ?? [];
+
+                // Recent items (take last 5 by created_at desc)
+                $recentAssignments = [];
+                $recentQuizzes = [];
+                try {
+                    $assignmentsResp = $this->assignmentService->getAssignments();
+                    $assignments = $assignmentsResp['assignments'] ?? ($assignmentsResp ?? []);
+                    usort($assignments, function($a, $b){
+                        return strtotime($b['created_at'] ?? '0') <=> strtotime($a['created_at'] ?? '0');
+                    });
+                    $recentAssignments = array_slice($assignments, 0, 5);
+                } catch (\Throwable $e) { /* ignore */ }
+
+                try {
+                    $quizzesResp = $this->quizService->getQuizzes();
+                    $quizzes = $quizzesResp['quizzes'] ?? ($quizzesResp ?? []);
+                    usort($quizzes, function($a, $b){
+                        return strtotime($b['created_at'] ?? '0') <=> strtotime($a['created_at'] ?? '0');
+                    });
+                    $recentQuizzes = array_slice($quizzes, 0, 5);
+                } catch (\Throwable $e) { /* ignore */ }
+
+                // Evaluation snapshot (counts by status)
+                $evalSummary = ['completed' => 0, 'pending' => 0, 'overdue' => 0, 'total' => 0];
+                try {
+                    $monitoring = $this->weeklyEvaluationService->getTeacherDashboard() ?? [];
+                    foreach (($monitoring ?: []) as $row) {
+                        $status = strtolower((string)($row['status'] ?? ''));
+                        if (isset($evalSummary[$status])) {
+                            $evalSummary[$status]++;
+                        }
+                        $evalSummary['total']++;
+                    }
+                } catch (\Throwable $e) { /* ignore */ }
+
+                // Course insights for charts
+                $courseInsights = [];
+                try { $courseInsights = $this->analyticsService->getTeacherCourseInsights(10) ?? []; } catch (\Throwable $e) { /* ignore */ }
+
                 $this->render('guru/dashboard', [
-                    'teacherStats' => $teacherStats
+                    'teacherStats' => $teacherStats,
+                    'recentAssignments' => $recentAssignments,
+                    'recentQuizzes' => $recentQuizzes,
+                    'evalSummary' => $evalSummary,
+                    'courseInsights' => $courseInsights,
                 ]);
                 return;
             case 'siswa':

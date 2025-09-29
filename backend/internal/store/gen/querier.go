@@ -132,6 +132,8 @@ type Querier interface {
 	GetStudentQuizzesByQuizID(ctx context.Context, quizID int64) ([]GetStudentQuizzesByQuizIDRow, error)
 	GetStudentQuizzesByStudentID(ctx context.Context, userID int64) ([]GetStudentQuizzesByStudentIDRow, error)
 	GetStudentStatistic(ctx context.Context, id int64) (GetStudentStatisticRow, error)
+	// Aggregates latest AMS, MSLQ, and VARK per course for a given teacher (owner)
+	GetTeacherCourseInsights(ctx context.Context, arg GetTeacherCourseInsightsParams) ([]GetTeacherCourseInsightsRow, error)
 	GetTeacherStatistic(ctx context.Context, arg GetTeacherStatisticParams) (GetTeacherStatisticRow, error)
 	GetUserBadgesByUserID(ctx context.Context, userID int64) ([]GetUserBadgesByUserIDRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)

@@ -141,7 +141,7 @@ $renderer->includePartial('components/partials/page_title', [
                         <div class="col-md-4 text-center">
                             <i class="<?php echo htmlspecialchars($learningTips['icon']); ?> fa-4x text-primary opacity-50 mb-3"></i>
                             <br>
-                            <a href="/vark-assessment" class="btn btn-outline-primary btn-sm">
+                            <a href="<?php echo htmlspecialchars($varkQuestionnaireLink ?? '/questionnaires'); ?>" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-sync-alt me-1"></i>
                                 Ulangi Assessment
                             </a>
@@ -152,7 +152,7 @@ $renderer->includePartial('components/partials/page_title', [
                         'icon' => 'fas fa-brain',
                         'title' => 'Gaya Belajar Belum Dinilai',
                         'subtitle' => 'Ikuti VARK assessment untuk tahu preferensi belajar kamu dan dapat rekomendasi yang lebih personal.',
-                        'cta_path' => '/vark-assessment',
+                        'cta_path' => (isset($varkQuestionnaireLink) && $varkQuestionnaireLink) ? $varkQuestionnaireLink : '/questionnaires',
                         'cta_label' => 'Mulai VARK Assessment',
                     ]); ?>
                 <?php } ?>

@@ -9,6 +9,7 @@ use App\Services\AssignmentService;
 use App\Services\QuizService;
 use App\Services\WeeklyEvaluationService;
 use App\Services\AnalyticsService;
+use App\Services\QuestionnaireService;
 
 class DashboardController extends BaseController
 {
@@ -18,6 +19,7 @@ class DashboardController extends BaseController
     protected QuizService $quizService;
     protected WeeklyEvaluationService $weeklyEvaluationService;
     protected AnalyticsService $analyticsService;
+    protected QuestionnaireService $questionnaireService;
 
     public function __construct(
         ApiClient $apiClient,
@@ -27,6 +29,7 @@ class DashboardController extends BaseController
         QuizService $quizService = null,
         WeeklyEvaluationService $weeklyEvaluationService = null,
         AnalyticsService $analyticsService = null,
+        QuestionnaireService $questionnaireService = null,
     )
     {
         parent::__construct($apiClient);
@@ -36,6 +39,7 @@ class DashboardController extends BaseController
         $this->quizService = $quizService ?? new QuizService($apiClient);
         $this->weeklyEvaluationService = $weeklyEvaluationService ?? new WeeklyEvaluationService($apiClient);
         $this->analyticsService = $analyticsService ?? new AnalyticsService($apiClient);
+        $this->questionnaireService = $questionnaireService ?? new QuestionnaireService($apiClient);
     }
 
     public function showDashboard(): void
@@ -130,11 +134,41 @@ class DashboardController extends BaseController
                     }
                 }
 
+                // Compute dynamic VARK questionnaire link (Option A)
+                $varkQuestionnaireLink = '/questionnaires';
+                try {
+                    $allQs = $this->questionnaireService->getAllQuestionnaires() ?? [];
+                    // filter VARK, prefer active, pick latest by id
+                    $varkQs = array_values(array_filter($allQs, function ($q) {
+                        $isVark = isset($q['type']) && strtoupper((string)$q['type']) === 'VARK';
+                        $isActive = !isset($q['status']) || strtolower((string)$q['status']) === 'active';
+                        return $isVark && $isActive;
+                    }));
+                    if (empty($varkQs)) {
+                        // fallback: any VARK regardless of status
+                        $varkQs = array_values(array_filter($allQs, function ($q) {
+                            return isset($q['type']) && strtoupper((string)$q['type']) === 'VARK';
+                        }));
+                    }
+                    if (!empty($varkQs)) {
+                        usort($varkQs, function ($a, $b) {
+                            return (int)($a['id'] ?? 0) <=> (int)($b['id'] ?? 0);
+                        });
+                        $latest = end($varkQs);
+                        if (!empty($latest['id'])) {
+                            $varkQuestionnaireLink = '/questionnaires/' . (int)$latest['id'];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // leave default fallback
+                }
+
                 $this->render('siswa/dashboard', [
                     'studentStats' => $studentStats,
                     'weekly_evaluations' => $weeklyEvaluations,
                     'recommendations' => $recommendations,
                     'missingAssessments' => $missingAssessments,
+                    'varkQuestionnaireLink' => $varkQuestionnaireLink,
                 ]);
                 return;
         }

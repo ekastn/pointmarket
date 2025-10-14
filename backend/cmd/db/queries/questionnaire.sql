@@ -118,3 +118,76 @@ WHERE id = ?;
 -- name: DeleteVarkOption :exec
 DELETE FROM questionnaire_vark_options
 WHERE id = ?;
+
+-- name: GetLikertTypeStatsByStudent :many
+SELECT
+  q.type AS type,
+  CAST(COUNT(r.id) AS SIGNED) AS total_completed,
+  CAST(AVG(r.total_score) AS DOUBLE) AS average_score,
+  CAST(MAX(r.total_score) AS DOUBLE) AS best_score,
+  CAST(MIN(r.total_score) AS DOUBLE) AS lowest_score,
+  CAST(MAX(r.created_at) AS DATETIME) AS last_completed
+FROM questionnaires q
+LEFT JOIN student_questionnaire_likert_results r
+  ON q.id = r.questionnaire_id
+  AND r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+WHERE q.type IN ('MSLQ','AMS') AND q.status = 'active'
+GROUP BY q.type
+ORDER BY q.type;
+
+-- name: CountVarkResultsByStudent :one
+SELECT COUNT(*) AS total
+FROM student_questionnaire_vark_results r
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?);
+
+-- name: GetLikertHistoryByStudent :many
+SELECT
+  r.id,
+  r.student_id,
+  r.questionnaire_id,
+  r.total_score,
+  r.subscale_scores,
+  r.created_at,
+  r.weekly_evaluation_id,
+  q.name AS questionnaire_name,
+  q.description AS questionnaire_description,
+  q.type AS questionnaire_type
+FROM student_questionnaire_likert_results r
+JOIN questionnaires q ON q.id = r.questionnaire_id
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = sqlc.arg('user_id'))
+  AND (sqlc.arg('type_filter_is_empty') = 1 OR q.type = sqlc.arg('type_filter'))
+ORDER BY r.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountLikertHistoryByStudent :one
+SELECT COUNT(*) AS total
+FROM student_questionnaire_likert_results r
+JOIN questionnaires q ON q.id = r.questionnaire_id
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = sqlc.arg('user_id'))
+  AND (sqlc.arg('type_filter_is_empty') = 1 OR q.type = sqlc.arg('type_filter'));
+
+-- name: GetVarkHistoryByStudent :many
+SELECT
+  r.id,
+  r.student_id,
+  r.questionnaire_id,
+  r.vark_type,
+  r.vark_label,
+  r.score_visual,
+  r.score_auditory,
+  r.score_reading,
+  r.score_kinesthetic,
+  r.created_at,
+  q.name  AS questionnaire_name,
+  q.description AS questionnaire_description,
+  q.type  AS questionnaire_type
+FROM student_questionnaire_vark_results r
+JOIN questionnaires q ON q.id = r.questionnaire_id
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+ORDER BY r.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountVarkHistoryByStudent :one
+SELECT COUNT(*) AS total
+FROM student_questionnaire_vark_results r
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?);

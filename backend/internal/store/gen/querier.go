@@ -17,10 +17,13 @@ type Querier interface {
 	CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int64, error)
 	CountCoursesWithEnrollmentStatus(ctx context.Context, arg CountCoursesWithEnrollmentStatusParams) (int64, error)
 	CountLessonsByCourseID(ctx context.Context, courseID int64) (int64, error)
+	CountLikertHistoryByStudent(ctx context.Context, arg CountLikertHistoryByStudentParams) (int64, error)
 	CountProductCategories(ctx context.Context) (int64, error)
 	CountProducts(ctx context.Context, arg CountProductsParams) (int64, error)
 	CountSearchedUsers(ctx context.Context, arg CountSearchedUsersParams) (int64, error)
 	CountStudents(ctx context.Context, arg CountStudentsParams) (int64, error)
+	CountVarkHistoryByStudent(ctx context.Context, userID int64) (int64, error)
+	CountVarkResultsByStudent(ctx context.Context, userID int64) (int64, error)
 	// Assignments --
 	CreateAssignment(ctx context.Context, arg CreateAssignmentParams) (sql.Result, error)
 	// Badges --
@@ -95,7 +98,9 @@ type Querier interface {
 	GetLatestVarkResult(ctx context.Context, userID int64) (GetLatestVarkResultRow, error)
 	GetLessonByID(ctx context.Context, id int64) (Lesson, error)
 	GetLessonsByCourseID(ctx context.Context, arg GetLessonsByCourseIDParams) ([]Lesson, error)
+	GetLikertHistoryByStudent(ctx context.Context, arg GetLikertHistoryByStudentParams) ([]GetLikertHistoryByStudentRow, error)
 	GetLikertStatsByStudent(ctx context.Context, userID int64) ([]GetLikertStatsByStudentRow, error)
+	GetLikertTypeStatsByStudent(ctx context.Context, userID int64) ([]GetLikertTypeStatsByStudentRow, error)
 	GetMaxOrdinalForQuiz(ctx context.Context, quizID int64) (interface{}, error)
 	GetMissionByID(ctx context.Context, id int64) (Mission, error)
 	GetMissions(ctx context.Context) ([]Mission, error)
@@ -146,6 +151,7 @@ type Querier interface {
 	// User Stats --
 	GetUserStats(ctx context.Context, userID int64) (UserStat, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	GetVarkHistoryByStudent(ctx context.Context, arg GetVarkHistoryByStudentParams) ([]GetVarkHistoryByStudentRow, error)
 	GetVarkOptionsByQuestionnaireID(ctx context.Context, questionnaireID int32) ([]QuestionnaireVarkOption, error)
 	GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDate(ctx context.Context, arg GetWeeklyEvaluationByStudentAndQuestionnaireAndDueDateParams) (int64, error)
 	GetWeeklyEvaluationResult(ctx context.Context, weeklyEvaluationID sql.NullInt64) (GetWeeklyEvaluationResultRow, error)

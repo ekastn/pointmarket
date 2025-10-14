@@ -239,6 +239,80 @@ func (h *QuestionnaireHandler) GetCorrelation(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Correlation analysis successful", analysisResult)
 }
 
+// GetQuestionnaireStats returns aggregated stats for the current student.
+func (h *QuestionnaireHandler) GetQuestionnaireStats(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	stats, err := h.questionnaireService.GetQuestionnaireStats(c.Request.Context(), userID)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Questionnaire stats retrieved", stats)
+}
+
+// GetQuestionnaireHistory returns the student's questionnaire history (Likert), paginated.
+func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	typ := c.Query("type") // optional: MSLQ|AMS
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	items, total, err := h.questionnaireService.GetQuestionnaireHistory(c.Request.Context(), userID, typ, int32(limit), int32(offset))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Paginated(c, http.StatusOK, "Questionnaire history retrieved", items, total, (offset/limit)+1, limit)
+}
+
+// GetLatestVark returns the latest fused learning style for the current user (if available).
+func (h *QuestionnaireHandler) GetLatestVark(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	// Prefer latest fused learning style from user service
+	ls, err := h.userService.GetLatestUserLearningStyle(c.Request.Context(), userID)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	// When no record, return empty style
+	if ls.ID == 0 {
+		response.Success(c, http.StatusOK, "No VARK result", gin.H{"style": gin.H{}, "completed_at": nil})
+		return
+	}
+	var completedAt interface{} = nil
+	if !ls.CreatedAt.IsZero() {
+		completedAt = ls.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
+	}
+	style := gin.H{
+		"type":  string(ls.Type),
+		"label": ls.Label,
+		"scores": gin.H{
+			"visual":      nsToFloat(ls.ScoreVisual),
+			"auditory":    nsToFloat(ls.ScoreAuditory),
+			"reading":     nsToFloat(ls.ScoreReading),
+			"kinesthetic": nsToFloat(ls.ScoreKinesthetic),
+		},
+	}
+	response.Success(c, http.StatusOK, "Latest VARK retrieved", gin.H{"style": style, "completed_at": completedAt})
+}
+
+// helper to safely unwrap *float64 (nullable scores)
+func nsToFloat(p *float64) float64 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}
+
 func (h *QuestionnaireHandler) CreateQuestionnaire(c *gin.Context) {
 	var req dtos.AdminQuestionnaireDTO
 	if err := c.ShouldBindJSON(&req); err != nil {

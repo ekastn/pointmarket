@@ -23,64 +23,79 @@ $renderer->includePartial('components/partials/page_title', [
 
 <!-- Statistics Overview -->
 <div class="row pm-section">
-    <div class="col-12">
-        <h4><i class="fas fa-chart-bar me-2"></i>Statistik Kamu</h4>
-    </div>
-    <?php if (!empty($stats)): ?>
-        <?php foreach ($stats as $stat): ?>
-        <div class="col-md-6 mb-3">
-            <div class="card stats-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-<?php echo $stat['type'] === 'MSLQ' ? 'brain' : ($stat['type'] === 'AMS' ? 'heart' : 'graduation-cap'); ?> me-2"></i>
-                        <?php echo strtoupper($stat['type']); ?>
-                    </h5>
-                    <div class="row">
-                        <div class="col-6">
-                            <p class="mb-1"><strong>Selesai:</strong></p>
-                            <h4 class="text-primary"><?php echo htmlspecialchars($stat['total_completed'] ?? 0); ?></h4>
-                        </div>
-                        <div class="col-6">
-                            <?php if ($stat['type'] === 'vark'): ?>
-                                <p class="mb-1"><strong>Gaya Belajar:</strong></p>
-                                <?php if ($stat['total_completed'] > 0 && $varkResult): ?>
-                                    <h6 class="text-success"><?php echo htmlspecialchars($varkResult['dominant_style']); ?></h6>
-                                    <small class="text-muted"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></small>
-                                <?php else: ?>
-                                    <h6 class="text-muted">Belum dinilai</h6>
-                                <?php endif; ?>
+  <div class="col-12">
+    <div class="card pm-card">
+      <div class="card-header"><h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistik Kamu</h5></div>
+      <div class="card-body">
+        <div class="row g-3">
+          <?php if (!empty($stats)): ?>
+            <?php foreach ($stats as $stat): ?>
+              <?php 
+                $type = strtoupper($stat['type'] ?? '');
+                $icon = 'clipboard-list';
+                $accent = 'primary';
+                if ($type === 'MSLQ') { $icon = 'brain'; $accent = 'info'; }
+                elseif ($type === 'AMS') { $icon = 'heart'; $accent = 'danger'; }
+                elseif ($type === 'VARK') { $icon = 'graduation-cap'; $accent = 'success'; }
+              ?>
+              <div class="col-xl-4 col-md-6">
+                <div class="card h-100">
+                  <div class="card-header d-flex align-items-center justify-content-between py-2">
+                    <span class="fw-semibold text-<?php echo $accent; ?>">
+                      <i class="fas fa-<?php echo $icon; ?> me-2"></i><?php echo $type; ?>
+                    </span>
+                    <span class="badge bg-light text-muted">Selesai: <?php echo (int)($stat['total_completed'] ?? 0); ?></span>
+                  </div>
+                  <div class="card-body">
+                    <?php if ($type === 'VARK'): ?>
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                          <div class="text-muted small">Gaya Belajar</div>
+                          <div class="h6 mb-0">
+                            <?php if (($stat['total_completed'] ?? 0) > 0 && $varkResult): ?>
+                              <?php echo htmlspecialchars($varkResult['dominant_style']); ?>
+                              <small class="text-muted d-block"><?php echo htmlspecialchars($varkResult['learning_preference']); ?></small>
                             <?php else: ?>
-                                <p class="mb-1"><strong>Rata-rata Skor:</strong></p>
-                                <?php if ($stat['average_score'] !== null): ?>
-                                    <?php 
-                                    $avg_score = $stat['average_score'];
-                                    $scoreClass = $avg_score >= 5.5 ? 'score-high' : ($avg_score >= 4 ? 'score-medium' : 'score-low');
-                                    ?>
-                                    <h4 class="<?php echo $scoreClass; ?>"><?php echo htmlspecialchars(number_format($avg_score, 2)); ?></h4>
-                                <?php else: ?>
-                                    <h4 class="text-muted">-</h4>
-                                <?php endif; ?>
+                              <span class="text-muted">Belum dinilai</span>
                             <?php endif; ?>
+                          </div>
                         </div>
-                    </div>
-                    <?php if ($stat['last_completed']): ?>
-                        <small class="text-muted">
-                            Terakhir selesai: <?php echo htmlspecialchars(date('d M Y', strtotime($stat['last_completed']))); ?>
-                        </small>
+                        <i class="fas fa-<?php echo $icon; ?> fa-2x text-<?php echo $accent; ?> opacity-25"></i>
+                      </div>
+                    <?php else: ?>
+                      <div class="text-muted small">Rata-rata Skor</div>
+                      <?php 
+                        $avg = $stat['average_score'] ?? null;
+                        $avgText = $avg !== null ? number_format($avg, 2) : '-';
+                        $scoreClass = ($avg !== null && $avg >= 5.5) ? 'score-high' : (($avg !== null && $avg >= 4) ? 'score-medium' : 'score-low');
+                      ?>
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="h4 mb-0 <?php echo $avg !== null ? $scoreClass : 'text-muted'; ?>"><?php echo htmlspecialchars($avgText); ?></div>
+                        <i class="fas fa-<?php echo $icon; ?> fa-2x text-<?php echo $accent; ?> opacity-25"></i>
+                      </div>
                     <?php endif; ?>
+                    <?php if (!empty($stat['last_completed'])): ?>
+                      <div class="mt-2 text-muted small">
+                        <i class="fas fa-clock me-1"></i>Terakhir: <?php echo htmlspecialchars(date('d M Y', strtotime($stat['last_completed']))); ?>
+                      </div>
+                    <?php endif; ?>
+                  </div>
                 </div>
+              </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="col-12">
+              <?php $renderer->includePartial('components/partials/empty_state', [
+                  'icon' => 'fas fa-chart-bar',
+                  'title' => 'Belum ada statistik kuesioner',
+                  'subtitle' => 'Isi kuesioner dulu untuk lihat progress di sini.',
+              ]); ?>
             </div>
+          <?php endif; ?>
         </div>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <div class="col-12">
-            <?php $renderer->includePartial('components/partials/empty_state', [
-                'icon' => 'fas fa-chart-bar',
-                'title' => 'Belum ada statistik kuesioner',
-                'subtitle' => 'Isi kuesioner dulu untuk lihat progress di sini.',
-            ]); ?>
-        </div>
-    <?php endif; ?>
+      </div>
+    </div>
+  </div>
 </div>
 
 <?php $renderer->includePartial('siswa/partials/available_questionnaires', ['questionnaires' => $questionnaires]); ?>
@@ -88,22 +103,28 @@ $renderer->includePartial('components/partials/page_title', [
 <!-- Recent History -->
 <div class="row pm-section">
     <div class="col-12">
-        <div class="card">
+        <div class="card pm-card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-history me-2"></i>Riwayat Kuesioner Terakhir</h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($history)): ?>
-                    <div class="history-timeline">
+                    <ul class="list-group list-group-flush">
                         <?php foreach ($history as $item): ?>
-                        <div class="history-item">
+                        <li class="list-group-item">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="mb-1">
-                                        <i class="fas fa-<?php echo $item['questionnaire_type'] === 'MSLQ' ? 'brain' : 'heart'; ?> me-2"></i>
+                                    <div class="fw-semibold">
+                                        <?php
+                                        $icon = 'clipboard-list';
+                                        if (($item['questionnaire_type'] ?? '') === 'MSLQ') $icon = 'brain';
+                                        elseif (($item['questionnaire_type'] ?? '') === 'AMS') $icon = 'heart';
+                                        elseif (($item['questionnaire_type'] ?? '') === 'VARK') $icon = 'graduation-cap';
+                                        ?>
+                                        <i class="fas fa-<?php echo $icon; ?> me-2 text-muted"></i>
                                         <?php echo htmlspecialchars($item['questionnaire_name']); ?>
-                                    </h6>
-                                    <p class="text-muted mb-2"><?php echo htmlspecialchars($item['questionnaire_description'] ?? 'Belum ada deskripsi.'); ?></p>
+                                    </div>
+                                    <div class="text-muted small mb-1"><?php echo htmlspecialchars($item['questionnaire_description'] ?? 'Belum ada deskripsi.'); ?></div>
                                     <small class="text-muted">
                                         <i class="fas fa-calendar me-1"></i>
                                         <?php echo htmlspecialchars(date('d M Y', strtotime($item['completed_at']))); ?>
@@ -113,18 +134,23 @@ $renderer->includePartial('components/partials/page_title', [
                                     </small>
                                 </div>
                                 <div class="text-end">
-                                    <?php 
-                                    $score = $item['total_score'];
-                                    $scoreClass = $score >= 5.5 ? 'score-high' : ($score >= 4 ? 'score-medium' : 'score-low');
-                                    ?>
-                                    <span class="score-badge <?php echo $scoreClass; ?>">
-                                        Skor: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
-                                    </span>
+                                    <?php if (($item['questionnaire_type'] ?? '') === 'VARK'): ?>
+                                        <?php $label = $item['vark_style_label'] ?? 'VARK'; ?>
+                                        <span class="badge bg-primary">Gaya: <?php echo htmlspecialchars($label); ?></span>
+                                    <?php else: ?>
+                                        <?php 
+                                        $score = $item['total_score'] ?? 0;
+                                        $scoreClass = $score >= 5.5 ? 'score-high' : ($score >= 4 ? 'score-medium' : 'score-low');
+                                        ?>
+                                        <span class="score-badge <?php echo $scoreClass; ?>">
+                                            Skor: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        </div>
+                        </li>
                         <?php endforeach; ?>
-                    </div>
+                    </ul>
                 <?php else: ?>
                     <?php $renderer->includePartial('components/partials/empty_state', [
                         'icon' => 'fas fa-clipboard-list',

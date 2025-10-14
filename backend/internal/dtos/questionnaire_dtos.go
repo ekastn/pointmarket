@@ -107,6 +107,47 @@ type LikertStatsDTO struct {
 	LowestScore     *float64 `json:"lowest_score"`
 }
 
+// QuestionnaireTypeStatDTO is an aggregated stat per questionnaire type (e.g., MSLQ, AMS).
+type QuestionnaireTypeStatDTO struct {
+	Type           string  `json:"type"`
+	TotalCompleted int64   `json:"total_completed"`
+	AverageScore   float64 `json:"average_score"`
+	BestScore      float64 `json:"best_score"`
+	LowestScore    float64 `json:"lowest_score"`
+	LastCompleted  *string `json:"last_completed,omitempty"`
+}
+
+// VarkStatsDTO is a compact summary for VARK.
+type VarkStatsDTO struct {
+	TotalCompleted int64   `json:"total_completed"`
+	LastCompleted  *string `json:"last_completed,omitempty"`
+}
+
+// StudentQuestionnaireStatsDTO groups Likert type stats and VARK summary.
+type StudentQuestionnaireStatsDTO struct {
+	Likert []QuestionnaireTypeStatDTO `json:"likert"`
+	Vark   VarkStatsDTO               `json:"vark"`
+}
+
+// QuestionnaireHistoryItemDTO represents a single history entry.
+type QuestionnaireHistoryItemDTO struct {
+    QuestionnaireID          int32   `json:"questionnaire_id"`
+    QuestionnaireType        string  `json:"questionnaire_type"`
+    QuestionnaireName        string  `json:"questionnaire_name"`
+    QuestionnaireDescription *string `json:"questionnaire_description,omitempty"`
+    CompletedAt              string  `json:"completed_at"`
+    // Likert-only fields
+    TotalScore         *float64 `json:"total_score,omitempty"`
+    WeeklyEvaluationID *int64   `json:"weekly_evaluation_id,omitempty"`
+    // VARK-only fields
+    VarkStyleType  *string  `json:"vark_style_type,omitempty"`
+    VarkStyleLabel *string  `json:"vark_style_label,omitempty"`
+    VarkScores     *VARKScores `json:"vark_scores,omitempty"`
+    // Convenience fields
+    WeekNumber *int `json:"week_number,omitempty"`
+    Year       *int `json:"year,omitempty"`
+}
+
 type QuestionnaireLikertDetailResponse struct {
 	Questionnaire QuestionnaireDTO                 `json:"questionnaire"`
 	Questions     []QuestionnaireLikertQuestionDTO `json:"questions"`

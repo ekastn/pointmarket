@@ -34,8 +34,8 @@ func main() {
 	studentService := services.NewStudentService(querier)
 	questionnaireService := services.NewQuestionnaireService(db.DB, querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
-    dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
-    analyticsService := services.NewAnalyticsService(querier)
+	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
+	analyticsService := services.NewAnalyticsService(querier)
 	correlationService := services.NewCorrelationService(querier)
 	productService := services.NewProductService(db.DB, querier)
 	badgeService := services.NewBadgeService(querier)
@@ -70,8 +70,8 @@ func main() {
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
 	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService, studentService)
-    dashboardHandler := handler.NewDashboardHandler(*dashboardService)
-    analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
+	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 	productHandler := handler.NewProductHandler(*productService)
 	badgeHandler := handler.NewBadgeHandler(*badgeService)
 	missionHandler := handler.NewMissionHandler(*missionService)
@@ -239,7 +239,7 @@ func main() {
 		}
 
 		// NEW: Quizzes routes (general CRUD)
-        quizzesRoutes := authRequired.Group("/quizzes")
+		quizzesRoutes := authRequired.Group("/quizzes")
 		{
 			quizzesRoutes.POST("", adminRoutes.Handlers[0], quizHandler.CreateQuiz) // Admin/Teacher-only
 			quizzesRoutes.GET("", quizHandler.GetQuizzes)
@@ -260,13 +260,13 @@ func main() {
 			quizzesRoutes.GET("/:id/submissions", adminRoutes.Handlers[0], quizHandler.GetStudentQuizzesByQuizID)             // Admin/Teacher-only (get all submissions for a quiz)
 			quizzesRoutes.PUT("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.UpdateStudentQuiz)    // Admin/Teacher-only (grade/update specific submission)
 			quizzesRoutes.DELETE("/:id/submissions/:student_quiz_id", adminRoutes.Handlers[0], quizHandler.DeleteStudentQuiz) // Admin-only
-        }
+		}
 
-        // Teacher analytics
-        teacherRoutes := authRequired.Group("/teachers")
-        {
-            teacherRoutes.GET("/course-insights", analyticsHandler.GetTeacherCourseInsights)
-        }
+		// Teacher analytics
+		teacherRoutes := authRequired.Group("/teachers")
+		{
+			teacherRoutes.GET("/course-insights", analyticsHandler.GetTeacherCourseInsights)
+		}
 
 		questionnaireRoutes := authRequired.Group("/questionnaires")
 		{
@@ -275,6 +275,10 @@ func main() {
 			questionnaireRoutes.GET("/:id", questionnaireHandler.GetQuestionnaireByID)
 			questionnaireRoutes.POST("/vark", questionnaireHandler.SubmitVark)
 			questionnaireRoutes.GET("/correlations", questionnaireHandler.GetCorrelation)
+			// New student helpers
+			questionnaireRoutes.GET("/stats", questionnaireHandler.GetQuestionnaireStats)
+			questionnaireRoutes.GET("/history", questionnaireHandler.GetQuestionnaireHistory)
+			questionnaireRoutes.GET("/vark", questionnaireHandler.GetLatestVark)
 
 			// Admin routes for questionnaires
 			questionnaireRoutes.POST("/", adminRoutes.Handlers[0], questionnaireHandler.CreateQuestionnaire)

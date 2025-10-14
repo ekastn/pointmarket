@@ -28,6 +28,7 @@ class QuestionnaireController extends BaseController
 
         // Check user role to render appropriate view
         if ($user && $user['role'] === 'admin') {
+            $messages = $_SESSION['messages'] ?? [];
             $this->render('admin/questionnaires/index', [
                 'title' => 'Manage Questionnaires',
                 'user' => $user,

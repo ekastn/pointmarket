@@ -117,7 +117,7 @@ Base path: `/api/v1`
 | Profile (avatar) | `PATCH /profile/avatar` | Multipart upload field `file`; updates current user's avatar (requires GCS envs). |
 | Programs | `GET /programs` | List academic programs. |
 | Students | `GET /students`, `GET /students/:user_id`, `PUT /students/:user_id` | Filters: search, program, cohort, status. Admin for write. |
-| Questionnaires | `GET /questionnaires`, `GET /questionnaires/:id`, `POST /questionnaires/likert`, `POST /questionnaires/vark`, `GET /questionnaires/correlations` | Admin CRUD also available. |
+| Questionnaires | `GET /questionnaires`, `GET /questionnaires/:id`, `POST /questionnaires/likert`, `POST /questionnaires/vark`, `GET /questionnaires/correlations`, `GET /questionnaires/stats`, `GET /questionnaires/history`, `GET /questionnaires/vark` | Admin CRUD also available. |
 | Weekly evaluations | `GET /weekly-evaluations`, `POST /weekly-evaluations/initialize` | Init is admin-only. |
 | Text analyzer | `POST /text-analyzer` | Calls `AI_SERVICE_URL`. Optional. |
 | Courses | `GET /courses`, `GET /courses/:id`, `POST/PUT/DELETE /courses/:id`, `POST /courses/:id/enroll`, `DELETE /courses/:id/unenroll` | Admin/teacher for write. |
@@ -129,6 +129,26 @@ Base path: `/api/v1`
 | Health | `GET /health` | Returns `{"status":"ok"}`. |
 
 All protected routes expect `Authorization: Bearer <token>`.
+
+### Questionnaire stats and history (student)
+
+- `GET /api/v1/questionnaires/stats`
+  - Returns per‑type Likert stats (MSLQ, AMS) and a compact VARK summary.
+  - Shape:
+    - `likert`: [{ `type`, `total_completed`, `average_score`, `best_score`, `lowest_score`, `last_completed?` }]
+    - `vark`: { `total_completed`, `last_completed?` }
+
+- `GET /api/v1/questionnaires/history?limit=&offset=&type=`
+  - Returns a paginated history of questionnaire submissions.
+  - `type` optional: `MSLQ` | `AMS` | `VARK`. Omit for combined feed (sorted by time desc).
+  - Response: `data` (items array) + `meta` (pagination).
+  - Items include common fields, with extras per type:
+    - Likert: `total_score`, `weekly_evaluation_id?`
+    - VARK: `vark_style_type`, `vark_style_label`, `vark_scores`
+
+- `GET /api/v1/questionnaires/vark`
+  - Returns latest fused learning style for the current user.
+  - Shape: `{ style: { type, label, scores{ visual, auditory, reading, kinesthetic } }, completed_at }`
 
 ## Run with Air (auto reload)
 

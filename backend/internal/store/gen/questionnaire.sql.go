@@ -9,7 +9,55 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 )
+
+const countLikertHistoryByStudent = `-- name: CountLikertHistoryByStudent :one
+SELECT COUNT(*) AS total
+FROM student_questionnaire_likert_results r
+JOIN questionnaires q ON q.id = r.questionnaire_id
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+  AND (? = 1 OR q.type = ?)
+`
+
+type CountLikertHistoryByStudentParams struct {
+	UserID            int64              `json:"user_id"`
+	TypeFilterIsEmpty interface{}        `json:"type_filter_is_empty"`
+	TypeFilter        QuestionnairesType `json:"type_filter"`
+}
+
+func (q *Queries) CountLikertHistoryByStudent(ctx context.Context, arg CountLikertHistoryByStudentParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countLikertHistoryByStudent, arg.UserID, arg.TypeFilterIsEmpty, arg.TypeFilter)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countVarkHistoryByStudent = `-- name: CountVarkHistoryByStudent :one
+SELECT COUNT(*) AS total
+FROM student_questionnaire_vark_results r
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+`
+
+func (q *Queries) CountVarkHistoryByStudent(ctx context.Context, userID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countVarkHistoryByStudent, userID)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countVarkResultsByStudent = `-- name: CountVarkResultsByStudent :one
+SELECT COUNT(*) AS total
+FROM student_questionnaire_vark_results r
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+`
+
+func (q *Queries) CountVarkResultsByStudent(ctx context.Context, userID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countVarkResultsByStudent, userID)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
 
 const createLikertResult = `-- name: CreateLikertResult :exec
 INSERT INTO student_questionnaire_likert_results
@@ -272,6 +320,87 @@ func (q *Queries) GetLatestVarkResult(ctx context.Context, userID int64) (GetLat
 	return i, err
 }
 
+const getLikertHistoryByStudent = `-- name: GetLikertHistoryByStudent :many
+SELECT
+  r.id,
+  r.student_id,
+  r.questionnaire_id,
+  r.total_score,
+  r.subscale_scores,
+  r.created_at,
+  r.weekly_evaluation_id,
+  q.name AS questionnaire_name,
+  q.description AS questionnaire_description,
+  q.type AS questionnaire_type
+FROM student_questionnaire_likert_results r
+JOIN questionnaires q ON q.id = r.questionnaire_id
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+  AND (? = 1 OR q.type = ?)
+ORDER BY r.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetLikertHistoryByStudentParams struct {
+	UserID            int64              `json:"user_id"`
+	TypeFilterIsEmpty interface{}        `json:"type_filter_is_empty"`
+	TypeFilter        QuestionnairesType `json:"type_filter"`
+	Limit             int32              `json:"limit"`
+	Offset            int32              `json:"offset"`
+}
+
+type GetLikertHistoryByStudentRow struct {
+	ID                       int64              `json:"id"`
+	StudentID                string             `json:"student_id"`
+	QuestionnaireID          int32              `json:"questionnaire_id"`
+	TotalScore               float64            `json:"total_score"`
+	SubscaleScores           json.RawMessage    `json:"subscale_scores"`
+	CreatedAt                sql.NullTime       `json:"created_at"`
+	WeeklyEvaluationID       sql.NullInt64      `json:"weekly_evaluation_id"`
+	QuestionnaireName        string             `json:"questionnaire_name"`
+	QuestionnaireDescription sql.NullString     `json:"questionnaire_description"`
+	QuestionnaireType        QuestionnairesType `json:"questionnaire_type"`
+}
+
+func (q *Queries) GetLikertHistoryByStudent(ctx context.Context, arg GetLikertHistoryByStudentParams) ([]GetLikertHistoryByStudentRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLikertHistoryByStudent,
+		arg.UserID,
+		arg.TypeFilterIsEmpty,
+		arg.TypeFilter,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLikertHistoryByStudentRow
+	for rows.Next() {
+		var i GetLikertHistoryByStudentRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.StudentID,
+			&i.QuestionnaireID,
+			&i.TotalScore,
+			&i.SubscaleScores,
+			&i.CreatedAt,
+			&i.WeeklyEvaluationID,
+			&i.QuestionnaireName,
+			&i.QuestionnaireDescription,
+			&i.QuestionnaireType,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLikertStatsByStudent = `-- name: GetLikertStatsByStudent :many
 SELECT q.id AS questionnaire_id, q.type, q.name,
        COUNT(r.id) AS attempts,
@@ -313,6 +442,62 @@ func (q *Queries) GetLikertStatsByStudent(ctx context.Context, userID int64) ([]
 			&i.AverageScore,
 			&i.BestScore,
 			&i.LowestScore,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getLikertTypeStatsByStudent = `-- name: GetLikertTypeStatsByStudent :many
+SELECT
+  q.type AS type,
+  CAST(COUNT(r.id) AS SIGNED) AS total_completed,
+  CAST(AVG(r.total_score) AS DOUBLE) AS average_score,
+  CAST(MAX(r.total_score) AS DOUBLE) AS best_score,
+  CAST(MIN(r.total_score) AS DOUBLE) AS lowest_score,
+  CAST(MAX(r.created_at) AS DATETIME) AS last_completed
+FROM questionnaires q
+LEFT JOIN student_questionnaire_likert_results r
+  ON q.id = r.questionnaire_id
+  AND r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+WHERE q.type IN ('MSLQ','AMS') AND q.status = 'active'
+GROUP BY q.type
+ORDER BY q.type
+`
+
+type GetLikertTypeStatsByStudentRow struct {
+	Type           QuestionnairesType `json:"type"`
+	TotalCompleted int64              `json:"total_completed"`
+	AverageScore   float64            `json:"average_score"`
+	BestScore      float64            `json:"best_score"`
+	LowestScore    float64            `json:"lowest_score"`
+	LastCompleted  time.Time          `json:"last_completed"`
+}
+
+func (q *Queries) GetLikertTypeStatsByStudent(ctx context.Context, userID int64) ([]GetLikertTypeStatsByStudentRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLikertTypeStatsByStudent, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLikertTypeStatsByStudentRow
+	for rows.Next() {
+		var i GetLikertTypeStatsByStudentRow
+		if err := rows.Scan(
+			&i.Type,
+			&i.TotalCompleted,
+			&i.AverageScore,
+			&i.BestScore,
+			&i.LowestScore,
+			&i.LastCompleted,
 		); err != nil {
 			return nil, err
 		}
@@ -431,6 +616,87 @@ func (q *Queries) GetQuestionsByQuestionnaireID(ctx context.Context, questionnai
 			&i.Subscale,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getVarkHistoryByStudent = `-- name: GetVarkHistoryByStudent :many
+SELECT
+  r.id,
+  r.student_id,
+  r.questionnaire_id,
+  r.vark_type,
+  r.vark_label,
+  r.score_visual,
+  r.score_auditory,
+  r.score_reading,
+  r.score_kinesthetic,
+  r.created_at,
+  q.name  AS questionnaire_name,
+  q.description AS questionnaire_description,
+  q.type  AS questionnaire_type
+FROM student_questionnaire_vark_results r
+JOIN questionnaires q ON q.id = r.questionnaire_id
+WHERE r.student_id = (SELECT student_id FROM students WHERE user_id = ?)
+ORDER BY r.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetVarkHistoryByStudentParams struct {
+	UserID int64 `json:"user_id"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type GetVarkHistoryByStudentRow struct {
+	ID                       int64                                   `json:"id"`
+	StudentID                string                                  `json:"student_id"`
+	QuestionnaireID          int32                                   `json:"questionnaire_id"`
+	VarkType                 StudentQuestionnaireVarkResultsVarkType `json:"vark_type"`
+	VarkLabel                string                                  `json:"vark_label"`
+	ScoreVisual              int32                                   `json:"score_visual"`
+	ScoreAuditory            int32                                   `json:"score_auditory"`
+	ScoreReading             int32                                   `json:"score_reading"`
+	ScoreKinesthetic         int32                                   `json:"score_kinesthetic"`
+	CreatedAt                sql.NullTime                            `json:"created_at"`
+	QuestionnaireName        string                                  `json:"questionnaire_name"`
+	QuestionnaireDescription sql.NullString                          `json:"questionnaire_description"`
+	QuestionnaireType        QuestionnairesType                      `json:"questionnaire_type"`
+}
+
+func (q *Queries) GetVarkHistoryByStudent(ctx context.Context, arg GetVarkHistoryByStudentParams) ([]GetVarkHistoryByStudentRow, error) {
+	rows, err := q.db.QueryContext(ctx, getVarkHistoryByStudent, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetVarkHistoryByStudentRow
+	for rows.Next() {
+		var i GetVarkHistoryByStudentRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.StudentID,
+			&i.QuestionnaireID,
+			&i.VarkType,
+			&i.VarkLabel,
+			&i.ScoreVisual,
+			&i.ScoreAuditory,
+			&i.ScoreReading,
+			&i.ScoreKinesthetic,
+			&i.CreatedAt,
+			&i.QuestionnaireName,
+			&i.QuestionnaireDescription,
+			&i.QuestionnaireType,
 		); err != nil {
 			return nil, err
 		}

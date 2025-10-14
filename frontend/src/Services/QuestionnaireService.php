@@ -59,7 +59,21 @@ class QuestionnaireService
     {
         $response = $this->apiClient->request('GET', '/api/v1/questionnaires/vark');
         if ($response['success']) {
-            return $response['data'];
+            $data = $response['data'] ?? null;
+            if (is_array($data)) {
+                // Normalize to legacy keys expected by the view
+                $style = $data['style'] ?? [];
+                $label = $style['label'] ?? null; // dominant style label
+                $type  = $style['type'] ?? null;  // learning preference type (dominant|multimodal)
+                $scores = $style['scores'] ?? [];
+                return [
+                    'dominant_style' => $label,
+                    'learning_preference' => $type,
+                    'scores' => $scores,
+                    'completed_at' => $data['completed_at'] ?? null,
+                ];
+            }
+            return $data;
         }
         return null;
     }
@@ -77,7 +91,12 @@ class QuestionnaireService
     {
         $response = $this->apiClient->request('GET', '/api/v1/questionnaires/history');
         if ($response['success']) {
-            return $response['data'];
+            // Backend returns paginated shape; the view expects a flat list
+            $items = $response['data'] ?? [];
+            if (is_array($items)) {
+                return $items;
+            }
+            return [];
         }
         return null;
     }
@@ -86,7 +105,33 @@ class QuestionnaireService
     {
         $response = $this->apiClient->request('GET', '/api/v1/questionnaires/stats');
         if ($response['success']) {
-            return $response['data'];
+            $data = $response['data'] ?? [];
+            // Normalize to flat array for the view (MSLQ, AMS, and VARK pseudo entry)
+            $flat = [];
+            if (isset($data['likert']) && is_array($data['likert'])) {
+                foreach ($data['likert'] as $row) {
+                    if (!is_array($row)) continue;
+                    $flat[] = [
+                        'type' => $row['type'] ?? '',
+                        'total_completed' => $row['total_completed'] ?? 0,
+                        'average_score' => $row['average_score'] ?? null,
+                        'best_score' => $row['best_score'] ?? null,
+                        'lowest_score' => $row['lowest_score'] ?? null,
+                        'last_completed' => $row['last_completed'] ?? null,
+                    ];
+                }
+            }
+            if (isset($data['vark']) && is_array($data['vark'])) {
+                $flat[] = [
+                    'type' => 'vark',
+                    'total_completed' => $data['vark']['total_completed'] ?? 0,
+                    'average_score' => null,
+                    'best_score' => null,
+                    'lowest_score' => null,
+                    'last_completed' => $data['vark']['last_completed'] ?? null,
+                ];
+            }
+            return $flat;
         }
         return null;
     }

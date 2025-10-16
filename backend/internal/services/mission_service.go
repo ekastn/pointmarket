@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,35 @@ type MissionService struct {
 // NewMissionService creates a new MissionService
 func NewMissionService(q gen.Querier, ps *PointsService) *MissionService {
 	return &MissionService{q: q, points: ps}
+}
+
+// EnsureUserMission ensures a (user_id, mission_id) pair exists in user_missions with status not_started.
+// It first checks existence to avoid unnecessary writes, and handles duplicate key errors gracefully.
+func (s *MissionService) EnsureUserMission(ctx context.Context, userID int64, missionID int64) error {
+	// Check if exists
+	_, err := s.q.GetUserMissionByUserIDAndMissionID(ctx, gen.GetUserMissionByUserIDAndMissionIDParams{UserID: userID, MissionID: missionID})
+	if err == nil {
+		return nil
+	}
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	// Create with defaults
+	_, err = s.q.CreateUserMission(ctx, gen.CreateUserMissionParams{
+		MissionID: missionID,
+		UserID:    userID,
+		Status:    "not_started",
+		StartedAt: time.Now(),
+		Progress:  json.RawMessage("{}"),
+	})
+	if err != nil {
+		// swallow duplicate key error from unique index
+		if strings.Contains(strings.ToLower(err.Error()), "duplicate") || strings.Contains(err.Error(), "1062") {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 // CreateMission creates a new mission

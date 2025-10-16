@@ -13,23 +13,52 @@
     <?php else: ?>
         <div class="row pm-section">
             <?php foreach ($missions as $mission): ?>
+                <?php
+                    $title = $mission['mission_title'] ?? '';
+                    if (is_array($title)) { $title = json_encode($title); }
+                    $desc = $mission['mission_description'] ?? 'Belum ada deskripsi.';
+                    if (is_array($desc)) { $desc = json_encode($desc); }
+                    $status = $mission['status'] ?? '';
+                    $startedAt = $mission['started_at'] ?? '';
+                    if ($startedAt && !is_string($startedAt)) { $startedAt = ''; }
+                    $completedAt = $mission['completed_at'] ?? null;
+                    if ($completedAt && !is_string($completedAt)) { $completedAt = null; }
+                    // progress can be numeric or JSON; normalize to percent if possible
+                    $progressVal = 0;
+                    if (isset($mission['progress'])) {
+                        if (is_numeric($mission['progress'])) {
+                            $progressVal = (int)$mission['progress'];
+                        } elseif (is_string($mission['progress'])) {
+                            $progressVal = is_numeric($mission['progress']) ? (int)$mission['progress'] : 0;
+                        } elseif (is_array($mission['progress'])) {
+                            // try common keys
+                            if (isset($mission['progress']['percent']) && is_numeric($mission['progress']['percent'])) {
+                                $progressVal = (int)$mission['progress']['percent'];
+                            } elseif (isset($mission['progress']['value']) && is_numeric($mission['progress']['value'])) {
+                                $progressVal = (int)$mission['progress']['value'];
+                            }
+                        }
+                    }
+                ?>
                 <div class="col-lg-6 mb-4">
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary"><?= htmlspecialchars($mission['mission_title']) ?></h6>
+                            <h6 class="m-0 font-weight-bold text-primary"><?= htmlspecialchars($title) ?></h6>
                         </div>
                         <div class="card-body">
-                            <p><?= htmlspecialchars($mission['mission_description'] ?? 'Belum ada deskripsi.') ?></p>
-                            <p><strong>Status:</strong> <?= htmlspecialchars(ucfirst($mission['status'])) ?></p>
-                            <p><strong>Mulai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($mission['started_at']))) ?></p>
-                            <?php if ($mission['completed_at']): ?>
-                                <p><strong>Selesai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($mission['completed_at']))) ?></p>
+                            <p><?= htmlspecialchars($desc) ?></p>
+                            <p><strong>Status:</strong> <?= htmlspecialchars(ucfirst($status)) ?></p>
+                            <?php if (!empty($startedAt)): ?>
+                                <p><strong>Mulai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($startedAt))) ?></p>
                             <?php endif; ?>
-                            <p><strong>Progress:</strong> <?= htmlspecialchars($mission['progress'] ?? 0) ?>%</p>
+                            <?php if (!empty($completedAt)): ?>
+                                <p><strong>Selesai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($completedAt))) ?></p>
+                            <?php endif; ?>
+                            <p><strong>Progress:</strong> <?= (int)$progressVal ?>%</p>
 
-                            <?php if ($mission['status'] !== 'completed'): ?>
-                                <button class="btn btn-success btn-sm start-mission-btn" data-mission-id="<?= $mission['mission_id'] ?>" data-user-mission-id="<?= $mission['id'] ?>">Mulai/Lanjutkan</button>
-                                <button class="btn btn-info btn-sm update-status-btn" data-user-mission-id="<?= $mission['id'] ?>" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update Status</button>
+                            <?php if (($status ?? '') !== 'completed'): ?>
+                                <button class="btn btn-success btn-sm start-mission-btn" data-mission-id="<?= (int)($mission['mission_id'] ?? 0) ?>" data-user-mission-id="<?= (int)($mission['id'] ?? 0) ?>">Mulai/Lanjutkan</button>
+                                <button class="btn btn-info btn-sm update-status-btn" data-user-mission-id="<?= (int)($mission['id'] ?? 0) ?>" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update Status</button>
                             <?php else: ?>
                                 <span class="badge bg-success">Selesai</span>
                             <?php endif; ?>

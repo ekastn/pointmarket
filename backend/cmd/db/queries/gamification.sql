@@ -131,6 +131,11 @@ FROM user_missions um
 JOIN missions m ON um.mission_id = m.id
 WHERE um.id = ?;
 
+-- name: GetUserMissionByUserIDAndMissionID :one
+SELECT id FROM user_missions
+WHERE user_id = ? AND mission_id = ?
+LIMIT 1;
+
 
 -- Points Transactions and Stats Helpers --
 

@@ -131,21 +131,21 @@ type StudentQuestionnaireStatsDTO struct {
 
 // QuestionnaireHistoryItemDTO represents a single history entry.
 type QuestionnaireHistoryItemDTO struct {
-    QuestionnaireID          int32   `json:"questionnaire_id"`
-    QuestionnaireType        string  `json:"questionnaire_type"`
-    QuestionnaireName        string  `json:"questionnaire_name"`
-    QuestionnaireDescription *string `json:"questionnaire_description,omitempty"`
-    CompletedAt              string  `json:"completed_at"`
-    // Likert-only fields
-    TotalScore         *float64 `json:"total_score,omitempty"`
-    WeeklyEvaluationID *int64   `json:"weekly_evaluation_id,omitempty"`
-    // VARK-only fields
-    VarkStyleType  *string  `json:"vark_style_type,omitempty"`
-    VarkStyleLabel *string  `json:"vark_style_label,omitempty"`
-    VarkScores     *VARKScores `json:"vark_scores,omitempty"`
-    // Convenience fields
-    WeekNumber *int `json:"week_number,omitempty"`
-    Year       *int `json:"year,omitempty"`
+	QuestionnaireID          int32   `json:"questionnaire_id"`
+	QuestionnaireType        string  `json:"questionnaire_type"`
+	QuestionnaireName        string  `json:"questionnaire_name"`
+	QuestionnaireDescription *string `json:"questionnaire_description,omitempty"`
+	CompletedAt              string  `json:"completed_at"`
+	// Likert-only fields
+	TotalScore         *float64 `json:"total_score,omitempty"`
+	WeeklyEvaluationID *int64   `json:"weekly_evaluation_id,omitempty"`
+	// VARK-only fields
+	VarkStyleType  *string     `json:"vark_style_type,omitempty"`
+	VarkStyleLabel *string     `json:"vark_style_label,omitempty"`
+	VarkScores     *VARKScores `json:"vark_scores,omitempty"`
+	// Convenience fields
+	WeekNumber *int `json:"week_number,omitempty"`
+	Year       *int `json:"year,omitempty"`
 }
 
 type QuestionnaireLikertDetailResponse struct {

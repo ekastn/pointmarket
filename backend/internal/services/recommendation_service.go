@@ -17,14 +17,15 @@ import (
 type RecommendationService struct {
 	gateway    *gateway.RecommendationGateway
 	studentSvc *StudentService
+	missionSvc *MissionService
 	// training control
 	trainMux       sync.Mutex
 	lastTrainStart time.Time
 	trainCooldown  time.Duration
 }
 
-func NewRecommendationService(gw *gateway.RecommendationGateway, studentSvc *StudentService) *RecommendationService {
-	return &RecommendationService{gateway: gw, studentSvc: studentSvc, trainCooldown: 5 * time.Minute}
+func NewRecommendationService(gw *gateway.RecommendationGateway, studentSvc *StudentService, missionSvc *MissionService) *RecommendationService {
+	return &RecommendationService{gateway: gw, studentSvc: studentSvc, missionSvc: missionSvc, trainCooldown: 5 * time.Minute}
 }
 
 // GetStudentRecommendations returns mapped recommendations with fallback heuristics.
@@ -58,6 +59,8 @@ func (s *RecommendationService) GetStudentRecommendations(ctx context.Context, s
 		mapped.EmptyReason = "trained_but_empty"
 	}
 
+	// Best-effort persistence of mission recommendations (side-effect, non-blocking)
+	go s.persistRecommendedMissions(studentID, up)
 	return mapped, nil
 }
 
@@ -339,6 +342,27 @@ func totalItems(actions []dtos.RecommendationAction) int {
 		t += len(a.Items)
 	}
 	return t
+}
+
+// persistRecommendedMissions ensures all mission refs are created in user_missions with not_started status.
+func (s *RecommendationService) persistRecommendedMissions(studentID string, up *gateway.UpstreamResponseExportShim) {
+	if s.missionSvc == nil || s.studentSvc == nil || up == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	st, err := s.studentSvc.GetByStudentID(ctx, studentID)
+	if err != nil || st == nil {
+		return
+	}
+	userID := st.UserID
+	for _, ar := range up.ActionRecommendations {
+		for _, ref := range ar.ItemsRefs {
+			if ref.RefType == "mission" {
+				_ = s.missionSvc.EnsureUserMission(ctx, userID, ref.RefID)
+			}
+		}
+	}
 }
 
 // ensureUpstreamStudent tries to mirror student core metrics into recommendation service.

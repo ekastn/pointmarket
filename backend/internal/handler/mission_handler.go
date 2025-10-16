@@ -62,7 +62,7 @@ func (h *MissionHandler) GetMissionByID(c *gin.Context) {
 
 // GetMissions handles fetching a list of all missions (Auth required)
 func (h *MissionHandler) GetMissions(c *gin.Context) {
-	// Check for user_id query parameter for admin-specific filtering
+	// Check for user_id query parameter for user-specific listing
 	userIDStr := c.Query("user_id")
 	if userIDStr != "" {
 		userID, err := strconv.ParseInt(userIDStr, 10, 64)
@@ -71,11 +71,24 @@ func (h *MissionHandler) GetMissions(c *gin.Context) {
 			return
 		}
 
-		// Admin check: Only admin can query for other user's missions
-		userRole, exists := c.Get("role")
-		if !exists || userRole.(string) != "admin" {
-			response.Error(c, http.StatusForbidden, "Forbidden: Only admins can query missions for specific users")
+		// Authorization: allow admin for any user, or allow the authenticated user to fetch their own missions
+		roleVal, exists := c.Get("role")
+		if !exists {
+			response.Error(c, http.StatusUnauthorized, "Unauthorized")
 			return
+		}
+		role := roleVal.(string)
+		if role != "admin" {
+			authUserIDVal, ok := c.Get("userID")
+			if !ok {
+				response.Error(c, http.StatusUnauthorized, "Unauthorized")
+				return
+			}
+			authUserID := authUserIDVal.(int64)
+			if authUserID != userID {
+				response.Error(c, http.StatusForbidden, "Forbidden: Cannot query missions for other users")
+				return
+			}
 		}
 
 		userMissions, err := h.missionService.GetUserMissionsByUserID(c.Request.Context(), userID)

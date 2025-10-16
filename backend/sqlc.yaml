@@ -18,6 +18,7 @@ sql:
       - cmd/db/migrations/00014_quiz_questions_ordinal.sql
       - cmd/db/migrations/00016_student_assignments_enhancements.sql
       - cmd/db/migrations/00017_interventions.sql
+      - cmd/db/migrations/00021_user_missions_unique_index.sql
     queries: "cmd/db/queries"
     gen:
       go:

@@ -46,7 +46,7 @@ func main() {
 	assignmentService := services.NewAssignmentService(querier, pointsService)
 	quizService := services.NewQuizService(querier, pointsService)
 	textAnalyzerService := services.NewTextAnalyzerService(aiServiceGateway, querier)
-	recommendationService := services.NewRecommendationService(recGateway, studentService)
+	recommendationService := services.NewRecommendationService(recGateway, studentService, missionService)
 	pointsHandler := handler.NewPointsHandler(pointsService, querier)
 
 	var imgStore store.ImageStore

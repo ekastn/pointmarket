@@ -9,9 +9,9 @@ import (
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
+	"sort"
 	"strconv"
 	"strings"
-    "sort"
 )
 
 // QuestionnaireService provides business logic for questionnaires
@@ -307,134 +307,169 @@ func (s *QuestionnaireService) GetQuestionnaireStats(ctx context.Context, userID
 
 // GetQuestionnaireHistory returns a paginated list of Likert submissions (optionally filtered by type).
 func (s *QuestionnaireService) GetQuestionnaireHistory(ctx context.Context, userID int64, typ string, limit, offset int32) ([]dtos.QuestionnaireHistoryItemDTO, int64, error) {
-    t := strings.ToUpper(strings.TrimSpace(typ))
-    switch t {
-    case string(gen.QuestionnairesTypeMSLQ), string(gen.QuestionnairesTypeAMS):
-        rows, err := s.q.GetLikertHistoryByStudent(ctx, gen.GetLikertHistoryByStudentParams{
-            UserID:            userID,
-            TypeFilterIsEmpty: 0,
-            TypeFilter:        gen.QuestionnairesType(t),
-            Limit:             limit,
-            Offset:            offset,
-        })
-        if err != nil { return nil, 0, err }
-        total, err := s.q.CountLikertHistoryByStudent(ctx, gen.CountLikertHistoryByStudentParams{
-            UserID:            userID,
-            TypeFilterIsEmpty: 0,
-            TypeFilter:        gen.QuestionnairesType(t),
-        })
-        if err != nil { return nil, 0, err }
-        return mapLikertHistory(rows), total, nil
-    case string(gen.QuestionnairesTypeVARK):
-        rows, err := s.q.GetVarkHistoryByStudent(ctx, gen.GetVarkHistoryByStudentParams{UserID: userID, Limit: limit, Offset: offset})
-        if err != nil { return nil, 0, err }
-        total, err := s.q.CountVarkHistoryByStudent(ctx, userID)
-        if err != nil { return nil, 0, err }
-        return mapVarkHistory(rows), total, nil
-    default:
-        fetchN := limit + offset
-        if fetchN < 1 { fetchN = limit }
-        lRows, err := s.q.GetLikertHistoryByStudent(ctx, gen.GetLikertHistoryByStudentParams{
-            UserID:            userID,
-            TypeFilterIsEmpty: 1,
-            TypeFilter:        gen.QuestionnairesType(""),
-            Limit:             fetchN,
-            Offset:            0,
-        })
-        if err != nil { return nil, 0, err }
-        vRows, err := s.q.GetVarkHistoryByStudent(ctx, gen.GetVarkHistoryByStudentParams{UserID: userID, Limit: fetchN, Offset: 0})
-        if err != nil { return nil, 0, err }
-        likertItems := mapLikertHistory(lRows)
-        varkItems := mapVarkHistory(vRows)
-        merged := mergeHistory(likertItems, varkItems)
-        lTotal, err := s.q.CountLikertHistoryByStudent(ctx, gen.CountLikertHistoryByStudentParams{UserID: userID, TypeFilterIsEmpty: 1, TypeFilter: gen.QuestionnairesType("")})
-        if err != nil { return nil, 0, err }
-        vTotal, err := s.q.CountVarkHistoryByStudent(ctx, userID)
-        if err != nil { return nil, 0, err }
-        total := lTotal + vTotal
-        start := int(offset)
-        end := start + int(limit)
-        if start > len(merged) { return []dtos.QuestionnaireHistoryItemDTO{}, total, nil }
-        if end > len(merged) { end = len(merged) }
-        return merged[start:end], total, nil
-    }
+	t := strings.ToUpper(strings.TrimSpace(typ))
+	switch t {
+	case string(gen.QuestionnairesTypeMSLQ), string(gen.QuestionnairesTypeAMS):
+		rows, err := s.q.GetLikertHistoryByStudent(ctx, gen.GetLikertHistoryByStudentParams{
+			UserID:            userID,
+			TypeFilterIsEmpty: 0,
+			TypeFilter:        gen.QuestionnairesType(t),
+			Limit:             limit,
+			Offset:            offset,
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+		total, err := s.q.CountLikertHistoryByStudent(ctx, gen.CountLikertHistoryByStudentParams{
+			UserID:            userID,
+			TypeFilterIsEmpty: 0,
+			TypeFilter:        gen.QuestionnairesType(t),
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+		return mapLikertHistory(rows), total, nil
+	case string(gen.QuestionnairesTypeVARK):
+		rows, err := s.q.GetVarkHistoryByStudent(ctx, gen.GetVarkHistoryByStudentParams{UserID: userID, Limit: limit, Offset: offset})
+		if err != nil {
+			return nil, 0, err
+		}
+		total, err := s.q.CountVarkHistoryByStudent(ctx, userID)
+		if err != nil {
+			return nil, 0, err
+		}
+		return mapVarkHistory(rows), total, nil
+	default:
+		fetchN := limit + offset
+		if fetchN < 1 {
+			fetchN = limit
+		}
+		lRows, err := s.q.GetLikertHistoryByStudent(ctx, gen.GetLikertHistoryByStudentParams{
+			UserID:            userID,
+			TypeFilterIsEmpty: 1,
+			TypeFilter:        gen.QuestionnairesType(""),
+			Limit:             fetchN,
+			Offset:            0,
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+		vRows, err := s.q.GetVarkHistoryByStudent(ctx, gen.GetVarkHistoryByStudentParams{UserID: userID, Limit: fetchN, Offset: 0})
+		if err != nil {
+			return nil, 0, err
+		}
+		likertItems := mapLikertHistory(lRows)
+		varkItems := mapVarkHistory(vRows)
+		merged := mergeHistory(likertItems, varkItems)
+		lTotal, err := s.q.CountLikertHistoryByStudent(ctx, gen.CountLikertHistoryByStudentParams{UserID: userID, TypeFilterIsEmpty: 1, TypeFilter: gen.QuestionnairesType("")})
+		if err != nil {
+			return nil, 0, err
+		}
+		vTotal, err := s.q.CountVarkHistoryByStudent(ctx, userID)
+		if err != nil {
+			return nil, 0, err
+		}
+		total := lTotal + vTotal
+		start := int(offset)
+		end := start + int(limit)
+		if start > len(merged) {
+			return []dtos.QuestionnaireHistoryItemDTO{}, total, nil
+		}
+		if end > len(merged) {
+			end = len(merged)
+		}
+		return merged[start:end], total, nil
+	}
 }
 
 func mapLikertHistory(rows []gen.GetLikertHistoryByStudentRow) []dtos.QuestionnaireHistoryItemDTO {
-    items := make([]dtos.QuestionnaireHistoryItemDTO, 0, len(rows))
-    for _, r := range rows {
-        var completed string
-        var weekNum, yearNum int
-        if r.CreatedAt.Valid {
-            t := r.CreatedAt.Time
-            completed = t.Format("2006-01-02T15:04:05Z07:00")
-            y, w := t.ISOWeek()
-            weekNum = int(w)
-            yearNum = int(y)
-        }
-        var desc *string
-        if r.QuestionnaireDescription.Valid { desc = &r.QuestionnaireDescription.String }
-        ts := r.TotalScore
-        var weid *int64
-        if r.WeeklyEvaluationID.Valid { v := r.WeeklyEvaluationID.Int64; weid = &v }
-        item := dtos.QuestionnaireHistoryItemDTO{
-            QuestionnaireID:          r.QuestionnaireID,
-            QuestionnaireType:        string(r.QuestionnaireType),
-            QuestionnaireName:        r.QuestionnaireName,
-            QuestionnaireDescription: desc,
-            CompletedAt:              completed,
-            TotalScore:               &ts,
-            WeeklyEvaluationID:       weid,
-        }
-        if completed != "" { item.WeekNumber = &weekNum; item.Year = &yearNum }
-        items = append(items, item)
-    }
-    return items
+	items := make([]dtos.QuestionnaireHistoryItemDTO, 0, len(rows))
+	for _, r := range rows {
+		var completed string
+		var weekNum, yearNum int
+		if r.CreatedAt.Valid {
+			t := r.CreatedAt.Time
+			completed = t.Format("2006-01-02T15:04:05Z07:00")
+			y, w := t.ISOWeek()
+			weekNum = int(w)
+			yearNum = int(y)
+		}
+		var desc *string
+		if r.QuestionnaireDescription.Valid {
+			desc = &r.QuestionnaireDescription.String
+		}
+		ts := r.TotalScore
+		var weid *int64
+		if r.WeeklyEvaluationID.Valid {
+			v := r.WeeklyEvaluationID.Int64
+			weid = &v
+		}
+		item := dtos.QuestionnaireHistoryItemDTO{
+			QuestionnaireID:          r.QuestionnaireID,
+			QuestionnaireType:        string(r.QuestionnaireType),
+			QuestionnaireName:        r.QuestionnaireName,
+			QuestionnaireDescription: desc,
+			CompletedAt:              completed,
+			TotalScore:               &ts,
+			WeeklyEvaluationID:       weid,
+		}
+		if completed != "" {
+			item.WeekNumber = &weekNum
+			item.Year = &yearNum
+		}
+		items = append(items, item)
+	}
+	return items
 }
 
 func mapVarkHistory(rows []gen.GetVarkHistoryByStudentRow) []dtos.QuestionnaireHistoryItemDTO {
-    items := make([]dtos.QuestionnaireHistoryItemDTO, 0, len(rows))
-    for _, r := range rows {
-        var completed string
-        var weekNum, yearNum int
-        if r.CreatedAt.Valid {
-            t := r.CreatedAt.Time
-            completed = t.Format("2006-01-02T15:04:05Z07:00")
-            y, w := t.ISOWeek()
-            weekNum = int(w)
-            yearNum = int(y)
-        }
-        var desc *string
-        if r.QuestionnaireDescription.Valid { desc = &r.QuestionnaireDescription.String }
-        scores := dtos.VARKScores{
-            Visual:      float64(r.ScoreVisual),
-            Auditory:    float64(r.ScoreAuditory),
-            Reading:     float64(r.ScoreReading),
-            Kinesthetic: float64(r.ScoreKinesthetic),
-        }
-        stype := string(r.VarkType)
-        slabel := r.VarkLabel
-        item := dtos.QuestionnaireHistoryItemDTO{
-            QuestionnaireID:          r.QuestionnaireID,
-            QuestionnaireType:        string(r.QuestionnaireType),
-            QuestionnaireName:        r.QuestionnaireName,
-            QuestionnaireDescription: desc,
-            CompletedAt:              completed,
-            VarkStyleType:            &stype,
-            VarkStyleLabel:           &slabel,
-            VarkScores:               &scores,
-        }
-        if completed != "" { item.WeekNumber = &weekNum; item.Year = &yearNum }
-        items = append(items, item)
-    }
-    return items
+	items := make([]dtos.QuestionnaireHistoryItemDTO, 0, len(rows))
+	for _, r := range rows {
+		var completed string
+		var weekNum, yearNum int
+		if r.CreatedAt.Valid {
+			t := r.CreatedAt.Time
+			completed = t.Format("2006-01-02T15:04:05Z07:00")
+			y, w := t.ISOWeek()
+			weekNum = int(w)
+			yearNum = int(y)
+		}
+		var desc *string
+		if r.QuestionnaireDescription.Valid {
+			desc = &r.QuestionnaireDescription.String
+		}
+		scores := dtos.VARKScores{
+			Visual:      float64(r.ScoreVisual),
+			Auditory:    float64(r.ScoreAuditory),
+			Reading:     float64(r.ScoreReading),
+			Kinesthetic: float64(r.ScoreKinesthetic),
+		}
+		stype := string(r.VarkType)
+		slabel := r.VarkLabel
+		item := dtos.QuestionnaireHistoryItemDTO{
+			QuestionnaireID:          r.QuestionnaireID,
+			QuestionnaireType:        string(r.QuestionnaireType),
+			QuestionnaireName:        r.QuestionnaireName,
+			QuestionnaireDescription: desc,
+			CompletedAt:              completed,
+			VarkStyleType:            &stype,
+			VarkStyleLabel:           &slabel,
+			VarkScores:               &scores,
+		}
+		if completed != "" {
+			item.WeekNumber = &weekNum
+			item.Year = &yearNum
+		}
+		items = append(items, item)
+	}
+	return items
 }
 
 func mergeHistory(a, b []dtos.QuestionnaireHistoryItemDTO) []dtos.QuestionnaireHistoryItemDTO {
-    all := append([]dtos.QuestionnaireHistoryItemDTO{}, a...)
-    all = append(all, b...)
-    sort.SliceStable(all, func(i, j int) bool { return all[i].CompletedAt > all[j].CompletedAt })
-    return all
+	all := append([]dtos.QuestionnaireHistoryItemDTO{}, a...)
+	all = append(all, b...)
+	sort.SliceStable(all, func(i, j int) bool { return all[i].CompletedAt > all[j].CompletedAt })
+	return all
 }
 
 func boolToTinyInt(b bool) int32 {

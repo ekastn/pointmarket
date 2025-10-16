@@ -146,6 +146,7 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	// Fetch single user mission with mission detail by ID
 	GetUserMissionByID(ctx context.Context, id int64) (GetUserMissionByIDRow, error)
+	GetUserMissionByUserIDAndMissionID(ctx context.Context, arg GetUserMissionByUserIDAndMissionIDParams) (int64, error)
 	GetUserMissionsByUserID(ctx context.Context, userID int64) ([]GetUserMissionsByUserIDRow, error)
 	GetUserProfileByID(ctx context.Context, id int64) (GetUserProfileByIDRow, error)
 	// User Stats --

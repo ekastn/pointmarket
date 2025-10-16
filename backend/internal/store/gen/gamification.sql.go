@@ -377,6 +377,24 @@ func (q *Queries) GetUserMissionByID(ctx context.Context, id int64) (GetUserMiss
 	return i, err
 }
 
+const getUserMissionByUserIDAndMissionID = `-- name: GetUserMissionByUserIDAndMissionID :one
+SELECT id FROM user_missions
+WHERE user_id = ? AND mission_id = ?
+LIMIT 1
+`
+
+type GetUserMissionByUserIDAndMissionIDParams struct {
+	UserID    int64 `json:"user_id"`
+	MissionID int64 `json:"mission_id"`
+}
+
+func (q *Queries) GetUserMissionByUserIDAndMissionID(ctx context.Context, arg GetUserMissionByUserIDAndMissionIDParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getUserMissionByUserIDAndMissionID, arg.UserID, arg.MissionID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getUserMissionsByUserID = `-- name: GetUserMissionsByUserID :many
 SELECT um.id, um.mission_id, um.user_id, um.status, um.started_at, um.completed_at, um.progress, m.title, m.description, m.reward_points, m.metadata
 FROM user_missions um

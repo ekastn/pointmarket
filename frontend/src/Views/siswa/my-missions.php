@@ -23,6 +23,7 @@
                     if ($startedAt && !is_string($startedAt)) { $startedAt = ''; }
                     $completedAt = $mission['completed_at'] ?? null;
                     if ($completedAt && !is_string($completedAt)) { $completedAt = null; }
+                    $rewardPoints = $mission['mission_reward_points'] ?? null;
                     // progress can be numeric or JSON; normalize to percent if possible
                     $progressVal = 0;
                     if (isset($mission['progress'])) {
@@ -31,7 +32,6 @@
                         } elseif (is_string($mission['progress'])) {
                             $progressVal = is_numeric($mission['progress']) ? (int)$mission['progress'] : 0;
                         } elseif (is_array($mission['progress'])) {
-                            // try common keys
                             if (isset($mission['progress']['percent']) && is_numeric($mission['progress']['percent'])) {
                                 $progressVal = (int)$mission['progress']['percent'];
                             } elseif (isset($mission['progress']['value']) && is_numeric($mission['progress']['value'])) {
@@ -40,26 +40,34 @@
                         }
                     }
                 ?>
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary"><?= htmlspecialchars($title) ?></h6>
-                        </div>
-                        <div class="card-body">
-                            <p><?= htmlspecialchars($desc) ?></p>
-                            <p><strong>Status:</strong> <?= htmlspecialchars(ucfirst($status)) ?></p>
-                            <?php if (!empty($startedAt)): ?>
-                                <p><strong>Mulai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($startedAt))) ?></p>
-                            <?php endif; ?>
-                            <?php if (!empty($completedAt)): ?>
-                                <p><strong>Selesai:</strong> <?= htmlspecialchars(date('d M Y H:i', strtotime($completedAt))) ?></p>
-                            <?php endif; ?>
-                            <p><strong>Progress:</strong> <?= (int)$progressVal ?>%</p>
-
-                            <div class="d-flex gap-2">
-                                <a href="/missions/<?= (int)($mission['mission_id'] ?? 0) ?>" class="btn btn-outline-primary btn-sm">Detail</a>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge <?= ($status === 'completed') ? 'bg-success' : 'bg-secondary' ?>"><?php echo htmlspecialchars($status ? ucfirst($status) : 'Tersedia'); ?></span>
+                                <small class="text-muted">Poin: <?php echo (int)($rewardPoints ?? 0); ?></small>
+                            </div>
+                            <h5 class="card-title mb-1">
+                                <a class="text-decoration-none" href="/missions/<?php echo (int)($mission['mission_id'] ?? 0); ?>"><?php echo htmlspecialchars($title); ?></a>
+                            </h5>
+                            <p class="card-text text-muted small flex-grow-1"><?php echo htmlspecialchars($desc); ?></p>
+                            <div class="small text-muted mb-2">
+                                <?php if (!empty($startedAt)): ?>
+                                    <div><i class="fas fa-play-circle me-1"></i>Mulai: <?php echo htmlspecialchars(date('Y-m-d H:i', strtotime($startedAt))); ?></div>
+                                <?php endif; ?>
+                                <?php if (!empty($completedAt)): ?>
+                                    <div><i class="fas fa-flag-checkered me-1"></i>Selesai: <?php echo htmlspecialchars(date('Y-m-d H:i', strtotime($completedAt))); ?></div>
+                                <?php endif; ?>
+                                <div><i class="fas fa-chart-line me-1"></i>Progress: <?php echo (int)$progressVal; ?>%</div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a class="btn btn-sm btn-primary" href="/missions/<?php echo (int)($mission['mission_id'] ?? 0); ?>">
+                                    <i class="fas fa-eye me-1"></i> Detail
+                                </a>
                                 <?php if (($status ?? '') !== 'completed'): ?>
-                                <button class="btn btn-success btn-sm start-mission-btn" data-mission-id="<?= (int)($mission['mission_id'] ?? 0) ?>" data-user-mission-id="<?= (int)($mission['id'] ?? 0) ?>">Mulai/Lanjutkan</button>
+                                <button class="btn btn-sm btn-success start-mission-btn" data-mission-id="<?= (int)($mission['mission_id'] ?? 0) ?>" data-user-mission-id="<?= (int)($mission['id'] ?? 0) ?>">
+                                    <i class="fas fa-play me-1"></i> Mulai/Lanjutkan
+                                </button>
                                 <?php endif; ?>
                             </div>
                         </div>

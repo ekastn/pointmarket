@@ -130,7 +130,7 @@ return function (Router $router) {
         $router->post('/courses/{id}/enroll', [CoursesController::class, 'enroll'], [[AuthMiddleware::class, 'requireStudent']]);
         $router->delete('/courses/{id}/unenroll', [CoursesController::class, 'unenroll'], [[AuthMiddleware::class, 'requireStudent']]);
 
-        // Missions routes (Admin CRUD, Student actions)
+        // Missions routes (Admin CRUD, Student actions, Student detail)
         $router->group('/missions', function (Router $router) {
             // Admin can create/edit/delete missions
             $router->post('/', [MissionsController::class, 'store'], [[AuthMiddleware::class, 'requireAdmin']]);
@@ -140,6 +140,9 @@ return function (Router $router) {
             // Student actions on missions
             $router->post('/{id}/start', [MissionsController::class, 'start'], [[AuthMiddleware::class, 'requireStudent']]);
             $router->put('/{id}/status', [MissionsController::class, 'updateStatus'], [[AuthMiddleware::class, 'requireStudent']]);
+
+            // Student view mission detail
+            $router->get('/{id}', [MissionsController::class, 'show'], [[AuthMiddleware::class, 'requireStudent']]);
         });
 
         // General missions listing (accessible by Admin, Teacher, Student)

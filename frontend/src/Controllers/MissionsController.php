@@ -155,4 +155,32 @@ class MissionsController extends BaseController
         echo json_encode(['success' => false, 'message' => $_SESSION['api_error_message'] ?? 'Failed to update mission status.']);
         exit;
     }
+
+    public function show(int $id): void
+    {
+        $user = $_SESSION['user_data'] ?? null;
+        $userId = $user['id'] ?? 0;
+
+        // Fetch mission detail
+        $mission = $this->missionService->getMissionById($id) ?? [];
+
+        // Fetch user missions and find current one (if exists)
+        $userMission = null;
+        $resp = $this->missionService->getUserMissions($userId);
+        if ($resp && ($resp['success'] ?? false)) {
+            $list = $resp['data']['user_missions'] ?? [];
+            foreach ($list as $um) {
+                if ((int)($um['mission_id'] ?? 0) === $id) {
+                    $userMission = $um;
+                    break;
+                }
+            }
+        }
+
+        $this->render('siswa/mission_detail', [
+            'title' => 'Detail Misi',
+            'mission' => $mission,
+            'userMission' => $userMission,
+        ]);
+    }
 }

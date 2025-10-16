@@ -56,12 +56,12 @@
                             <?php endif; ?>
                             <p><strong>Progress:</strong> <?= (int)$progressVal ?>%</p>
 
-                            <?php if (($status ?? '') !== 'completed'): ?>
+                            <div class="d-flex gap-2">
+                                <a href="/missions/<?= (int)($mission['mission_id'] ?? 0) ?>" class="btn btn-outline-primary btn-sm">Detail</a>
+                                <?php if (($status ?? '') !== 'completed'): ?>
                                 <button class="btn btn-success btn-sm start-mission-btn" data-mission-id="<?= (int)($mission['mission_id'] ?? 0) ?>" data-user-mission-id="<?= (int)($mission['id'] ?? 0) ?>">Mulai/Lanjutkan</button>
-                                <button class="btn btn-info btn-sm update-status-btn" data-user-mission-id="<?= (int)($mission['id'] ?? 0) ?>" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update Status</button>
-                            <?php else: ?>
-                                <span class="badge bg-success">Selesai</span>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -70,32 +70,4 @@
     <?php endif; ?>
 </div>
 
-<!-- Update Status Modal -->
-<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="updateStatusModalLabel">Update Status Misi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="updateStatusForm">
-                    <input type="hidden" id="userMissionId" name="user_mission_id">
-                    <div class="mb-3">
-                        <label for="missionStatus" class="form-label">Status</label>
-                        <select class="form-control" id="missionStatus" name="status">
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="on_hold">On Hold</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="missionProgress" class="form-label">Progress (%)</label>
-                        <input type="number" class="form-control" id="missionProgress" name="progress" min="0" max="100">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Status updates are managed by the system; manual updates are disabled for students. -->

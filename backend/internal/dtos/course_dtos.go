@@ -85,8 +85,10 @@ type ListCoursesResponseDTO struct {
 
 // EnrollStudentRequestDTO for enrolling a student in a course
 type EnrollStudentRequestDTO struct {
-	UserID   int64 `json:"user_id" binding:"required"`
-	CourseID int64 `json:"course_id" binding:"required"`
+    // Optional for students; backend derives from auth when omitted
+    UserID   int64 `json:"user_id"`
+    // Optional; backend takes course ID from the path
+    CourseID int64 `json:"course_id"`
 }
 
 // StudentCourseDTO represents a student's enrollment in a course, including course details

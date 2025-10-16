@@ -66,7 +66,7 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="username" name="username" placeholder="andi atau 2401001" required>
+                                    <input type="text" class="form-control" id="username" name="username" placeholder="" required>
                                 </div>
                             </div>
                             

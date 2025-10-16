@@ -59,7 +59,11 @@
           <h5 class="card-title mb-2">Info</h5>
           <dl class="row mb-0 small">
             <dt class="col-sm-3">Slug</dt><dd class="col-sm-9"><?= htmlspecialchars($course['slug'] ?? '') ?></dd>
-            <dt class="col-sm-3">Owner ID</dt><dd class="col-sm-9"><?= htmlspecialchars((string)($course['owner_id'] ?? '')) ?></dd>
+            <?php 
+              $guruNameRaw = $course['owner_display_name'] ?? '-';
+              $guruNameTitled = $guruNameRaw && $guruNameRaw !== '-' ? ucwords(strtolower($guruNameRaw)) : '-';
+            ?>
+            <dt class="col-sm-3">Guru</dt><dd class="col-sm-9"><?= htmlspecialchars($guruNameTitled) ?></dd>
             <dt class="col-sm-3">Dibuat</dt><dd class="col-sm-9"><?= isset($course['created_at']) ? date('d-m-Y H:i', strtotime($course['created_at'])) : '-' ?></dd>
             <dt class="col-sm-3">Diubah</dt><dd class="col-sm-9"><?= isset($course['updated_at']) ? date('d-m-Y H:i', strtotime($course['updated_at'])) : '-' ?></dd>
           </dl>

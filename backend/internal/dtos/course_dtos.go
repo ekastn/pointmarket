@@ -11,14 +11,15 @@ import (
 
 // CourseDTO represents a course for API responses
 type CourseDTO struct {
-	ID          int64           `json:"id"`
-	Title       string          `json:"title"`
-	Slug        string          `json:"slug"`
-	Description *string         `json:"description"` // Use pointer for nullable
-	OwnerID     int64           `json:"owner_id"`
-	Metadata    json.RawMessage `json:"metadata"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID               int64           `json:"id"`
+	Title            string          `json:"title"`
+	Slug             string          `json:"slug"`
+	Description      *string         `json:"description"` // Use pointer for nullable
+	OwnerID          int64           `json:"owner_id"`
+	OwnerDisplayName string          `json:"owner_display_name"`
+	Metadata         json.RawMessage `json:"metadata"`
+	CreatedAt        time.Time       `json:"created_at"`
+	UpdatedAt        time.Time       `json:"updated_at"`
 }
 
 // FromCourseModel converts a gen.Course model to a CourseDTO
@@ -85,10 +86,10 @@ type ListCoursesResponseDTO struct {
 
 // EnrollStudentRequestDTO for enrolling a student in a course
 type EnrollStudentRequestDTO struct {
-    // Optional for students; backend derives from auth when omitted
-    UserID   int64 `json:"user_id"`
-    // Optional; backend takes course ID from the path
-    CourseID int64 `json:"course_id"`
+	// Optional for students; backend derives from auth when omitted
+	UserID int64 `json:"user_id"`
+	// Optional; backend takes course ID from the path
+	CourseID int64 `json:"course_id"`
 }
 
 // StudentCourseDTO represents a student's enrollment in a course, including course details

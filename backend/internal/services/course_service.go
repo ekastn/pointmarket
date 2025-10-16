@@ -46,6 +46,10 @@ func (s *CourseService) CreateCourse(ctx context.Context, req dtos.CreateCourseR
 
 	var courseDTO dtos.CourseDTO
 	courseDTO.FromCourseModel(course)
+	// Enrich owner display name
+	if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+		courseDTO.OwnerDisplayName = u.DisplayName
+	}
 	return courseDTO, nil
 }
 
@@ -61,6 +65,10 @@ func (s *CourseService) GetCourseByID(ctx context.Context, id int64) (dtos.Cours
 
 	var courseDTO dtos.CourseDTO
 	courseDTO.FromCourseModel(course)
+	// Enrich owner display name
+	if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+		courseDTO.OwnerDisplayName = u.DisplayName
+	}
 	return courseDTO, nil
 }
 
@@ -143,7 +151,7 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 				if r.Description.Valid {
 					desc = &r.Description.String
 				}
-				courseDTOs = append(courseDTOs, dtos.CourseDTO{
+				dto := dtos.CourseDTO{
 					ID:          r.ID,
 					Title:       r.Title,
 					Slug:        r.Slug,
@@ -152,7 +160,11 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 					Metadata:    r.Metadata,
 					CreatedAt:   r.CreatedAt,
 					UpdatedAt:   r.UpdatedAt,
-				})
+				}
+				if u, err2 := s.q.GetUserByID(ctx, r.OwnerID); err2 == nil {
+					dto.OwnerDisplayName = u.DisplayName
+				}
+				courseDTOs = append(courseDTOs, dto)
 			}
 			return courseDTOs, totalCourses, nil
 		}
@@ -171,6 +183,9 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 	for _, course := range courses {
 		var courseDTO dtos.CourseDTO
 		courseDTO.FromCourseModel(course)
+		if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+			courseDTO.OwnerDisplayName = u.DisplayName
+		}
 		courseDTOs = append(courseDTOs, courseDTO)
 	}
 	return courseDTOs, totalCourses, nil
@@ -196,6 +211,9 @@ func (s *CourseService) GetCoursesByOwnerID(ctx context.Context, ownerID int64, 
 		for _, course := range courses {
 			var courseDTO dtos.CourseDTO
 			courseDTO.FromCourseModel(course)
+			if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+				courseDTO.OwnerDisplayName = u.DisplayName
+			}
 			courseDTOs = append(courseDTOs, courseDTO)
 		}
 		return courseDTOs, totalCourses, nil
@@ -219,7 +237,7 @@ func (s *CourseService) GetCoursesByOwnerID(ctx context.Context, ownerID int64, 
 		if r.Description.Valid {
 			desc = &r.Description.String
 		}
-		filtered = append(filtered, dtos.CourseDTO{
+		dto := dtos.CourseDTO{
 			ID:          r.ID,
 			Title:       r.Title,
 			Slug:        r.Slug,
@@ -228,7 +246,11 @@ func (s *CourseService) GetCoursesByOwnerID(ctx context.Context, ownerID int64, 
 			Metadata:    r.Metadata,
 			CreatedAt:   r.CreatedAt,
 			UpdatedAt:   r.UpdatedAt,
-		})
+		}
+		if u, err2 := s.q.GetUserByID(ctx, r.OwnerID); err2 == nil {
+			dto.OwnerDisplayName = u.DisplayName
+		}
+		filtered = append(filtered, dto)
 	}
 	total := int64(len(filtered))
 	start := offset
@@ -265,6 +287,9 @@ func (s *CourseService) GetStudentViewableCourses(ctx context.Context, studentID
 	for _, course := range courses {
 		var courseDTO dtos.StudentCoursesDTO
 		courseDTO.FromStudentCoursesModel(course)
+		if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+			courseDTO.OwnerDisplayName = u.DisplayName
+		}
 		courseDTOs = append(courseDTOs, courseDTO)
 	}
 
@@ -321,6 +346,9 @@ func (s *CourseService) UpdateCourse(ctx context.Context, id int64, req dtos.Upd
 
 	var courseDTO dtos.CourseDTO
 	courseDTO.FromCourseModel(updatedCourse)
+	if u, err2 := s.q.GetUserByID(ctx, updatedCourse.OwnerID); err2 == nil {
+		courseDTO.OwnerDisplayName = u.DisplayName
+	}
 	return courseDTO, nil
 }
 
@@ -367,5 +395,8 @@ func (s *CourseService) GetCourseBySlug(ctx context.Context, slug string) (dtos.
 	}
 	var dto dtos.CourseDTO
 	dto.FromCourseModel(course)
+	if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+		dto.OwnerDisplayName = u.DisplayName
+	}
 	return dto, nil
 }

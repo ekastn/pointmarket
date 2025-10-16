@@ -63,4 +63,30 @@ class WeeklyEvaluationsController extends BaseController
 
         $this->redirect('/dashboard');
     }
+
+    // Admin: start scheduler
+    public function start(): void
+    {
+        $ok = false;
+        try {
+            $ok = $this->weeklyEvaluationService->startScheduler();
+        } catch (\Throwable $e) {
+            $ok = false;
+        }
+        $_SESSION['messages'][$ok ? 'success' : 'error'] = $ok ? 'Scheduler started.' : 'Failed to start scheduler.';
+        $this->redirect('/dashboard');
+    }
+
+    // Admin: stop scheduler
+    public function stop(): void
+    {
+        $ok = false;
+        try {
+            $ok = $this->weeklyEvaluationService->stopScheduler();
+        } catch (\Throwable $e) {
+            $ok = false;
+        }
+        $_SESSION['messages'][$ok ? 'success' : 'error'] = $ok ? 'Scheduler stopped.' : 'Failed to stop scheduler.';
+        $this->redirect('/dashboard');
+    }
 }

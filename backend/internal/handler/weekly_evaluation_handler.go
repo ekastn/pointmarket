@@ -14,11 +14,12 @@ import (
 // WeeklyEvaluationHandler handles requests related to weekly evaluations
 type WeeklyEvaluationHandler struct {
 	weeklyEvaluationService *services.WeeklyEvaluationService
+	scheduler               *services.SchedulerManager
 }
 
 // NewWeeklyEvaluationHandler creates a new instance of WeeklyEvaluationHandler
-func NewWeeklyEvaluationHandler(weeklyEvaluationService *services.WeeklyEvaluationService) *WeeklyEvaluationHandler {
-	return &WeeklyEvaluationHandler{weeklyEvaluationService: weeklyEvaluationService}
+func NewWeeklyEvaluationHandler(weeklyEvaluationService *services.WeeklyEvaluationService, scheduler *services.SchedulerManager) *WeeklyEvaluationHandler {
+	return &WeeklyEvaluationHandler{weeklyEvaluationService: weeklyEvaluationService, scheduler: scheduler}
 }
 
 // GetWeeklyEvaluations handles fetching weekly evaluations for students or teachers
@@ -96,4 +97,33 @@ func (h *WeeklyEvaluationHandler) InitializeWeeklyEvaluations(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusOK, "Weekly evaluations initialized successfully", nil)
+}
+
+// SchedulerStatus returns current scheduler status (admin only)
+func (h *WeeklyEvaluationHandler) SchedulerStatus(c *gin.Context) {
+	st := h.scheduler.Status()
+	response.Success(c, http.StatusOK, "Scheduler status", gin.H{
+		"running":     st.Running,
+		"job_running": st.JobRunning,
+		"next_run":    st.NextRun,
+	})
+}
+
+// SchedulerStart starts the in-process scheduler loop (admin only)
+func (h *WeeklyEvaluationHandler) SchedulerStart(c *gin.Context) {
+	if err := h.scheduler.Start(); err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	st := h.scheduler.Status()
+	response.Success(c, http.StatusOK, "Scheduler started", gin.H{"next_run": st.NextRun})
+}
+
+// SchedulerStop stops the in-process scheduler loop (admin only)
+func (h *WeeklyEvaluationHandler) SchedulerStop(c *gin.Context) {
+	if err := h.scheduler.Stop(); err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Success(c, http.StatusOK, "Scheduler stopped", nil)
 }

@@ -112,6 +112,9 @@ return function (Router $router) {
         // Weekly Evaluations routes
         $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);
         $router->post('weekly-evaluations/initialize', [WeeklyEvaluationsController::class, 'initialize'], [[AuthMiddleware::class, 'requireAdmin']]);
+        // Admin-only scheduler actions (rendered in Admin dashboard)
+        $router->post('weekly-evaluations/start', [WeeklyEvaluationsController::class, 'start'], [[AuthMiddleware::class, 'requireAdmin']]);
+        $router->post('weekly-evaluations/stop', [WeeklyEvaluationsController::class, 'stop'], [[AuthMiddleware::class, 'requireAdmin']]);
 
         // Courses routes (Admin/Teacher CRUD)
         $router->group('/courses', function (Router $router) {

@@ -98,13 +98,68 @@ $statsItems = [
                                 Backup Data
                             </a>
                         </div>
-                        <div class="col mb-2">
-                            <form action="/weekly-evaluations/initialize" method="post">
-                                <button type="submit" class="btn btn-danger w-100 h-100">
-                                    <i class="fas fa-calendar-plus me-2"></i>
-                                    Initialize Weekly Evaluations
-                                </button>
-                            </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Evaluation Scheduler (Admin) -->
+    <div class="row pm-section">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Weekly Evaluation Scheduler
+                    </h5>
+                    <?php
+                    $isRunning = (bool)($schedulerStatus['running'] ?? false);
+                    $isJobRunning = (bool)($schedulerStatus['job_running'] ?? false);
+                    $nextRunRaw = $schedulerStatus['next_run'] ?? null;
+                    $nextRun = '';
+                    if ($nextRunRaw) {
+                        $ts = is_numeric($nextRunRaw) ? (int)$nextRunRaw : strtotime((string)$nextRunRaw);
+                        if ($ts) { $nextRun = date('D, d M Y H:i', $ts); }
+                    }
+                    ?>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-lg-7 mb-3 mb-lg-0">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge <?= $isRunning ? 'bg-success' : 'bg-secondary' ?> me-2">
+                                        <?= $isRunning ? 'Running' : 'Stopped' ?>
+                                    </span>
+                                    <?php if ($isJobRunning): ?>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-spinner fa-spin me-1"></i> Job Running
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="far fa-clock me-1"></i>
+                                    Next run: <?= htmlspecialchars($nextRun ?: '—') ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                                <?php if (!$isRunning): ?>
+                                    <form action="/weekly-evaluations/start" method="post">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-play me-1"></i> Start
+                                        </button>
+                                    </form>
+                                <?php else: ?>
+                                    <form action="/weekly-evaluations/stop" method="post">
+                                        <button type="submit" class="btn btn-outline-secondary">
+                                            <i class="fas fa-stop me-1"></i> Stop
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -56,8 +56,12 @@ class DashboardController extends BaseController
         switch ($userRole) {
             case 'admin':
                 $adminStats = $dashboardData['admin_stats'] ?? null;
+                // Try to fetch scheduler status for admin card
+                $schedulerStatus = null;
+                try { $schedulerStatus = $this->weeklyEvaluationService->getSchedulerStatus(); } catch (\Throwable $e) { $schedulerStatus = null; }
                 $this->render('admin/dashboard', [
-                    'adminStats' => $adminStats
+                    'adminStats' => $adminStats,
+                    'schedulerStatus' => $schedulerStatus,
                 ]);
                 return;
             case 'guru':

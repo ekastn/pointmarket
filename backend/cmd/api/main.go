@@ -34,6 +34,7 @@ func main() {
 	studentService := services.NewStudentService(querier)
 	questionnaireService := services.NewQuestionnaireService(db.DB, querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
+	schedulerManager := services.NewSchedulerManager(weeklyEvaluationService)
 	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
 	analyticsService := services.NewAnalyticsService(querier)
 	correlationService := services.NewCorrelationService(querier)
@@ -67,7 +68,7 @@ func main() {
 	userHandler := handler.NewUserHandler(*userService, studentService, cfg.MaxAvatarMB)
 	studentHandler := handler.NewStudentHandler(studentService)
 	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService, userService)
-	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService)
+	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService, schedulerManager)
 	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService, studentService)
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
@@ -291,6 +292,10 @@ func main() {
 		{
 			weeklyEvaluationRoutes.GET("", weeklyEvaluationHandler.GetWeeklyEvaluations)
 			weeklyEvaluationRoutes.POST("/initialize", adminRoutes.Handlers[0], weeklyEvaluationHandler.InitializeWeeklyEvaluations) // Admin-only
+			// Admin-only scheduler controls (flat under the resource)
+			weeklyEvaluationRoutes.GET("/status", adminRoutes.Handlers[0], weeklyEvaluationHandler.SchedulerStatus)
+			weeklyEvaluationRoutes.POST("/start", adminRoutes.Handlers[0], weeklyEvaluationHandler.SchedulerStart)
+			weeklyEvaluationRoutes.POST("/stop", adminRoutes.Handlers[0], weeklyEvaluationHandler.SchedulerStop)
 		}
 
 		productCategoriesRoutes := authRequired.Group("/product-categories")

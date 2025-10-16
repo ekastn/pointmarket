@@ -248,11 +248,36 @@ class CoursesController extends BaseController
             $lessons = $lessonsResp['data'] ?? [];
         }
 
+        // Determine enrollment status for student users (frontend-only approach)
+        $user = $_SESSION['user_data'] ?? null;
+        $role = $user['role'] ?? '';
+        $isEnrolled = null;
+        if ($role === 'siswa') {
+            $title = (string)($course['title'] ?? '');
+            $listResp = $this->apiClient->request('GET', '/api/v1/courses', [
+                'query' => [
+                    'search' => $title,
+                    'page' => 1,
+                    'limit' => 1,
+                ],
+            ]);
+            if (($listResp['success'] ?? false) && !empty($listResp['data'])) {
+                $item = $listResp['data'][0];
+                if ((int)($item['id'] ?? 0) === (int)($course['id'] ?? 0)) {
+                    $isEnrolled = !empty($item['is_enrolled']);
+                }
+            }
+            if ($isEnrolled === null) {
+                $isEnrolled = false; // fallback if not found
+            }
+        }
+
         $this->render('courses/show', [
-            'user' => $_SESSION['user_data'] ?? null,
+            'user' => $user,
             'title' => $course['title'] ?? 'Course',
             'course' => $course,
             'lessons' => $lessons,
+            'isEnrolled' => $isEnrolled,
         ]);
     }
 }

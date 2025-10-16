@@ -69,14 +69,15 @@
     <div class="col-lg-4">
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="card-title">Tindakan</h5>
           <?php $role = $user['role'] ?? ''; ?>
           <?php if ($role === 'siswa'): ?>
             <div class="d-grid gap-2">
-              <button type="button" class="btn btn-primary btn-enroll" data-course-id="<?= (int)($course['id'] ?? 0) ?>">Daftar</button>
-              <button type="button" class="btn btn-outline-danger btn-unenroll" data-course-id="<?= (int)($course['id'] ?? 0) ?>">Batalkan</button>
+              <?php if (!empty($isEnrolled)): ?>
+                <button type="button" class="btn btn-outline-danger btn-unenroll" data-course-id="<?= (int)($course['id'] ?? 0) ?>">Batalkan</button>
+              <?php else: ?>
+                <button type="button" class="btn btn-primary btn-enroll" data-course-id="<?= (int)($course['id'] ?? 0) ?>">Daftar</button>
+              <?php endif; ?>
             </div>
-            <small class="text-muted d-block mt-2">Catatan: jika sudah terdaftar, sistem akan memberi tahu.</small>
           <?php else: ?>
             <?php $isOwner = (($role === 'admin') || ($role === 'guru' && (int)($user['id'] ?? 0) === (int)($course['owner_id'] ?? -1))); ?>
             <?php if ($isOwner): ?>

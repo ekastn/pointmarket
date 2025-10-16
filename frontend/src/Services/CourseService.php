@@ -102,7 +102,8 @@ class CourseService
 
     public function enrollStudent(int $courseId, int $userId): ?bool
     {
-        $response = $this->apiClient->request('POST', '/api/v1/courses/' . $courseId . '/enroll', ['json' => ['user_id' => $userId, 'course_id' => $courseId]]);
+        // Do not send user_id; backend derives from JWT. Send empty JSON object.
+        $response = $this->apiClient->request('POST', '/api/v1/courses/' . $courseId . '/enroll', ['json' => (object)[]]);
 
         if ($response['success']) {
             return true;
@@ -115,7 +116,8 @@ class CourseService
 
     public function unenrollStudent(int $courseId, int $userId): ?bool
     {
-        $response = $this->apiClient->request('DELETE', '/api/v1/courses/' . $courseId . '/unenroll', ['json' => ['user_id' => $userId, 'course_id' => $courseId]]);
+        // Do not send user_id; backend derives from JWT. Send empty JSON object.
+        $response = $this->apiClient->request('DELETE', '/api/v1/courses/' . $courseId . '/unenroll', ['json' => (object)[]]);
 
         if ($response['success']) {
             return true;

@@ -13,9 +13,10 @@ class WeeklyEvaluationService
         $this->apiClient = $apiClient;
     }
 
-    public function getWeeklyEvaluations(): ?array
+    public function getWeeklyEvaluations(int $weeks = 8): ?array
     {
-        $response = $this->apiClient->request('GET', '/api/v1/weekly-evaluations');
+        $query = ($weeks > 0) ? ('?weeks=' . $weeks) : '';
+        $response = $this->apiClient->request('GET', '/api/v1/weekly-evaluations' . $query);
 
         if ($response['success']) {
             return $response['data'];

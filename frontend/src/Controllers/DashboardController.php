@@ -167,12 +167,46 @@ class DashboardController extends BaseController
                     // leave default fallback
                 }
 
+                // Build weekly chart data (Option A: fetch a large window ~ all time)
+                $weeklyChart = null;
+                try {
+                    $list = $this->weeklyEvaluationService->getWeeklyEvaluations(520) ?? [];
+                    if (!empty($list)) {
+                        $points = [];
+                        foreach ($list as $row) {
+                            $status = strtolower((string)($row['status'] ?? ''));
+                            if ($status !== 'completed') { continue; }
+                            if (!isset($row['score'])) { continue; }
+                            $score = (float)$row['score'];
+                            $dateStr = $row['completed_at'] ?? ($row['due_date'] ?? null);
+                            if (!$dateStr) { continue; }
+                            $ts = strtotime((string)$dateStr);
+                            if (!$ts) { continue; }
+                            $label = date('o-\WW', $ts); // ISO year-week label
+                            $type = strtoupper((string)($row['questionnaire_type'] ?? ''));
+                            if (!isset($points[$label])) { $points[$label] = ['mslq' => null, 'ams' => null, 'ts' => $ts]; }
+                            if ($type === 'MSLQ') { $points[$label]['mslq'] = $score; }
+                            if ($type === 'AMS')  { $points[$label]['ams']  = $score; }
+                        }
+                        if (!empty($points)) {
+                            uasort($points, function($a, $b) { return $a['ts'] <=> $b['ts']; });
+                            $labels = array_keys($points);
+                            $mslq = [];$ams = [];
+                            foreach ($labels as $lbl) { $mslq[] = $points[$lbl]['mslq']; $ams[] = $points[$lbl]['ams']; }
+                            $weeklyChart = ['labels' => $labels, 'mslq' => $mslq, 'ams' => $ams];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $weeklyChart = null;
+                }
+
                 $this->render('siswa/dashboard', [
                     'studentStats' => $studentStats,
                     'weekly_evaluations' => $weeklyEvaluations,
                     'recommendations' => $recommendations,
                     'missingAssessments' => $missingAssessments,
                     'varkQuestionnaireLink' => $varkQuestionnaireLink,
+                    'weeklyChart' => $weeklyChart,
                 ]);
                 return;
         }

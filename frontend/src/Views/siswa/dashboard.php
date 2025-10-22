@@ -252,6 +252,87 @@ $renderer->includePartial('components/partials/page_title', [
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <?php if (!empty($weeklyChart) && !empty($weeklyChart['labels'])): ?>
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="mb-0">Grafik Skor Evaluasi Mingguan</h6>
+                        <button type="button" id="weeklyScoresReset" class="btn btn-sm btn-outline-secondary">reset zoom</button>
+                    </div>
+                    <div class="position-relative" style="height: 240px;">
+                        <canvas id="weeklyScores"></canvas>
+                    </div>
+                </div>
+                <!-- Chart libs (scoped to dashboard only) -->
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+                <script>
+                (function(){
+                    try {
+                        var chartData = <?php echo json_encode($weeklyChart ?? null); ?>;
+                        if (!chartData || !Array.isArray(chartData.labels) || chartData.labels.length === 0) return;
+                        if (window.Chart && window.ChartZoom) { Chart.register(window.ChartZoom); }
+                        var ctx = document.getElementById('weeklyScores');
+                        if (!ctx) return;
+                        var chart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: chartData.labels,
+                                datasets: [
+                                    {
+                                        label: 'MSLQ',
+                                        data: chartData.mslq || [],
+                                        borderColor: '#2ecc71',
+                                        backgroundColor: 'rgba(46, 204, 113, 0.15)',
+                                        tension: 0.3,
+                                        cubicInterpolationMode: 'monotone',
+                                        spanGaps: true,
+                                        pointRadius: 2,
+                                        pointHoverRadius: 4
+                                    },
+                                    {
+                                        label: 'AMS',
+                                        data: chartData.ams || [],
+                                        borderColor: '#3498db',
+                                        backgroundColor: 'rgba(52, 152, 219, 0.15)',
+                                        tension: 0.3,
+                                        cubicInterpolationMode: 'monotone',
+                                        spanGaps: true,
+                                        pointRadius: 2,
+                                        pointHoverRadius: 4
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                interaction: { mode: 'nearest', intersect: false },
+                                scales: {
+                                    y: {
+                                        min: 0,
+                                        max: 10,
+                                        ticks: { stepSize: 1 }
+                                    },
+                                    x: {
+                                        ticks: { maxRotation: 0, autoSkip: true }
+                                    }
+                                },
+                                plugins: {
+                                    legend: { position: 'bottom' },
+                                    zoom: {
+                                        pan: { enabled: true, mode: 'xy' },
+                                        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
+                                        limits: { y: { min: 0, max: 10 } }
+                                    },
+                                    decimation: { enabled: true, algorithm: 'min-max' }
+                                }
+                            }
+                        });
+                        var resetBtn = document.getElementById('weeklyScoresReset');
+                        if (resetBtn) resetBtn.addEventListener('click', function(e){ e.preventDefault(); if (chart && chart.resetZoom) chart.resetZoom(); });
+                    } catch (e) { /* no-op */ }
+                })();
+                </script>
+                <?php endif; ?>
             </div>
         </div>
     </div>

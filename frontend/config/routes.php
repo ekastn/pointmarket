@@ -116,6 +116,9 @@ return function (Router $router) {
         $router->post('weekly-evaluations/start', [WeeklyEvaluationsController::class, 'start'], [[AuthMiddleware::class, 'requireAdmin']]);
         $router->post('weekly-evaluations/stop', [WeeklyEvaluationsController::class, 'stop'], [[AuthMiddleware::class, 'requireAdmin']]);
 
+        // Teacher/Admin: per-student chart data endpoint for modal
+        $router->get('guru/weekly-evaluations/{student_id}/chart-data', [WeeklyEvaluationsController::class, 'studentData'], [[AuthMiddleware::class, 'requireAdminOrTeacher']]);
+
         // Courses routes (Admin/Teacher CRUD)
         $router->group('/courses', function (Router $router) {
             // Admin/Teacher can create/edit/delete courses

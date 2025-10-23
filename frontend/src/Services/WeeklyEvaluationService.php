@@ -62,4 +62,14 @@ class WeeklyEvaluationService
         return $response['success'] ?? false;
     }
 
+    // Teacher/Admin: get a specific student's weekly evaluations
+    public function getStudentWeeklyEvaluations(int $studentId, int $weeks = 520): ?array
+    {
+        $weeks = $weeks > 0 ? $weeks : 520;
+        $response = $this->apiClient->request('GET', '/api/v1/weekly-evaluations?student_id=' . $studentId . '&weeks=' . $weeks);
+        if ($response['success'] ?? false) {
+            return $response['data'] ?? null;
+        }
+        return null;
+    }
 }

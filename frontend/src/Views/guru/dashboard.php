@@ -170,9 +170,14 @@ $renderer->includePartial('components/partials/page_title', [
                 </div>
             </div>
             <div class="card-footer text-end">
-                <a href="/weekly-evaluations" class="btn btn-sm btn-outline-primary">
-                    Lihat Monitoring
-                </a>
+                <div class="btn-group">
+                    <button type="button" id="pmOpenStudentChart" class="btn btn-sm btn-outline-secondary">
+                        Grafik Siswa
+                    </button>
+                    <a href="/weekly-evaluations" class="btn btn-sm btn-outline-primary">
+                        Monitoring
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -243,6 +248,193 @@ $renderer->includePartial('components/partials/page_title', [
         </div>
     </div>
 </div>
+
+<!-- Modal: Per-Student Weekly Scores Chart (Dashboard) -->
+<div class="modal fade" id="teacherDashStudentChartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-chart-line me-2"></i>Grafik Skor Evaluasi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+                <div class="modal-body">
+                <div class="row g-2 align-items-start mb-2">
+                    <div class="col-12">
+                        <label for="tdStudentSearch" class="form-label small text-muted">Cari siswa</label>
+                        <input type="text" id="tdStudentSearch" class="form-control" placeholder="ketik nama siswa..." autocomplete="off" />
+                        <div id="tdSearchResults" class="list-group mt-2" style="max-height: 220px; overflow:auto;"></div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <button type="button" id="tdResetZoom" class="btn btn-sm btn-outline-secondary">reset zoom</button>
+                </div>
+                <div id="tdChartWrap" class="position-relative d-none" style="height: 320px;">
+                    <canvas id="tdStudentScoresCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- Chart libs (scoped to dashboard) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+<script>
+(function(){
+    let modalEl = document.getElementById('teacherDashStudentChartModal');
+    let openBtn = document.getElementById('pmOpenStudentChart');
+    let searchEl = document.getElementById('tdStudentSearch');
+    let nameEl = document.getElementById('tdStudentName');
+    let resetBtn = document.getElementById('tdResetZoom');
+    let canvas = document.getElementById('tdStudentScoresCanvas');
+    let resultsEl = document.getElementById('tdSearchResults');
+    let chartWrap = document.getElementById('tdChartWrap');
+    let currentChart = null;
+    if (window.Chart && window.ChartZoom) { Chart.register(window.ChartZoom); }
+
+    function buildSeries(list) {
+        const points = {};
+        (list || []).forEach(function(row){
+            const status = (row.status || '').toLowerCase();
+            if (status !== 'completed') return;
+            if (row.score === undefined || row.score === null) return;
+            const dateStr = row.completed_at || row.due_date || null;
+            if (!dateStr) return;
+            const ts = Date.parse(dateStr);
+            if (!ts) return;
+            const d = new Date(ts);
+            const yy = d.getUTCFullYear();
+            const onejan = new Date(Date.UTC(yy,0,1));
+            const week = Math.ceil((((d - onejan) / 86400000) + onejan.getUTCDay()+1)/7);
+            const lbl = yy + '-W' + String(week).padStart(2,'0');
+            const type = String(row.questionnaire_type || '').toUpperCase();
+            if (!points[lbl]) points[lbl] = { mslq: null, ams: null, ts: ts };
+            if (type === 'MSLQ') points[lbl].mslq = Number(row.score);
+            if (type === 'AMS') points[lbl].ams = Number(row.score);
+        });
+        const entries = Object.entries(points).sort((a,b)=>a[1].ts - b[1].ts);
+        return {
+            labels: entries.map(e=>e[0]),
+            mslq: entries.map(e=>e[1].mslq),
+            ams: entries.map(e=>e[1].ams),
+        };
+    }
+
+    function renderChart(data){
+        if (currentChart) { currentChart.destroy(); currentChart = null; }
+        const ctx = canvas.getContext('2d');
+        if (window.Chart && window.ChartZoom) { Chart.register(window.ChartZoom); }
+        currentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    { label: 'MSLQ', data: data.mslq, borderColor: '#2ecc71', backgroundColor:'rgba(46,204,113,0.15)', tension:0.3, cubicInterpolationMode:'monotone', spanGaps:true, pointRadius:2, pointHoverRadius:4 },
+                    { label: 'AMS',  data: data.ams,  borderColor: '#3498db', backgroundColor:'rgba(52,152,219,0.15)', tension:0.3, cubicInterpolationMode:'monotone', spanGaps:true, pointRadius:2, pointHoverRadius:4 },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'nearest', intersect: false },
+                scales: { y: { min:0, max:10, ticks:{ stepSize:1 } } },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    zoom: { pan:{enabled:true, mode:'xy'}, zoom:{ wheel:{enabled:true}, pinch:{enabled:true}, mode:'xy' }, limits:{ y:{min:0,max:10} } },
+                    decimation: { enabled:true, algorithm:'min-max' }
+                }
+            }
+        });
+        if (chartWrap) chartWrap.classList.remove('d-none');
+    }
+    
+
+    // Build mapping from PHP data for quick name->id resolution
+    const TD_STUDENTS = (function(){
+        try { return <?php
+            $students = [];
+            $seen = [];
+            foreach (($teacherMonitoring ?? []) as $row) {
+                $sid = (int)($row['student_id'] ?? 0);
+                $sname = (string)($row['student_name'] ?? '');
+                if ($sid>0 && $sname!=='' && !isset($seen[$sid])) { $students[] = ['id'=>$sid,'name'=>$sname]; $seen[$sid]=true; }
+            }
+            echo json_encode($students);
+        ?>; } catch(e){ return []; }
+    })();
+
+    function clearResults(){ if (resultsEl) resultsEl.innerHTML = ''; }
+    function hideChart(){ if (currentChart) { currentChart.destroy(); currentChart = null; } if (chartWrap) chartWrap.classList.add('d-none'); }
+
+    if (openBtn) openBtn.addEventListener('click', function(){
+        if (searchEl) searchEl.value = '';
+        if (nameEl) nameEl.textContent = '(pilih siswa)';
+        clearResults();
+        hideChart();
+        const m = new bootstrap.Modal(modalEl);
+        m.show();
+    });
+
+    function resolveAndRender(query){
+        if (!query) return;
+        // Exact match first
+        let matches = TD_STUDENTS.filter(s => s.name.toLowerCase() === query.toLowerCase());
+        if (matches.length === 0) {
+            // Unique contains
+            const contains = TD_STUDENTS.filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
+            if (contains.length === 1) matches = contains;
+        }
+        if (matches.length !== 1) return; // avoid ambiguous fetch
+        const found = matches[0];
+        if (nameEl) nameEl.textContent = found.name;
+        fetch(`/guru/weekly-evaluations/${encodeURIComponent(found.id)}/chart-data`, { credentials:'same-origin' })
+            .then(r=>r.json())
+            .then(json => {
+                if (!json.success) throw new Error(json.message || 'failed');
+                const shaped = buildSeries(json.data || []);
+                renderChart(shaped);
+            })
+            .catch(()=>{
+                renderChart({ labels: [], mslq: [], ams: [] });
+            });
+    }
+
+    if (searchEl) {
+        // Render interactive results list
+        searchEl.addEventListener('input', function(){
+            const q = String(this.value).trim();
+            // keep existing resolver for exact/unique
+            resolveAndRender(q);
+            // also render list for manual selection
+            if (typeof clearResults === 'function') clearResults();
+            if (!q) { if (typeof hideChart === 'function') hideChart(); return; }
+            const matches = TD_STUDENTS.filter(s => s.name.toLowerCase().includes(q.toLowerCase())).slice(0,10);
+            if (!resultsEl) return;
+            matches.forEach(function(s){
+                const item = document.createElement('button');
+                item.type = 'button'; item.className = 'list-group-item list-group-item-action';
+                item.textContent = s.name;
+                item.addEventListener('click', function(){
+                    if (nameEl) nameEl.textContent = s.name;
+                    if (searchEl) searchEl.value = s.name;
+                    if (typeof clearResults === 'function') clearResults();
+                    fetch(`/guru/weekly-evaluations/${encodeURIComponent(s.id)}/chart-data`, { credentials:'same-origin' })
+                        .then(r=>r.json()).then(json => {
+                            if (!json.success) throw new Error(json.message || 'failed');
+                            const shaped = buildSeries(json.data || []);
+                            renderChart(shaped);
+                        }).catch(()=>{ if (typeof hideChart === 'function') hideChart(); });
+                });
+                resultsEl.appendChild(item);
+            });
+        });
+        searchEl.addEventListener('change', function(){ resolveAndRender(String(this.value).trim()); });
+        searchEl.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); resolveAndRender(String(this.value).trim()); }});
+    }
+
+    if (resetBtn) resetBtn.addEventListener('click', function(){ if (currentChart && currentChart.resetZoom) currentChart.resetZoom(); });
+})();
+</script>
 
 <!-- Insight Per Kelas -->
 <?php $courseInsights = $courseInsights ?? []; ?>

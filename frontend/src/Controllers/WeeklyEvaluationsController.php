@@ -89,4 +89,18 @@ class WeeklyEvaluationsController extends BaseController
         $_SESSION['messages'][$ok ? 'success' : 'error'] = $ok ? 'Scheduler stopped.' : 'Failed to stop scheduler.';
         $this->redirect('/dashboard');
     }
+
+    // Teacher/Admin JSON: per-student weekly evaluations for chart modal
+    public function studentData(string $studentId): void
+    {
+        header('Content-Type: application/json');
+        try {
+            $id = (int)$studentId;
+            if ($id <= 0) { echo json_encode(['success' => false, 'message' => 'invalid student id']); return; }
+            $data = $this->weeklyEvaluationService->getStudentWeeklyEvaluations($id, 520) ?? [];
+            echo json_encode(['success' => true, 'data' => $data]);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }

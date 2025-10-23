@@ -88,11 +88,13 @@ class DashboardController extends BaseController
                     $recentQuizzes = array_slice($quizzes, 0, 5);
                 } catch (\Throwable $e) { /* ignore */ }
 
-                // Evaluation snapshot (counts by status)
+                // Evaluation snapshot (counts by status) and monitoring data for student search
                 $evalSummary = ['completed' => 0, 'pending' => 0, 'overdue' => 0, 'total' => 0];
+                $teacherMonitoring = [];
                 try {
                     $monitoring = $this->weeklyEvaluationService->getTeacherDashboard() ?? [];
-                    foreach (($monitoring ?: []) as $row) {
+                    $teacherMonitoring = $monitoring ?: [];
+                    foreach ($teacherMonitoring as $row) {
                         $status = strtolower((string)($row['status'] ?? ''));
                         if (isset($evalSummary[$status])) {
                             $evalSummary[$status]++;
@@ -111,6 +113,7 @@ class DashboardController extends BaseController
                     'recentQuizzes' => $recentQuizzes,
                     'evalSummary' => $evalSummary,
                     'courseInsights' => $courseInsights,
+                    'teacherMonitoring' => $teacherMonitoring,
                 ]);
                 return;
             case 'siswa':

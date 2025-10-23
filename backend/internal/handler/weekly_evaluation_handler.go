@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
@@ -40,8 +39,6 @@ func (h *WeeklyEvaluationHandler) GetWeeklyEvaluations(c *gin.Context) {
 	numberOfWeeks := int32(parsedWeeks)
 
 	if role == "siswa" {
-		log.Println("Fetching weekly evaluations for student:", userID)
-		log.Println("Number of weeks:", numberOfWeeks)
 		evaluations, err := h.weeklyEvaluationService.GetWeeklyEvaluationsByStudentID(
 			c.Request.Context(),
 			userID,

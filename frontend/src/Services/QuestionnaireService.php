@@ -101,6 +101,22 @@ class QuestionnaireService
         return null;
     }
 
+    // Fetch VARK history specifically with paging options (default large enough window)
+    public function getVarkHistory(int $limit = 200, int $offset = 0): ?array
+    {
+        if ($limit <= 0) { $limit = 50; }
+        if ($limit > 500) { $limit = 500; }
+        if ($offset < 0) { $offset = 0; }
+        $query = http_build_query(['type' => 'VARK', 'limit' => $limit, 'offset' => $offset]);
+        $response = $this->apiClient->request('GET', '/api/v1/questionnaires/history?'.$query);
+        if ($response['success']) {
+            $items = $response['data'] ?? [];
+            if (is_array($items)) { return $items; }
+            return [];
+        }
+        return null;
+    }
+
     public function getQuestionnaireStats(): ?array
     {
         $response = $this->apiClient->request('GET', '/api/v1/questionnaires/stats');

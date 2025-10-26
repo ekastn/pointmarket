@@ -43,6 +43,138 @@ $renderer->includePartial('components/partials/page_title', [
     <?php } ?>
 </div>
 
+<!-- Visualisasi: Evaluasi Mingguan & VARK (dipindah tepat setelah Student Stats) -->
+<?php if ((!empty($weeklyChart) && !empty($weeklyChart['labels'])) || (!empty($varkChart) && !empty($varkChart['labels']))): ?>
+<div class="row pm-section">
+    <!-- Weekly Scores Chart -->
+    <div class="col-12 col-xl-6 mb-4">
+        <?php if (!empty($weeklyChart) && !empty($weeklyChart['labels'])): ?>
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Skor Evaluasi Mingguan</h6>
+                <button type="button" id="weeklyScoresReset" class="btn btn-sm btn-outline-secondary">reset zoom</button>
+            </div>
+            <div class="card-body">
+                <div class="position-relative" style="height: 260px;">
+                    <canvas id="weeklyScores"></canvas>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- VARK Composite Chart -->
+    <div class="col-12 col-xl-6 mb-4">
+        <?php if (!empty($varkComposite) && !empty($varkComposite['labels'])): ?>
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-brain me-2"></i>Perkembangan Gaya Belajar</h6>
+                <button type="button" id="varkCompositeReset" class="btn btn-sm btn-outline-secondary">reset zoom</button>
+            </div>
+            <div class="card-body">
+                <div class="position-relative" style="height: 260px;">
+                    <canvas id="varkCompositeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+<!-- VARK Scores Charts (grid style under other charts) -->
+<?php if (!empty($varkChart) && !empty($varkChart['labels'])): ?>
+<div class="row pm-section">
+    <div class="col-12 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-brain me-2"></i>Skor VARK</h6>
+                <button type="button" id="varkAllReset" class="btn btn-sm btn-outline-secondary">reset zoom</button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6 col-lg-3"><div style="height:160px"><canvas id="varkVisualChart"></canvas></div></div>
+                    <div class="col-12 col-sm-6 col-lg-3"><div style="height:160px"><canvas id="varkAuditoryChart"></canvas></div></div>
+                    <div class="col-12 col-sm-6 col-lg-3"><div style="height:160px"><canvas id="varkReadingChart"></canvas></div></div>
+                    <div class="col-12 col-sm-6 col-lg-3"><div style="height:160px"><canvas id="varkKinestheticChart"></canvas></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+<!-- Chart libs (scoped to this page for the visualization section) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+<script>
+(function(){
+  try {
+    if (window.Chart && window.ChartZoom) { Chart.register(window.ChartZoom); }
+    // Weekly chart
+    var weekly = <?php echo json_encode($weeklyChart ?? null); ?>;
+    var wctx = document.getElementById('weeklyScores');
+    var weeklyChartInst = null;
+    if (weekly && wctx && Array.isArray(weekly.labels) && weekly.labels.length) {
+      weeklyChartInst = new Chart(wctx, {
+        type: 'line',
+        data: {
+          labels: weekly.labels,
+          datasets: [
+            { label: 'MSLQ', data: weekly.mslq || [], borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.15)', tension: 0.3, cubicInterpolationMode: 'monotone', spanGaps: true, pointRadius: 2, pointHoverRadius: 4 },
+            { label: 'AMS',  data: weekly.ams  || [], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.15)', tension: 0.3, cubicInterpolationMode: 'monotone', spanGaps: true, pointRadius: 2, pointHoverRadius: 4 },
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'nearest', intersect: false },
+          scales: { y: { min:0, max:10, ticks:{ stepSize:1 } } },
+          plugins: { legend:{ position:'bottom' }, zoom:{ pan:{enabled:true, mode:'xy'}, zoom:{ wheel:{enabled:true}, pinch:{enabled:true}, mode:'xy' }, limits:{ y:{min:0,max:10} } }, decimation:{ enabled:true, algorithm:'min-max' } }
+        }
+      });
+      var wreset = document.getElementById('weeklyScoresReset');
+      if (wreset) wreset.addEventListener('click', function(e){ e.preventDefault(); if (weeklyChartInst && weeklyChartInst.resetZoom) weeklyChartInst.resetZoom(); });
+    }
+
+    // VARK composite chart (single line)
+    var comp = <?php echo json_encode($varkComposite ?? null); ?>;
+    var compCanvas = document.getElementById('varkCompositeChart');
+    if (comp && compCanvas && Array.isArray(comp.labels) && comp.labels.length) {
+      var compChart = new Chart(compCanvas, {
+        type: 'line',
+        data: {
+          labels: comp.labels,
+          datasets: [{ label: 'Composite', data: comp.composite || [], borderColor: '#4b7bec', backgroundColor: 'rgba(75, 123, 236, 0.12)', tension: 0.3, cubicInterpolationMode: 'monotone', spanGaps: true, pointRadius: 2, pointHoverRadius: 4, borderWidth: 2 }]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, zoom:{ pan:{enabled:true, mode:'xy'}, zoom:{ wheel:{enabled:true}, pinch:{enabled:true}, mode:'xy' }, limits:{ y:{ min:0, max:10 } } } }, scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true } }, y:{ min:0, max:10, ticks:{ stepSize:1 } } }, interaction:{ mode:'nearest', intersect:false } }
+      });
+      var compReset = document.getElementById('varkCompositeReset');
+      if (compReset) compReset.addEventListener('click', function(e){ e.preventDefault(); if (compChart && compChart.resetZoom) compChart.resetZoom(); });
+    }
+
+    // VARK mini charts
+    var vark = <?php echo json_encode($varkChart ?? null); ?>;
+    var vCharts = [];
+    function mkLine(ctx, label, data, color, bg) {
+      return new Chart(ctx, { type:'line', data:{ labels:(vark && vark.labels)||[], datasets:[ { label: label, data: data||[], borderColor: color, backgroundColor:bg, tension:0.3, cubicInterpolationMode:'monotone', spanGaps:true, pointRadius:2, pointHoverRadius:4 } ] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{ min:0, max:10, ticks:{ stepSize:1 } } }, plugins:{ legend:{ display:false }, zoom:{ pan:{enabled:true, mode:'xy'}, zoom:{ wheel:{enabled:true}, pinch:{enabled:true}, mode:'xy' }, limits:{ y:{min:0,max:10} } }, decimation:{ enabled:true, algorithm:'min-max' } } }});
+    }
+    if (vark && Array.isArray(vark.labels) && vark.labels.length) {
+      var cV = document.getElementById('varkVisualChart');
+      var cA = document.getElementById('varkAuditoryChart');
+      var cR = document.getElementById('varkReadingChart');
+      var cK = document.getElementById('varkKinestheticChart');
+      if (cV && cA && cR && cK) {
+        vCharts.push(mkLine(cV, 'Visual', vark.visual, '#8e44ad', 'rgba(142,68,173,0.12)'));
+        vCharts.push(mkLine(cA, 'Auditory', vark.auditory, '#e67e22', 'rgba(230,126,34,0.12)'));
+        vCharts.push(mkLine(cR, 'Reading', vark.reading, '#16a085', 'rgba(22,160,133,0.12)'));
+        vCharts.push(mkLine(cK, 'Kinesthetic', vark.kinesthetic, '#c0392b', 'rgba(192,57,43,0.12)'));
+      }
+      var vreset = document.getElementById('varkAllReset');
+      if (vreset) vreset.addEventListener('click', function(e){ e.preventDefault(); vCharts.forEach(function(ch){ if (ch && ch.resetZoom) ch.resetZoom(); }); });
+    }
+  } catch(e) {}
+})();
+</script>
+<?php endif; ?>
+
 <!-- Quick Actions -->
 <div class="row pm-section">
     <div class="col-12">
@@ -97,6 +229,9 @@ $renderer->includePartial('components/partials/page_title', [
                 </h6>
             </div>
             <div class="card-body">
+                <?php if (!empty($varkChart) && !empty($varkChart['labels'])): ?>
+                <?php /* VARK charts moved above in the visualization section */ ?>
+                <?php endif; ?>
                 <?php if ($learningStyle && $learningStyle && $learningStyle['label'] !== null && $learningStyle['label'] !== "") { ?>
                     <?php
                     $dominantStyle = $learningStyle['label'];
@@ -252,87 +387,7 @@ $renderer->includePartial('components/partials/page_title', [
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <?php if (!empty($weeklyChart) && !empty($weeklyChart['labels'])): ?>
-                <div class="mb-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h6 class="mb-0">Grafik Skor Evaluasi Mingguan</h6>
-                        <button type="button" id="weeklyScoresReset" class="btn btn-sm btn-outline-secondary">reset zoom</button>
-                    </div>
-                    <div class="position-relative" style="height: 240px;">
-                        <canvas id="weeklyScores"></canvas>
-                    </div>
-                </div>
-                <!-- Chart libs (scoped to dashboard only) -->
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
-                <script>
-                (function(){
-                    try {
-                        var chartData = <?php echo json_encode($weeklyChart ?? null); ?>;
-                        if (!chartData || !Array.isArray(chartData.labels) || chartData.labels.length === 0) return;
-                        if (window.Chart && window.ChartZoom) { Chart.register(window.ChartZoom); }
-                        var ctx = document.getElementById('weeklyScores');
-                        if (!ctx) return;
-                        var chart = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: chartData.labels,
-                                datasets: [
-                                    {
-                                        label: 'MSLQ',
-                                        data: chartData.mslq || [],
-                                        borderColor: '#2ecc71',
-                                        backgroundColor: 'rgba(46, 204, 113, 0.15)',
-                                        tension: 0.3,
-                                        cubicInterpolationMode: 'monotone',
-                                        spanGaps: true,
-                                        pointRadius: 2,
-                                        pointHoverRadius: 4
-                                    },
-                                    {
-                                        label: 'AMS',
-                                        data: chartData.ams || [],
-                                        borderColor: '#3498db',
-                                        backgroundColor: 'rgba(52, 152, 219, 0.15)',
-                                        tension: 0.3,
-                                        cubicInterpolationMode: 'monotone',
-                                        spanGaps: true,
-                                        pointRadius: 2,
-                                        pointHoverRadius: 4
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                interaction: { mode: 'nearest', intersect: false },
-                                scales: {
-                                    y: {
-                                        min: 0,
-                                        max: 10,
-                                        ticks: { stepSize: 1 }
-                                    },
-                                    x: {
-                                        ticks: { maxRotation: 0, autoSkip: true }
-                                    }
-                                },
-                                plugins: {
-                                    legend: { position: 'bottom' },
-                                    zoom: {
-                                        pan: { enabled: true, mode: 'xy' },
-                                        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
-                                        limits: { y: { min: 0, max: 10 } }
-                                    },
-                                    decimation: { enabled: true, algorithm: 'min-max' }
-                                }
-                            }
-                        });
-                        var resetBtn = document.getElementById('weeklyScoresReset');
-                        if (resetBtn) resetBtn.addEventListener('click', function(e){ e.preventDefault(); if (chart && chart.resetZoom) chart.resetZoom(); });
-                    } catch (e) { /* no-op */ }
-                })();
-                </script>
-                <?php endif; ?>
+                <?php /* Weekly chart moved above in the visualization section */ ?>
             </div>
         </div>
     </div>

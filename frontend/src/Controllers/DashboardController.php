@@ -203,6 +203,78 @@ class DashboardController extends BaseController
                     $weeklyChart = null;
                 }
 
+                // Build VARK history chart (scores over time)
+                $varkChart = null;
+                $varkLabelProgress = null;
+                $varkComposite = null;
+                try {
+                    $vh = $this->questionnaireService->getVarkHistory(200, 0) ?? [];
+                    if (!empty($vh)) {
+                        $rows = [];
+                        $labelRows = [];
+                        foreach ($vh as $row) {
+                            $when = $row['completed_at'] ?? null;
+                            $scores = $row['vark_scores'] ?? null;
+                            if (!$when || !is_array($scores)) { continue; }
+                            $ts = strtotime((string)$when);
+                            if (!$ts) { continue; }
+                            $label = date('Y-m-d', $ts); // simple date label
+                            $rows[] = [
+                                'ts' => $ts,
+                                'label' => $label,
+                                'visual' => isset($scores['visual']) ? (float)$scores['visual'] : null,
+                                'auditory' => isset($scores['auditory']) ? (float)$scores['auditory'] : null,
+                                'reading' => isset($scores['reading']) ? (float)$scores['reading'] : null,
+                                'kinesthetic' => isset($scores['kinesthetic']) ? (float)$scores['kinesthetic'] : null,
+                            ];
+                            $styleLabel = $row['vark_style_label'] ?? null;
+                            $labelRows[] = [ 'ts' => $ts, 'label' => $label, 'style' => $styleLabel ];
+                        }
+                        if (!empty($rows)) {
+                            usort($rows, function($a,$b){ return $a['ts'] <=> $b['ts']; });
+                            $labels = array_column($rows, 'label');
+                            $visual = array_map(fn($r)=>$r['visual'], $rows);
+                            $auditory = array_map(fn($r)=>$r['auditory'], $rows);
+                            $reading = array_map(fn($r)=>$r['reading'], $rows);
+                            $kinesthetic = array_map(fn($r)=>$r['kinesthetic'], $rows);
+                            $varkChart = [
+                                'labels' => $labels,
+                                'visual' => $visual,
+                                'auditory' => $auditory,
+                                'reading' => $reading,
+                                'kinesthetic' => $kinesthetic,
+                            ];
+
+                            // Label progress (style label per date)
+                            if (!empty($labelRows)) {
+                                usort($labelRows, function($a,$b){ return $a['ts'] <=> $b['ts']; });
+                                $varkLabelProgress = [
+                                    'labels' => array_column($labelRows, 'label'),
+                                    'styles' => array_map(fn($r)=> (string)($r['style'] ?? ''), $labelRows),
+                                ];
+                            }
+
+                            // Composite progress aligned with RecommendationService:
+                            // For each submission, scale each of the four scores by (score / maxOfFour) * 10, then average.
+                            $composites = [];
+                            foreach ($rows as $r) {
+                                $raw = [ $r['visual'], $r['auditory'], $r['reading'], $r['kinesthetic'] ];
+                                $vals = array_values(array_filter($raw, fn($x) => $x !== null));
+                                if (empty($vals)) { $composites[] = null; continue; }
+                                $max = max($vals);
+                                if ($max <= 0) { $composites[] = null; continue; }
+                                $norms = array_map(function($v) use ($max) { return ($v / $max) * 10.0; }, $vals);
+                                $composites[] = array_sum($norms) / count($norms);
+                            }
+                            $varkComposite = [ 'labels' => $labels, 'composite' => $composites ];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $varkChart = null;
+                    $varkLabelProgress = null;
+                    $varkComposite = null;
+                }
+
                 $this->render('siswa/dashboard', [
                     'studentStats' => $studentStats,
                     'weekly_evaluations' => $weeklyEvaluations,
@@ -210,6 +282,9 @@ class DashboardController extends BaseController
                     'missingAssessments' => $missingAssessments,
                     'varkQuestionnaireLink' => $varkQuestionnaireLink,
                     'weeklyChart' => $weeklyChart,
+                    'varkChart' => $varkChart,
+                    'varkLabelProgress' => $varkLabelProgress,
+                    'varkComposite' => $varkComposite,
                 ]);
                 return;
         }

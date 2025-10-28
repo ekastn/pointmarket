@@ -136,6 +136,16 @@ $renderer->includePartial('components/partials/page_title', [
 
     // VARK composite chart (single line)
     var comp = <?php echo json_encode($varkComposite ?? null); ?>;
+    var lp = <?php echo json_encode($varkLabelProgress ?? null); ?>;
+    // Build date->style map for tooltip enrichment
+    var styleMap = {};
+    if (lp && Array.isArray(lp.labels) && Array.isArray(lp.styles)) {
+      for (var i = 0; i < lp.labels.length; i++) {
+        var k = String(lp.labels[i] || '');
+        var v = String(lp.styles[i] || '');
+        styleMap[k] = v;
+      }
+    }
     var compCanvas = document.getElementById('varkCompositeChart');
     if (comp && compCanvas && Array.isArray(comp.labels) && comp.labels.length) {
       var compChart = new Chart(compCanvas, {
@@ -144,7 +154,33 @@ $renderer->includePartial('components/partials/page_title', [
           labels: comp.labels,
           datasets: [{ label: 'Composite', data: comp.composite || [], borderColor: '#4b7bec', backgroundColor: 'rgba(75, 123, 236, 0.12)', tension: 0.3, cubicInterpolationMode: 'monotone', spanGaps: true, pointRadius: 2, pointHoverRadius: 4, borderWidth: 2 }]
         },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, zoom:{ pan:{enabled:true, mode:'xy'}, zoom:{ wheel:{enabled:true}, pinch:{enabled:true}, mode:'xy' }, limits:{ y:{ min:0, max:10 } } } }, scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true } }, y:{ min:0, max:10, ticks:{ stepSize:1 } } }, interaction:{ mode:'nearest', intersect:false } }
+        options: { 
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{ 
+            legend:{ display:false }, 
+            zoom:{ pan:{enabled:true, mode:'xy'}, zoom:{ wheel:{enabled:true}, pinch:{enabled:true}, mode:'xy' }, limits:{ y:{ min:0, max:10 } } },
+            tooltip: {
+              callbacks: {
+                // Title shows date + style label if available
+                title: function(items){
+                  if (!items || !items.length) return '';
+                  var lbl = String(items[0].label || '');
+                  var st = styleMap[lbl] ? String(styleMap[lbl]) : '';
+                  if (!st) return lbl;
+                  return lbl + ' — ' + (st.charAt(0).toUpperCase() + st.slice(1));
+                },
+                // Label only shows numeric value
+                label: function(ctx){
+                  var v = (ctx.parsed && typeof ctx.parsed.y === 'number') ? ctx.parsed.y : ctx.formattedValue;
+                  return 'Composite: ' + (typeof v === 'number' ? v.toFixed(2) : v);
+                }
+              }
+            }
+          }, 
+          scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true } }, y:{ min:0, max:10, ticks:{ stepSize:1 } } }, 
+          interaction:{ mode:'nearest', intersect:false } 
+        }
       });
       var compReset = document.getElementById('varkCompositeReset');
       if (compReset) compReset.addEventListener('click', function(e){ e.preventDefault(); if (compChart && compChart.resetZoom) compChart.resetZoom(); });

@@ -15,7 +15,7 @@ import (
 type RecommendationGateway struct {
 	BaseURL string
 	Client  *http.Client
-	Token   string // optional internal auth token
+	Token   string 
 }
 
 func NewRecommendationGateway(baseURL, token string) *RecommendationGateway {
@@ -112,13 +112,14 @@ type upstreamAction struct {
 }
 
 type upstreamResponse struct {
-	StudentID             string                    `json:"siswa_id"`
-	CurrentState          string                    `json:"current_state"`
-	ActionRecommendations map[string]upstreamAction `json:"action_recommendations"`
-	Summary               struct {
-		HasTrainedQValues bool `json:"has_trained_q_values"`
-	} `json:"summary"`
-	Message string `json:"message"`
+    StudentID             string                    `json:"siswa_id"`
+    CurrentState          string                    `json:"current_state"`
+    ActionRecommendations map[string]upstreamAction `json:"action_recommendations"`
+    Summary               struct {
+        HasTrainedQValues bool `json:"has_trained_q_values"`
+    } `json:"summary"`
+    Message string `json:"message"`
+    Trace   map[string]interface{} `json:"trace"`
 }
 
 // GetStudentRecommendations fetches upstream recommendations.
@@ -148,6 +149,35 @@ func (g *RecommendationGateway) GetStudentRecommendations(studentID string) (*up
 		return nil, err
 	}
 	return &up, nil
+}
+
+// GetStudentRecommendationsTrace fetches upstream recommendations with trace=1 for admin analysis.
+func (g *RecommendationGateway) GetStudentRecommendationsTrace(studentID string) (*upstreamResponse, error) {
+    endpoint := fmt.Sprintf("%s/recommendations", g.BaseURL)
+    q := url.Values{}
+    q.Set("student_id", studentID)
+    q.Set("trace", "1")
+    fullURL := endpoint + "?" + q.Encode()
+    req, err := http.NewRequest(http.MethodGet, fullURL, nil)
+    if err != nil {
+        return nil, err
+    }
+    if g.Token != "" {
+        req.Header.Set("X-Internal-Token", g.Token)
+    }
+    resp, err := g.Client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        return nil, fmt.Errorf("upstream status %d", resp.StatusCode)
+    }
+    var up upstreamResponse
+    if err := json.NewDecoder(resp.Body).Decode(&up); err != nil {
+        return nil, err
+    }
+    return &up, nil
 }
 
 // UpsertRecommendationStudent ensures a student exists in the recommendation service.

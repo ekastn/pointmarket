@@ -167,4 +167,133 @@ $statsItems = [
         </div>
     </div>
 
+    <!-- Recommendations Trace (Admin) -->
+    <div class="row pm-section">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Recommendations Trace
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-2 align-items-center mb-3">
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" name="trace_q" placeholder="Search students by name/email/student ID" value="<?= htmlspecialchars($traceQuery ?? '') ?>" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search me-1"></i> Search</button>
+                        </div>
+                    </form>
+
+                    <?php if (!empty($traceResults['data'])): ?>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Student ID</th>
+                                        <th>Program</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($traceResults['data'] as $row): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($row['name'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($row['email'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($row['student_id'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($row['program']['name'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($row['status'] ?? '') ?></td>
+                                            <td>
+                                                <form method="get" class="d-inline">
+                                                    <input type="hidden" name="trace_q" value="<?= htmlspecialchars($traceQuery ?? '') ?>" />
+                                                    <input type="hidden" name="trace_student_id" value="<?= htmlspecialchars($row['student_id'] ?? '') ?>" />
+                                                    <button class="btn btn-sm btn-primary" type="submit">
+                                                        <i class="fas fa-eye me-1"></i> View Trace
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php elseif (!empty($traceQuery)): ?>
+                        <div class="alert alert-warning">No students found for query "<?= htmlspecialchars($traceQuery) ?>".</div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($traceError)): ?>
+                        <div class="alert alert-danger">Trace error: <?= htmlspecialchars($traceError) ?></div>
+                    <?php elseif (!empty($tracePayload['trace'])): ?>
+                        <?php $t = $tracePayload['trace']; ?>
+                        <div class="border rounded p-3">
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <div><strong>Student:</strong> <?= htmlspecialchars($tracePayload['siswa_id'] ?? '') ?></div>
+                                    <div><strong>State:</strong> <?= htmlspecialchars($tracePayload['current_state'] ?? '') ?></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div><strong>Timestamp:</strong> <?= htmlspecialchars($t['timestamp'] ?? '') ?></div>
+                                    <div><strong>Source:</strong> <?= htmlspecialchars($t['source'] ?? '') ?></div>
+                                </div>
+                            </div>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered">
+                                    <thead><tr><th colspan="2">Q-Values</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach (($t['q_values'] ?? []) as $ac => $q): ?>
+                                        <tr><td><?= htmlspecialchars((string)$ac) ?></td><td><?= htmlspecialchars(number_format((float)$q, 4)) ?></td></tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php foreach (($t['cbf']['actions'] ?? []) as $a): ?>
+                                <h6 class="mt-3">Action <?= htmlspecialchars((string)($a['action_code'] ?? '')) ?> (State pool: <?= (int)($a['pool_size_state'] ?? 0) ?>, Fallback: <?= (int)($a['pool_size_action_fallback'] ?? 0) ?>)</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead><tr><th>Ref Type</th><th>Ref ID</th><th>Item State</th><th>CBF Score</th></tr></thead>
+                                        <tbody>
+                                            <?php foreach (($a['top_items'] ?? []) as $it): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars((string)($it['ref_type'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($it['ref_id'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($it['item_state'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars(number_format((float)($it['cbf_score'] ?? 0), 4)) ?></td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endforeach; ?>
+                            <h6 class="mt-3">Recent Rewards</h6>
+                            <?php foreach (($t['rewards'] ?? []) as $rw): ?>
+                                <div class="table-responsive mb-2">
+                                    <table class="table table-sm table-bordered align-middle">
+                                        <thead><tr><th colspan="3">Action <?= htmlspecialchars((string)($rw['action_code'] ?? '')) ?></th></tr></thead>
+                                        <tbody>
+                                        <tr><th style="width: 30%">Timestamp</th><th>State</th><th style="width: 15%">Reward</th></tr>
+                                        <?php foreach (($rw['recent'] ?? []) as $r): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars((string)($r['timestamp'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($r['state'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars(number_format((float)($r['reward'] ?? 0), 4)) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php elseif (!empty($traceStudentId ?? '')): ?>
+                        <div class="alert alert-warning">No trace available.</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>

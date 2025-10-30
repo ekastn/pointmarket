@@ -10,6 +10,8 @@ use App\Services\QuizService;
 use App\Services\WeeklyEvaluationService;
 use App\Services\AnalyticsService;
 use App\Services\QuestionnaireService;
+use App\Services\StudentService;
+use App\Services\ReportsService;
 
 class DashboardController extends BaseController
 {
@@ -20,6 +22,8 @@ class DashboardController extends BaseController
     protected WeeklyEvaluationService $weeklyEvaluationService;
     protected AnalyticsService $analyticsService;
     protected QuestionnaireService $questionnaireService;
+    protected StudentService $studentService;
+    protected ReportsService $reportsService;
 
     public function __construct(
         ApiClient $apiClient,
@@ -30,6 +34,8 @@ class DashboardController extends BaseController
         WeeklyEvaluationService $weeklyEvaluationService = null,
         AnalyticsService $analyticsService = null,
         QuestionnaireService $questionnaireService = null,
+        StudentService $studentService = null,
+        ReportsService $reportsService = null,
     )
     {
         parent::__construct($apiClient);
@@ -40,6 +46,8 @@ class DashboardController extends BaseController
         $this->weeklyEvaluationService = $weeklyEvaluationService ?? new WeeklyEvaluationService($apiClient);
         $this->analyticsService = $analyticsService ?? new AnalyticsService($apiClient);
         $this->questionnaireService = $questionnaireService ?? new QuestionnaireService($apiClient);
+        $this->studentService = $studentService ?? new StudentService($apiClient);
+        $this->reportsService = $reportsService ?? new ReportsService($apiClient);
     }
 
     public function showDashboard(): void
@@ -59,9 +67,42 @@ class DashboardController extends BaseController
                 // Try to fetch scheduler status for admin card
                 $schedulerStatus = null;
                 try { $schedulerStatus = $this->weeklyEvaluationService->getSchedulerStatus(); } catch (\Throwable $e) { $schedulerStatus = null; }
+                // Admin: optional recommendations trace search & view
+                $traceQuery = isset($_GET['trace_q']) ? trim((string)$_GET['trace_q']) : '';
+                $traceResults = null;
+                if ($traceQuery !== '') {
+                    try {
+                        $traceResults = $this->studentService->search(['search' => $traceQuery, 'limit' => 10]);
+                    } catch (\Throwable $e) {
+                        $traceResults = null;
+                    }
+                }
+                $tracePayload = null;
+                $traceError = null;
+                $traceStudentId = isset($_GET['trace_student_id']) ? trim((string)$_GET['trace_student_id']) : '';
+                if ($traceStudentId !== '') {
+                    try {
+                        $traceResp = $this->reportsService->getRecommendationsTrace($traceStudentId);
+                        error_log('Trace response: ' . print_r($traceResp, true));
+                        if (is_array($traceResp) && array_key_exists('__error', $traceResp)) {
+                            $traceError = (string)$traceResp['__error'];
+                            $tracePayload = null;
+                        } else {
+                            $tracePayload = $traceResp;
+                        }
+                    } catch (\Throwable $e) {
+                        $traceError = 'Trace request failed';
+                        $tracePayload = null;
+                    }
+                }
+
                 $this->render('admin/dashboard', [
                     'adminStats' => $adminStats,
                     'schedulerStatus' => $schedulerStatus,
+                    'traceQuery' => $traceQuery,
+                    'traceResults' => $traceResults,
+                    'tracePayload' => $tracePayload,
+                    'traceError' => $traceError,
                 ]);
                 return;
             case 'guru':

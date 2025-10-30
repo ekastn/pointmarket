@@ -19,6 +19,7 @@ use App\Controllers\SettingsController;
 use App\Controllers\UsersController;
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
+use App\Controllers\ReportsController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 
@@ -190,6 +191,11 @@ return function (Router $router) {
             $router->put('/multimodal', [SettingsController::class, 'updateMultimodalThreshold']);
 
         }, [[AuthMiddleware::class, 'requireLogin']]);
+
+        // Admin reports
+        $router->group('/reports', function (Router $router) {
+            $router->get('/recommendations-trace', [ReportsController::class, 'recommendationsTrace']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);
 };

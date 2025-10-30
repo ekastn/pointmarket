@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
@@ -45,4 +46,22 @@ func (h *RecommendationHandler) GetStudentRecommendations(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Recommendations retrieved successfully", recs)
+}
+
+// GetRecommendationsTrace godoc (admin-only)
+func (h *RecommendationHandler) GetRecommendationsTrace(c *gin.Context) {
+	studentID := c.Query("student_id")
+	if studentID == "" {
+		response.Error(c, http.StatusBadRequest, "missing student_id")
+		return
+	}
+	payload, err := h.recService.GetStudentRecommendationsTrace(c.Request.Context(), studentID)
+	if err != nil {
+		response.Error(c, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	log.Printf("trace: %v", payload)
+
+	response.Success(c, http.StatusOK, "Trace retrieved successfully", payload)
 }

@@ -64,6 +64,23 @@ func (s *RecommendationService) GetStudentRecommendations(ctx context.Context, s
 	return mapped, nil
 }
 
+// GetStudentRecommendationsTrace returns the upstream trace payload for admin analysis.
+func (s *RecommendationService) GetStudentRecommendationsTrace(ctx context.Context, studentID string) (map[string]interface{}, error) {
+    up, err := s.gateway.GetStudentRecommendationsTrace(studentID)
+    if err != nil {
+        return nil, err
+    }
+    // Return only the trace block plus minimal header context
+    trace := map[string]interface{}{
+        "siswa_id":      up.StudentID,
+        "current_state": up.CurrentState,
+        "trace":         up.Trace,
+        "message":       up.Message,
+        "summary":       up.Summary,
+    }
+    return trace, nil
+}
+
 // maybeTriggerTraining ensures we don't spam /train. Returns true if a trigger was started.
 func (s *RecommendationService) maybeTriggerTraining() bool {
 	s.trainMux.Lock()

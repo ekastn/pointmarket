@@ -20,6 +20,7 @@ use App\Controllers\ErrorController;
 use App\Services\WeeklyEvaluationService;
 use App\Services\RecommendationService;
 use App\Services\AnalyticsService;
+use App\Services\ReportsService;
 use Psr\Container\ContainerInterface;
 
 return [
@@ -88,6 +89,10 @@ return [
 
     AnalyticsService::class => function (ApiClient $apiClient) {
         return new AnalyticsService($apiClient);
+    },
+
+    ReportsService::class => function (ApiClient $apiClient) {
+        return new ReportsService($apiClient);
     },
 
     AuthMiddleware::class => function (ApiClient $apiClient, ProfileService $profileService) {

@@ -1,14 +1,15 @@
 package gateway
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
-	"time"
+    "bytes"
+    "context"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "net/url"
+    "strconv"
+    "time"
 )
 
 // RecommendationGateway handles communication with the Recommendation microservice.
@@ -232,3 +233,160 @@ func (g *RecommendationGateway) EnsureStudent(studentID string, vark, mslq, ams 
 // Export shims so service layer can map without exporting raw internals broadly.
 type UpstreamResponseExportShim = upstreamResponse
 type UpstreamActionExportShim = upstreamAction
+
+// --- Admin Items (proxy) ---
+
+func (g *RecommendationGateway) AdminListItems(ctx context.Context, q url.Values) (map[string]interface{}, error) {
+    endpoint := fmt.Sprintf("%s/admin/items", g.BaseURL)
+    if len(q) > 0 {
+        endpoint = endpoint + "?" + q.Encode()
+    }
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+    if err != nil {
+        return nil, err
+    }
+    resp, err := g.Client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    var out map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+        return nil, err
+    }
+    return out, nil
+}
+
+func (g *RecommendationGateway) AdminCreateItems(ctx context.Context, body []byte) (map[string]interface{}, error) {
+    endpoint := fmt.Sprintf("%s/admin/items", g.BaseURL)
+    req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+    if err != nil {
+        return nil, err
+    }
+    req.Header.Set("Content-Type", "application/json")
+    resp, err := g.Client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    var out map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+        return nil, err
+    }
+    return out, nil
+}
+
+func (g *RecommendationGateway) AdminUpdateItem(ctx context.Context, id int64, body []byte) (map[string]interface{}, error) {
+    endpoint := fmt.Sprintf("%s/admin/items/%d", g.BaseURL, id)
+    req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, bytes.NewReader(body))
+    if err != nil {
+        return nil, err
+    }
+    req.Header.Set("Content-Type", "application/json")
+    resp, err := g.Client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    var out map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+        return nil, err
+    }
+    return out, nil
+}
+
+func (g *RecommendationGateway) AdminToggleItem(ctx context.Context, id int64, body []byte) (map[string]interface{}, error) {
+    endpoint := fmt.Sprintf("%s/admin/items/%d/toggle", g.BaseURL, id)
+    req, err := http.NewRequestWithContext(ctx, http.MethodPatch, endpoint, bytes.NewReader(body))
+    if err != nil {
+        return nil, err
+    }
+    req.Header.Set("Content-Type", "application/json")
+    resp, err := g.Client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    var out map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+        return nil, err
+    }
+    return out, nil
+}
+
+func (g *RecommendationGateway) AdminDeleteItem(ctx context.Context, id int64, force bool) error {
+    endpoint := fmt.Sprintf("%s/admin/items/%d", g.BaseURL, id)
+    if force {
+        u, _ := url.Parse(endpoint)
+        q := u.Query()
+        q.Set("force", "1")
+        u.RawQuery = q.Encode()
+        endpoint = u.String()
+    }
+    req, err := http.NewRequestWithContext(ctx, http.MethodDelete, endpoint, nil)
+    if err != nil {
+        return err
+    }
+    resp, err := g.Client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    return nil
+}
+
+func (g *RecommendationGateway) AdminListStates(ctx context.Context, q url.Values) (map[string]interface{}, error) {
+    endpoint := fmt.Sprintf("%s/admin/states", g.BaseURL)
+    if len(q) > 0 {
+        endpoint = endpoint + "?" + q.Encode()
+    }
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+    if err != nil { return nil, err }
+    resp, err := g.Client.Do(req)
+    if err != nil { return nil, err }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    var out map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, err }
+    return out, nil
+}
+
+func (g *RecommendationGateway) AdminSearchRefs(ctx context.Context, q url.Values) (map[string]interface{}, error) {
+    endpoint := fmt.Sprintf("%s/admin/refs", g.BaseURL)
+    if len(q) > 0 { endpoint = endpoint + "?" + q.Encode() }
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+    if err != nil { return nil, err }
+    resp, err := g.Client.Do(req)
+    if err != nil { return nil, err }
+    defer resp.Body.Close()
+    if resp.StatusCode >= 400 {
+        b, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+    }
+    var out map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, err }
+    return out, nil
+}

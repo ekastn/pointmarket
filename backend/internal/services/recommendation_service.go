@@ -1,23 +1,24 @@
 package services
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"log"
-	"pointmarket/backend/internal/dtos"
-	"pointmarket/backend/internal/gateway"
-	"pointmarket/backend/internal/store/gen"
-	"sort"
-	"sync"
-	"time"
+    "context"
+    "database/sql"
+    "fmt"
+    "log"
+    "pointmarket/backend/internal/dtos"
+    "pointmarket/backend/internal/gateway"
+    "pointmarket/backend/internal/store/gen"
+    "sort"
+    "sync"
+    "time"
+    "net/url"
 )
 
 // RecommendationService orchestrates fetching and mapping recommendations.
 type RecommendationService struct {
-	gateway    *gateway.RecommendationGateway
-	studentSvc *StudentService
-	missionSvc *MissionService
+    gateway    *gateway.RecommendationGateway
+    studentSvc *StudentService
+    missionSvc *MissionService
 	// training control
 	trainMux       sync.Mutex
 	lastTrainStart time.Time
@@ -79,6 +80,150 @@ func (s *RecommendationService) GetStudentRecommendationsTrace(ctx context.Conte
         "summary":       up.Summary,
     }
     return trace, nil
+}
+
+// Admin — Items management proxies
+func (s *RecommendationService) AdminListItems(ctx context.Context, q url.Values) (map[string]interface{}, error) {
+    return s.gateway.AdminListItems(ctx, q)
+}
+
+func (s *RecommendationService) AdminCreateItems(ctx context.Context, body []byte) (map[string]interface{}, error) {
+    return s.gateway.AdminCreateItems(ctx, body)
+}
+
+func (s *RecommendationService) AdminUpdateItem(ctx context.Context, id int64, body []byte) (map[string]interface{}, error) {
+    return s.gateway.AdminUpdateItem(ctx, id, body)
+}
+
+func (s *RecommendationService) AdminToggleItem(ctx context.Context, id int64, body []byte) (map[string]interface{}, error) {
+    return s.gateway.AdminToggleItem(ctx, id, body)
+}
+
+func (s *RecommendationService) AdminDeleteItem(ctx context.Context, id int64, force bool) error {
+    return s.gateway.AdminDeleteItem(ctx, id, force)
+}
+
+// EnrichItemRefsWithTitles augments rec-service items payload with human-friendly ref titles.
+// It expects payload shape: { items: [ { ref_type, ref_id, ... } ], meta: {...} }
+func (s *RecommendationService) EnrichItemRefsWithTitles(ctx context.Context, payload map[string]interface{}) map[string]interface{} {
+    rawItems, ok := payload["items"].([]interface{})
+    if !ok || len(rawItems) == 0 {
+        return payload
+    }
+    // Collect IDs by ref_type
+    missionIDs := make([]int64, 0)
+    rewardIDs := make([]int64, 0)
+    punishIDs := make([]int64, 0)
+    coachIDs := make([]int64, 0)
+    productIDs := make([]int64, 0)
+
+    for _, it := range rawItems {
+        m, _ := it.(map[string]interface{})
+        if m == nil { continue }
+        rtype, _ := m["ref_type"].(string)
+        // ref_id may be float64 from JSON decode
+        var rid int64
+        switch v := m["ref_id"].(type) {
+        case float64:
+            rid = int64(v)
+        case int64:
+            rid = v
+        case int:
+            rid = int64(v)
+        case string:
+            // ignore non-numeric
+        }
+        if rid <= 0 { continue }
+        switch rtype {
+        case "mission":
+            missionIDs = append(missionIDs, rid)
+        case "reward":
+            rewardIDs = append(rewardIDs, rid)
+        case "punishment":
+            punishIDs = append(punishIDs, rid)
+        case "coaching":
+            coachIDs = append(coachIDs, rid)
+        case "product":
+            productIDs = append(productIDs, rid)
+        }
+    }
+    // Fetch titles by type
+    mByID := map[int64]gen.Mission{}
+    rByID := map[int64]gen.Reward{}
+    pByID := map[int64]gen.Punishment{}
+    cByID := map[int64]gen.Coaching{}
+    prByID := map[int64]gen.Product{}
+
+    if len(missionIDs) > 0 {
+        if rows, err := s.studentSvc.q.GetMissionsByIDs(ctx, missionIDs); err == nil {
+            for _, r := range rows { mByID[r.ID] = r }
+        }
+    }
+    if len(rewardIDs) > 0 {
+        if rows, err := s.studentSvc.q.GetRewardsByIDs(ctx, rewardIDs); err == nil {
+            for _, r := range rows { rByID[r.ID] = r }
+        }
+    }
+    if len(punishIDs) > 0 {
+        if rows, err := s.studentSvc.q.GetPunishmentsByIDs(ctx, punishIDs); err == nil {
+            for _, r := range rows { pByID[r.ID] = r }
+        }
+    }
+    if len(coachIDs) > 0 {
+        if rows, err := s.studentSvc.q.GetCoachingsByIDs(ctx, coachIDs); err == nil {
+            for _, r := range rows { cByID[r.ID] = r }
+        }
+    }
+    if len(productIDs) > 0 {
+        if rows, err := s.studentSvc.q.GetProductsByIDs(ctx, productIDs); err == nil {
+            for _, r := range rows { prByID[r.ID] = r }
+        }
+    }
+
+    // Attach ref_title
+    for _, it := range rawItems {
+        m, _ := it.(map[string]interface{})
+        if m == nil { continue }
+        rtype, _ := m["ref_type"].(string)
+        var rid int64
+        switch v := m["ref_id"].(type) {
+        case float64:
+            rid = int64(v)
+        case int64:
+            rid = v
+        case int:
+            rid = int64(v)
+        case string:
+            // try parse
+        }
+        var title string
+        switch rtype {
+        case "mission":
+            if r, ok := mByID[rid]; ok { title = r.Title }
+        case "reward":
+            if r, ok := rByID[rid]; ok { title = r.Title }
+        case "punishment":
+            if r, ok := pByID[rid]; ok { title = r.Title }
+        case "coaching":
+            if r, ok := cByID[rid]; ok { title = r.Title }
+        case "product":
+            if r, ok := prByID[rid]; ok { title = r.Name }
+        }
+        if title != "" {
+            m["ref_title"] = title
+        }
+    }
+    return payload
+}
+
+// Admin list states proxy
+func (s *RecommendationService) AdminListStates(ctx context.Context, q url.Values) (map[string]interface{}, error) {
+    return s.gateway.AdminListStates(ctx, q)
+}
+
+// Admin search refs proxy
+func (s *RecommendationService) AdminSearchRefs(ctx context.Context, q url.Values) (map[string]interface{}, error) {
+    return s.gateway.AdminSearchRefs(ctx, q)
 }
 
 // maybeTriggerTraining ensures we don't spam /train. Returns true if a trigger was started.

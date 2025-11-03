@@ -6,8 +6,8 @@ if os.getenv('APP_SETTING', 'dev') != 'prod':
 
 class Config:
     SERVER_NAME = os.getenv('SERVER_NAME', '0.0.0.0:5000')
-
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'super-secret-key'
+    INTERNAL_TOKEN = os.getenv('INTERNAL_TOKEN')
 
     MYSQL_HOST = os.environ.get('DB_HOST') or 'localhost'
     MYSQL_USER = os.environ.get('DB_USER') or 'lab'

@@ -21,6 +21,7 @@ use App\Services\WeeklyEvaluationService;
 use App\Services\RecommendationService;
 use App\Services\AnalyticsService;
 use App\Services\ReportsService;
+use App\Services\AdminItemsService;
 use Psr\Container\ContainerInterface;
 
 return [
@@ -89,6 +90,10 @@ return [
 
     AnalyticsService::class => function (ApiClient $apiClient) {
         return new AnalyticsService($apiClient);
+    },
+
+    AdminItemsService::class => function (ApiClient $apiClient) {
+        return new AdminItemsService($apiClient);
     },
 
     ReportsService::class => function (ApiClient $apiClient) {

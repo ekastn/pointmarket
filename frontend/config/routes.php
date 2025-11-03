@@ -20,6 +20,7 @@ use App\Controllers\UsersController;
 use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
 use App\Controllers\ReportsController;
+use App\Controllers\AdminItemsController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 
@@ -195,6 +196,18 @@ return function (Router $router) {
         // Admin reports
         $router->group('/reports', function (Router $router) {
             $router->get('/recommendations-trace', [ReportsController::class, 'recommendationsTrace']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+
+        // Admin: Recommendation Items management
+        $router->group('/admin/recommendations/items', function (Router $router) {
+            $router->get('/', [AdminItemsController::class, 'index']);
+            $router->post('/', [AdminItemsController::class, 'store']);
+            $router->post('/update', [AdminItemsController::class, 'update']);
+            $router->post('/toggle', [AdminItemsController::class, 'toggle']);
+            $router->post('/delete', [AdminItemsController::class, 'destroy']);
+            // Typeahead proxies
+            $router->get('/typeahead/states', [AdminItemsController::class, 'typeaheadStates']);
+            $router->get('/typeahead/refs', [AdminItemsController::class, 'typeaheadRefs']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);

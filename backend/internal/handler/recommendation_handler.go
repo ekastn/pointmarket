@@ -1,13 +1,15 @@
 package handler
 
 import (
-	"log"
-	"net/http"
-	"pointmarket/backend/internal/response"
-	"pointmarket/backend/internal/services"
-	"strconv"
+    "io"
+    "log"
+    "net/http"
+    "net/url"
+    "pointmarket/backend/internal/response"
+    "pointmarket/backend/internal/services"
+    "strconv"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 )
 
 type RecommendationHandler struct {
@@ -64,4 +66,102 @@ func (h *RecommendationHandler) GetRecommendationsTrace(c *gin.Context) {
 	log.Printf("trace: %v", payload)
 
 	response.Success(c, http.StatusOK, "Trace retrieved successfully", payload)
+}
+
+// Admin: Items management
+func (h *RecommendationHandler) AdminListItems(c *gin.Context) {
+    q := url.Values{}
+    for k, v := range c.Request.URL.Query() {
+        for _, val := range v {
+            q.Add(k, val)
+        }
+    }
+    out, err := h.recService.AdminListItems(c.Request.Context(), q)
+    if err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    enriched := h.recService.EnrichItemRefsWithTitles(c.Request.Context(), out)
+    response.Success(c, http.StatusOK, "ok", enriched)
+}
+
+func (h *RecommendationHandler) AdminCreateItems(c *gin.Context) {
+    body, _ := io.ReadAll(c.Request.Body)
+    out, err := h.recService.AdminCreateItems(c.Request.Context(), body)
+    if err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    response.Success(c, http.StatusCreated, "created", out)
+}
+
+func (h *RecommendationHandler) AdminUpdateItem(c *gin.Context) {
+    idStr := c.Param("id")
+    id, err := strconv.ParseInt(idStr, 10, 64)
+    if err != nil {
+        response.Error(c, http.StatusBadRequest, "invalid id")
+        return
+    }
+    body, _ := io.ReadAll(c.Request.Body)
+    out, err := h.recService.AdminUpdateItem(c.Request.Context(), id, body)
+    if err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    response.Success(c, http.StatusOK, "updated", out)
+}
+
+func (h *RecommendationHandler) AdminToggleItem(c *gin.Context) {
+    idStr := c.Param("id")
+    id, err := strconv.ParseInt(idStr, 10, 64)
+    if err != nil {
+        response.Error(c, http.StatusBadRequest, "invalid id")
+        return
+    }
+    body, _ := io.ReadAll(c.Request.Body)
+    out, err := h.recService.AdminToggleItem(c.Request.Context(), id, body)
+    if err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    response.Success(c, http.StatusOK, "toggled", out)
+}
+
+func (h *RecommendationHandler) AdminDeleteItem(c *gin.Context) {
+    idStr := c.Param("id")
+    id, err := strconv.ParseInt(idStr, 10, 64)
+    if err != nil {
+        response.Error(c, http.StatusBadRequest, "invalid id")
+        return
+    }
+    force := c.DefaultQuery("force", "0") == "1"
+    if err := h.recService.AdminDeleteItem(c.Request.Context(), id, force); err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    response.Success(c, http.StatusOK, "deleted", nil)
+}
+
+// Admin: States typeahead
+func (h *RecommendationHandler) AdminListStates(c *gin.Context) {
+    q := url.Values{}
+    for k, v := range c.Request.URL.Query() { for _, val := range v { q.Add(k, val) } }
+    out, err := h.recService.AdminListStates(c.Request.Context(), q)
+    if err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    response.Success(c, http.StatusOK, "ok", out)
+}
+
+// Admin: Refs search typeahead
+func (h *RecommendationHandler) AdminSearchRefs(c *gin.Context) {
+    q := url.Values{}
+    for k, v := range c.Request.URL.Query() { for _, val := range v { q.Add(k, val) } }
+    out, err := h.recService.AdminSearchRefs(c.Request.Context(), q)
+    if err != nil {
+        response.Error(c, http.StatusBadGateway, err.Error())
+        return
+    }
+    response.Success(c, http.StatusOK, "ok", out)
 }

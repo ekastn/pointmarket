@@ -3,10 +3,10 @@ steps:
   args:
     - build
     - -f
-    - ai-services/Dockerfile.cpu
+    - recommendation-service/Dockerfile.cpu
     - -t
     - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$SHORT_SHA
-    - ai-services
+    - recommendation-service
 - name: 'gcr.io/cloud-builders/docker'
   args:
     - push

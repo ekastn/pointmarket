@@ -95,9 +95,10 @@ return [
             ],
         ],
         [
-            'label' => 'State',
+            'label' => 'Rekomendasi',
             'items' => [
                 ['path' => '/admin/recommendations/items', 'label' => 'Items', 'icon' => 'fas fa-list'],
+                ['path' => '/admin/recommendations/states', 'label' => 'States', 'icon' => 'fas fa-stream'],
             ],
         ],
         // [

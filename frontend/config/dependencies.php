@@ -22,6 +22,7 @@ use App\Services\RecommendationService;
 use App\Services\AnalyticsService;
 use App\Services\ReportsService;
 use App\Services\AdminItemsService;
+use App\Services\AdminStatesService;
 use Psr\Container\ContainerInterface;
 
 return [
@@ -94,6 +95,10 @@ return [
 
     AdminItemsService::class => function (ApiClient $apiClient) {
         return new AdminItemsService($apiClient);
+    },
+
+    AdminStatesService::class => function (ApiClient $apiClient) {
+        return new AdminStatesService($apiClient);
     },
 
     ReportsService::class => function (ApiClient $apiClient) {

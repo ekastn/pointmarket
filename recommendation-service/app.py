@@ -19,11 +19,13 @@ def create_app(config_class=Config) -> Flask:
     from blueprints.students import bp as students_bp
     from blueprints.training import bp as training_bp
     from blueprints.admin_items import bp as admin_items_bp
+    from blueprints.admin_states import bp as admin_states_bp
 
     app.register_blueprint(students_bp, url_prefix="/students")
     app.register_blueprint(recommendations_bp, url_prefix="/recommendations")
     app.register_blueprint(training_bp)
     app.register_blueprint(admin_items_bp, url_prefix="/admin")
+    app.register_blueprint(admin_states_bp, url_prefix="/admin")
 
     @app.route("/health")
     def health():

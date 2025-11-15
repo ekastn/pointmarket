@@ -70,7 +70,7 @@ func main() {
 	questionnaireHandler := handler.NewQuestionnaireHandler(questionnaireService, textAnalyzerService, correlationService, userService)
 	weeklyEvaluationHandler := handler.NewWeeklyEvaluationHandler(weeklyEvaluationService, schedulerManager)
 	textAnalyzerHandler := handler.NewTextAnalysisHandler(textAnalyzerService)
-		recommendationHandler := handler.NewRecommendationHandler(recommendationService, studentService)
+	recommendationHandler := handler.NewRecommendationHandler(recommendationService, studentService)
 	dashboardHandler := handler.NewDashboardHandler(*dashboardService)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 	productHandler := handler.NewProductHandler(*productService)
@@ -313,21 +313,27 @@ func main() {
 			scoringsRoutes.GET("/multimodal", scoringHandler.GetMultimodalThreshold)
 		}
 
-        // Admin-only: recommendations trace for evaluator
-        adminGroup := authRequired.Group("/admin")
-        adminGroup.Use(middleware.Authz("admin"))
-        adminGroup.GET("/recommendations/trace", recommendationHandler.GetRecommendationsTrace)
+		// Admin-only: recommendations trace for evaluator
+		adminGroup := authRequired.Group("/admin")
+		adminGroup.Use(middleware.Authz("admin"))
+		adminGroup.GET("/recommendations/trace", recommendationHandler.GetRecommendationsTrace)
 
-        // Admin-only: Recommendation items management
-        adminGroup.GET("/recommendations/items", recommendationHandler.AdminListItems)
-        adminGroup.POST("/recommendations/items", recommendationHandler.AdminCreateItems)
-        adminGroup.PUT("/recommendations/items/:id", recommendationHandler.AdminUpdateItem)
-        adminGroup.PATCH("/recommendations/items/:id/toggle", recommendationHandler.AdminToggleItem)
-        adminGroup.DELETE("/recommendations/items/:id", recommendationHandler.AdminDeleteItem)
+		// Admin-only: Recommendation items management
+		adminGroup.GET("/recommendations/items", recommendationHandler.AdminListItems)
+		adminGroup.POST("/recommendations/items", recommendationHandler.AdminCreateItems)
+		adminGroup.PUT("/recommendations/items/:id", recommendationHandler.AdminUpdateItem)
+		adminGroup.PATCH("/recommendations/items/:id/toggle", recommendationHandler.AdminToggleItem)
+		adminGroup.DELETE("/recommendations/items/:id", recommendationHandler.AdminDeleteItem)
 
-        // Admin-only: typeahead helpers
-        adminGroup.GET("/recommendations/states", recommendationHandler.AdminListStates)
-        adminGroup.GET("/recommendations/refs", recommendationHandler.AdminSearchRefs)
+		// Admin-only: typeahead helpers
+		adminGroup.GET("/recommendations/states", recommendationHandler.AdminListStates)
+		adminGroup.GET("/recommendations/refs", recommendationHandler.AdminSearchRefs)
+
+		// Admin-only: Unique States CRUD
+		adminGroup.GET("/recommendations/unique-states", recommendationHandler.AdminStatesList)
+		adminGroup.POST("/recommendations/unique-states", recommendationHandler.AdminStatesCreate)
+		adminGroup.PUT("/recommendations/unique-states/:id", recommendationHandler.AdminStatesUpdate)
+		adminGroup.DELETE("/recommendations/unique-states/:id", recommendationHandler.AdminStatesDelete)
 	}
 
 	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)

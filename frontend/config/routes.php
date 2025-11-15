@@ -21,6 +21,7 @@ use App\Controllers\VarkCorrelationAnalysisController;
 use App\Controllers\WeeklyEvaluationsController;
 use App\Controllers\ReportsController;
 use App\Controllers\AdminItemsController;
+use App\Controllers\AdminStatesController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 
@@ -208,6 +209,14 @@ return function (Router $router) {
             // Typeahead proxies
             $router->get('/typeahead/states', [AdminItemsController::class, 'typeaheadStates']);
             $router->get('/typeahead/refs', [AdminItemsController::class, 'typeaheadRefs']);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+
+        // Admin: Unique States management
+        $router->group('/admin/recommendations/states', function (Router $router) {
+            $router->get('/', [AdminStatesController::class, 'index']);
+            $router->post('/', [AdminStatesController::class, 'store']);
+            $router->post('/update', [AdminStatesController::class, 'update']);
+            $router->post('/delete', [AdminStatesController::class, 'destroy']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 
     }, [[AuthMiddleware::class, 'requireLogin']]);

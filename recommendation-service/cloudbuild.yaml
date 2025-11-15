@@ -1,0 +1,33 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - build
+    - -f
+    - ai-services/Dockerfile.cpu
+    - -t
+    - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$SHORT_SHA
+    - ai-services
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - push
+    - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$SHORT_SHA
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+  entrypoint: gcloud
+  args:
+    - run
+    - deploy
+    - ${_SERVICE_NAME}
+    - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$SHORT_SHA
+    - --region=${_REGION}
+    - --port=5000
+    - --memory=${_MEMORY}
+    - --max-instances=${_MAX_INSTANCES}
+    - --platform=managed
+    - --allow-unauthenticated
+
+images:
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

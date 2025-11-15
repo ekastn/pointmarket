@@ -160,12 +160,25 @@
             $qs = array_merge($filters, ['do' => 'toggle', 'id' => (int)$row['id'], 'to' => 0]);
             return ['href' => '/admin/recommendations/items?' . http_build_query($qs)];
           }
-        ],
-        [
-          'label' => 'Delete', 'icon' => 'fas fa-trash', 'class' => 'btn-outline-danger',
-          'attributes' => function($row) use ($filters) {
-            $qs = array_merge($filters, ['do' => 'delete', 'id' => (int)$row['id']]);
-            return ['href' => '/admin/recommendations/items?' . http_build_query($qs), 'onclick' => "return confirm('Delete this item?');"];
+      ],
+      [
+        'label' => 'Edit', 'icon' => 'fas fa-edit', 'class' => 'btn-outline-primary js-edit-item',
+        'attributes' => function($row){
+          return [
+            'data-id' => (int)$row['id'],
+            'data-state' => (string)($row['state'] ?? ''),
+            'data-action' => (int)($row['action_code'] ?? 0),
+            'data-ref-type' => (string)($row['ref_type'] ?? ''),
+            'data-ref-id' => (int)($row['ref_id'] ?? 0),
+            'data-active' => !empty($row['is_active']) ? '1' : '0',
+          ];
+        }
+      ],
+      [
+        'label' => 'Delete', 'icon' => 'fas fa-trash', 'class' => 'btn-outline-danger',
+        'attributes' => function($row) use ($filters) {
+          $qs = array_merge($filters, ['do' => 'delete', 'id' => (int)$row['id']]);
+          return ['href' => '/admin/recommendations/items?' . http_build_query($qs), 'onclick' => "return confirm('Delete this item?');"];
           }
         ],
       ];
@@ -258,6 +271,147 @@
       }
       refSearch && refSearch.addEventListener('input', doRefSearch);
       refTypeSel && refTypeSel.addEventListener('change', () => { refSearch.value=''; refIdHidden.value=''; refsMenu.innerHTML=''; refsMenu.style.display='none'; });
+      
+      // Edit modal logic: build and wire modal
+      (function(){
+        const tpl = `
+<div class=\"modal fade\" id=\"editItemModal\" tabindex=\"-1\" aria-hidden=\"true\">
+  <div class=\"modal-dialog modal-lg modal-dialog-scrollable\">
+    <div class=\"modal-content\">
+      <div class=\"modal-header\">
+        <h5 class=\"modal-title\"><i class=\"fas fa-edit me-2\"></i>Edit Item</h5>
+        <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\" aria-label=\"Close\"></button>
+      </div>
+      <form method=\"post\" action=\"/admin/recommendations/items/update\" id=\"edit-item-form\">
+        <div class=\"modal-body\">
+          <input type=\"hidden\" name=\"id\" id=\"edit-id\" />
+          <div class=\"row g-2\">
+            <div class=\"col-md-6 position-relative\">
+              <label class=\"form-label\">State</label>
+              <input type=\"text\" name=\"state\" class=\"form-control\" id=\"edit-state\" autocomplete=\"off\" required />
+              <div id=\"edit-states-menu\" class=\"list-group position-absolute w-100 border bg-white\" style=\"z-index:1000; display:none; max-height:240px; overflow:auto;\"></div>
+            </div>
+            <div class=\"col-md-3\">
+              <label class=\"form-label\">Action</label>
+              <select name=\"action_code\" class=\"form-select\" id=\"edit-action\" required>
+                <option value=\"101\">101 - Reward</option>
+                <option value=\"102\">102 - Produk</option>
+                <option value=\"103\">103 - Hukuman</option>
+                <option value=\"105\">105 - Misi</option>
+                <option value=\"106\">106 - Coaching</option>
+              </select>
+            </div>
+            <div class=\"col-md-3\">
+              <label class=\"form-label\">Ref Type</label>
+              <select name=\"ref_type\" class=\"form-select\" id=\"edit-ref-type\" required>
+                <option value=\"mission\">mission</option>
+                <option value=\"product\">product</option>
+                <option value=\"reward\">reward</option>
+                <option value=\"coaching\">coaching</option>
+                <option value=\"punishment\">punishment</option>
+              </select>
+            </div>
+            <div class=\"col-md-6 position-relative\">
+              <label class=\"form-label\">Ref Search</label>
+              <input type=\"text\" class=\"form-control\" id=\"edit-ref-search\" autocomplete=\"off\" placeholder=\"type to search...\" />
+              <div id=\"edit-refs-menu\" class=\"list-group position-absolute w-100 border bg-white\" style=\"z-index:1000; display:none; max-height:240px; overflow:auto;\"></div>
+              <input type=\"hidden\" name=\"ref_id\" id=\"edit-ref-id\" required />
+            </div>
+            <div class=\"col-md-3\">
+              <label class=\"form-label\">Active</label>
+              <select name=\"is_active\" class=\"form-select\" id=\"edit-active\">
+                <option value=\"1\">Yes</option>
+                <option value=\"0\">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class=\"modal-footer\">
+          <button type=\"button\" class=\"btn btn-outline-secondary\" data-bs-dismiss=\"modal\">Cancel</button>
+          <button type=\"submit\" class=\"btn btn-primary\"><i class=\"fas fa-save me-1\"></i>Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>`;
+        const wrap = document.createElement('div');
+        wrap.innerHTML = tpl;
+        document.body.appendChild(wrap);
+        let bsModal = null;
+        const modalEl = document.getElementById('editItemModal');
+        function showModal(){ if (!bsModal && window.bootstrap) bsModal = new bootstrap.Modal(modalEl); bsModal && bsModal.show(); }
+
+        // Bind edit buttons
+        Array.from(document.querySelectorAll('.js-edit-item')).forEach(btn => {
+          btn.addEventListener('click', function(){
+            document.getElementById('edit-id').value = this.getAttribute('data-id');
+            document.getElementById('edit-state').value = this.getAttribute('data-state') || '';
+            document.getElementById('edit-action').value = this.getAttribute('data-action') || '';
+            document.getElementById('edit-ref-type').value = this.getAttribute('data-ref-type') || '';
+            document.getElementById('edit-ref-id').value = this.getAttribute('data-ref-id') || '';
+            document.getElementById('edit-ref-search').value = '';
+            document.getElementById('edit-active').value = (this.getAttribute('data-active') === '1') ? '1' : '0';
+            showModal();
+          });
+        });
+
+        // Typeahead inside modal
+        const mState = document.getElementById('edit-state');
+        const mStatesMenu = document.getElementById('edit-states-menu');
+        let tm;
+        mState && mState.addEventListener('input', function(){
+          const q = this.value.trim();
+          clearTimeout(tm);
+          tm = setTimeout(()=>{
+            if (!q){ mStatesMenu.style.display='none'; mStatesMenu.innerHTML=''; return; }
+            fetch('/admin/recommendations/items/typeahead/states?q=' + encodeURIComponent(q))
+              .then(r=>r.json()).then(d=>{
+                const items = (d && (d.states || (d.data && d.data.states))) || [];
+                if (!items.length){ mStatesMenu.style.display='none'; mStatesMenu.innerHTML=''; return; }
+                mStatesMenu.innerHTML = items.map(s => `<button type="button" class="list-group-item list-group-item-action" data-value="${s}">${s}</button>`).join('');
+                mStatesMenu.style.display='block';
+                Array.from(mStatesMenu.querySelectorAll('button')).forEach(b=>{
+                  b.addEventListener('click',()=>{
+                    mState.value = b.getAttribute('data-value');
+                    mStatesMenu.style.display='none'; mStatesMenu.innerHTML='';
+                  });
+                });
+              }).catch(()=>{});
+          }, 200);
+        });
+        document.addEventListener('click', (e)=>{ if (!mStatesMenu.contains(e.target) && e.target !== mState){ mStatesMenu.style.display='none'; }});
+
+        const mRefType = document.getElementById('edit-ref-type');
+        const mRefSearch = document.getElementById('edit-ref-search');
+        const mRefsMenu = document.getElementById('edit-refs-menu');
+        const mRefId = document.getElementById('edit-ref-id');
+        let tr2;
+        function doMRef(){
+          const q = (mRefSearch.value || '').trim();
+          const tval = mRefType.value;
+          clearTimeout(tr2);
+          tr2 = setTimeout(()=>{
+            if (!tval || q.length < 1){ mRefsMenu.style.display='none'; mRefsMenu.innerHTML=''; return; }
+            fetch('/admin/recommendations/items/typeahead/refs?ref_type=' + encodeURIComponent(tval) + '&q=' + encodeURIComponent(q))
+              .then(r=>r.json()).then(d=>{
+                const items = (d && (d.refs || (d.data && d.data.refs))) || [];
+                if (!items.length){ mRefsMenu.style.display='none'; mRefsMenu.innerHTML=''; return; }
+                mRefsMenu.innerHTML = items.map(it => `<button type="button" class="list-group-item list-group-item-action" data-id="${it.id}" data-title="${it.title}">${it.title}</button>`).join('');
+                mRefsMenu.style.display='block';
+                Array.from(mRefsMenu.querySelectorAll('button')).forEach(b=>{
+                  b.addEventListener('click',()=>{
+                    mRefSearch.value = b.getAttribute('data-title');
+                    mRefId.value = b.getAttribute('data-id');
+                    mRefsMenu.style.display='none'; mRefsMenu.innerHTML='';
+                  });
+                });
+              }).catch(()=>{});
+          }, 200);
+        }
+        mRefSearch && mRefSearch.addEventListener('input', doMRef);
+        mRefType && mRefType.addEventListener('change', ()=>{ mRefSearch.value=''; mRefId.value=''; mRefsMenu.innerHTML=''; mRefsMenu.style.display='none'; });
+        document.addEventListener('click', (e)=>{ if (!mRefsMenu.contains(e.target) && e.target !== mRefSearch){ mRefsMenu.style.display='none'; }});
+      })();
       document.addEventListener('click', (e)=>{
         if (!refsMenu.contains(e.target) && e.target !== refSearch) {
           refsMenu.style.display='none';

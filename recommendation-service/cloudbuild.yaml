@@ -3,7 +3,7 @@ steps:
   args:
     - build
     - -f
-    - recommendation-service/Dockerfile.cpu
+    - recommendation-service/Dockerfile
     - -t
     - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$SHORT_SHA
     - recommendation-service

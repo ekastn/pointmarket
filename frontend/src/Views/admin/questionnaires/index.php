@@ -77,7 +77,7 @@ $renderer->includePartial('components/partials/table', [
                 const questionnaireId = this.dataset.id;
                 if (confirm('Are you sure you want to delete this questionnaire? This action cannot be undone.')) {
                     try {
-                        const response = await fetch(`/api/v1/questionnaires/${questionnaireId}`, {
+                        const response = await fetch(`/questionnaires/${questionnaireId}`, {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': 'Bearer ' + JWT_TOKEN // Assuming JWT_TOKEN is globally available

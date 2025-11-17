@@ -165,7 +165,7 @@ class QuestionnaireService
     {
         $response = $this->apiClient->request('PUT', '/api/v1/questionnaires/' . $id, ['json' => $data]);
         if ($response['success']) {
-            return $response['data'];
+            return $response;
         }
         return null;
     }
@@ -174,7 +174,7 @@ class QuestionnaireService
     {
         $response = $this->apiClient->request('DELETE', '/api/v1/questionnaires/' . $id);
         if ($response['success']) {
-            return $response['data'];
+            return $response;
         }
         return null;
     }

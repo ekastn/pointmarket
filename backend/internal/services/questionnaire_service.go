@@ -605,7 +605,7 @@ func (s *QuestionnaireService) UpdateQuestionnaire(ctx context.Context, id int32
 			QuestionnaireID: id,
 			QuestionNumber:  qDto.QuestionNumber,
 			QuestionText:    qDto.QuestionText,
-			Subscale:        sql.NullString{String: *qDto.Subscale, Valid: qDto.Subscale != nil},
+			Subscale:        utils.NullString(qDto.Subscale),
 		})
 		if err != nil {
 			return gen.Questionnaire{}, err

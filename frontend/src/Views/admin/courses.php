@@ -67,7 +67,7 @@ $base_params = [
                     </div>
                     <div class="mb-3">
                         <label for="metadata" class="form-label">Metadata (JSON)</label>
-                        <textarea class="form-control" id="metadata" name="metadata" rows="3">{}</textarea>
+                        <textarea class="form-control" id="metadata" name="metadata" rows="3"></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Save</button>
@@ -105,7 +105,7 @@ $base_params = [
                     </div>
                     <div class="mb-3">
                         <label for="edit-metadata" class="form-label">Metadata (JSON)</label>
-                        <textarea class="form-control" id="edit-metadata" name="metadata" rows="3">{}</textarea>
+                        <textarea class="form-control" id="edit-metadata" name="metadata" rows="3"></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Update</button>

@@ -22,7 +22,7 @@ $actions = [
             'data-title' => htmlspecialchars($row['title']),
             'data-description' => htmlspecialchars($row['description'] ?? ''),
             'data-reward-points' => htmlspecialchars($row['reward_points'] ?? ''),
-            'data-metadata' => htmlspecialchars(json_encode($row['metadata'])),
+            'data-metadata' => json_encode($row['metadata']),
             'data-bs-toggle' => 'modal',
             'data-bs-target' => '#missionModal'
         ]

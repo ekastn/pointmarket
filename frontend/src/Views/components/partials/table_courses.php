@@ -34,7 +34,7 @@ $actions = [
             'data-course-title' => htmlspecialchars($row['title']),
             'data-course-slug' => htmlspecialchars($row['slug']),
             'data-course-description' => htmlspecialchars($row['description'] ?? ''),
-            'data-course-metadata' => htmlspecialchars(json_encode($row['metadata']))
+            'data-course-metadata' => json_encode($row['metadata'])
         ]
     ],
     [

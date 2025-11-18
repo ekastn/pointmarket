@@ -31,7 +31,7 @@ $actions = [
             'data-product-type' => htmlspecialchars($row['type']),
             'data-product-stock-quantity' => htmlspecialchars($row['stock_quantity'] ?? ''),
             'data-product-is-active' => $row['is_active'] ? '1' : '0',
-            'data-product-metadata' => htmlspecialchars(json_encode($row['metadata']))
+            'data-product-metadata' => json_encode($row['metadata'])
         ]
     ],
     [

@@ -6,6 +6,7 @@
       'title' => htmlspecialchars($course['title'] ?? 'Course'),
       'right' => ''
     ]);
+
   ?>
 
   <div class="row">
@@ -86,7 +87,18 @@
             <?php $isOwner = (($role === 'admin') || ($role === 'guru' && (int)($user['id'] ?? 0) === (int)($course['owner_id'] ?? -1))); ?>
             <?php if ($isOwner): ?>
               <div class="d-grid gap-2">
-                <a href="/courses/<?= (int)($course['id'] ?? 0) ?>/edit" class="btn btn-primary">Edit Kelas</a>
+                <button class="btn btn-primary btn-edit-course"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalEditCourse"
+                    data-course-id="<?= (int)($course['id'] ?? 0) ?>"
+                    data-course-slug="<?= htmlspecialchars($course['slug'] ?? '') ?>"
+                    data-course-title="<?= htmlspecialchars($course['title'] ?? '') ?>"
+                    data-course-description="<?= htmlspecialchars($course['description'] ?? '') ?>"
+                    data-course-metadata='<?= json_encode($course['metadata'] ?? []) ?>'>
+                  Edit Kelas
+                </button>
+
+                <!-- <a href="/courses/<?= (int)($course['id'] ?? 0) ?>/edit" class="btn btn-primary">Edit Kelas</a> -->
                 <button type="button" class="btn btn-success" id="btn-add-lesson-side" data-course-id="<?= (int)($course['id'] ?? 0) ?>">Tambah Materi</button>
               </div>
               <small class="text-muted d-block mt-2">Kelola materi: tambah, ubah, atau hapus di bagian Lessons.</small>
@@ -146,3 +158,105 @@
   </div>
   </div>
 <?php endif; ?>
+
+<!-- Data Modal Box Edit Course -->
+<div class="modal fade" id="modalEditCourse" tabindex="-1" aria-labelledby="modalEditCourseLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditCourseLabel">Edit Course</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post" id="edit-course-form">
+                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="id" id="edit-course-id">
+                    <div class="mb-3">
+                        <label for="edit-title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="edit-title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-slug" class="form-label">Slug</label>
+                        <input type="text" class="form-control" id="edit-slug" name="slug" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit-description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-metadata" class="form-label">Metadata (JSON)</label>
+                        <textarea class="form-control" id="edit-metadata" name="metadata" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modalEditCourse = document.getElementById('modalEditCourse');
+    const editCourseForm = document.getElementById('edit-course-form');
+
+    const editButton = document.querySelector('.btn-edit-course');
+
+    editButton.addEventListener('click', function () {
+        const courseId = editButton.dataset.courseId;
+        const courseTitle = editButton.dataset.courseTitle;
+        const courseSlug = editButton.dataset.courseSlug;
+        const courseDescription = editButton.dataset.courseDescription;
+        const courseMetadata = editButton.dataset.courseMetadata;
+
+        document.getElementById('edit-course-id').value = courseId;
+        document.getElementById('edit-title').value = courseTitle;
+        document.getElementById('edit-slug').value = courseSlug;
+        document.getElementById('edit-description').value = courseDescription;
+        document.getElementById('edit-metadata').value = courseMetadata;
+
+        // Set form action for PUT request
+        editCourseForm.action = `/courses/${courseId}`;
+    })
+
+
+    if (editCourseForm) {
+        editCourseForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const courseId = document.getElementById('edit-course-id').value;
+            const formData = new FormData(this);
+            const jsonData = {};
+
+            // Convert FormData to JSON, excluding _method and id
+            for (let [key, value] of formData.entries()) {
+                if (key !== '_method' && key !== 'id') {
+                    jsonData[key] = value;
+                }
+            }
+
+            try {
+                const response = await fetch(`/courses/${courseId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    window.location.reload(); // Reload page to see changes
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while updating the course.');
+            }
+        });
+    }
+</script>

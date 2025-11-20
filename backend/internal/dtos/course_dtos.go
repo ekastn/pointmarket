@@ -17,6 +17,7 @@ type CourseDTO struct {
 	Description      *string         `json:"description"` // Use pointer for nullable
 	OwnerID          int64           `json:"owner_id"`
 	OwnerDisplayName string          `json:"owner_display_name"`
+	OwnerRole        string          `json:"owner_role"`
 	Metadata         json.RawMessage `json:"metadata"`
 	CreatedAt        time.Time       `json:"created_at"`
 	UpdatedAt        time.Time       `json:"updated_at"`

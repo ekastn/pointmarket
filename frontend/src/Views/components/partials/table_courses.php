@@ -8,7 +8,7 @@ $columns = [
     ['label' => 'Title', 'key' => 'title'],
     ['label' => 'Slug', 'key' => 'slug'],
     ['label' => 'Description', 'key' => 'description', 'formatter' => fn($val) => $val ?? '-'],
-    ['label' => 'Owner ID', 'key' => 'owner_id'],
+    ['label' => 'Owner', 'key' => 'owner_display_name', 'formatter' => fn($val, $row) => $val . ' (' . ($row['owner_role'] ?? 'N/A') . ')'],
     ['label' => 'Created At', 'key' => 'created_at', 'formatter' => fn($val) => date('d-m-Y H:i', strtotime($val))],
     ['label' => 'Updated At', 'key' => 'updated_at', 'formatter' => fn($val) => date('d-m-Y H:i', strtotime($val))]
 ];

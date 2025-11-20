@@ -31,12 +31,10 @@ $base_params = [
 
     <div class="col-md-9 col-lg-10 ">
         <?php
-        // Detect if courses have is_enrolled flag
-        $hasEnrollFlag = false;
-        foreach (($courses ?? []) as $c) { if (isset($c['is_enrolled'])) { $hasEnrollFlag = true; break; } }
+        $userRole = $_SESSION['user_data']['role'] ?? '';
 
-        if ($hasEnrollFlag) {
-            $myCourses = array_filter($courses, function($course) {
+        if ($userRole === 'siswa') {
+            $myCourses = array_filter($courses ?? [], function($course) {
                 return !empty($course['is_enrolled']);
             });
             if (!empty($myCourses)) {
@@ -54,8 +52,29 @@ $base_params = [
                 if (empty($course['is_enrolled'])) { $renderer->includePartial('components/partials/course_card', ['course' => $course]); }
             }
             echo '</div></div>';
+        } elseif ($userRole === 'guru') {
+            $ownedCourses = array_filter($courses ?? [], function($course) {
+                return !empty($course['is_owner']);
+            });
+
+            if (!empty($ownedCourses)) {
+                echo '<div class="pm-section">';
+                echo '<h4 class="mb-3">Kelas Saya</h4>';
+                echo '<div class="row">';
+                foreach ($ownedCourses as $course) { $renderer->includePartial('components/partials/course_card', ['course' => $course, 'is_owner' => true]); }
+                echo '</div></div>';
+            }
+
+            echo '<div class="pm-section">';
+            echo '<h4 class="mb-3">Semua Kelas</h4>';
+            echo '<div class="row">';
+            foreach ($courses as $course) {
+                // Always render, course_card will handle is_owner flag if present
+                $renderer->includePartial('components/partials/course_card', ['course' => $course, 'is_owner' => !empty($course['is_owner'])]);
+            }
+            echo '</div></div>';
         } else {
-            // Teacher view (no enrollment flag): show all as cards
+            // Default view for other roles or if no specific flag
             echo '<div class="pm-section">';
             echo '<div class="row">';
             foreach ($courses as $course) { $renderer->includePartial('components/partials/course_card', ['course' => $course]); }

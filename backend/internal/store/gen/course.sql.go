@@ -56,6 +56,27 @@ func (q *Queries) CountCoursesWithEnrollmentStatus(ctx context.Context, arg Coun
 	return count, err
 }
 
+const countCoursesWithOwnershipStatus = `-- name: CountCoursesWithOwnershipStatus :one
+SELECT
+    COUNT(c.id)
+FROM courses AS c
+WHERE
+    (c.title LIKE CONCAT('%', ?, '%') OR
+     c.description LIKE CONCAT('%', ?, '%'))
+    OR ? = ''
+`
+
+type CountCoursesWithOwnershipStatusParams struct {
+	Search interface{} `json:"search"`
+}
+
+func (q *Queries) CountCoursesWithOwnershipStatus(ctx context.Context, arg CountCoursesWithOwnershipStatusParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCoursesWithOwnershipStatus, arg.Search, arg.Search, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCourse = `-- name: CreateCourse :execresult
 INSERT INTO courses (
     title, slug, description, owner_id, metadata
@@ -301,6 +322,78 @@ func (q *Queries) GetCoursesWithEnrollmentStatus(ctx context.Context, arg GetCou
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.IsEnrolled,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCoursesWithOwnershipStatus = `-- name: GetCoursesWithOwnershipStatus :many
+SELECT
+    c.id, c.title, c.slug, c.description, c.owner_id, c.metadata, c.created_at, c.updated_at,
+    CASE WHEN c.owner_id = ? THEN TRUE ELSE FALSE END AS is_owner
+FROM courses AS c
+WHERE
+    (c.title LIKE CONCAT('%', ?, '%') OR
+     c.description LIKE CONCAT('%', ?, '%'))
+    OR ? = ''
+ORDER BY c.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetCoursesWithOwnershipStatusParams struct {
+	UserID int64       `json:"user_id"`
+	Search interface{} `json:"search"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+type GetCoursesWithOwnershipStatusRow struct {
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Slug        string          `json:"slug"`
+	Description sql.NullString  `json:"description"`
+	OwnerID     int64           `json:"owner_id"`
+	Metadata    json.RawMessage `json:"metadata"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	IsOwner     int32           `json:"is_owner"`
+}
+
+func (q *Queries) GetCoursesWithOwnershipStatus(ctx context.Context, arg GetCoursesWithOwnershipStatusParams) ([]GetCoursesWithOwnershipStatusRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCoursesWithOwnershipStatus,
+		arg.UserID,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCoursesWithOwnershipStatusRow
+	for rows.Next() {
+		var i GetCoursesWithOwnershipStatusRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Slug,
+			&i.Description,
+			&i.OwnerID,
+			&i.Metadata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsOwner,
 		); err != nil {
 			return nil, err
 		}

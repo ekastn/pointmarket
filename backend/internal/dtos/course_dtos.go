@@ -107,7 +107,49 @@ type StudentCourseDTO struct {
 }
 
 // ListStudentCoursesResponseDTO for listing a student's enrolled courses
+
 type ListStudentCoursesResponseDTO struct {
 	StudentCourses []StudentCoursesDTO `json:"student_courses"`
-	Total          int                 `json:"total"`
+
+	Total int `json:"total"`
+}
+
+// TeacherCoursesDTO for listing courses for teachers with ownership status
+
+type TeacherCoursesDTO struct {
+	CourseDTO
+
+	IsOwner bool `json:"is_owner"`
+}
+
+// FromTeacherCoursesModel converts a gen.GetCoursesWithOwnershipStatusRow model to a TeacherCoursesDTO
+
+func (dto *TeacherCoursesDTO) FromTeacherCoursesModel(m gen.GetCoursesWithOwnershipStatusRow) {
+
+	dto.ID = m.ID
+
+	dto.Title = m.Title
+
+	dto.Slug = m.Slug
+
+	if m.Description.Valid {
+
+		dto.Description = &m.Description.String
+
+	} else {
+
+		dto.Description = nil
+
+	}
+
+	dto.OwnerID = m.OwnerID
+
+	dto.Metadata = m.Metadata
+
+	dto.CreatedAt = m.CreatedAt
+
+	dto.UpdatedAt = m.UpdatedAt
+
+	dto.IsOwner = m.IsOwner == 1
+
 }

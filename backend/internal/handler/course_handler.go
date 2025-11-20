@@ -115,28 +115,28 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 
 	switch userRole {
 	case "guru":
-		courses, totalCourses, err := h.courseService.GetCoursesByOwnerID(c.Request.Context(), authUserID, page, limit, search)
+		coursesDTOs, totalCourses, err := h.courseService.GetTeacherViewableCourses(c.Request.Context(), authUserID, page, limit, search)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
 			return
 		}
-		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", coursesDTOs, totalCourses, page, limit)
 		return
 	case "admin":
-		courses, totalCourses, err := h.courseService.GetCourses(c.Request.Context(), filterUserID, page, limit, search)
+		coursesDTOs, totalCourses, err := h.courseService.GetCourses(c.Request.Context(), filterUserID, page, limit, search)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
 			return
 		}
-		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", coursesDTOs, totalCourses, page, limit)
 		return
 	case "siswa":
-		courses, totalCourses, err := h.courseService.GetStudentViewableCourses(c.Request.Context(), authUserID, page, limit, search)
+		coursesDTOs, totalCourses, err := h.courseService.GetStudentViewableCourses(c.Request.Context(), authUserID, page, limit, search)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, "Failed to retrieve courses: "+err.Error())
 			return
 		}
-		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", courses, totalCourses, page, limit)
+		response.Paginated(c, http.StatusOK, "Courses retrieved successfully", coursesDTOs, totalCourses, page, limit)
 		return
 	}
 }

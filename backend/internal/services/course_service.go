@@ -303,6 +303,42 @@ func (s *CourseService) GetStudentViewableCourses(ctx context.Context, studentID
 	return courseDTOs, totalCourses, nil
 }
 
+// GetTeacherViewableCourses retrieves a list of courses for teachers with ownership status
+func (s *CourseService) GetTeacherViewableCourses(ctx context.Context, teacherID int64, page, limit int, search string) ([]dtos.TeacherCoursesDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	// Use the new query to get courses with ownership status
+	courses, err := s.q.GetCoursesWithOwnershipStatus(ctx, gen.GetCoursesWithOwnershipStatusParams{
+		UserID: teacherID,
+		Search: search,
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Use the new count query
+	totalCourses, err := s.q.CountCoursesWithOwnershipStatus(ctx, gen.CountCoursesWithOwnershipStatusParams{Search: search})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var teacherCourseDTOs []dtos.TeacherCoursesDTO
+	for _, course := range courses {
+		var courseDTO dtos.TeacherCoursesDTO
+		courseDTO.FromTeacherCoursesModel(course)
+		// Enrich owner display name and role
+		if u, err2 := s.q.GetUserByID(ctx, course.OwnerID); err2 == nil {
+			courseDTO.OwnerDisplayName = u.DisplayName
+			courseDTO.OwnerRole = string(u.Role)
+		}
+		teacherCourseDTOs = append(teacherCourseDTOs, courseDTO)
+	}
+
+	return teacherCourseDTOs, totalCourses, nil
+}
+
 // UpdateCourse updates an existing course
 func (s *CourseService) UpdateCourse(ctx context.Context, id int64, req dtos.UpdateCourseRequestDTO) (dtos.CourseDTO, error) {
 	// Get existing course to apply partial updates

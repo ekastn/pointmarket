@@ -90,6 +90,27 @@ WHERE
      c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))
     OR sqlc.arg('search') = '';
 
+-- name: GetCoursesWithOwnershipStatus :many
+SELECT
+    c.*,
+    CASE WHEN c.owner_id = sqlc.arg('user_id') THEN TRUE ELSE FALSE END AS is_owner
+FROM courses AS c
+WHERE
+    (c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+     c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))
+    OR sqlc.arg('search') = ''
+ORDER BY c.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountCoursesWithOwnershipStatus :one
+SELECT
+    COUNT(c.id)
+FROM courses AS c
+WHERE
+    (c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+     c.description LIKE CONCAT('%', sqlc.arg('search'), '%'))
+    OR sqlc.arg('search') = '';
+
 -- name: GetCourseBySlug :one
 SELECT * FROM courses
 WHERE slug = ?

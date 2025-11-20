@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 )
 
 const createAssignment = `-- name: CreateAssignment :execresult
@@ -138,19 +139,32 @@ func (q *Queries) GetAssignmentByID(ctx context.Context, id int64) (Assignment, 
 }
 
 const getAssignments = `-- name: GetAssignments :many
-SELECT id, title, description, course_id, reward_points, due_date, status, created_at, updated_at FROM assignments
-ORDER BY created_at DESC
+SELECT a.id, a.title, a.description, a.course_id, a.reward_points, a.due_date, a.status, a.created_at, a.updated_at, c.title as course_title FROM assignments a JOIN courses c ON a.course_id = c.id
+ORDER BY a.created_at DESC
 `
 
-func (q *Queries) GetAssignments(ctx context.Context) ([]Assignment, error) {
+type GetAssignmentsRow struct {
+	ID           int64                 `json:"id"`
+	Title        string                `json:"title"`
+	Description  sql.NullString        `json:"description"`
+	CourseID     int64                 `json:"course_id"`
+	RewardPoints int32                 `json:"reward_points"`
+	DueDate      sql.NullTime          `json:"due_date"`
+	Status       NullAssignmentsStatus `json:"status"`
+	CreatedAt    time.Time             `json:"created_at"`
+	UpdatedAt    time.Time             `json:"updated_at"`
+	CourseTitle  string                `json:"course_title"`
+}
+
+func (q *Queries) GetAssignments(ctx context.Context) ([]GetAssignmentsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAssignments)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Assignment
+	var items []GetAssignmentsRow
 	for rows.Next() {
-		var i Assignment
+		var i GetAssignmentsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
@@ -161,6 +175,7 @@ func (q *Queries) GetAssignments(ctx context.Context) ([]Assignment, error) {
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CourseTitle,
 		); err != nil {
 			return nil, err
 		}
@@ -176,20 +191,33 @@ func (q *Queries) GetAssignments(ctx context.Context) ([]Assignment, error) {
 }
 
 const getAssignmentsByCourseID = `-- name: GetAssignmentsByCourseID :many
-SELECT id, title, description, course_id, reward_points, due_date, status, created_at, updated_at FROM assignments
-WHERE course_id = ?
-ORDER BY created_at DESC
+SELECT a.id, a.title, a.description, a.course_id, a.reward_points, a.due_date, a.status, a.created_at, a.updated_at, c.title as course_title FROM assignments a JOIN courses c ON a.course_id = c.id
+WHERE a.course_id = ?
+ORDER BY a.created_at DESC
 `
 
-func (q *Queries) GetAssignmentsByCourseID(ctx context.Context, courseID int64) ([]Assignment, error) {
+type GetAssignmentsByCourseIDRow struct {
+	ID           int64                 `json:"id"`
+	Title        string                `json:"title"`
+	Description  sql.NullString        `json:"description"`
+	CourseID     int64                 `json:"course_id"`
+	RewardPoints int32                 `json:"reward_points"`
+	DueDate      sql.NullTime          `json:"due_date"`
+	Status       NullAssignmentsStatus `json:"status"`
+	CreatedAt    time.Time             `json:"created_at"`
+	UpdatedAt    time.Time             `json:"updated_at"`
+	CourseTitle  string                `json:"course_title"`
+}
+
+func (q *Queries) GetAssignmentsByCourseID(ctx context.Context, courseID int64) ([]GetAssignmentsByCourseIDRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAssignmentsByCourseID, courseID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Assignment
+	var items []GetAssignmentsByCourseIDRow
 	for rows.Next() {
-		var i Assignment
+		var i GetAssignmentsByCourseIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
@@ -200,6 +228,7 @@ func (q *Queries) GetAssignmentsByCourseID(ctx context.Context, courseID int64) 
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CourseTitle,
 		); err != nil {
 			return nil, err
 		}
@@ -215,21 +244,34 @@ func (q *Queries) GetAssignmentsByCourseID(ctx context.Context, courseID int64) 
 }
 
 const getAssignmentsByOwnerID = `-- name: GetAssignmentsByOwnerID :many
-SELECT a.id, a.title, a.description, a.course_id, a.reward_points, a.due_date, a.status, a.created_at, a.updated_at FROM assignments a
+SELECT a.id, a.title, a.description, a.course_id, a.reward_points, a.due_date, a.status, a.created_at, a.updated_at, c.title as course_title FROM assignments a
 JOIN courses c ON a.course_id = c.id
 WHERE c.owner_id = ?
 ORDER BY a.created_at DESC
 `
 
-func (q *Queries) GetAssignmentsByOwnerID(ctx context.Context, ownerID int64) ([]Assignment, error) {
+type GetAssignmentsByOwnerIDRow struct {
+	ID           int64                 `json:"id"`
+	Title        string                `json:"title"`
+	Description  sql.NullString        `json:"description"`
+	CourseID     int64                 `json:"course_id"`
+	RewardPoints int32                 `json:"reward_points"`
+	DueDate      sql.NullTime          `json:"due_date"`
+	Status       NullAssignmentsStatus `json:"status"`
+	CreatedAt    time.Time             `json:"created_at"`
+	UpdatedAt    time.Time             `json:"updated_at"`
+	CourseTitle  string                `json:"course_title"`
+}
+
+func (q *Queries) GetAssignmentsByOwnerID(ctx context.Context, ownerID int64) ([]GetAssignmentsByOwnerIDRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAssignmentsByOwnerID, ownerID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Assignment
+	var items []GetAssignmentsByOwnerIDRow
 	for rows.Next() {
-		var i Assignment
+		var i GetAssignmentsByOwnerIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
@@ -240,6 +282,7 @@ func (q *Queries) GetAssignmentsByOwnerID(ctx context.Context, ownerID int64) ([
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CourseTitle,
 		); err != nil {
 			return nil, err
 		}

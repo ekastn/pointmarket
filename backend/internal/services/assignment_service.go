@@ -72,29 +72,47 @@ func (s *AssignmentService) GetAssignmentByID(ctx context.Context, id int64) (dt
 // GetAssignments retrieves a list of assignments based on filters
 // This method returns general AssignmentDTOs, not student-specific ones.
 func (s *AssignmentService) GetAssignments(ctx context.Context, userID int64, userRole string, courseIDFilter *int64) ([]dtos.AssignmentDTO, error) {
-	var assignments []gen.Assignment
+	var assignments []gen.GetAssignmentsRow
 	var err error
 
 	switch userRole {
 	case "admin":
 		if courseIDFilter != nil {
-			// Admin filtering for assignments by course ID
-			assignments, err = s.q.GetAssignmentsByCourseID(ctx, *courseIDFilter)
+			adminAssignments, adminErr := s.q.GetAssignmentsByCourseID(ctx, *courseIDFilter)
+			if adminErr != nil {
+				return nil, adminErr
+			}
+			assignments = make([]gen.GetAssignmentsRow, len(adminAssignments))
+			for i, a := range adminAssignments {
+				assignments[i] = gen.GetAssignmentsRow{
+					ID: a.ID, Title: a.Title, Description: a.Description, CourseID: a.CourseID,
+					RewardPoints: a.RewardPoints, DueDate: a.DueDate, Status: a.Status,
+					CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt, CourseTitle: a.CourseTitle,
+				}
+			}
 		} else {
-			// Admin getting all assignments
 			assignments, err = s.q.GetAssignments(ctx)
 		}
 	case "guru": // Teacher
-		// Teachers get assignments for courses they own
-		assignments, err = s.q.GetAssignmentsByOwnerID(ctx, userID)
+		teacherAssignments, teacherErr := s.q.GetAssignmentsByOwnerID(ctx, userID)
+		if teacherErr != nil {
+			return nil, teacherErr
+		}
+		assignments = make([]gen.GetAssignmentsRow, len(teacherAssignments))
+		for i, a := range teacherAssignments {
+			assignments[i] = gen.GetAssignmentsRow{
+				ID: a.ID, Title: a.Title, Description: a.Description, CourseID: a.CourseID,
+				RewardPoints: a.RewardPoints, DueDate: a.DueDate, Status: a.Status,
+				CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt, CourseTitle: a.CourseTitle,
+			}
+		}
 	case "siswa": // Student
-		// Students get assignments filtered by visibility rules (minimal: published only)
 		assignments, err = s.q.GetAssignments(ctx)
 	default:
 		return nil, fmt.Errorf("unsupported user role: %s", userRole)
 	}
 
-	if err != nil {
+	if err != nil { // Catch errors from admin/student paths
 		return nil, err
 	}
 
@@ -102,9 +120,15 @@ func (s *AssignmentService) GetAssignments(ctx context.Context, userID int64, us
 	now := time.Now()
 	for _, assignment := range assignments {
 		var assignmentDTO dtos.AssignmentDTO
-		assignmentDTO.FromAssignmentModel(assignment)
+		assignmentDTO.FromGetAssignmentsRow(assignment)
+
 		if userRole == "siswa" {
-			if !s.isAssignmentVisible(now, assignment) {
+			if !s.isAssignmentVisible(now, gen.Assignment{
+				ID: assignment.ID, Title: assignment.Title, Description: assignment.Description,
+				CourseID: assignment.CourseID, RewardPoints: assignment.RewardPoints,
+				DueDate: assignment.DueDate, Status: assignment.Status,
+				CreatedAt: assignment.CreatedAt, UpdatedAt: assignment.UpdatedAt,
+			}) {
 				continue
 			}
 		}

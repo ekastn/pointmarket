@@ -15,6 +15,7 @@ type AssignmentDTO struct {
 	Title        string     `json:"title"`
 	Description  *string    `json:"description"` // Use pointer for nullable
 	CourseID     int64      `json:"course_id"`
+	CourseTitle  string     `json:"course_title"`
 	RewardPoints int32      `json:"reward_points"`
 	DueDate      *time.Time `json:"due_date"` // Use pointer for nullable
 	Status       string     `json:"status"`
@@ -46,6 +47,33 @@ func (dto *AssignmentDTO) FromAssignmentModel(m gen.Assignment) {
 	}
 	dto.CreatedAt = m.CreatedAt // Assuming CreatedAt is NOT nullable in DB
 	dto.UpdatedAt = m.UpdatedAt // Assuming UpdatedAt is NOT nullable in DB
+}
+
+// FromGetAssignmentsRow converts a gen.GetAssignmentsRow model to an AssignmentDTO
+func (dto *AssignmentDTO) FromGetAssignmentsRow(m gen.GetAssignmentsRow) {
+	dto.ID = m.ID
+	dto.Title = m.Title
+	if m.Description.Valid {
+		dto.Description = &m.Description.String
+	} else {
+		dto.Description = nil
+	}
+	dto.CourseID = m.CourseID
+	dto.RewardPoints = m.RewardPoints
+	if m.DueDate.Valid {
+		dto.DueDate = &m.DueDate.Time
+	} else {
+		dto.DueDate = nil
+	}
+	// Handle NullAssignmentsStatus
+	if m.Status.Valid {
+		dto.Status = string(m.Status.AssignmentsStatus)
+	} else {
+		dto.Status = "" // Or a default status string
+	}
+	dto.CreatedAt = m.CreatedAt
+	dto.UpdatedAt = m.UpdatedAt
+	dto.CourseTitle = m.CourseTitle
 }
 
 // CreateAssignmentRequestDTO for creating a new assignment

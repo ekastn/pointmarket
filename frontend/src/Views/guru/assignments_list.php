@@ -10,7 +10,7 @@ $renderer->includePartial('components/partials/page_title', [
 $columns = [
     ['label' => '#', 'key' => 'id', 'type' => 'index'],
     ['label' => 'Judul', 'key' => 'title'],
-    ['label' => 'Course ID', 'key' => 'course_id'],
+    ['label' => 'Course', 'key' => 'course_title'],
     ['label' => 'Due', 'key' => 'due_date', 'formatter' => function($v){ return $v ? date('Y-m-d', strtotime($v)) : '-'; }],
     ['label' => 'Status', 'key' => 'status'],
     ['label' => 'Poin', 'key' => 'reward_points'],

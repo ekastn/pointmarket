@@ -12,8 +12,8 @@ SELECT * FROM assignments
 WHERE id = ?;
 
 -- name: GetAssignments :many
-SELECT * FROM assignments
-ORDER BY created_at DESC;
+SELECT a.*, c.title as course_title FROM assignments a JOIN courses c ON a.course_id = c.id
+ORDER BY a.created_at DESC;
 
 -- name: UpdateAssignment :exec
 UPDATE assignments
@@ -31,12 +31,12 @@ DELETE FROM assignments
 WHERE id = ?;
 
 -- name: GetAssignmentsByCourseID :many
-SELECT * FROM assignments
-WHERE course_id = ?
-ORDER BY created_at DESC;
+SELECT a.*, c.title as course_title FROM assignments a JOIN courses c ON a.course_id = c.id
+WHERE a.course_id = ?
+ORDER BY a.created_at DESC;
 
 -- name: GetAssignmentsByOwnerID :many
-SELECT a.* FROM assignments a
+SELECT a.*, c.title as course_title FROM assignments a
 JOIN courses c ON a.course_id = c.id
 WHERE c.owner_id = ?
 ORDER BY a.created_at DESC;

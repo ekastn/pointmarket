@@ -194,16 +194,17 @@ class CoursesController extends BaseController
             return;
         }
 
-        $result = $this->courseService->enrollStudent($id, $userId);
+        $course = $this->courseService->enrollStudent($id, $userId);
 
-        if ($result) {
+        if ($course && !empty($course['slug'])) {
             $_SESSION['messages']['success'] = 'Successfully enrolled in course!';
+            $this->redirect('/courses/' . $course['slug']);
         } else {
             $errorMessage = $_SESSION['api_error_message'] ?? 'Failed to enroll in course.';
             $_SESSION['messages']['error'] = $errorMessage;
             unset($_SESSION['api_error_message']);
+            $this->redirect('/my-courses');
         }
-        $this->redirect('/my-courses');
     }
 
     public function unenroll(int $id): void

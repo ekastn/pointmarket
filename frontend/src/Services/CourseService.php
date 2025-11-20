@@ -100,18 +100,18 @@ class CourseService
         return false;
     }
 
-    public function enrollStudent(int $courseId, int $userId): ?bool
+    public function enrollStudent(int $courseId, int $userId): ?array
     {
         // Do not send user_id; backend derives from JWT. Send empty JSON object.
         $response = $this->apiClient->request('POST', '/api/v1/courses/' . $courseId . '/enroll', ['json' => (object)[]]);
 
         if ($response['success']) {
-            return true;
+            return $response['data'];
         } else {
             $_SESSION['api_error_message'] = $response['message'] ?? 'Failed to enroll student.';
         }
 
-        return false;
+        return null;
     }
 
     public function unenrollStudent(int $courseId, int $userId): ?bool

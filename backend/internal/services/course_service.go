@@ -402,7 +402,7 @@ func (s *CourseService) DeleteCourse(ctx context.Context, id int64) error {
 }
 
 // EnrollStudentInCourse enrolls a student in a course
-func (s *CourseService) EnrollStudentInCourse(ctx context.Context, req dtos.EnrollStudentRequestDTO) error {
+func (s *CourseService) EnrollStudentInCourse(ctx context.Context, req dtos.EnrollStudentRequestDTO) (gen.Course, error) {
 	_, err := s.q.EnrollStudentInCourse(ctx, gen.EnrollStudentInCourseParams{
 		UserID:   req.UserID,
 		CourseID: req.CourseID,
@@ -410,11 +410,18 @@ func (s *CourseService) EnrollStudentInCourse(ctx context.Context, req dtos.Enro
 	if err != nil {
 		var me *mysql.MySQLError
 		if errors.As(err, &me) && me.Number == 1062 {
-			return ErrAlreadyEnrolled
+			return gen.Course{}, ErrAlreadyEnrolled
 		}
-		return err
+		return gen.Course{}, err
 	}
-	return nil
+
+	// Fetch the course details to return
+	course, err := s.q.GetCourseByID(ctx, req.CourseID)
+	if err != nil {
+		return gen.Course{}, err // Should ideally not happen if FK constraints are met
+	}
+
+	return course, nil
 }
 
 // UnenrollStudentFromCourse unenrolls a student from a course

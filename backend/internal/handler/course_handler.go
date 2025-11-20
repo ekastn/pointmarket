@@ -258,7 +258,7 @@ func (h *CourseHandler) EnrollStudent(c *gin.Context) {
 	}
 	req.CourseID = courseID // Use ID from path
 
-	err = h.courseService.EnrollStudentInCourse(c.Request.Context(), req)
+	course, err := h.courseService.EnrollStudentInCourse(c.Request.Context(), req)
 	if err != nil {
 		if err == services.ErrAlreadyEnrolled {
 			response.Error(c, http.StatusConflict, "Student is already enrolled in this course")
@@ -268,7 +268,9 @@ func (h *CourseHandler) EnrollStudent(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Student enrolled successfully", nil)
+	var courseDTO dtos.CourseDTO
+	courseDTO.FromCourseModel(course)
+	response.Success(c, http.StatusCreated, "Student enrolled successfully", courseDTO)
 }
 
 // UnenrollStudent handles unenrolls a student from a course

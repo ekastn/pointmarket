@@ -2,6 +2,10 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
 	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/store/gen"
 	"pointmarket/backend/internal/utils"
@@ -196,4 +200,113 @@ func (s *StudentService) Search(ctx context.Context, req dtos.StudentSearchReque
 	}
 
 	return out, total, nil
+}
+
+func (s *StudentService) GetStudentDetailsByUserID(ctx context.Context, userID int64) (*dtos.StudentDetailsDTO, error) {
+	// Fetch basic student info along with user details
+	studentRow, err := s.q.GetStudentByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get student by user ID %d: %w", userID, err)
+	}
+
+	userRow, err := s.q.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by ID %d: %w", userID, err)
+	}
+
+	studentDetails := &dtos.StudentDetailsDTO{
+		UserID:      studentRow.UserID,
+		StudentID:   studentRow.StudentID,
+		DisplayName: userRow.DisplayName,
+		Email:       userRow.Email,
+		ProgramName: studentRow.ProgramName,
+		Status:      string(studentRow.Status),
+	}
+
+	if studentRow.CohortYear.Valid {
+		studentDetails.CohortYear = &studentRow.CohortYear.Int32
+	}
+	if studentRow.BirthDate.Valid {
+		studentDetails.BirthDate = &studentRow.BirthDate.Time
+	}
+	if studentRow.Gender.Valid {
+		g := string(studentRow.Gender.StudentsGender)
+		studentDetails.Gender = &g
+	}
+	if studentRow.Phone.Valid {
+		p := studentRow.Phone.String
+		studentDetails.Phone = &p
+	}
+
+	// Fetch latest VARK result
+	varkResult, err := s.q.GetLatestVarkResult(ctx, userID)
+	if err == nil {
+		studentDetails.VARKResult = &dtos.VarkResultDTO{
+			ID:              varkResult.ID,
+			StudentID:       varkResult.StudentID,
+			QuestionnaireID: int64(varkResult.QuestionnaireID),
+			Scores: dtos.VARKScores{
+				Visual:      float64(varkResult.ScoreVisual),
+				Auditory:    float64(varkResult.ScoreAuditory),
+				Reading:     float64(varkResult.ScoreReading),
+				Kinesthetic: float64(varkResult.ScoreKinesthetic),
+			},
+			// Answers:         convert to DTO if needed (currently []VarkAnswerDetailDTO),
+			CreatedAt: varkResult.CreatedAt.Time,
+		}
+	} else if err != sql.ErrNoRows {
+		log.Printf("error fetching VARK result for user %d: %v", userID, err)
+	}
+
+	// Fetch latest MSLQ result
+	mslqResult, err := s.q.GetLatestLikertResultByType(ctx, gen.GetLatestLikertResultByTypeParams{
+		UserID: userID,
+		Type:   "MSLQ",
+	})
+	if err == nil {
+		var mslqSubscaleScores map[string]float64
+		if len(mslqResult.SubscaleScores) > 0 {
+			if err := json.Unmarshal(mslqResult.SubscaleScores, &mslqSubscaleScores); err != nil {
+				log.Printf("error unmarshalling MSLQ subscale scores for user %d: %v", userID, err)
+				mslqSubscaleScores = make(map[string]float64)
+			}
+		}
+		studentDetails.MSLQResult = &dtos.LikertResultDTO{
+			ID:              mslqResult.ID,
+			StudentID:       mslqResult.StudentID,
+			QuestionnaireID: int64(mslqResult.QuestionnaireID),
+			TotalScore:      mslqResult.TotalScore,
+			SubscaleScores:  mslqSubscaleScores,
+			CreatedAt:       mslqResult.CreatedAt.Time,
+		}
+	} else if err != sql.ErrNoRows {
+		log.Printf("error fetching MSLQ result for user %d: %v", userID, err)
+	}
+
+	// Fetch latest AMS result
+	amsResult, err := s.q.GetLatestLikertResultByType(ctx, gen.GetLatestLikertResultByTypeParams{
+		UserID: userID,
+		Type:   "AMS",
+	})
+	if err == nil {
+		var amsSubscaleScores map[string]float64
+		if len(amsResult.SubscaleScores) > 0 {
+			if err := json.Unmarshal(amsResult.SubscaleScores, &amsSubscaleScores); err != nil {
+				log.Printf("error unmarshalling AMS subscale scores for user %d: %v", userID, err)
+				amsSubscaleScores = make(map[string]float64)
+			}
+		}
+		studentDetails.AMSResult = &dtos.LikertResultDTO{
+			ID:              amsResult.ID,
+			StudentID:       amsResult.StudentID,
+			QuestionnaireID: int64(amsResult.QuestionnaireID),
+			TotalScore:      amsResult.TotalScore,
+			SubscaleScores:  amsSubscaleScores,
+			CreatedAt:       amsResult.CreatedAt.Time,
+		}
+	} else if err != sql.ErrNoRows {
+		log.Printf("error fetching AMS result for user %d: %v", userID, err)
+	}
+
+	return studentDetails, nil
 }

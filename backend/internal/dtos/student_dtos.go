@@ -53,3 +53,19 @@ type StudentSearchRequest struct {
 	Page       int    `form:"page"`
 	Limit      int    `form:"limit"`
 }
+
+type StudentDetailsDTO struct {
+	UserID      int64            `json:"user_id"`
+	StudentID   string           `json:"student_id"`
+	DisplayName string           `json:"display_name"`
+	Email       string           `json:"email"`
+	ProgramName string           `json:"program_name"`
+	CohortYear  *int32           `json:"cohort_year,omitempty"`
+	Status      string           `json:"status"`
+	BirthDate   *time.Time       `json:"birth_date,omitempty"`
+	Gender      *string          `json:"gender,omitempty"`
+	Phone       *string          `json:"phone,omitempty"`
+	VARKResult  *VarkResultDTO   `json:"vark_result,omitempty"`
+	MSLQResult  *LikertResultDTO `json:"mslq_result,omitempty"`
+	AMSResult   *LikertResultDTO `json:"ams_result,omitempty"`
+}

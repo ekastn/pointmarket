@@ -109,6 +109,7 @@ return function (Router $router) {
         // Admin Students management
         $router->group('/students', function (Router $router) {
             $router->get('/', [StudentsController::class, 'index']);
+            $router->get('/{id}', [StudentsController::class, 'show']);
             $router->put('/{id}', [StudentsController::class, 'update']);
         }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
 

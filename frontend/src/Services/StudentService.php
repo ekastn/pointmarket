@@ -50,5 +50,14 @@ class StudentService
         $resp = $this->apiClient->request('PUT', '/api/v1/students/'.$userId, ['json' => $payload]);
         return $resp['success'] ?? false;
     }
+
+    public function getStudentDetails(int $userId): ?array
+    {
+        $resp = $this->apiClient->request('GET', '/api/v1/students/' . $userId . '/details');
+        if ($resp['success']) {
+            return $resp['data'];
+        }
+        return null;
+    }
 }
 

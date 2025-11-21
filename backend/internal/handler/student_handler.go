@@ -104,3 +104,25 @@ func (h *StudentHandler) SearchStudents(c *gin.Context) {
 	}
 	response.Paginated(c, http.StatusOK, "Students retrieved successfully", list, total, req.Page, req.Limit)
 }
+
+// GetStudentDetailsByUserID fetches detailed student info by user ID, including questionnaire results.
+func (h *StudentHandler) GetStudentDetailsByUserID(c *gin.Context) {
+	uidStr := c.Param("user_id")
+	uid, err := strconv.ParseInt(uidStr, 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	studentDetails, err := h.studentService.GetStudentDetailsByUserID(c.Request.Context(), uid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			response.Error(c, http.StatusNotFound, "Student details not found")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Student details retrieved successfully", studentDetails)
+}

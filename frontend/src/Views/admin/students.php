@@ -48,6 +48,16 @@
 
         $actions = [
             [
+                'label' => 'Detail',
+                'icon' => 'fas fa-info-circle',
+                'class' => 'btn-info',
+                'attributes' => function($row) {
+                    return [
+                        'href' => '/students/' . $row['user_id'],
+                    ];
+                }
+            ],
+            [
                 'label' => 'Edit',
                 'icon' => 'fas fa-edit',
                 'class' => 'btn-primary btn-edit-student',

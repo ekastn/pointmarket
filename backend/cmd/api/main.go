@@ -157,6 +157,7 @@ func main() {
 			// Admin-only routes reusing admin middleware handler
 			studentsRoutes.GET("", adminRoutes.Handlers[0], studentHandler.SearchStudents)
 			studentsRoutes.GET("/:user_id", adminRoutes.Handlers[0], studentHandler.GetStudentByUserID)
+			studentsRoutes.GET("/:user_id/details", adminRoutes.Handlers[0], studentHandler.GetStudentDetailsByUserID)
 			studentsRoutes.PUT("/:user_id", adminRoutes.Handlers[0], studentHandler.UpsertStudentByUserID)
 
 			studentsRoutes.GET("/:user_id/assignments", assignmentHandler.GetStudentAssignmentsList)

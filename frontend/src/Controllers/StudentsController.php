@@ -85,5 +85,22 @@ class StudentsController extends BaseController
             echo json_encode(['success' => false, 'message' => 'Gagal menyimpan data siswa']);
         }
     }
+
+    public function show(int $userId): void
+    {
+        $studentDetails = $this->studentService->getStudentDetails($userId);
+
+        if ($studentDetails === null) {
+            $_SESSION['messages']['error'] = 'Gagal memuat detail siswa atau siswa tidak ditemukan.';
+            $this->redirect('/admin/students');
+            return;
+        }
+
+        $this->render('admin/student_detail', [
+            'user' => $_SESSION['user_data'],
+            'title' => 'Detail Siswa',
+            'student' => $studentDetails,
+        ]);
+    }
 }
 

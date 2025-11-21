@@ -162,6 +162,10 @@ func (h *ProductHandler) PurchaseProduct(c *gin.Context) {
 
 	err = h.productService.PurchaseProduct(c.Request.Context(), userID.(int64), productID)
 	if err != nil {
+		if err == services.ErrInsufficientPoints {
+			response.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, "Failed to purchase product: "+err.Error())
 		return
 	}

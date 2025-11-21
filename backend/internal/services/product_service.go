@@ -205,7 +205,7 @@ func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID 
 
 	// 3. Check if user has enough points
 	if userStats.TotalPoints < int64(product.PointsPrice) {
-		return errors.New("not enough points to purchase this product")
+		return ErrInsufficientPoints
 	}
 
 	// Start a transaction for atomicity
@@ -240,7 +240,7 @@ func (s *ProductService) PurchaseProduct(ctx context.Context, userID, productID 
 		return fmt.Errorf("failed to get user stats in tx: %w", err)
 	}
 	if statsInside.TotalPoints < int64(product.PointsPrice) {
-		return errors.New("not enough points to purchase this product")
+		return ErrInsufficientPoints
 	}
 
 	if _, err := qtx.CreatePointsTransaction(ctx, gen.CreatePointsTransactionParams{

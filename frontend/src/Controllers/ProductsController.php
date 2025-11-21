@@ -121,10 +121,10 @@ class ProductsController extends BaseController
     {
         $result = $this->productService->purchaseProduct($id);
 
-        if ($result) {
-            echo json_encode(['success' => true, 'message' => 'Product purchased successfully!']);
+        if ($result && $result['success']) {
+            echo json_encode(['success' => true, 'message' => $result['message'] ?? 'Product purchased successfully!']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to purchase product.']);
+            echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Failed to purchase product.']);
         }
     }
 }

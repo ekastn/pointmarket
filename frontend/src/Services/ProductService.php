@@ -99,17 +99,11 @@ class ProductService
         return false;
     }
 
-    public function purchaseProduct(int $productId): ?bool
+    public function purchaseProduct(int $productId): ?array
     {
         $response = $this->apiClient->request('POST', '/api/v1/products/' . $productId . '/purchase');
         error_log(print_r($response, true));
 
-        if ($response['success']) {
-            return true;
-        } else {
-            $_SESSION['api_error_message'] = $response['message'] ?? 'Failed to purchase product.';
-        }
-
-        return false;
+        return $response;
     }
 }

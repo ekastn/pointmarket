@@ -39,17 +39,23 @@ class ApiClient
 
         try {
             $response = $this->client->request($method, $uri, $options);
-            $statusCode = $response->getStatusCode();
             $body = json_decode($response->getBody()->getContents(), true);
-            return $body;
+            return is_array($body) ? $body : ['success' => true, 'data' => null];
         } catch (RequestException $e) {
-            $statusCode = $e->getResponse() ? $e->getResponse()->getStatusCode() : 500;
-            $errorMessage = $e->getMessage();
-            if (empty($errorMessage) && $e->hasResponse()) {
-                $responseBody = json_decode($e->getResponse()->getBody()->getContents(), true);
-                $errorMessage = $responseBody['message'] ?? $errorMessage;
+            $response = $e->getResponse();
+            $statusCode = $response ? $response->getStatusCode() : 500;
+            $message = 'An unknown error occurred.';
+
+            if ($response) {
+                $responseBody = json_decode($response->getBody()->getContents(), true);
+                if (isset($responseBody['message'])) {
+                    $message = $responseBody['message'];
+                } else {
+                    $message = $e->getMessage();
+                }
             }
-            return ['success' => false, 'error' => $errorMessage, 'status' => $statusCode];
+
+            return ['success' => false, 'message' => $message, 'status' => $statusCode];
         }
     }
 

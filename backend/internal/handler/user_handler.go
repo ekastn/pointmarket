@@ -282,3 +282,24 @@ func (h *UserHandler) PatchUserAvatar(c *gin.Context) {
 	}
 	response.Success(c, http.StatusOK, "Avatar updated", gin.H{"avatar_url": publicURL})
 }
+
+// GetUserDetails handles fetching detailed user information for the admin panel.
+func (h *UserHandler) GetUserDetails(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	details, err := h.userService.GetUserDetails(c.Request.Context(), id)
+	if err == sql.ErrNoRows {
+		response.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User details retrieved successfully", details)
+}

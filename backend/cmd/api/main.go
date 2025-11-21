@@ -136,6 +136,7 @@ func main() {
 			userRoutes.GET("", userHandler.GetAllUsers)
 			userRoutes.POST("", userHandler.CreateUser)
 			userRoutes.GET("/:id", userHandler.GetUserByID)
+			userRoutes.GET("/:id/details", userHandler.GetUserDetails)
 			userRoutes.PUT("/:id", userHandler.UpdateUser)
 			userRoutes.PUT("/:id/role", userHandler.UpdateUserRole)
 			userRoutes.DELETE("/:id", userHandler.DeleteUser)

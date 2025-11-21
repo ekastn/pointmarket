@@ -51,9 +51,9 @@ $actions = [
         'label' => 'Detail',
         'icon' => 'fas fa-eye',
         'class' => 'btn-info',
+        'tag' => 'a',
         'attributes' => fn($row) => [
-            'data-bs-toggle' => 'modal',
-            'data-bs-target' => '#modalDetail' . $row['id']
+            'href' => '/users/' . $row['id']
         ]
     ],
     [
@@ -101,29 +101,3 @@ $renderer->includePartial('components/partials/table', [
 
 ?>
 
-<!-- 
-    The user detail modals that were here previously have been kept for now to avoid breaking changes. 
-    For true reusability, these should be moved to the main view file that includes this partial, 
-    for example, `src/Views/admin/users.php`.
--->
-<?php foreach ($users as $u) : ?>
-    <div class="modal fade" id="modalDetail<?= $u['id']; ?>" tabindex="-1" aria-labelledby="modalDetailLabel<?= $u['id']; ?>" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetailLabel<?= $u['id']; ?>">Profil : <?= htmlspecialchars($u['username']); ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><b>Username:</b> <?= htmlspecialchars($u['username']); ?></li>
-                        <li class="list-group-item"><b>Email:</b> <?= htmlspecialchars($u['email']); ?></li>
-                        <li class="list-group-item"><b>Role:</b> <?= htmlspecialchars($u['role']); ?></li>
-                        <li class="list-group-item"><b>Created At:</b> <?= date('d-m-Y H:i:s', strtotime($u['created_at'])); ?></li>
-                        <li class="list-group-item"><b>Updated At:</b> <?= date('d-m-Y H:i:s', strtotime($u['updated_at'])); ?></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-<?php endforeach;

@@ -182,4 +182,21 @@ class UsersController extends BaseController
             echo json_encode(['success' => false, 'message' => $msg]);
         }
     }
+
+    public function show(int $id): void
+    {
+        $userDetails = $this->userService->getUserDetails($id);
+
+        if ($userDetails === null) {
+            $_SESSION['messages']['error'] = 'User not found.';
+            $this->redirect('/users');
+            return;
+        }
+
+        $this->render('admin/user_detail', [
+            'user' => $_SESSION['user_data'],
+            'title' => 'User Details',
+            'userDetails' => $userDetails,
+        ]);
+    }
 }

@@ -73,3 +73,21 @@ type ChangePasswordRequest struct {
 	NewPassword     string `json:"new_password" binding:"required"`
 	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }
+
+// UserDetailsDTO represents detailed user information for the admin panel.
+type PointsStats struct {
+	TotalPoints int `json:"total_points"`
+}
+
+type UserDetailsDTO struct {
+	ID         int           `json:"id"`
+	Username   string        `json:"username"`
+	Name       string        `json:"name"`
+	Email      string        `json:"email"`
+	Role       string        `json:"role"`
+	Avatar     *string       `json:"avatar"`
+	Bio        *string       `json:"bio"`
+	Points     PointsStats   `json:"points"`
+	CreatedAt  time.Time     `json:"created_at"`
+	UpdatedAt  time.Time     `json:"updated_at"`
+}

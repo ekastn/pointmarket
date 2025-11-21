@@ -386,3 +386,48 @@ func (s *UserService) UpdateUserLearningStyle(
 func (s *UserService) GetLatestUserLearningStyle(ctx context.Context, userID int64) (gen.StudentLearningStyle, error) {
 	return s.q.GetLatestUserLearningStyle(ctx, userID)
 }
+
+// GetUserDetails retrieves detailed information about a user for the admin panel.
+func (s *UserService) GetUserDetails(ctx context.Context, userID int64) (*dtos.UserDetailsDTO, error) {
+	user, err := s.q.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	profile, err := s.q.GetUserProfileByID(ctx, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	stats, err := s.q.GetUserStats(ctx, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	var avatar *string
+	if profile.AvatarUrl.Valid {
+		avatar = &profile.AvatarUrl.String
+	}
+
+	var bio *string
+	if profile.Bio.Valid {
+		bio = &profile.Bio.String
+	}
+
+	details := &dtos.UserDetailsDTO{
+		ID:        int(user.ID),
+		Username:  user.Username,
+		Name:      user.DisplayName,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		Avatar:    avatar,
+		Bio:       bio,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Points: dtos.PointsStats{
+			TotalPoints: int(stats.TotalPoints),
+		},
+	}
+
+	return details, nil
+}

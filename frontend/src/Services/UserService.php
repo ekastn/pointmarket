@@ -117,4 +117,15 @@ class UserService
         $_SESSION['api_error_message'] = $response['message'] ?? 'Failed to adjust user stats.';
         return null;
     }
+
+    public function getUserDetails(int $id): ?array
+    {
+        $response = $this->apiClient->request('GET', '/api/v1/users/' . $id . '/details');
+
+        if ($response['success']) {
+            return $response['data'];
+        }
+
+        return null;
+    }
 }

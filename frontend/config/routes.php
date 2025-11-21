@@ -98,6 +98,7 @@ return function (Router $router) {
         // Admin routes group
         $router->group('/users', function (Router $router) {
             $router->get('/', [UsersController::class, 'index']);
+            $router->get('/{id}', [UsersController::class, 'show']);
             $router->post('/', [UsersController::class, 'saveUser']); // Create user
             $router->put('/{id}', [UsersController::class, 'updateUser']); // Update user
             $router->put('/{id}/role', [UsersController::class, 'updateUserRole']);

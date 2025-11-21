@@ -25,7 +25,8 @@ $adminStats = $adminStats ?? [
     'total_points_transaction' => 0,
     'total_products' => 0,
     'total_missions' => 0,
-    'total_badges' => 0
+    'total_badges' => 0,
+    'total_recommendation_states' => 0,
 ];
 
 $statsItems = [
@@ -37,6 +38,7 @@ $statsItems = [
     [ 'title' => 'Products', 'value' => $adminStats['total_products'], 'icon' => 'fas fa-box-open' ],
     [ 'title' => 'Missions', 'value' => $adminStats['total_missions'], 'icon' => 'fas fa-trophy' ],
     [ 'title' => 'Badges', 'value' => $adminStats['total_badges'], 'icon' => 'fas fa-medal' ],
+    [ 'title' => 'Q-Learning States', 'value' => $adminStats['total_recommendation_states'], 'icon' => 'fas fa-robot' ],
 ]
 
 ?>

@@ -57,6 +57,7 @@ class AdminItemsController extends BaseController
 
         $this->render('admin/recommendations/items/index', [
             'items' => $data['items'] ?? [],
+            'stats' => $data['stats'] ?? [],
             'meta' => $data['meta'] ?? ['total' => 0, 'limit' => 20, 'offset' => 0],
             'filters' => $filters,
             'messages' => $messages,

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"pointmarket/backend/internal/dtos"
+	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/store/gen"
 	"sort"
 )
@@ -13,12 +14,14 @@ import (
 type DashboardService struct {
 	q                       gen.Querier
 	weeklyEvaluationService *WeeklyEvaluationService
+	recommendationGateway   *gateway.RecommendationGateway
 }
 
-func NewDashboardService(q gen.Querier, weeklyEvaluationService *WeeklyEvaluationService) *DashboardService {
+func NewDashboardService(q gen.Querier, weeklyEvaluationService *WeeklyEvaluationService, recommendationGateway *gateway.RecommendationGateway) *DashboardService {
 	return &DashboardService{
 		q:                       q,
 		weeklyEvaluationService: weeklyEvaluationService,
+		recommendationGateway:   recommendationGateway,
 	}
 }
 
@@ -48,15 +51,25 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 		if err != nil {
 			return dashboardData, err
 		}
+
+		// Fetch stats from recommendation service
+		recStats, err := s.recommendationGateway.GetAdminStats(ctx)
+		if err != nil {
+			// Log the error but don't fail the whole request
+			log.Printf("WARNING: could not fetch recommendation stats: %v", err)
+			recStats = &gateway.AdminStatsDTO{TotalUniqueStates: 0} // Default to 0 on error
+		}
+
 		dashboardData.AdminStats = &dtos.AdminDashboardStatsDTO{
-			TotalUsers:              stats.TotalUsers,
-			TotalTeachers:           stats.TotalTeachers,
-			TotalStudents:           stats.TotalStudents,
-			TotalCourses:            stats.TotalCourses,
-			TotalBadges:             stats.TotalBadges,
-			TotalPointsTransactions: stats.TotalPointsTransactions,
-			TotalProducts:           stats.TotalProducts,
-			TotalMissions:           stats.TotalMissions,
+			TotalUsers:                stats.TotalUsers,
+			TotalTeachers:             stats.TotalTeachers,
+			TotalStudents:             stats.TotalStudents,
+			TotalCourses:              stats.TotalCourses,
+			TotalBadges:               stats.TotalBadges,
+			TotalPointsTransactions:   stats.TotalPointsTransactions,
+			TotalProducts:             stats.TotalProducts,
+			TotalMissions:             stats.TotalMissions,
+			TotalRecommendationStates: int64(recStats.TotalUniqueStates),
 		}
 	case "guru":
 		stats, err := s.q.GetTeacherStatistic(ctx, gen.GetTeacherStatisticParams{TeacherID: userID})

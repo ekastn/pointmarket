@@ -27,6 +27,36 @@ func NewRecommendationGateway(baseURL, token string) *RecommendationGateway {
 	}
 }
 
+// AdminStatsDTO mirrors the JSON from the recommendation service's /admin/stats endpoint.
+type AdminStatsDTO struct {
+	TotalUniqueStates int `json:"total_unique_states"`
+}
+
+// GetAdminStats fetches dashboard stats from the recommendation service.
+func (g *RecommendationGateway) GetAdminStats(ctx context.Context) (*AdminStatsDTO, error) {
+	endpoint := fmt.Sprintf("%s/admin/stats", g.BaseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := g.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("upstream stats status %d", resp.StatusCode)
+	}
+
+	var stats AdminStatsDTO
+	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
+		return nil, fmt.Errorf("failed to decode upstream stats: %w", err)
+	}
+	return &stats, nil
+}
+
 // TrainRequest represents payload to start training.
 type TrainRequest struct {
 	Episodes int `json:"episodes"`
@@ -260,6 +290,29 @@ func (g *RecommendationGateway) AdminListItems(ctx context.Context, q url.Values
 	}
 	return out, nil
 }
+
+func (g *RecommendationGateway) AdminGetItemStats(ctx context.Context) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("%s/admin/items/stats", g.BaseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("upstream %d: %s", resp.StatusCode, string(b))
+	}
+	var out map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 
 func (g *RecommendationGateway) AdminCreateItems(ctx context.Context, body []byte) (map[string]interface{}, error) {
 	endpoint := fmt.Sprintf("%s/admin/items", g.BaseURL)

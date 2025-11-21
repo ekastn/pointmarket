@@ -35,7 +35,7 @@ func main() {
 	questionnaireService := services.NewQuestionnaireService(db.DB, querier)
 	weeklyEvaluationService := services.NewWeeklyEvaluationService(querier, userService, questionnaireService)
 	schedulerManager := services.NewSchedulerManager(weeklyEvaluationService)
-	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService)
+	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService, recGateway)
 	analyticsService := services.NewAnalyticsService(querier)
 	correlationService := services.NewCorrelationService(querier)
 	productService := services.NewProductService(db.DB, querier)

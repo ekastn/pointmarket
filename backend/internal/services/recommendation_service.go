@@ -87,6 +87,10 @@ func (s *RecommendationService) AdminListItems(ctx context.Context, q url.Values
 	return s.gateway.AdminListItems(ctx, q)
 }
 
+func (s *RecommendationService) AdminGetItemStats(ctx context.Context) (map[string]interface{}, error) {
+	return s.gateway.AdminGetItemStats(ctx)
+}
+
 func (s *RecommendationService) AdminCreateItems(ctx context.Context, body []byte) (map[string]interface{}, error) {
 	return s.gateway.AdminCreateItems(ctx, body)
 }

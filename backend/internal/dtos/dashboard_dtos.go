@@ -16,8 +16,9 @@ type AdminDashboardStatsDTO struct {
 	TotalCourses            int64 `json:"total_courses"`
 	TotalPointsTransactions int64 `json:"total_points_transaction"`
 	TotalProducts           int64 `json:"total_products"`
-	TotalMissions           int64 `json:"total_missions"`
-	TotalBadges             int64 `json:"total_badges"`
+	TotalMissions             int64 `json:"total_missions"`
+	TotalBadges               int64 `json:"total_badges"`
+	TotalRecommendationStates int64 `json:"total_recommendation_states"`
 }
 
 // StudentDashboardStatsDTO holds aggregated statistics for a student's dashboard.

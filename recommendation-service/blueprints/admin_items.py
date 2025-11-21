@@ -63,6 +63,16 @@ def _item_to_dict(it: Item) -> dict:
     }
 
 
+@bp.get("/items/stats")
+def get_item_stats():
+    try:
+        rows = execute_query("SELECT ref_type, COUNT(*) AS count FROM items GROUP BY ref_type")
+        stats = {row['ref_type']: int(row['count']) for row in rows}
+        return jsonify(stats), 200
+    except Exception as e:
+        return jsonify({"error": f"get_item_stats failed: {str(e)}"}), 500
+
+
 @bp.get("/items")
 def list_items():
     try:

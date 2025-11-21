@@ -8,6 +8,38 @@
     ]);
   ?>
 
+  <!-- Item Stats -->
+  <div class="row pm-section">
+    <?php
+    $stats = $stats ?? [];
+    $statItems = [];
+    $total = 0;
+    $typeMap = [
+        'mission' => ['icon' => 'fas fa-trophy', 'title' => 'Missions'],
+        'product' => ['icon' => 'fas fa-box-open', 'title' => 'Products'],
+        'reward' => ['icon' => 'fas fa-award', 'title' => 'Rewards'],
+        'coaching' => ['icon' => 'fas fa-chalkboard-teacher', 'title' => 'Coaching'],
+        'punishment' => ['icon' => 'fas fa-exclamation-triangle', 'title' => 'Punishments'],
+    ];
+    foreach ($stats as $type => $count) {
+        $total += $count;
+        $statItems[] = [
+            'title' => $typeMap[$type]['title'] ?? ucfirst($type),
+            'value' => $count,
+            'icon' => $typeMap[$type]['icon'] ?? 'fas fa-question-circle',
+        ];
+    }
+    // Add a total card
+    array_unshift($statItems, ['title' => 'Total Items', 'value' => $total, 'icon' => 'fas fa-database']);
+    ?>
+    <?php foreach ($statItems as $item): ?>
+      <div class="col-xl-3 col-md-6 mb-4">
+        <?php $renderer->includePartial('components/partials/card_stats', $item); ?>
+      </div>
+    <?php endforeach; ?>
+  </div>
+
+
   <?php if (!empty($messages['success'])): ?>
     <div class="alert alert-success"><?= htmlspecialchars($messages['success']) ?></div>
   <?php elseif (!empty($messages['error'])): ?>

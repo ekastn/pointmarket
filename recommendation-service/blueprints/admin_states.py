@@ -15,6 +15,16 @@ def _validate_state_token(s: str) -> bool:
     return bool(STATE_REGEX.match(s))
 
 
+@bp.get("/stats")
+def get_admin_stats():
+    try:
+        rows = execute_query("SELECT COUNT(*) AS cnt FROM unique_states")
+        total = int(rows[0]["cnt"]) if rows else 0
+        return jsonify({"total_unique_states": total}), 200
+    except Exception as e:
+        return jsonify({"error": f"get_admin_stats failed: {str(e)}"}), 500
+
+
 @bp.get("/unique-states")
 def list_states():
     try:

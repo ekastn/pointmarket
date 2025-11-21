@@ -8,6 +8,7 @@ import (
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"strconv"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -76,12 +77,36 @@ func (h *RecommendationHandler) AdminListItems(c *gin.Context) {
 			q.Add(k, val)
 		}
 	}
-	out, err := h.recService.AdminListItems(c.Request.Context(), q)
-	if err != nil {
-		response.Error(c, http.StatusBadGateway, err.Error())
+
+	var items, stats map[string]interface{}
+	var itemsErr, statsErr error
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		items, itemsErr = h.recService.AdminListItems(c.Request.Context(), q)
+	}()
+
+	go func() {
+		defer wg.Done()
+		stats, statsErr = h.recService.AdminGetItemStats(c.Request.Context())
+	}()
+
+	wg.Wait()
+
+	if itemsErr != nil {
+		response.Error(c, http.StatusBadGateway, itemsErr.Error())
 		return
 	}
-	enriched := h.recService.EnrichItemRefsWithTitles(c.Request.Context(), out)
+	if statsErr != nil {
+		// Log this but don't fail the request, the main data is the item list
+		log.Printf("WARN: failed to get recommendation item stats: %v", statsErr)
+	}
+
+	enriched := h.recService.EnrichItemRefsWithTitles(c.Request.Context(), items)
+	enriched["stats"] = stats // Add stats to the final response
+
 	response.Success(c, http.StatusOK, "ok", enriched)
 }
 

@@ -9,7 +9,8 @@ SELECT s.user_id,
        s.gender,
        s.phone,
        s.created_at,
-       s.updated_at
+       s.updated_at,
+       s.academic_score
 FROM students s
 JOIN programs p ON p.id = s.program_id
 WHERE s.user_id = ?;
@@ -91,3 +92,19 @@ WHERE
 SELECT id, name, faculty_id, created_at, updated_at
 FROM programs
 ORDER BY name ASC;
+
+-- name: GetStudentAcademicScores :many
+SELECT sa.score
+FROM student_assignments sa
+JOIN students s ON sa.student_id = s.id
+WHERE s.user_id = ? AND sa.status = 'graded' AND sa.score IS NOT NULL
+UNION ALL
+SELECT sq.score
+FROM student_quizzes sq
+JOIN students s ON sq.student_id = s.id
+WHERE s.user_id = ? AND sq.status = 'graded' AND sq.score IS NOT NULL;
+
+-- name: UpdateStudentAcademicScore :exec
+UPDATE students
+SET academic_score = ?
+WHERE user_id = ?;

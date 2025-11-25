@@ -52,6 +52,46 @@ func (q *Queries) CountStudents(ctx context.Context, arg CountStudentsParams) (i
 	return count, err
 }
 
+const getStudentAcademicScores = `-- name: GetStudentAcademicScores :many
+SELECT sa.score
+FROM student_assignments sa
+JOIN students s ON sa.student_id = s.id
+WHERE s.user_id = ? AND sa.status = 'graded' AND sa.score IS NOT NULL
+UNION ALL
+SELECT sq.score
+FROM student_quizzes sq
+JOIN students s ON sq.student_id = s.id
+WHERE s.user_id = ? AND sq.status = 'graded' AND sq.score IS NOT NULL
+`
+
+type GetStudentAcademicScoresParams struct {
+	UserID   int64 `json:"user_id"`
+	UserID_2 int64 `json:"user_id_2"`
+}
+
+func (q *Queries) GetStudentAcademicScores(ctx context.Context, arg GetStudentAcademicScoresParams) ([]*float64, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentAcademicScores, arg.UserID, arg.UserID_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*float64
+	for rows.Next() {
+		var score *float64
+		if err := rows.Scan(&score); err != nil {
+			return nil, err
+		}
+		items = append(items, score)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getStudentByStudentID = `-- name: GetStudentByStudentID :one
 SELECT s.user_id,
        s.student_id,
@@ -113,24 +153,26 @@ SELECT s.user_id,
        s.gender,
        s.phone,
        s.created_at,
-       s.updated_at
+       s.updated_at,
+       s.academic_score
 FROM students s
 JOIN programs p ON p.id = s.program_id
 WHERE s.user_id = ?
 `
 
 type GetStudentByUserIDRow struct {
-	UserID      int64              `json:"user_id"`
-	StudentID   string             `json:"student_id"`
-	ProgramID   int64              `json:"program_id"`
-	ProgramName string             `json:"program_name"`
-	CohortYear  sql.NullInt32      `json:"cohort_year"`
-	Status      StudentsStatus     `json:"status"`
-	BirthDate   sql.NullTime       `json:"birth_date"`
-	Gender      NullStudentsGender `json:"gender"`
-	Phone       sql.NullString     `json:"phone"`
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at"`
+	UserID        int64              `json:"user_id"`
+	StudentID     string             `json:"student_id"`
+	ProgramID     int64              `json:"program_id"`
+	ProgramName   string             `json:"program_name"`
+	CohortYear    sql.NullInt32      `json:"cohort_year"`
+	Status        StudentsStatus     `json:"status"`
+	BirthDate     sql.NullTime       `json:"birth_date"`
+	Gender        NullStudentsGender `json:"gender"`
+	Phone         sql.NullString     `json:"phone"`
+	CreatedAt     time.Time          `json:"created_at"`
+	UpdatedAt     time.Time          `json:"updated_at"`
+	AcademicScore float64            `json:"academic_score"`
 }
 
 func (q *Queries) GetStudentByUserID(ctx context.Context, userID int64) (GetStudentByUserIDRow, error) {
@@ -148,6 +190,7 @@ func (q *Queries) GetStudentByUserID(ctx context.Context, userID int64) (GetStud
 		&i.Phone,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AcademicScore,
 	)
 	return i, err
 }
@@ -314,6 +357,22 @@ func (q *Queries) SearchStudents(ctx context.Context, arg SearchStudentsParams) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateStudentAcademicScore = `-- name: UpdateStudentAcademicScore :exec
+UPDATE students
+SET academic_score = ?
+WHERE user_id = ?
+`
+
+type UpdateStudentAcademicScoreParams struct {
+	AcademicScore float64 `json:"academic_score"`
+	UserID        int64   `json:"user_id"`
+}
+
+func (q *Queries) UpdateStudentAcademicScore(ctx context.Context, arg UpdateStudentAcademicScoreParams) error {
+	_, err := q.db.ExecContext(ctx, updateStudentAcademicScore, arg.AcademicScore, arg.UserID)
+	return err
 }
 
 const updateStudentByUserID = `-- name: UpdateStudentByUserID :exec

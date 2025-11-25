@@ -54,6 +54,7 @@ class StudentService
     public function getStudentDetails(int $userId): ?array
     {
         $resp = $this->apiClient->request('GET', '/api/v1/students/' . $userId . '/details');
+        error_log(print_r($resp, true));
         if ($resp['success']) {
             return $resp['data'];
         }

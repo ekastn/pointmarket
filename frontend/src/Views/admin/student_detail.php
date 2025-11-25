@@ -43,6 +43,9 @@ $ams = $student['ams_result'] ?? null;
                         <dt class="col-sm-4">Status</dt>
                         <dd class="col-sm-8">: <?= htmlspecialchars($student['status'] ?? 'N/A'); ?></dd>
 
+                        <dt class="col-sm-4">Skor Akademik</dt>
+                        <dd class="col-sm-8">: <strong><?= htmlspecialchars(number_format($student['academic_score'] ?? 0, 2)); ?></strong></dd>
+
                         <dt class="col-sm-4">Tanggal Lahir</dt>
                         <dd class="col-sm-8">: <?php
                             $birthDate = $student['birth_date'] ?? null;

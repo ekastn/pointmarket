@@ -126,6 +126,7 @@ type Querier interface {
 	GetQuizzesByCourseID(ctx context.Context, courseID int64) ([]Quiz, error)
 	GetQuizzesByOwnerID(ctx context.Context, ownerID int64) ([]Quiz, error)
 	GetRewardsByIDs(ctx context.Context, ids []int64) ([]Reward, error)
+	GetStudentAcademicScores(ctx context.Context, arg GetStudentAcademicScoresParams) ([]*float64, error)
 	GetStudentAssignmentByID(ctx context.Context, id int64) (StudentAssignment, error)
 	GetStudentAssignmentByIDs(ctx context.Context, arg GetStudentAssignmentByIDsParams) (StudentAssignment, error)
 	GetStudentAssignmentsByAssignmentID(ctx context.Context, assignmentID int64) ([]GetStudentAssignmentsByAssignmentIDRow, error)
@@ -181,6 +182,7 @@ type Querier interface {
 	UpdateQuestionnaire(ctx context.Context, arg UpdateQuestionnaireParams) error
 	UpdateQuiz(ctx context.Context, arg UpdateQuizParams) error
 	UpdateQuizQuestion(ctx context.Context, arg UpdateQuizQuestionParams) error
+	UpdateStudentAcademicScore(ctx context.Context, arg UpdateStudentAcademicScoreParams) error
 	UpdateStudentAssignment(ctx context.Context, arg UpdateStudentAssignmentParams) error
 	UpdateStudentByUserID(ctx context.Context, arg UpdateStudentByUserIDParams) error
 	UpdateStudentQuiz(ctx context.Context, arg UpdateStudentQuizParams) error

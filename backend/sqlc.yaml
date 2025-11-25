@@ -19,6 +19,7 @@ sql:
       - cmd/db/migrations/00016_student_assignments_enhancements.sql
       - cmd/db/migrations/00017_interventions.sql
       - cmd/db/migrations/00021_user_missions_unique_index.sql
+      - cmd/db/migrations/00022_add_academic_score_to_students.sql
     queries: "cmd/db/queries"
     gen:
       go:

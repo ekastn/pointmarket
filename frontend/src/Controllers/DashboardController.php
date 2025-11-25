@@ -161,6 +161,20 @@ class DashboardController extends BaseController
                 $studentStats = $dashboardData['student_stats'] ?? null;
                 $weeklyEvaluations = $studentStats['weekly_evaluations'] ?? []; // Extract the new data
                 $userId = $_SESSION['user_data']['id'] ?? null; // Pass current user id for lazy loads
+
+                // Fetch student details to get the academic score
+                if ($userId) {
+                    try {
+                        $studentDetails = $this->studentService->getStudentDetails($userId);
+                        if (isset($studentDetails['academic_score'])) {
+                            $studentStats['academic_score'] = $studentDetails['academic_score'];
+                        }
+                    } catch (\Throwable $e) {
+                        // Log error but don't fail the dashboard
+                        error_log("Failed to fetch student details for dashboard: " . $e->getMessage());
+                    }
+                }
+
                 // Determine if we have sufficient psychometric coverage to request recommendations
                 $recommendations = null;
                 $missingAssessments = [];

@@ -15,13 +15,14 @@ import mysql "github.com/go-sql-driver/mysql"
 
 // QuizService provides business logic for quizzes, quiz questions, and student quizzes
 type QuizService struct {
-	q      gen.Querier
-	points *PointsService
+	q            gen.Querier
+	points       *PointsService
+	studentService *StudentService
 }
 
 // NewQuizService creates a new QuizService
-func NewQuizService(q gen.Querier, ps *PointsService) *QuizService {
-	return &QuizService{q: q, points: ps}
+func NewQuizService(q gen.Querier, ps *PointsService, ss *StudentService) *QuizService {
+	return &QuizService{q: q, points: ps, studentService: ss}
 }
 
 // CreateQuiz creates a new quiz
@@ -458,6 +459,15 @@ func (s *QuizService) UpdateStudentQuiz(ctx context.Context, id int64, req dtos.
 				} else if err3 != nil {
 					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updatedSQ.StudentID, err3)
 				}
+			}
+		}
+	}
+	
+	// Recalculate academic score if the quiz is graded
+	if updatedSQ.Status.Valid && string(updatedSQ.Status.StudentQuizzesStatus) == "graded" {
+		if stRow, err := s.q.GetStudentByStudentID(ctx, updatedSQ.StudentID); err == nil {
+			if err := s.studentService.recalculateAcademicScore(ctx, stRow.UserID); err != nil {
+				log.Printf("ERROR: could not recalculate academic score for user %d: %v", stRow.UserID, err)
 			}
 		}
 	}

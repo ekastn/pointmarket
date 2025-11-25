@@ -215,12 +215,13 @@ func (s *StudentService) GetStudentDetailsByUserID(ctx context.Context, userID i
 	}
 
 	studentDetails := &dtos.StudentDetailsDTO{
-		UserID:      studentRow.UserID,
-		StudentID:   studentRow.StudentID,
-		DisplayName: userRow.DisplayName,
-		Email:       userRow.Email,
-		ProgramName: studentRow.ProgramName,
-		Status:      string(studentRow.Status),
+		UserID:        studentRow.UserID,
+		StudentID:     studentRow.StudentID,
+		DisplayName:   userRow.DisplayName,
+		Email:         userRow.Email,
+		ProgramName:   studentRow.ProgramName,
+		Status:        string(studentRow.Status),
+		AcademicScore: studentRow.AcademicScore,
 	}
 
 	if studentRow.CohortYear.Valid {
@@ -309,4 +310,31 @@ func (s *StudentService) GetStudentDetailsByUserID(ctx context.Context, userID i
 	}
 
 	return studentDetails, nil
+}
+
+func (s *StudentService) recalculateAcademicScore(ctx context.Context, userID int64) error {
+	scores, err := s.q.GetStudentAcademicScores(ctx, gen.GetStudentAcademicScoresParams{UserID: userID, UserID_2: userID})
+	if err != nil {
+		return fmt.Errorf("could not get academic scores for user %d: %w", userID, err)
+	}
+
+	if len(scores) == 0 {
+		return s.q.UpdateStudentAcademicScore(ctx, gen.UpdateStudentAcademicScoreParams{
+			AcademicScore: 0.0,
+			UserID:        userID,
+		})
+	}
+
+	var totalScore float64
+	for _, scorePtr := range scores {
+		if scorePtr != nil {
+			totalScore += *scorePtr
+		}
+	}
+	average := totalScore / float64(len(scores))
+
+	return s.q.UpdateStudentAcademicScore(ctx, gen.UpdateStudentAcademicScoreParams{
+		AcademicScore: average,
+		UserID:        userID,
+	})
 }

@@ -1048,16 +1048,17 @@ type Reward struct {
 }
 
 type Student struct {
-	StudentID  string             `json:"student_id"`
-	UserID     int64              `json:"user_id"`
-	ProgramID  int64              `json:"program_id"`
-	CohortYear sql.NullInt32      `json:"cohort_year"`
-	Status     StudentsStatus     `json:"status"`
-	BirthDate  sql.NullTime       `json:"birth_date"`
-	Gender     NullStudentsGender `json:"gender"`
-	Phone      sql.NullString     `json:"phone"`
-	CreatedAt  time.Time          `json:"created_at"`
-	UpdatedAt  time.Time          `json:"updated_at"`
+	StudentID     string             `json:"student_id"`
+	UserID        int64              `json:"user_id"`
+	ProgramID     int64              `json:"program_id"`
+	CohortYear    sql.NullInt32      `json:"cohort_year"`
+	Status        StudentsStatus     `json:"status"`
+	BirthDate     sql.NullTime       `json:"birth_date"`
+	Gender        NullStudentsGender `json:"gender"`
+	Phone         sql.NullString     `json:"phone"`
+	CreatedAt     time.Time          `json:"created_at"`
+	UpdatedAt     time.Time          `json:"updated_at"`
+	AcademicScore float64            `json:"academic_score"`
 }
 
 type StudentAssignment struct {

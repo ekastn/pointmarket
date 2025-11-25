@@ -92,7 +92,7 @@ class StudentsController extends BaseController
 
         if ($studentDetails === null) {
             $_SESSION['messages']['error'] = 'Gagal memuat detail siswa atau siswa tidak ditemukan.';
-            $this->redirect('/admin/students');
+            $this->redirect('/students');
             return;
         }
 

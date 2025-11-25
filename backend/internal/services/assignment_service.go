@@ -16,13 +16,14 @@ import (
 
 // AssignmentService provides business logic for assignments and student assignments
 type AssignmentService struct {
-	q      gen.Querier
-	points *PointsService
+	q            gen.Querier
+	points       *PointsService
+	studentService *StudentService
 }
 
 // NewAssignmentService creates a new AssignmentService
-func NewAssignmentService(q gen.Querier, ps *PointsService) *AssignmentService {
-	return &AssignmentService{q: q, points: ps}
+func NewAssignmentService(q gen.Querier, ps *PointsService, ss *StudentService) *AssignmentService {
+	return &AssignmentService{q: q, points: ps, studentService: ss}
 }
 
 // CreateAssignment creates a new assignment
@@ -382,6 +383,15 @@ func (s *AssignmentService) UpdateStudentAssignment(ctx context.Context, id int6
 				} else if err3 != nil {
 					log.Printf("points award skipped: cannot resolve user_id from student_id=%s error=%v", updatedSA.StudentID, err3)
 				}
+			}
+		}
+	}
+
+	// Recalculate academic score if the assignment is graded
+	if updatedSA.Status.Valid && string(updatedSA.Status.StudentAssignmentsStatus) == "graded" {
+		if stRow, err := s.q.GetStudentByStudentID(ctx, updatedSA.StudentID); err == nil {
+			if err := s.studentService.recalculateAcademicScore(ctx, stRow.UserID); err != nil {
+				log.Printf("ERROR: could not recalculate academic score for user %d: %v", stRow.UserID, err)
 			}
 		}
 	}

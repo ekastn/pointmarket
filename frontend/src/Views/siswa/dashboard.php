@@ -8,6 +8,7 @@ $learningStyle = $studentStats['learning_style'] ?? null;
 
 $statsItems = [
     ['title' => 'Poin', 'value' => $studentStats['total_points'], 'icon' => 'fas fa-coins'],
+    ['title' => 'Skor Akademik', 'value' => number_format($studentStats['academic_score'] ?? 0, 2), 'icon' => 'fas fa-graduation-cap'],
     ['title' => 'Tugas Selesai', 'value' => $studentStats['completed_assignments'], 'icon' => 'fas fa-tasks'],
     ['title' => 'Skor MSLQ', 'value' => $studentStats['mslq_score'], 'icon' => 'fas fa-brain'],
     ['title' => 'Skor AMS', 'value' => $studentStats['ams_score'], 'icon' => 'fas fa-heart'],

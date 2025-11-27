@@ -26,6 +26,11 @@ func main() {
 
 	querier := gen.New(db)
 
+	geminiService, err := services.NewGeminiService(context.Background(), cfg.GeminiModel)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create gemini service: %v", err))
+	}
+
 	aiServiceGateway := gateway.NewAIServiceGateway(cfg.AIServiceURL)
 	recGateway := gateway.NewRecommendationGateway(cfg.RecommendationServiceURL, "")
 
@@ -37,7 +42,7 @@ func main() {
 	schedulerManager := services.NewSchedulerManager(weeklyEvaluationService)
 	dashboardService := services.NewDashboardService(querier, weeklyEvaluationService, recGateway)
 	analyticsService := services.NewAnalyticsService(querier)
-	correlationService := services.NewCorrelationService(querier)
+	correlationService := services.NewCorrelationService(querier, geminiService)
 	productService := services.NewProductService(db.DB, querier)
 	badgeService := services.NewBadgeService(querier)
 	pointsService := services.NewPointsService(db.DB, querier)

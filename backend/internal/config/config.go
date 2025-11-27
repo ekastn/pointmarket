@@ -24,6 +24,8 @@ type Config struct {
 	GCSBucket                string
 	GCSPublicBaseURL         string
 	MaxAvatarMB              int
+	GeminiAPIKey             string
+	GeminiModel              string
 }
 
 // Init loads the configuration from environment variables
@@ -47,6 +49,8 @@ func Init() *Config {
 		GCSBucket:                env.GetString("GCS_BUCKET", ""),
 		GCSPublicBaseURL:         env.GetString("GCS_PUBLIC_BASE_URL", ""),
 		MaxAvatarMB:              env.GetInt("MAX_AVATAR_MB", 5),
+		GeminiAPIKey:             env.GetString("GEMINI_API_KEY", ""),
+        GeminiModel:              env.GetString("GEMINI_MODEL", "gemini-2.5-flash"),
 	}
 }
 

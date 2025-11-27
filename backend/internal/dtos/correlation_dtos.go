@@ -20,6 +20,8 @@ type CorrelationAnalysisResponse struct {
 
 	// Analysis results
 	DominantVARKStyle string                  `json:"dominant_vark_style"`
+	MSLQInsight       string                  `json:"mslq_insight"`
+	AMSInsight        string                  `json:"ams_insight"`
 	MSLQCorrelation   []MSLQCorrelationDetail `json:"mslq_correlation"`
 	AMSCorrelation    []AMSCorrelationDetail  `json:"ams_correlation"`
 	Recommendations   []string                `json:"recommendations"`

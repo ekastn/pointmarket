@@ -21,6 +21,8 @@ class VarkCorrelationAnalysisController extends BaseController
         $dominant_style = 'N/A';
         $mslq_score = 'N/A';
         $ams_score = 'N/A';
+        $mslq_insight = '';
+        $ams_insight = '';
         $correlation_results = null;
 
         $correlationResults = $this->varkCorrelationService->analyzeCorrelation();
@@ -32,6 +34,8 @@ class VarkCorrelationAnalysisController extends BaseController
             $dominant_style = $correlationResults['dominant_vark_style'] ?? 'N/A';
             $mslq_score = $correlationResults['mslq_score'] ?? 'N/A';
             $ams_score = $correlationResults['ams_score'] ?? 'N/A';
+            $mslq_insight = $correlationResults['mslq_insight'] ?? '';
+            $ams_insight = $correlationResults['ams_insight'] ?? '';
             $correlation_results = $correlationResults;
         } else {
             $_SESSION['messages']['warning'] = 'Failed to load correlation analysis.';
@@ -44,6 +48,8 @@ class VarkCorrelationAnalysisController extends BaseController
             'dominant_style' => $dominant_style,
             'mslq_score' => $mslq_score,
             'ams_score' => $ams_score,
+            'mslq_insight' => $mslq_insight,
+            'ams_insight' => $ams_insight,
             'correlation_results' => $correlation_results,
         ]);
     }

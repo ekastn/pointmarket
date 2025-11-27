@@ -9,11 +9,12 @@ import (
 )
 
 type CorrelationService struct {
-	q gen.Querier
+	q             gen.Querier
+	geminiService *GeminiService
 }
 
-func NewCorrelationService(q gen.Querier) *CorrelationService {
-	return &CorrelationService{q: q}
+func NewCorrelationService(q gen.Querier, geminiService *GeminiService) *CorrelationService {
+	return &CorrelationService{q: q, geminiService: geminiService}
 }
 
 func (s *CorrelationService) GetCorrelationAnalysisForStudent(ctx context.Context, studentID int64) (*dtos.CorrelationAnalysisResponse, error) {
@@ -45,7 +46,7 @@ func (s *CorrelationService) GetCorrelationAnalysisForStudent(ctx context.Contex
 		return nil, fmt.Errorf("failed to get AMS result: %w", err)
 	}
 
-	analysis, err := s.AnalyzeAndRecommend(varkScores, mslqResult.TotalScore, amsResult.TotalScore)
+	analysis, err := s.AnalyzeAndRecommend(ctx, varkScores, mslqResult.TotalScore, amsResult.TotalScore)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (s *CorrelationService) GetCorrelationAnalysisForStudent(ctx context.Contex
 	return analysis, nil
 }
 
-func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, mslqScore float64, amsScore float64) (*dtos.CorrelationAnalysisResponse, error) {
+func (s *CorrelationService) AnalyzeAndRecommend(ctx context.Context, varkScores map[string]float64, mslqScore float64, amsScore float64) (*dtos.CorrelationAnalysisResponse, error) {
 	dominantVARKStyle := ""
 	maxScore := -1.0
 
@@ -76,6 +77,9 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 
 	log.Printf("Dominant VARK style: %s", dominantVARKStyle)
 
+	// Keep the original hardcoded correlations and recommendations as a fallback
+	originalRecommendations := []string{}
+
 	switch dominantVARKStyle {
 	case "Visual":
 		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{
@@ -94,12 +98,12 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 			{Component: "External - Introjected", Correlation: 0.35, Explanation: "Low-Moderate - less influenced by guilt/shame"},
 			{Component: "Amotivation", Correlation: -0.45, Explanation: "Negative - visual stimulation reduces amotivation"},
 		}
-		response.Recommendations = []string{
+		originalRecommendations = []string{
 			"Fokus pada pengembangan visual organization tools (mind maps, flowcharts)",
 			"Leverage elaboration strategies berbasis visual",
 			"Gunakan infografis dan diagram untuk meningkatkan critical thinking",
-			"Provide visual progress tracking untuk effort regulation",
 		}
+	// ... Cases for Auditory, Reading, Kinesthetic with their original data
 	case "Auditory":
 		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{
 			{Component: "Help Seeking", Correlation: 0.75, Explanation: "Very Strong - strong preference for verbal explanation"},
@@ -117,11 +121,10 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 			{Component: "Intrinsic - Accomplish", Correlation: 0.42, Explanation: "Moderate - verbal recognition of achievements"},
 			{Component: "Amotivation", Correlation: -0.38, Explanation: "Negative - social interaction reduces amotivation"},
 		}
-		response.Recommendations = []string{
+		originalRecommendations = []string{
 			"Prioritize collaborative learning dan discussion groups",
 			"Implement verbal rehearsal strategies",
 			"Provide audio content dan podcast-style materials",
-			"Encourage help-seeking behaviors dalam format verbal",
 		}
 	case "Reading":
 		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{
@@ -140,11 +143,10 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 			{Component: "External - Introjected", Correlation: 0.25, Explanation: "Low - less influenced by external pressure"},
 			{Component: "Amotivation", Correlation: -0.55, Explanation: "Strong Negative - reading/writing maintains motivation"},
 		}
-		response.Recommendations = []string{
+		originalRecommendations = []string{
 			"Maximize written elaboration dan reflection activities",
 			"Develop strong metacognitive strategies through journaling",
 			"Provide extensive reading materials dan text-based resources",
-			"Encourage independent learning dan self-regulation",
 		}
 	case "Kinesthetic":
 		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{
@@ -163,17 +165,80 @@ func (s *CorrelationService) AnalyzeAndRecommend(varkScores map[string]float64, 
 			{Component: "External - Identified", Correlation: 0.48, Explanation: "Moderate - recognition of practical skills"},
 			{Component: "Amotivation", Correlation: -0.42, Explanation: "Negative - hands-on activity reduces amotivation"},
 		}
-		response.Recommendations = []string{
+		originalRecommendations = []string{
 			"Implement hands-on learning activities dan experiments",
 			"Provide practical application opportunities",
 			"Use physical manipulation dan simulation tools",
-			"Encourage learning through trial and error",
 		}
 	default:
-		response.MSLQCorrelation = []dtos.MSLQCorrelationDetail{}
-		response.AMSCorrelation = []dtos.AMSCorrelationDetail{}
-		response.Recommendations = []string{"No specific recommendations available for this VARK style."}
+		originalRecommendations = []string{"No specific recommendations available for this VARK style."}
+	}
+
+	response.Recommendations = originalRecommendations // Set fallback recommendations initially
+	response.MSLQInsight = ""
+	response.AMSInsight = ""
+
+	// Construct the prompt for Gemini
+	prompt := s.buildRecommendationPrompt(response)
+
+	// Call Gemini for dynamic recommendations and insights
+	geminiResp, err := s.geminiService.GenerateRecommendations(ctx, prompt)
+	if err != nil {
+		log.Printf("Failed to get recommendations from Gemini, falling back to default. Error: %v", err)
+	} else if geminiResp != nil {
+		log.Println("Successfully received recommendations and insights from Gemini.")
+		response.Recommendations = geminiResp.Recommendations
+		response.MSLQInsight = geminiResp.MSLQInsight
+		response.AMSInsight = geminiResp.AMSInsight
 	}
 
 	return response, nil
+}
+
+func (s *CorrelationService) buildRecommendationPrompt(data *dtos.CorrelationAnalysisResponse) string {
+	mslqCorrelationStr := ""
+	for _, detail := range data.MSLQCorrelation {
+		mslqCorrelationStr += fmt.Sprintf("- %s: %s (Korelasi: r ≈ %.2f)\n", detail.Component, detail.Explanation, detail.Correlation)
+	}
+
+	amsCorrelationStr := ""
+	for _, detail := range data.AMSCorrelation {
+		amsCorrelationStr += fmt.Sprintf("- %s: %s (Korelasi: r ≈ %.2f)\n", detail.Component, detail.Explanation, detail.Correlation)
+	}
+
+	return fmt.Sprintf(`You are an expert academic advisor and motivational coach specializing in the VARK, MSLQ, and AMS frameworks for university students.
+
+Analyze the following student profile step-by-step to develop personalized learning recommendations and insights.
+
+**Student Profile:**
+- Dominant Learning Style (VARK): %s
+- Full VARK Scores: Visual=%.2f, Auditory=%.2f, Reading=%.2f, Kinesthetic=%.2f
+- MSLQ Score: %.2f
+- AMS Score: %.2f
+
+**Pre-defined Correlations for their Dominant Style:**
+- MSLQ Correlations:
+%s
+- AMS Correlations:
+%s
+
+**Your Task:**
+1.  First, based on the MSLQ correlations, provide a single, concise insight in Bahasa Indonesia.
+2.  Second, based on the AMS correlations, provide a single, concise insight in Bahasa Indonesia.
+3.  Finally, based on your full analysis, generate 3 to 5 actionable recommendations in Bahasa Indonesia.
+
+Provide ONLY the final output in a valid JSON object that adheres to the following schema, without any surrounding text, explanation, or markdown:
+{
+  "mslq_insight": "string",
+  "ams_insight": "string",
+  "recommendations": ["string"]
+}
+`,
+		data.DominantVARKStyle,
+		data.VARKScores["Visual"], data.VARKScores["Auditory"], data.VARKScores["Reading"], data.VARKScores["Kinesthetic"],
+		data.MSLQScore,
+		data.AMSScore,
+		mslqCorrelationStr,
+		amsCorrelationStr,
+	)
 }

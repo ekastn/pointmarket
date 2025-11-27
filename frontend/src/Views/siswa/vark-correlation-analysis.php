@@ -56,6 +56,10 @@ $ams_score = $ams_score ?? 'N/A';
                 <div class="alert alert-primary">
                     <strong>Insight:</strong> Unggul dalam membuat model mental visual dan alat organisasi.
                 </div>
+                <?php elseif (!empty($mslq_insight)): ?>
+                <div class="alert alert-primary">
+                    <strong>Insight:</strong> <?php echo htmlspecialchars($mslq_insight); ?>
+                </div>
                 <?php elseif ($dominant_style === 'Auditory'): ?>
                 <ul>
                     <li><strong>Mencari Bantuan</strong> - Sangat Kuat (r ≈ 0.75)</li>
@@ -110,6 +114,10 @@ $ams_score = $ams_score ?? 'N/A';
                 </ul>
                 <div class="alert alert-success">
                     <strong>Insight:</strong> Penemuan visual mendorong rasa ingin tahu dan representasi pencapaian visual.
+                </div>
+                <?php elseif (!empty($ams_insight)): ?>
+                <div class="alert alert-success">
+                    <strong>Insight:</strong> <?php echo htmlspecialchars($ams_insight); ?>
                 </div>
                 <?php elseif ($dominant_style === 'Auditory'): ?>
                 <ul>

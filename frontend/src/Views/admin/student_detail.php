@@ -71,20 +71,20 @@ $ams = $student['ams_result'] ?? null;
                     <?php if ($vark): ?>
                         <dl class="row mb-0">
                             <dt class="col-sm-6">Visual</dt>
-                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['visual'] ?? '0'); ?></dd>
+                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['scores']['visual'] ?? '0'); ?></dd>
 
                             <dt class="col-sm-6">Auditory</dt>
-                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['auditory'] ?? '0'); ?></dd>
+                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['scores']['auditory'] ?? '0'); ?></dd>
 
                             <dt class="col-sm-6">Reading/Writing</dt>
-                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['reading'] ?? '0'); ?></dd>
+                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['scores']['reading'] ?? '0'); ?></dd>
 
                             <dt class="col-sm-6">Kinesthetic</dt>
-                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['kinesthetic'] ?? '0'); ?></dd>
+                            <dd class="col-sm-6">: <?= htmlspecialchars($vark['scores']['kinesthetic'] ?? '0'); ?></dd>
 
                             <dt class="col-sm-6">Terakhir Diselesaikan</dt>
                             <dd class="col-sm-6">: <?php
-                                $varkCompletedAt = $vark['completed_at'] ?? null;
+                                $varkCompletedAt = $vark['created_at'] ?? null;
                                 echo $varkCompletedAt ? htmlspecialchars(date('d M Y H:i', strtotime($varkCompletedAt))) : '-';
                             ?></dd>
                         </dl>
@@ -118,7 +118,7 @@ $ams = $student['ams_result'] ?? null;
 
                             <dt class="col-sm-6 mt-2">Terakhir Diselesaikan</dt>
                             <dd class="col-sm-6">: <?php
-                                $mslqCompletedAt = $mslq['completed_at'] ?? null;
+                                $mslqCompletedAt = $mslq['created_at'] ?? null;
                                 echo $mslqCompletedAt ? htmlspecialchars(date('d M Y H:i', strtotime($mslqCompletedAt))) : '-';
                             ?></dd>
                         </dl>
@@ -150,7 +150,7 @@ $ams = $student['ams_result'] ?? null;
 
                             <dt class="col-sm-6 mt-2">Terakhir Diselesaikan</dt>
                             <dd class="col-sm-6">: <?php
-                                $amsCompletedAt = $ams['completed_at'] ?? null;
+                                $amsCompletedAt = $ams['created_at'] ?? null;
                                 echo $amsCompletedAt ? htmlspecialchars(date('d M Y H:i', strtotime($amsCompletedAt))) : '-';
                             ?></dd>
                         </dl>

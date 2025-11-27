@@ -323,7 +323,7 @@ if ($isEditMode && !empty($questions)) {
                 const optionItems = qCard.querySelectorAll('.option-item');
                 optionItems.forEach(oItem => {
                     question.options.push({
-                        id: oItem.dataset.optionId || null,
+                        id: parseInt(oItem.dataset.optionId, 10) || null,
                         option_text: oItem.querySelector('.option-text-input').value,
                         option_letter: oItem.querySelector('.option-letter-input').value,
                         learning_style: oItem.querySelector('.learning-style-input').value

@@ -18,16 +18,12 @@
             </div>
             <p class="card-text text-muted small mb-3"><?= htmlspecialchars($course['description'] ?? '') ?></p>
             <div class="mt-auto d-grid gap-2">
-                <?php if (isset($course['is_owner']) && $course['is_owner']): ?>
-                    <a href="/courses/<?= htmlspecialchars($course['slug']) ?>/edit" class="btn btn-warning">Edit Course</a>
-                <?php else: ?>
-                    <a href="/courses/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-primary">Lihat kelas</a>
-                    <?php if (isset($course['is_enrolled'])): ?>
-                        <?php if ($course['is_enrolled']): ?>
-                            <button class="btn btn-outline-danger btn-unenroll" data-course-id="<?= (int)$course['id'] ?>">Batalkan</button>
-                        <?php else: ?>
-                            <button class="btn btn-success btn-enroll" data-course-id="<?= (int)$course['id'] ?>">Daftar</button>
-                        <?php endif; ?>
+                <a href="/courses/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-primary">Lihat kelas</a>
+                <?php if (isset($course['is_enrolled'])): ?>
+                    <?php if ($course['is_enrolled']): ?>
+                        <button class="btn btn-outline-danger btn-unenroll" data-course-id="<?= (int)$course['id'] ?>">Batalkan</button>
+                    <?php else: ?>
+                        <button class="btn btn-success btn-enroll" data-course-id="<?= (int)$course['id'] ?>">Daftar</button>
                     <?php endif; ?>
                 <?php endif; ?>
             </div>

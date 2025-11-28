@@ -87,7 +87,7 @@
               <tbody>
                 <?php foreach ($course['enrolled_students'] as $student): ?>
                   <tr>
-                    <td><?= htmlspecialchars($student['display_name']) ?></td>
+                    <td><a href="/students/<?= htmlspecialchars($student['user_id']) ?>"><?= htmlspecialchars($student['display_name']) ?></a></td>
                     <td><?= htmlspecialchars($student['email']) ?></td>
                     <td><?= htmlspecialchars($student['student_id']) ?></td>
                   </tr>

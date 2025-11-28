@@ -112,7 +112,7 @@ return function (Router $router) {
             $router->get('/', [StudentsController::class, 'index']);
             $router->get('/{id}', [StudentsController::class, 'show']);
             $router->put('/{id}', [StudentsController::class, 'update']);
-        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdmin']]);
+        }, [[AuthMiddleware::class, 'requireLogin'], [AuthMiddleware::class, 'requireAdminOrTeacher']]);
 
         // Weekly Evaluations routes
         $router->get('weekly-evaluations', [WeeklyEvaluationsController::class, 'index']);

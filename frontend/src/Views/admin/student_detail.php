@@ -82,11 +82,11 @@ $ams = $student['ams_result'] ?? null;
                             <dt class="col-sm-6">Kinesthetic</dt>
                             <dd class="col-sm-6">: <?= htmlspecialchars($vark['scores']['kinesthetic'] ?? '0'); ?></dd>
 
-                            <dt class="col-sm-6">Terakhir Diselesaikan</dt>
-                            <dd class="col-sm-6">: <?php
-                                $varkCompletedAt = $vark['created_at'] ?? null;
-                                echo $varkCompletedAt ? htmlspecialchars(date('d M Y H:i', strtotime($varkCompletedAt))) : '-';
-                            ?></dd>
+                            <dt class="col-sm-6 border-top pt-2 mt-2">Tipe Gaya Belajar</dt>
+                            <dd class="col-sm-6 border-top pt-2 mt-2">: <strong><?= htmlspecialchars($vark['type'] ?? '-'); ?></strong></dd>
+                            
+                            <dt class="col-sm-6">Label Dominan</dt>
+                            <dd class="col-sm-6">: <strong><?= htmlspecialchars($vark['label'] ?? '-'); ?></strong></dd>
                         </dl>
                     <?php else: ?>
                         <p class="text-muted">Belum ada data gaya belajar VARK yang tercatat.</p>

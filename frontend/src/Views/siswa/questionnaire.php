@@ -134,16 +134,13 @@ $renderer->includePartial('components/partials/page_title', [
                                     </small>
                                 </div>
                                 <div class="text-end">
-                                    <?php if (($item['questionnaire_type'] ?? '') === 'VARK'): ?>
-                                        <?php $label = $item['vark_style_label'] ?? 'VARK'; ?>
-                                        <span class="badge bg-primary">Gaya: <?php echo htmlspecialchars($label); ?></span>
-                                    <?php else: ?>
+                                    <?php if (($item['questionnaire_type'] ?? '') !== 'VARK'): ?>
                                         <?php 
                                         $score = $item['total_score'] ?? 0;
                                         $scoreClass = $score >= 5.5 ? 'score-high' : ($score >= 4 ? 'score-medium' : 'score-low');
                                         ?>
                                         <span class="score-badge <?php echo $scoreClass; ?>">
-                                            Skor: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
+                                          Skor: <?php echo htmlspecialchars(number_format($score ?? 0, 2)); ?>
                                         </span>
                                     <?php endif; ?>
                                 </div>

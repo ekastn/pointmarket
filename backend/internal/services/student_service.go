@@ -239,24 +239,39 @@ func (s *StudentService) GetStudentDetailsByUserID(ctx context.Context, userID i
 		studentDetails.Phone = &p
 	}
 
-	// Fetch latest VARK result
-	varkResult, err := s.q.GetLatestVarkResult(ctx, userID)
+	// Fetch latest VARK result (using learning style which includes style type/label)
+	varkLearningStyle, err := s.q.GetStudentLearningStyle(ctx, userID)
 	if err == nil {
-		studentDetails.VARKResult = &dtos.VarkResultDTO{
-			ID:              varkResult.ID,
-			StudentID:       varkResult.StudentID,
-			QuestionnaireID: int64(varkResult.QuestionnaireID),
+		// Safely dereference score pointers
+		scoreVisual := 0.0
+		if varkLearningStyle.ScoreVisual != nil {
+			scoreVisual = *varkLearningStyle.ScoreVisual
+		}
+		scoreAuditory := 0.0
+		if varkLearningStyle.ScoreAuditory != nil {
+			scoreAuditory = *varkLearningStyle.ScoreAuditory
+		}
+		scoreReading := 0.0
+		if varkLearningStyle.ScoreReading != nil {
+			scoreReading = *varkLearningStyle.ScoreReading
+		}
+		scoreKinesthetic := 0.0
+		if varkLearningStyle.ScoreKinesthetic != nil {
+			scoreKinesthetic = *varkLearningStyle.ScoreKinesthetic
+		}
+
+		studentDetails.VARKResult = &dtos.StudentLearningStyle{
+			Type:  string(varkLearningStyle.Type),
+			Label: varkLearningStyle.Label,
 			Scores: dtos.VARKScores{
-				Visual:      float64(varkResult.ScoreVisual),
-				Auditory:    float64(varkResult.ScoreAuditory),
-				Reading:     float64(varkResult.ScoreReading),
-				Kinesthetic: float64(varkResult.ScoreKinesthetic),
+				Visual:      scoreVisual,
+				Auditory:    scoreAuditory,
+				Reading:     scoreReading,
+				Kinesthetic: scoreKinesthetic,
 			},
-			// Answers:         convert to DTO if needed (currently []VarkAnswerDetailDTO),
-			CreatedAt: varkResult.CreatedAt.Time,
 		}
 	} else if err != sql.ErrNoRows {
-		log.Printf("error fetching VARK result for user %d: %v", userID, err)
+		log.Printf("error fetching VARK learning style for user %d: %v", userID, err)
 	}
 
 	// Fetch latest MSLQ result

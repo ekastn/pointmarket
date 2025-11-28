@@ -65,7 +65,7 @@ type StudentDetailsDTO struct {
 	BirthDate   *time.Time       `json:"birth_date,omitempty"`
 	Gender      *string          `json:"gender,omitempty"`
 	Phone       *string          `json:"phone,omitempty"`
-	VARKResult     *VarkResultDTO   `json:"vark_result,omitempty"`
+	VARKResult     *StudentLearningStyle   `json:"vark_result,omitempty"`
 	MSLQResult     *LikertResultDTO `json:"mslq_result,omitempty"`
 	AMSResult      *LikertResultDTO `json:"ams_result,omitempty"`
 	AcademicScore  float64          `json:"academic_score"`

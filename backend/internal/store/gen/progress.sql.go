@@ -207,25 +207,24 @@ func (q *Queries) GetWeeklyEvaluationsByStudentID(ctx context.Context, arg GetWe
 
 const getWeeklyEvaluationsForTeacherDashboard = `-- name: GetWeeklyEvaluationsForTeacherDashboard :many
 SELECT
-    we.id,
-    we.status,
-    we.due_date,
-    we.completed_at,
     u.id as student_id,
-    u.display_name as student_name
-FROM weekly_evaluations we
-JOIN students s ON we.student_id = s.student_id
-JOIN users u ON s.user_id = u.id
-WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+    u.display_name as student_name,
+    COUNT(CASE WHEN we.status = 'completed' THEN 1 END) AS completed_count,
+    COUNT(CASE WHEN we.status = 'pending' THEN 1 END) AS pending_count,
+    COUNT(CASE WHEN we.status = 'overdue' THEN 1 END) AS overdue_count
+FROM users u
+JOIN students s ON u.id = s.user_id
+LEFT JOIN weekly_evaluations we ON s.student_id = we.student_id AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+WHERE u.role = 'siswa'
+GROUP BY u.id, u.display_name
 `
 
 type GetWeeklyEvaluationsForTeacherDashboardRow struct {
-	ID          int64                   `json:"id"`
-	Status      WeeklyEvaluationsStatus `json:"status"`
-	DueDate     time.Time               `json:"due_date"`
-	CompletedAt sql.NullTime            `json:"completed_at"`
-	StudentID   int64                   `json:"student_id"`
-	StudentName string                  `json:"student_name"`
+	StudentID      int64  `json:"student_id"`
+	StudentName    string `json:"student_name"`
+	CompletedCount int64  `json:"completed_count"`
+	PendingCount   int64  `json:"pending_count"`
+	OverdueCount   int64  `json:"overdue_count"`
 }
 
 func (q *Queries) GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, dateSUB interface{}) ([]GetWeeklyEvaluationsForTeacherDashboardRow, error) {
@@ -238,12 +237,11 @@ func (q *Queries) GetWeeklyEvaluationsForTeacherDashboard(ctx context.Context, d
 	for rows.Next() {
 		var i GetWeeklyEvaluationsForTeacherDashboardRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.Status,
-			&i.DueDate,
-			&i.CompletedAt,
 			&i.StudentID,
 			&i.StudentName,
+			&i.CompletedCount,
+			&i.PendingCount,
+			&i.OverdueCount,
 		); err != nil {
 			return nil, err
 		}

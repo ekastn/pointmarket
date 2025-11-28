@@ -44,16 +44,16 @@ ORDER BY
 
 -- name: GetWeeklyEvaluationsForTeacherDashboard :many
 SELECT
-    we.id,
-    we.status,
-    we.due_date,
-    we.completed_at,
     u.id as student_id,
-    u.display_name as student_name
-FROM weekly_evaluations we
-JOIN students s ON we.student_id = s.student_id
-JOIN users u ON s.user_id = u.id
-WHERE we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK);
+    u.display_name as student_name,
+    COUNT(CASE WHEN we.status = 'completed' THEN 1 END) AS completed_count,
+    COUNT(CASE WHEN we.status = 'pending' THEN 1 END) AS pending_count,
+    COUNT(CASE WHEN we.status = 'overdue' THEN 1 END) AS overdue_count
+FROM users u
+JOIN students s ON u.id = s.user_id
+LEFT JOIN weekly_evaluations we ON s.student_id = we.student_id AND we.due_date >= DATE_SUB(CURDATE(), INTERVAL ? WEEK)
+WHERE u.role = 'siswa'
+GROUP BY u.id, u.display_name;
 
 -- name: CreateWeeklyEvaluation :exec
 INSERT INTO weekly_evaluations

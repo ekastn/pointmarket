@@ -23,25 +23,29 @@
                             <thead>
                                 <tr>
                                     <th>Student</th>
-                                    <th>Completion Rate</th>
-                                    <th>Status</th>
+                                    <th>Completed</th>
+                                    <th>Pending</th>
+                                    <th>Overdue</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($dashboardData)) : ?>
                                     <tr>
-                                        <td colspan="3" class="text-center">No data available.</td>
+                                        <td colspan="5" class="text-center">No data available.</td>
                                     </tr>
                                 <?php else : ?>
                                     <?php foreach ($dashboardData as $data) : ?>
                                         <tr>
                                             <td><?= htmlspecialchars($data['student_name']) ?></td>
-                                            <td><?= htmlspecialchars(number_format($data['completion_rate'] * 100, 2)) ?>%</td>
                                             <td>
-                                                <span class="badge bg-<?= $data['status'] === 'completed' ? 'success' : ($data['status'] === 'pending' ? 'warning' : 'danger') ?>">
-                                                    <?= htmlspecialchars($data['status']) ?>
-                                                </span>
+                                                <span class="badge bg-success"><?= htmlspecialchars($data['completed_count']) ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning"><?= htmlspecialchars($data['pending_count']) ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-danger"><?= htmlspecialchars($data['overdue_count']) ?></span>
                                             </td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-outline-primary pm-view-student-chart"

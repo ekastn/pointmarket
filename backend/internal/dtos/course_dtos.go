@@ -2,76 +2,57 @@ package dtos
 
 import (
 	"encoding/json"
+	"pointmarket/backend/internal/store/gen"
 	"time"
-
-	"pointmarket/backend/internal/store/gen" // Import the sqlc generated models
 )
 
-// --- Course DTOs ---
+// EnrolledStudentDTO represents basic information for a student enrolled in a course.
+type EnrolledStudentDTO struct {
+	UserID      int64  `json:"user_id"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	StudentID   string `json:"student_id"`
+}
 
-// CourseDTO represents a course for API responses
+// CourseDTO represents a course for general purpose
 type CourseDTO struct {
-	ID               int64           `json:"id"`
-	Title            string          `json:"title"`
-	Slug             string          `json:"slug"`
-	Description      *string         `json:"description"` // Use pointer for nullable
-	OwnerID          int64           `json:"owner_id"`
-	OwnerDisplayName string          `json:"owner_display_name"`
-	OwnerRole        string          `json:"owner_role"`
-	Metadata         json.RawMessage `json:"metadata"`
-	CreatedAt        time.Time       `json:"created_at"`
-	UpdatedAt        time.Time       `json:"updated_at"`
+	ID               int64                `json:"id"`
+	Title            string               `json:"title"`
+	Slug             string               `json:"slug"`
+	Description      *string              `json:"description,omitempty"`
+	OwnerID          int64                `json:"owner_id"`
+	OwnerDisplayName string               `json:"owner_display_name,omitempty"`
+	OwnerRole        string               `json:"owner_role,omitempty"`
+	Metadata         json.RawMessage      `json:"metadata,omitempty"`
+	CreatedAt        time.Time            `json:"created_at"`
+	UpdatedAt        time.Time            `json:"updated_at"`
+	EnrolledStudents []EnrolledStudentDTO `json:"enrolled_students,omitempty"`
 }
 
-// FromCourseModel converts a gen.Course model to a CourseDTO
-func (dto *CourseDTO) FromCourseModel(m gen.Course) {
-	dto.ID = m.ID
-	dto.Title = m.Title
-	dto.Slug = m.Slug
-	if m.Description.Valid {
-		dto.Description = &m.Description.String
-	} else {
-		dto.Description = nil
+// FromCourseModel maps the database model to the DTO
+func (dto *CourseDTO) FromCourseModel(course gen.Course) {
+	dto.ID = course.ID
+	dto.Title = course.Title
+	dto.Slug = course.Slug
+	if course.Description.Valid {
+		dto.Description = &course.Description.String
 	}
-	dto.OwnerID = m.OwnerID
-	dto.Metadata = m.Metadata
-	dto.CreatedAt = m.CreatedAt
-	dto.UpdatedAt = m.UpdatedAt
+	dto.OwnerID = course.OwnerID
+	dto.Metadata = course.Metadata
+	dto.CreatedAt = course.CreatedAt
+	dto.UpdatedAt = course.UpdatedAt
 }
 
-// StudentCoursesDTO for listing courses for students with enrollment status
-type StudentCoursesDTO struct {
-	CourseDTO
-	IsEnrolled bool `json:"is_enrolled"`
-}
-
-// FromStudentCoursesModel converts a gen.StudentCourses model to a StudentCoursesDTO
-func (dto *StudentCoursesDTO) FromStudentCoursesModel(m gen.GetCoursesWithEnrollmentStatusRow) {
-	dto.ID = m.ID
-	dto.Title = m.Title
-	dto.Slug = m.Slug
-	if m.Description.Valid {
-		dto.Description = &m.Description.String
-	} else {
-		dto.Description = nil
-	}
-	dto.OwnerID = m.OwnerID
-	dto.Metadata = m.Metadata
-	dto.CreatedAt = m.CreatedAt
-	dto.UpdatedAt = m.UpdatedAt
-	dto.IsEnrolled = m.IsEnrolled == 1
-}
-
-// CreateCourseRequestDTO for creating a new course
+// CreateCourseRequestDTO defines the payload for creating a new course
 type CreateCourseRequestDTO struct {
 	Title       string          `json:"title" binding:"required"`
 	Slug        string          `json:"slug" binding:"required"`
 	Description *string         `json:"description"`
-	OwnerID     int64           `json:"owner_id" binding:"required"` // Will be inferred or set by admin
-	Metadata    json.RawMessage `json:"metadata" binding:"required"`
+	OwnerID     int64           `json:"owner_id" binding:"required"`
+	Metadata    json.RawMessage `json:"metadata"`
 }
 
-// UpdateCourseRequestDTO for updating an existing course
+// UpdateCourseRequestDTO defines the payload for updating a course
 type UpdateCourseRequestDTO struct {
 	Title       *string         `json:"title"`
 	Slug        *string         `json:"slug"`
@@ -79,77 +60,68 @@ type UpdateCourseRequestDTO struct {
 	Metadata    json.RawMessage `json:"metadata"`
 }
 
-// ListCoursesResponseDTO contains a list of CourseDTOs
-type ListCoursesResponseDTO struct {
-	Courses []CourseDTO `json:"courses"`
-	Total   int         `json:"total"`
-}
-
-// EnrollStudentRequestDTO for enrolling a student in a course
+// EnrollStudentRequestDTO defines the payload for enrolling a student in a course
 type EnrollStudentRequestDTO struct {
-	// Optional for students; backend derives from auth when omitted
-	UserID int64 `json:"user_id"`
-	// Optional; backend takes course ID from the path
-	CourseID int64 `json:"course_id"`
+	UserID   int64 `json:"user_id" binding:"required"`
+	CourseID int64 `json:"course_id" binding:"required"`
 }
 
-// StudentCourseDTO represents a student's enrollment in a course, including course details
-type StudentCourseDTO struct {
-	StudentID  int64     `json:"student_id"`
-	CourseID   int64     `json:"course_id"`
-	EnrolledAt time.Time `json:"enrolled_at"`
-	// Course details from the join
-	CourseTitle       string          `json:"course_title"`
-	CourseSlug        string          `json:"course_slug"`
-	CourseDescription *string         `json:"course_description"`
-	CourseOwnerID     int64           `json:"course_owner_id"`
-	CourseMetadata    json.RawMessage `json:"course_metadata"`
+// StudentCoursesDTO represents a course with enrollment status for a student
+type StudentCoursesDTO struct {
+	ID               int64           `json:"id"`
+	Title            string          `json:"title"`
+	Slug             string          `json:"slug"`
+	Description      *string         `json:"description,omitempty"`
+	OwnerID          int64           `json:"owner_id"`
+	OwnerDisplayName string          `json:"owner_display_name,omitempty"`
+	OwnerRole        string          `json:"owner_role,omitempty"`
+	Metadata         json.RawMessage `json:"metadata,omitempty"`
+	CreatedAt        time.Time       `json:"created_at"`
+	UpdatedAt        time.Time       `json:"updated_at"`
+	IsEnrolled       bool            `json:"is_enrolled"`
 }
 
-// ListStudentCoursesResponseDTO for listing a student's enrolled courses
-
-type ListStudentCoursesResponseDTO struct {
-	StudentCourses []StudentCoursesDTO `json:"student_courses"`
-
-	Total int `json:"total"`
-}
-
-// TeacherCoursesDTO for listing courses for teachers with ownership status
-
-type TeacherCoursesDTO struct {
-	CourseDTO
-
-	IsOwner bool `json:"is_owner"`
-}
-
-// FromTeacherCoursesModel converts a gen.GetCoursesWithOwnershipStatusRow model to a TeacherCoursesDTO
-
-func (dto *TeacherCoursesDTO) FromTeacherCoursesModel(m gen.GetCoursesWithOwnershipStatusRow) {
-
-	dto.ID = m.ID
-
-	dto.Title = m.Title
-
-	dto.Slug = m.Slug
-
-	if m.Description.Valid {
-
-		dto.Description = &m.Description.String
-
-	} else {
-
-		dto.Description = nil
-
+// FromStudentCoursesModel maps the database model to the DTO for student view
+func (dto *StudentCoursesDTO) FromStudentCoursesModel(course gen.GetCoursesWithEnrollmentStatusRow) {
+	dto.ID = course.ID
+	dto.Title = course.Title
+	dto.Slug = course.Slug
+	if course.Description.Valid {
+		dto.Description = &course.Description.String
 	}
+	dto.OwnerID = course.OwnerID
+	dto.Metadata = course.Metadata
+	dto.CreatedAt = course.CreatedAt
+	dto.UpdatedAt = course.UpdatedAt
+	dto.IsEnrolled = course.IsEnrolled == 1 // MariaDB/MySQL bool is 1 or 0
+}
 
-	dto.OwnerID = m.OwnerID
+// TeacherCoursesDTO represents a course with ownership status for a teacher
+type TeacherCoursesDTO struct {
+	ID               int64           `json:"id"`
+	Title            string          `json:"title"`
+	Slug             string          `json:"slug"`
+	Description      *string         `json:"description,omitempty"`
+	OwnerID          int64           `json:"owner_id"`
+	OwnerDisplayName string          `json:"owner_display_name,omitempty"`
+	OwnerRole        string          `json:"owner_role,omitempty"`
+	Metadata         json.RawMessage `json:"metadata,omitempty"`
+	CreatedAt        time.Time       `json:"created_at"`
+	UpdatedAt        time.Time       `json:"updated_at"`
+	IsOwner          bool            `json:"is_owner"`
+}
 
-	dto.Metadata = m.Metadata
-
-	dto.CreatedAt = m.CreatedAt
-
-	dto.UpdatedAt = m.UpdatedAt
-
-	dto.IsOwner = m.IsOwner == 1
-
+// FromTeacherCoursesModel maps the database model to the DTO for teacher view
+func (dto *TeacherCoursesDTO) FromTeacherCoursesModel(course gen.GetCoursesWithOwnershipStatusRow) {
+	dto.ID = course.ID
+	dto.Title = course.Title
+	dto.Slug = course.Slug
+	if course.Description.Valid {
+		dto.Description = &course.Description.String
+	}
+	dto.OwnerID = course.OwnerID
+	dto.Metadata = course.Metadata
+	dto.CreatedAt = course.CreatedAt
+	dto.UpdatedAt = course.UpdatedAt
+	dto.IsOwner = course.IsOwner == 1 // MariaDB/MySQL bool is 1 or 0
 }

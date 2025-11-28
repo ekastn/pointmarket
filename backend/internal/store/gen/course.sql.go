@@ -408,6 +408,54 @@ func (q *Queries) GetCoursesWithOwnershipStatus(ctx context.Context, arg GetCour
 	return items, nil
 }
 
+const getEnrolledStudentsByCourseID = `-- name: GetEnrolledStudentsByCourseID :many
+SELECT
+    u.id as user_id,
+    u.display_name,
+    u.email,
+    s.student_id
+FROM student_courses sc
+JOIN students s ON sc.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
+WHERE sc.course_id = ?
+ORDER BY u.display_name
+`
+
+type GetEnrolledStudentsByCourseIDRow struct {
+	UserID      int64  `json:"user_id"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	StudentID   string `json:"student_id"`
+}
+
+func (q *Queries) GetEnrolledStudentsByCourseID(ctx context.Context, courseID int64) ([]GetEnrolledStudentsByCourseIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getEnrolledStudentsByCourseID, courseID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEnrolledStudentsByCourseIDRow
+	for rows.Next() {
+		var i GetEnrolledStudentsByCourseIDRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.DisplayName,
+			&i.Email,
+			&i.StudentID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getStudentCoursesByUserID = `-- name: GetStudentCoursesByUserID :many
 SELECT
     sc.student_id,

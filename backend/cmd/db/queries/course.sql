@@ -115,3 +115,15 @@ WHERE
 SELECT * FROM courses
 WHERE slug = ?
 LIMIT 1;
+
+-- name: GetEnrolledStudentsByCourseID :many
+SELECT
+    u.id as user_id,
+    u.display_name,
+    u.email,
+    s.student_id
+FROM student_courses sc
+JOIN students s ON sc.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
+WHERE sc.course_id = ?
+ORDER BY u.display_name;

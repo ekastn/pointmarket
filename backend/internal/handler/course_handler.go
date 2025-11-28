@@ -93,6 +93,19 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 			response.Error(c, http.StatusInternalServerError, "Failed to retrieve course by slug: "+err.Error())
 			return
 		}
+
+		// If user is a teacher, also fetch the list of enrolled students
+		if userRole == "guru" && course.ID != 0 {
+			enrolledStudents, err := h.courseService.GetEnrolledStudentsByCourseID(c.Request.Context(), course.ID)
+			if err != nil {
+				// Log the error but don't fail the whole request
+				// The teacher can still see the course details
+				// log.Printf("Could not fetch enrolled students: %v", err)
+			} else {
+				course.EnrolledStudents = enrolledStudents
+			}
+		}
+
 		var courses []dtos.CourseDTO
 		var total int64 = 0
 		if course.ID != 0 {

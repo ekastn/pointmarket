@@ -70,6 +70,36 @@
           </dl>
         </div>
       </div>
+
+      <?php if (!empty($user) && ($user['role'] ?? '') === 'guru' && !empty($course['enrolled_students'])): ?>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Daftar Siswa Terdaftar</h5>
+          <?php if (!empty($course['enrolled_students'])): ?>
+            <table class="table table-sm table-striped">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Email</th>
+                  <th>NIM</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($course['enrolled_students'] as $student): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($student['display_name']) ?></td>
+                    <td><?= htmlspecialchars($student['email']) ?></td>
+                    <td><?= htmlspecialchars($student['student_id']) ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          <?php else: ?>
+            <div class="text-muted">Belum ada siswa terdaftar.</div>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
     <div class="col-lg-4">
       <div class="card mb-3">

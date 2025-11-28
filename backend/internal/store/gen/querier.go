@@ -95,6 +95,7 @@ type Querier interface {
 	GetCoursesByOwnerID(ctx context.Context, arg GetCoursesByOwnerIDParams) ([]Course, error)
 	GetCoursesWithEnrollmentStatus(ctx context.Context, arg GetCoursesWithEnrollmentStatusParams) ([]GetCoursesWithEnrollmentStatusRow, error)
 	GetCoursesWithOwnershipStatus(ctx context.Context, arg GetCoursesWithOwnershipStatusParams) ([]GetCoursesWithOwnershipStatusRow, error)
+	GetEnrolledStudentsByCourseID(ctx context.Context, courseID int64) ([]GetEnrolledStudentsByCourseIDRow, error)
 	GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error)
 	GetLatestUserLearningStyle(ctx context.Context, userID int64) (StudentLearningStyle, error)
 	GetLatestVarkResult(ctx context.Context, userID int64) (GetLatestVarkResultRow, error)

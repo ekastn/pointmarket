@@ -100,7 +100,7 @@ func (s *CourseService) GetCourses(ctx context.Context, filterUserID *int64, pag
 			}
 			if search != "" {
 				title := strings.ToLower(sc.CourseTitle)
-				var descVal string
+				descVal := ""
 				if courseDesc != nil {
 					descVal = strings.ToLower(*courseDesc)
 				}
@@ -451,4 +451,23 @@ func (s *CourseService) GetCourseBySlug(ctx context.Context, slug string) (dtos.
 		dto.OwnerRole = string(u.Role)
 	}
 	return dto, nil
+}
+
+// GetEnrolledStudentsByCourseID retrieves a list of students enrolled in a specific course
+func (s *CourseService) GetEnrolledStudentsByCourseID(ctx context.Context, courseID int64) ([]dtos.EnrolledStudentDTO, error) {
+	rows, err := s.q.GetEnrolledStudentsByCourseID(ctx, courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	studentDTOs := make([]dtos.EnrolledStudentDTO, 0, len(rows))
+	for _, row := range rows {
+		studentDTOs = append(studentDTOs, dtos.EnrolledStudentDTO{
+			UserID:      row.UserID,
+			DisplayName: row.DisplayName,
+			Email:       row.Email,
+			StudentID:   row.StudentID,
+		})
+	}
+	return studentDTOs, nil
 }

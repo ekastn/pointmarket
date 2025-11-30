@@ -138,3 +138,19 @@ type ListProductCategoriesResponseDTO struct {
 	Categories []ProductCategoryDTO `json:"categories"`
 	Total      int                  `json:"total"`
 }
+
+// OrderDTO represents an order transaction for admin view
+type OrderDTO struct {
+	ID          int64     `json:"id"`
+	OrderedAt   time.Time `json:"ordered_at"`
+	PointsSpent int32     `json:"points_spent"`
+	Status      string    `json:"status"`
+	ProductName string    `json:"product_name"`
+	UserName    string    `json:"user_name"`
+}
+
+// ListOrdersResponseDTO for admin list
+type ListOrdersResponseDTO struct {
+	Orders []OrderDTO `json:"orders"`
+	Total  int64      `json:"total"`
+}

@@ -136,6 +136,9 @@ func main() {
 		authRequired.GET("/roles", userHandler.GetRoles)
 		authRequired.POST("/text-analyzer", textAnalyzerHandler.PredictText)
 
+		// Admin-only: View all orders (transactions)
+		adminRoutes.GET("/orders", productHandler.GetAllOrders)
+
 		userRoutes := adminRoutes.Group("/users")
 		{
 			userRoutes.GET("", userHandler.GetAllUsers)

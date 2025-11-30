@@ -13,6 +13,29 @@ import (
 	"time"
 )
 
+const countAllOrders = `-- name: CountAllOrders :one
+SELECT count(*)
+FROM orders o
+JOIN products p ON o.product_id = p.id
+JOIN users u ON o.user_id = u.id
+WHERE (
+    ? = '' OR
+    u.display_name LIKE CONCAT('%', ?, '%') OR
+    p.name LIKE CONCAT('%', ?, '%')
+)
+`
+
+type CountAllOrdersParams struct {
+	Search interface{} `json:"search"`
+}
+
+func (q *Queries) CountAllOrders(ctx context.Context, arg CountAllOrdersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllOrders, arg.Search, arg.Search, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countProductCategories = `-- name: CountProductCategories :one
 SELECT count(*) FROM product_categories
 `
@@ -159,6 +182,77 @@ WHERE id = ?
 func (q *Queries) DeleteProductCategory(ctx context.Context, id int32) error {
 	_, err := q.db.ExecContext(ctx, deleteProductCategory, id)
 	return err
+}
+
+const getAllOrders = `-- name: GetAllOrders :many
+SELECT
+    o.id,
+    o.ordered_at,
+    o.points_spent,
+    o.status,
+    p.name AS product_name,
+    u.display_name AS user_name
+FROM orders o
+JOIN products p ON o.product_id = p.id
+JOIN users u ON o.user_id = u.id
+WHERE (
+    ? = '' OR
+    u.display_name LIKE CONCAT('%', ?, '%') OR
+    p.name LIKE CONCAT('%', ?, '%')
+)
+ORDER BY o.ordered_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetAllOrdersParams struct {
+	Search interface{} `json:"search"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+type GetAllOrdersRow struct {
+	ID          int64        `json:"id"`
+	OrderedAt   time.Time    `json:"ordered_at"`
+	PointsSpent int32        `json:"points_spent"`
+	Status      OrdersStatus `json:"status"`
+	ProductName string       `json:"product_name"`
+	UserName    string       `json:"user_name"`
+}
+
+func (q *Queries) GetAllOrders(ctx context.Context, arg GetAllOrdersParams) ([]GetAllOrdersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllOrders,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllOrdersRow
+	for rows.Next() {
+		var i GetAllOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrderedAt,
+			&i.PointsSpent,
+			&i.Status,
+			&i.ProductName,
+			&i.UserName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getProductByID = `-- name: GetProductByID :one

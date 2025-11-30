@@ -12,6 +12,7 @@ import (
 type Querier interface {
 	// User Badges --
 	AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserParams) (sql.Result, error)
+	CountAllOrders(ctx context.Context, arg CountAllOrdersParams) (int64, error)
 	CountBadges(ctx context.Context) (int64, error)
 	CountCourses(ctx context.Context) (int64, error)
 	CountCoursesByOwnerID(ctx context.Context, ownerID int64) (int64, error)
@@ -81,6 +82,7 @@ type Querier interface {
 	GetActiveQuestionnaires(ctx context.Context) ([]Questionnaire, error)
 	GetActiveStudents(ctx context.Context) ([]GetActiveStudentsRow, error)
 	GetAdminStatistic(ctx context.Context) (GetAdminStatisticRow, error)
+	GetAllOrders(ctx context.Context, arg GetAllOrdersParams) ([]GetAllOrdersRow, error)
 	GetAssignmentByCourseIDAndOwnerID(ctx context.Context, arg GetAssignmentByCourseIDAndOwnerIDParams) (Assignment, error)
 	GetAssignmentByID(ctx context.Context, id int64) (Assignment, error)
 	GetAssignments(ctx context.Context) ([]GetAssignmentsRow, error)

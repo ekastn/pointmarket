@@ -47,8 +47,20 @@ class ProductsController extends BaseController
             ];
 
             if ($userRole === 'admin') {
+                // Fetch transaction history for admin
+                $ordersPage = (int) ($_GET['orders_page'] ?? 1);
+                $ordersLimit = 10;
+                $ordersSearch = $_GET['orders_search'] ?? '';
+
+                $ordersResponse = $this->productService->getAllOrders($ordersPage, $ordersLimit, $ordersSearch);
+                $ordersData = $ordersResponse['data'] ?? [];
+                $ordersMeta = $ordersResponse['meta'] ?? [];
+
                 $this->render('admin/products', array_merge($commonData, [
                     'title' => 'Product Management',
+                    'orders' => $ordersData,
+                    'orders_meta' => $ordersMeta,
+                    'orders_search' => $ordersSearch,
                 ]));
             } else {
                 $this->render('products/index', array_merge($commonData, [

@@ -437,3 +437,38 @@ func (s *ProductService) UpdateProductCategory(ctx context.Context, id int32, re
 func (s *ProductService) DeleteProductCategory(ctx context.Context, id int32) error {
 	return s.q.DeleteProductCategory(ctx, id)
 }
+
+// GetAllOrders retrieves a list of orders (transactions) for admin view
+func (s *ProductService) GetAllOrders(ctx context.Context, page, limit int, search string) ([]dtos.OrderDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	totalOrders, err := s.q.CountAllOrders(ctx, gen.CountAllOrdersParams{
+		Search: search,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	orders, err := s.q.GetAllOrders(ctx, gen.GetAllOrdersParams{
+		Search: search,
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var orderDTOs []dtos.OrderDTO
+	for _, o := range orders {
+		orderDTOs = append(orderDTOs, dtos.OrderDTO{
+			ID:          o.ID,
+			OrderedAt:   o.OrderedAt,
+			PointsSpent: o.PointsSpent,
+			Status:      string(o.Status),
+			ProductName: o.ProductName,
+			UserName:    o.UserName, // Using DisplayName from SQL query alias
+		})
+	}
+
+	return orderDTOs, totalOrders, nil
+}

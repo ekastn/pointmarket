@@ -49,6 +49,17 @@ $base_params = [
     </div>
 </div>
 
+
+<div class="container-fluid mt-5">
+    <?php
+    $renderer->includePartial('components/partials/table_orders', [
+        'orders' => $orders ?? [],
+        'orders_meta' => $orders_meta ?? [],
+        'orders_search' => $orders_search ?? ''
+    ]);
+    ?>
+</div>
+
 <!-- Data Modal Box Tambah Product -->
 <div class="modal fade" id="modalTambahProduct" tabindex="-1" aria-labelledby="modalTambahProductLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

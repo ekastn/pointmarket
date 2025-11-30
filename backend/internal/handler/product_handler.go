@@ -264,3 +264,18 @@ func (h *ProductHandler) DeleteProductCategory(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Product category deleted successfully", nil)
 }
+
+// GetAllOrders handles fetching a list of orders (transactions) for admin
+func (h *ProductHandler) GetAllOrders(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	orders, totalOrders, err := h.productService.GetAllOrders(c.Request.Context(), page, limit, search)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve orders: "+err.Error())
+		return
+	}
+
+	response.Paginated(c, http.StatusOK, "Orders retrieved successfully", orders, totalOrders, page, limit)
+}

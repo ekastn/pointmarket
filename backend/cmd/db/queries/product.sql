@@ -130,3 +130,33 @@ SELECT
 FROM products
 WHERE is_active = 1
   AND id IN (sqlc.slice('ids'));
+
+-- name: GetAllOrders :many
+SELECT
+    o.id,
+    o.ordered_at,
+    o.points_spent,
+    o.status,
+    p.name AS product_name,
+    u.display_name AS user_name
+FROM orders o
+JOIN products p ON o.product_id = p.id
+JOIN users u ON o.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    p.name LIKE CONCAT('%', sqlc.arg('search'), '%')
+)
+ORDER BY o.ordered_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountAllOrders :one
+SELECT count(*)
+FROM orders o
+JOIN products p ON o.product_id = p.id
+JOIN users u ON o.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    p.name LIKE CONCAT('%', sqlc.arg('search'), '%')
+);

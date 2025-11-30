@@ -36,6 +36,15 @@ class CoursesController extends BaseController
             // Determine which view to render based on user role
             $userRole = $_SESSION['user_data']['role'] ?? '';
             if ($userRole === 'admin') {
+                // Fetch enrollments for admin view
+                $enrollmentsPage = (int) ($_GET['enrollments_page'] ?? 1);
+                $enrollmentsSearch = $_GET['enrollments_search'] ?? '';
+                $enrollmentsLimit = 10;
+
+                $enrollmentsResponse = $this->courseService->getAllEnrollments($enrollmentsPage, $enrollmentsLimit, $enrollmentsSearch);
+                $enrollmentsData = $enrollmentsResponse['data'] ?? [];
+                $enrollmentsMeta = $enrollmentsResponse['meta'] ?? [];
+
                 $this->render('admin/courses', [
                     'user' => $_SESSION['user_data'],
                     'title' => 'Data Kelas',
@@ -48,6 +57,9 @@ class CoursesController extends BaseController
                     'total_pages' => $meta['total_pages'],
                     'start' => $start,
                     'end' => $end,
+                    'enrollments' => $enrollmentsData,
+                    'enrollments_meta' => $enrollmentsMeta,
+                    'enrollments_search' => $enrollmentsSearch,
                 ]);
             } elseif ($userRole === 'guru' || $userRole === 'siswa') {
                 $this->render('siswa/courses', [

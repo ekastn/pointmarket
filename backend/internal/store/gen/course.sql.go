@@ -12,6 +12,30 @@ import (
 	"time"
 )
 
+const countAllEnrollments = `-- name: CountAllEnrollments :one
+SELECT count(*)
+FROM student_courses sc
+JOIN courses c ON sc.course_id = c.id
+JOIN students s ON sc.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
+WHERE (
+    ? = '' OR
+    c.title LIKE CONCAT('%', ?, '%') OR
+    u.display_name LIKE CONCAT('%', ?, '%')
+)
+`
+
+type CountAllEnrollmentsParams struct {
+	Search interface{} `json:"search"`
+}
+
+func (q *Queries) CountAllEnrollments(ctx context.Context, arg CountAllEnrollmentsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllEnrollments, arg.Search, arg.Search, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countCourses = `-- name: CountCourses :one
 SELECT count(*) FROM courses
 `
@@ -130,6 +154,72 @@ type EnrollStudentInCourseParams struct {
 // Student Enrollment --
 func (q *Queries) EnrollStudentInCourse(ctx context.Context, arg EnrollStudentInCourseParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, enrollStudentInCourse, arg.UserID, arg.CourseID)
+}
+
+const getAllEnrollments = `-- name: GetAllEnrollments :many
+SELECT
+    sc.enrolled_at,
+    c.title AS course_title,
+    u.display_name AS student_name,
+    u.email AS student_email
+FROM student_courses sc
+JOIN courses c ON sc.course_id = c.id
+JOIN students s ON sc.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
+WHERE (
+    ? = '' OR
+    c.title LIKE CONCAT('%', ?, '%') OR
+    u.display_name LIKE CONCAT('%', ?, '%')
+)
+ORDER BY sc.enrolled_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetAllEnrollmentsParams struct {
+	Search interface{} `json:"search"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+type GetAllEnrollmentsRow struct {
+	EnrolledAt   time.Time `json:"enrolled_at"`
+	CourseTitle  string    `json:"course_title"`
+	StudentName  string    `json:"student_name"`
+	StudentEmail string    `json:"student_email"`
+}
+
+func (q *Queries) GetAllEnrollments(ctx context.Context, arg GetAllEnrollmentsParams) ([]GetAllEnrollmentsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllEnrollments,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllEnrollmentsRow
+	for rows.Next() {
+		var i GetAllEnrollmentsRow
+		if err := rows.Scan(
+			&i.EnrolledAt,
+			&i.CourseTitle,
+			&i.StudentName,
+			&i.StudentEmail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getCourseByID = `-- name: GetCourseByID :one

@@ -329,3 +329,18 @@ func (h *CourseHandler) UnenrollStudent(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Student unenrolled successfully", nil)
 }
+
+// GetAllEnrollments handles fetching a list of all course enrollments for admin
+func (h *CourseHandler) GetAllEnrollments(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	enrollments, total, err := h.courseService.GetAllEnrollments(c.Request.Context(), page, limit, search)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve enrollments: "+err.Error())
+		return
+	}
+
+	response.Paginated(c, http.StatusOK, "Enrollments retrieved successfully", enrollments, total, page, limit)
+}

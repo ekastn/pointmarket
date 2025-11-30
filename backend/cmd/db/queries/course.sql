@@ -127,3 +127,33 @@ JOIN students s ON sc.student_id = s.student_id
 JOIN users u ON s.user_id = u.id
 WHERE sc.course_id = ?
 ORDER BY u.display_name;
+
+-- name: GetAllEnrollments :many
+SELECT
+    sc.enrolled_at,
+    c.title AS course_title,
+    u.display_name AS student_name,
+    u.email AS student_email
+FROM student_courses sc
+JOIN courses c ON sc.course_id = c.id
+JOIN students s ON sc.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
+)
+ORDER BY sc.enrolled_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountAllEnrollments :one
+SELECT count(*)
+FROM student_courses sc
+JOIN courses c ON sc.course_id = c.id
+JOIN students s ON sc.student_id = s.student_id
+JOIN users u ON s.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    c.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
+);

@@ -139,6 +139,9 @@ func main() {
 		// Admin-only: View all orders (transactions)
 		adminRoutes.GET("/orders", productHandler.GetAllOrders)
 
+		// Admin-only: View all course enrollments
+		adminRoutes.GET("/enrollments", courseHandler.GetAllEnrollments)
+
 		userRoutes := adminRoutes.Group("/users")
 		{
 			userRoutes.GET("", userHandler.GetAllUsers)

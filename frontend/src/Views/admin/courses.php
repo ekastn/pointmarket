@@ -41,6 +41,16 @@ $base_params = [
         'base_params' => $base_params,
     ]);
     ?>
+
+    <div class="mt-5">
+        <?php
+        $renderer->includePartial('components/partials/table_enrollments', [
+            'enrollments' => $enrollments ?? [],
+            'enrollments_meta' => $enrollments_meta ?? [],
+            'enrollments_search' => $enrollments_search ?? ''
+        ]);
+        ?>
+    </div>
 </div>
 
 <!-- Data Modal Box Tambah Course -->

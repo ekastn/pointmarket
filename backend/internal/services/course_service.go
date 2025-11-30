@@ -471,3 +471,35 @@ func (s *CourseService) GetEnrolledStudentsByCourseID(ctx context.Context, cours
 	}
 	return studentDTOs, nil
 }
+
+// GetAllEnrollments retrieves a list of all course enrollments for admin view
+func (s *CourseService) GetAllEnrollments(ctx context.Context, page, limit int, search string) ([]dtos.EnrollmentDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	total, err := s.q.CountAllEnrollments(ctx, gen.CountAllEnrollmentsParams{
+		Search: search,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	enrollments, err := s.q.GetAllEnrollments(ctx, gen.GetAllEnrollmentsParams{
+		Search: search,
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var enrollmentDTOs []dtos.EnrollmentDTO
+	for _, e := range enrollments {
+		enrollmentDTOs = append(enrollmentDTOs, dtos.EnrollmentDTO{
+			EnrolledAt:   e.EnrolledAt,
+			CourseTitle:  e.CourseTitle,
+			StudentName:  e.StudentName,
+			StudentEmail: e.StudentEmail,
+		})
+	}
+	return enrollmentDTOs, total, nil
+}

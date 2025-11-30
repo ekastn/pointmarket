@@ -125,3 +125,15 @@ func (dto *TeacherCoursesDTO) FromTeacherCoursesModel(course gen.GetCoursesWithO
 	dto.UpdatedAt = course.UpdatedAt
 	dto.IsOwner = course.IsOwner == 1 // MariaDB/MySQL bool is 1 or 0
 }
+
+type EnrollmentDTO struct {
+	EnrolledAt   time.Time `json:"enrolled_at"`
+	CourseTitle  string    `json:"course_title"`
+	StudentName  string    `json:"student_name"`
+	StudentEmail string    `json:"student_email"`
+}
+
+type ListEnrollmentsResponseDTO struct {
+	Enrollments []EnrollmentDTO `json:"enrollments"`
+	Total       int64           `json:"total"`
+}

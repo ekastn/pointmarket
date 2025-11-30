@@ -11,6 +11,16 @@
         'role' => $role,
     ]);
     ?>
+
+    <div class="mt-5">
+        <?php
+        $renderer->includePartial('components/partials/table_mission_progress', [
+            'progress' => $progress ?? [],
+            'progress_meta' => $progress_meta ?? [],
+            'progress_search' => $progress_search ?? ''
+        ]);
+        ?>
+    </div>
 </div>
 
 <!-- Mission Modal -->
@@ -46,3 +56,5 @@
         </div>
     </div>
 </div>
+
+<script src="/public/assets/js/admin-missions.js"></script>

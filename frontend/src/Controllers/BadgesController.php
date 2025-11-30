@@ -27,7 +27,7 @@ class BadgesController extends BaseController
             $badges = $response['data'];
             $meta = $response['meta'];
 
-            $this->render('admin/badges', [
+            $data = [
                 'user' => $_SESSION['user_data'],
                 'title' => 'Badges',
                 'badges' => $badges,
@@ -36,7 +36,22 @@ class BadgesController extends BaseController
                 'limit' => $meta['limit'],
                 'total_data' => $meta['total_records'],
                 'total_pages' => $meta['total_pages'],
-            ]);
+            ];
+
+            // If admin, also fetch user badge awards
+            $userRole = $_SESSION['user_data']['role'] ?? '';
+            if ($userRole === 'admin') {
+                $awardsPage = (int) ($_GET['awards_page'] ?? 1);
+                $awardsSearch = $_GET['awards_search'] ?? '';
+                $awardsLimit = 10;
+
+                $awardsResponse = $this->badgeService->getAllBadgeAwards($awardsPage, $awardsLimit, $awardsSearch);
+                $data['awards'] = $awardsResponse['data'] ?? [];
+                $data['awards_meta'] = $awardsResponse['meta'] ?? [];
+                $data['awards_search'] = $awardsSearch;
+            }
+
+            $this->render('admin/badges', $data);
         } else {
             $_SESSION['messages']['error'] = 'Failed to fetch badges.';
             $this->redirect('/dashboard');

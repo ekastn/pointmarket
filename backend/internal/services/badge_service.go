@@ -197,3 +197,35 @@ func (s *BadgeService) RevokeBadgeFromUser(ctx context.Context, userID, badgeID 
 		BadgeID: badgeID,
 	})
 }
+
+// GetAllUserBadges retrieves all badge awards for admin
+func (s *BadgeService) GetAllUserBadges(ctx context.Context, page, limit int, search string) ([]dtos.BadgeAwardDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	total, err := s.q.CountAllUserBadges(ctx, gen.CountAllUserBadgesParams{
+		Search: search,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	awards, err := s.q.GetAllUserBadges(ctx, gen.GetAllUserBadgesParams{
+		Search: search,
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var badgeAwardDTOs []dtos.BadgeAwardDTO
+	for _, a := range awards {
+		badgeAwardDTOs = append(badgeAwardDTOs, dtos.BadgeAwardDTO{
+			AwardedAt:  a.AwardedAt,
+			BadgeTitle: a.BadgeTitle,
+			UserName:   a.UserName,
+			UserEmail:  a.UserEmail,
+		})
+	}
+	return badgeAwardDTOs, total, nil
+}

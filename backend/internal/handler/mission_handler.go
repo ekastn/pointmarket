@@ -271,3 +271,18 @@ func (h *MissionHandler) EndMission(c *gin.Context) {
 
 	// response.Success(c, http.StatusOK, "User mission ended successfully", nil)
 }
+
+// GetAllUserMissions handles fetching all user mission progress for admin view
+func (h *MissionHandler) GetAllUserMissions(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	progress, total, err := h.missionService.GetAllUserMissions(c.Request.Context(), page, limit, search)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve user mission progress: "+err.Error())
+		return
+	}
+
+	response.Paginated(c, http.StatusOK, "User mission progress retrieved successfully", progress, total, page, limit)
+}

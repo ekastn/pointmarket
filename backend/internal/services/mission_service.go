@@ -335,3 +335,42 @@ func (s *MissionService) UpdateUserMissionStatus(ctx context.Context, userMissio
 func (s *MissionService) DeleteUserMission(ctx context.Context, userMissionID int64) error {
 	return s.q.DeleteUserMission(ctx, userMissionID)
 }
+
+// GetAllUserMissions retrieves all user mission progress for admin view
+func (s *MissionService) GetAllUserMissions(ctx context.Context, page, limit int, search string) ([]dtos.UserMissionProgressDTO, int64, error) {
+	offset := (page - 1) * limit
+
+	total, err := s.q.CountAllUserMissions(ctx, gen.CountAllUserMissionsParams{
+		Search: search,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	missions, err := s.q.GetAllUserMissions(ctx, gen.GetAllUserMissionsParams{
+		Search: search,
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var progressDTOs []dtos.UserMissionProgressDTO
+	for _, m := range missions {
+		completedAt := (*time.Time)(nil)
+		if m.CompletedAt.Valid {
+			t := m.CompletedAt.Time
+			completedAt = &t
+		}
+		progressDTOs = append(progressDTOs, dtos.UserMissionProgressDTO{
+			StartedAt:    m.StartedAt,
+			CompletedAt:  completedAt,
+			Status:       m.Status,
+			MissionTitle: m.MissionTitle,
+			UserName:     m.UserName,
+			UserEmail:    m.UserEmail,
+		})
+	}
+	return progressDTOs, total, nil
+}

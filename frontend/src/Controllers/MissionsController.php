@@ -36,6 +36,17 @@ class MissionsController extends BaseController
                 $totalMissions = $response['data']['total'] ?? 0;
                 $totalPages = ceil($totalMissions / $limit);
             }
+
+            // If admin, also fetch all user mission progress
+            if ($role === 'admin') {
+                $progressPage = (int) ($_GET['progress_page'] ?? 1);
+                $progressSearch = $_GET['progress_search'] ?? '';
+                $progressLimit = 10;
+
+                $progressResponse = $this->missionService->getAllUserMissions($progressPage, $progressLimit, $progressSearch);
+                $progressData = $progressResponse['data'] ?? [];
+                $progressMeta = $progressResponse['meta'] ?? [];
+            }
         } elseif ($role === 'siswa') {
             $response = $this->missionService->getUserMissions($userId);
             if ($response && $response['success']) {
@@ -55,6 +66,9 @@ class MissionsController extends BaseController
                 'totalMissions' => $totalMissions,
                 'search' => $search,
                 'role' => $role,
+                'progress' => $progressData ?? [],
+                'progress_meta' => $progressMeta ?? [],
+                'progress_search' => $progressSearch ?? '',
             ]
         );
     }

@@ -163,3 +163,29 @@ type ListUserMissionsResponseDTO struct {
 	UserMissions []UserMissionDTO `json:"user_missions"`
 	Total        int              `json:"total"`
 }
+
+type BadgeAwardDTO struct {
+	AwardedAt  time.Time `json:"awarded_at"`
+	BadgeTitle string    `json:"badge_title"`
+	UserName   string    `json:"user_name"`
+	UserEmail  string    `json:"user_email"`
+}
+
+type ListBadgeAwardsResponseDTO struct {
+	Awards []BadgeAwardDTO `json:"awards"`
+	Total  int64           `json:"total"`
+}
+
+type UserMissionProgressDTO struct {
+	StartedAt    time.Time  `json:"started_at"`
+	CompletedAt  *time.Time `json:"completed_at"`
+	Status       string     `json:"status"`
+	MissionTitle string     `json:"mission_title"`
+	UserName     string     `json:"user_name"`
+	UserEmail    string     `json:"user_email"`
+}
+
+type ListUserMissionProgressResponseDTO struct {
+	Progress []UserMissionProgressDTO `json:"progress"`
+	Total    int64                    `json:"total"`
+}

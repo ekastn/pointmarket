@@ -31,6 +31,52 @@ func (q *Queries) AwardBadgeToUser(ctx context.Context, arg AwardBadgeToUserPara
 	return q.db.ExecContext(ctx, awardBadgeToUser, arg.UserID, arg.BadgeID)
 }
 
+const countAllUserBadges = `-- name: CountAllUserBadges :one
+SELECT count(*)
+FROM user_badges ub
+JOIN badges b ON ub.badge_id = b.id
+JOIN users u ON ub.user_id = u.id
+WHERE (
+    ? = '' OR
+    b.title LIKE CONCAT('%', ?, '%') OR
+    u.display_name LIKE CONCAT('%', ?, '%')
+)
+`
+
+type CountAllUserBadgesParams struct {
+	Search interface{} `json:"search"`
+}
+
+func (q *Queries) CountAllUserBadges(ctx context.Context, arg CountAllUserBadgesParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllUserBadges, arg.Search, arg.Search, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countAllUserMissions = `-- name: CountAllUserMissions :one
+SELECT count(*)
+FROM user_missions um
+JOIN missions m ON um.mission_id = m.id
+JOIN users u ON um.user_id = u.id
+WHERE (
+    ? = '' OR
+    m.title LIKE CONCAT('%', ?, '%') OR
+    u.display_name LIKE CONCAT('%', ?, '%')
+)
+`
+
+type CountAllUserMissionsParams struct {
+	Search interface{} `json:"search"`
+}
+
+func (q *Queries) CountAllUserMissions(ctx context.Context, arg CountAllUserMissionsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllUserMissions, arg.Search, arg.Search, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countBadges = `-- name: CountBadges :one
 SELECT count(*) FROM badges
 `
@@ -172,6 +218,142 @@ WHERE id = ?
 func (q *Queries) DeleteUserMission(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteUserMission, id)
 	return err
+}
+
+const getAllUserBadges = `-- name: GetAllUserBadges :many
+SELECT
+    ub.awarded_at,
+    b.title AS badge_title,
+    u.display_name AS user_name,
+    u.email AS user_email
+FROM user_badges ub
+JOIN badges b ON ub.badge_id = b.id
+JOIN users u ON ub.user_id = u.id
+WHERE (
+    ? = '' OR
+    b.title LIKE CONCAT('%', ?, '%') OR
+    u.display_name LIKE CONCAT('%', ?, '%')
+)
+ORDER BY ub.awarded_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetAllUserBadgesParams struct {
+	Search interface{} `json:"search"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+type GetAllUserBadgesRow struct {
+	AwardedAt  time.Time `json:"awarded_at"`
+	BadgeTitle string    `json:"badge_title"`
+	UserName   string    `json:"user_name"`
+	UserEmail  string    `json:"user_email"`
+}
+
+func (q *Queries) GetAllUserBadges(ctx context.Context, arg GetAllUserBadgesParams) ([]GetAllUserBadgesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserBadges,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllUserBadgesRow
+	for rows.Next() {
+		var i GetAllUserBadgesRow
+		if err := rows.Scan(
+			&i.AwardedAt,
+			&i.BadgeTitle,
+			&i.UserName,
+			&i.UserEmail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUserMissions = `-- name: GetAllUserMissions :many
+SELECT
+    um.started_at,
+    um.completed_at,
+    um.status,
+    m.title AS mission_title,
+    u.display_name AS user_name,
+    u.email AS user_email
+FROM user_missions um
+JOIN missions m ON um.mission_id = m.id
+JOIN users u ON um.user_id = u.id
+WHERE (
+    ? = '' OR
+    m.title LIKE CONCAT('%', ?, '%') OR
+    u.display_name LIKE CONCAT('%', ?, '%')
+)
+ORDER BY um.started_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetAllUserMissionsParams struct {
+	Search interface{} `json:"search"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+type GetAllUserMissionsRow struct {
+	StartedAt    time.Time    `json:"started_at"`
+	CompletedAt  sql.NullTime `json:"completed_at"`
+	Status       string       `json:"status"`
+	MissionTitle string       `json:"mission_title"`
+	UserName     string       `json:"user_name"`
+	UserEmail    string       `json:"user_email"`
+}
+
+func (q *Queries) GetAllUserMissions(ctx context.Context, arg GetAllUserMissionsParams) ([]GetAllUserMissionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserMissions,
+		arg.Search,
+		arg.Search,
+		arg.Search,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllUserMissionsRow
+	for rows.Next() {
+		var i GetAllUserMissionsRow
+		if err := rows.Scan(
+			&i.StartedAt,
+			&i.CompletedAt,
+			&i.Status,
+			&i.MissionTitle,
+			&i.UserName,
+			&i.UserEmail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getBadgeByID = `-- name: GetBadgeByID :one

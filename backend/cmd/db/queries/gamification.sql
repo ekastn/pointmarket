@@ -157,3 +157,61 @@ LIMIT ? OFFSET ?;
 INSERT INTO user_stats (user_id, total_points, updated_at)
 VALUES (?, 0, CURRENT_TIMESTAMP)
 ON DUPLICATE KEY UPDATE user_id = user_id;
+
+-- name: GetAllUserBadges :many
+SELECT
+    ub.awarded_at,
+    b.title AS badge_title,
+    u.display_name AS user_name,
+    u.email AS user_email
+FROM user_badges ub
+JOIN badges b ON ub.badge_id = b.id
+JOIN users u ON ub.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    b.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
+)
+ORDER BY ub.awarded_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountAllUserBadges :one
+SELECT count(*)
+FROM user_badges ub
+JOIN badges b ON ub.badge_id = b.id
+JOIN users u ON ub.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    b.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
+);
+
+-- name: GetAllUserMissions :many
+SELECT
+    um.started_at,
+    um.completed_at,
+    um.status,
+    m.title AS mission_title,
+    u.display_name AS user_name,
+    u.email AS user_email
+FROM user_missions um
+JOIN missions m ON um.mission_id = m.id
+JOIN users u ON um.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    m.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
+)
+ORDER BY um.started_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountAllUserMissions :one
+SELECT count(*)
+FROM user_missions um
+JOIN missions m ON um.mission_id = m.id
+JOIN users u ON um.user_id = u.id
+WHERE (
+    sqlc.arg('search') = '' OR
+    m.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
+    u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
+);

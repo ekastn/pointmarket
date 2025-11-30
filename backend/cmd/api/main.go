@@ -142,6 +142,12 @@ func main() {
 		// Admin-only: View all course enrollments
 		adminRoutes.GET("/enrollments", courseHandler.GetAllEnrollments)
 
+		// Admin-only: View all badge awards
+		adminRoutes.GET("/badges/awards", badgeHandler.GetAllUserBadges)
+
+		// Admin-only: View all mission progress
+		adminRoutes.GET("/missions/progress", missionHandler.GetAllUserMissions)
+
 		userRoutes := adminRoutes.Group("/users")
 		{
 			userRoutes.GET("", userHandler.GetAllUsers)

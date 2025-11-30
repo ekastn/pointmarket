@@ -42,6 +42,16 @@ $base_params = [
         'base_params' => $base_params,
     ]);
     ?>
+
+    <div class="mt-5">
+        <?php
+        $renderer->includePartial('components/partials/table_badge_awards', [
+            'awards' => $awards ?? [],
+            'awards_meta' => $awards_meta ?? [],
+            'awards_search' => $awards_search ?? ''
+        ]);
+        ?>
+    </div>
     </div>
 </div>
 
@@ -139,3 +149,5 @@ $base_params = [
         </div>
     </div>
 </div>
+
+<script src="/public/assets/js/admin-badges.js"></script>

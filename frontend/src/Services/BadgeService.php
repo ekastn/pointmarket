@@ -133,4 +133,23 @@ class BadgeService
 
         return null;
     }
+
+    public function getAllBadgeAwards(int $page = 1, int $limit = 10, string $search = ''): ?array
+    {
+        $queryParams = [
+            'page' => $page,
+            'limit' => $limit,
+        ];
+        if (!empty($search)) {
+            $queryParams['search'] = $search;
+        }
+
+        $response = $this->apiClient->request('GET', '/api/v1/badges/awards', ['query' => $queryParams]);
+
+        if ($response['success']) {
+            return $response;
+        }
+
+        return null;
+    }
 }

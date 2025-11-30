@@ -232,3 +232,18 @@ func (h *BadgeHandler) GetUserOwnBadges(c *gin.Context) {
 		Total:      len(userBadges),
 	})
 }
+
+// GetAllUserBadges handles fetching all badge awards for admin view
+func (h *BadgeHandler) GetAllUserBadges(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	awards, total, err := h.badgeService.GetAllUserBadges(c.Request.Context(), page, limit, search)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve badge awards: "+err.Error())
+		return
+	}
+
+	response.Paginated(c, http.StatusOK, "Badge awards retrieved successfully", awards, total, page, limit)
+}

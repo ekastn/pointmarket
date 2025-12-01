@@ -145,8 +145,9 @@ type OrderDTO struct {
 	OrderedAt   time.Time `json:"ordered_at"`
 	PointsSpent int32     `json:"points_spent"`
 	Status      string    `json:"status"`
-	ProductName string    `json:"product_name"`
-	UserName    string    `json:"user_name"`
+	ProductName       string    `json:"product_name"`
+	UserName          string    `json:"user_name"`
+	UserCurrentPoints int64     `json:"user_current_points"`
 }
 
 // ListOrdersResponseDTO for admin list

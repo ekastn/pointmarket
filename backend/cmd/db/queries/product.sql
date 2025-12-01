@@ -138,10 +138,12 @@ SELECT
     o.points_spent,
     o.status,
     p.name AS product_name,
-    u.display_name AS user_name
+    u.display_name AS user_name,
+    COALESCE(us.total_points, 0) AS user_current_points
 FROM orders o
 JOIN products p ON o.product_id = p.id
 JOIN users u ON o.user_id = u.id
+LEFT JOIN user_stats us ON u.id = us.user_id
 WHERE (
     sqlc.arg('search') = '' OR
     u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%') OR

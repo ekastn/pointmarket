@@ -464,9 +464,10 @@ func (s *ProductService) GetAllOrders(ctx context.Context, page, limit int, sear
 			ID:          o.ID,
 			OrderedAt:   o.OrderedAt,
 			PointsSpent: o.PointsSpent,
-			Status:      string(o.Status),
-			ProductName: o.ProductName,
-			UserName:    o.UserName, // Using DisplayName from SQL query alias
+			Status:            string(o.Status),
+			ProductName:       o.ProductName,
+			UserName:          o.UserName, // Using DisplayName from SQL query alias
+			UserCurrentPoints: o.UserCurrentPoints,
 		})
 	}
 

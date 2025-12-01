@@ -30,9 +30,10 @@ unset($current_get_params['orders_page']); // Remove current orders page param
 
 // Prepare columns for the generic table partial
 $columns = [
-    ['label' => 'ID', 'key' => 'id', 'formatter' => fn($val) => '#' . $val],
+    ['label' => 'ID', 'key' => 'id'],
     ['label' => 'Date', 'key' => 'ordered_at', 'formatter' => fn($val) => date('d M Y H:i', strtotime($val))],
     ['label' => 'User', 'key' => 'user_name'],
+    ['label' => 'Current Points', 'key' => 'user_current_points', 'formatter' => fn($val) => number_format($val)],
     ['label' => 'Product', 'key' => 'product_name'],
     ['label' => 'Points', 'key' => 'points_spent', 'formatter' => fn($val) => '<span class="text-danger">-' . $val . '</span>'],
     ['label' => 'Status', 'key' => 'status', 'formatter' => function($val) {

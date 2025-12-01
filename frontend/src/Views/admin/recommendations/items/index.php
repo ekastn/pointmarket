@@ -157,6 +157,7 @@
         ['label' => 'ID', 'key' => 'id'],
         ['label' => 'State', 'key' => 'state'],
         ['label' => 'Action', 'key' => 'action_code'],
+        ['label' => 'Avg Q', 'key' => 'avg_q', 'formatter' => function($v) { return $v !== null ? number_format($v, 3) : '<span class="text-muted">-</span>'; }],
         [
           'label' => 'Ref',
           'key' => 'ref',

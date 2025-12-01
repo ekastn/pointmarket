@@ -132,6 +132,43 @@ def list_items():
             rows = session.execute(stmt).scalars().all()
             items = [_item_to_dict(r) for r in rows]
 
+            # NEW: Calculate Average Q-Values per State/Action
+            try:
+                # We need averages for each action column grouped by state
+                q_sql = """
+                SELECT state,
+                       AVG(action_101) as q_101, AVG(action_102) as q_102,
+                       AVG(action_103) as q_103, AVG(action_105) as q_105,
+                       AVG(action_106) as q_106
+                FROM q_table_results
+                GROUP BY state
+                """
+                q_rows = execute_query(q_sql)
+                # Map: state -> { 101: val, 102: val ... }
+                q_map = {}
+                for r in q_rows:
+                    st = r.get("state")
+                    if not st: continue
+                    q_map[st] = {
+                        101: float(r.get("q_101") or 0),
+                        102: float(r.get("q_102") or 0),
+                        103: float(r.get("q_103") or 0),
+                        105: float(r.get("q_105") or 0),
+                        106: float(r.get("q_106") or 0),
+                    }
+
+                # Attach to items
+                for it in items:
+                    st = it.get("state")
+                    ac = int(it.get("action_code") or 0)
+                    if st in q_map and ac in q_map[st]:
+                        it["avg_q"] = round(q_map[st][ac], 3)
+                    else:
+                        it["avg_q"] = None # Not visited/trained yet
+            except Exception as e:
+                # Log but don't fail list
+                print(f"Avg Q calc failed: {e}")
+
             # Enrich ref titles from local rec DB reference tables (if present)
             try:
                 # Collect IDs per type

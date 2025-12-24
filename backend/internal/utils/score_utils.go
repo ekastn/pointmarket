@@ -43,6 +43,14 @@ func NormalizeSixtenScore(dbScore float64) float64 {
 	return math.Round(normalized*100) / 100 // Round to 2 decimal places
 }
 
+// NormalizeVARKScore is a backwards-compatible alias for NormalizeSixtenScore.
+//
+// Tests and some older code refer to the generic name, but the input is expected
+// to be in the 0-16 questionnaire scale.
+func NormalizeVARKScore(dbScore float64) float64 {
+	return NormalizeSixtenScore(dbScore)
+}
+
 // NormalizeZeroOneScore converts a score from a 0-1 scale to the 1-10 standard VARK score scale.
 // Input: score (0.0-1.0)
 // Output: normalized score (1.0-10.0)

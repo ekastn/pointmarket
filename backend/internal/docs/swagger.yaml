@@ -1,0 +1,1325 @@
+basePath: /api/v1
+definitions:
+  pointmarket_backend_internal_dtos.APIError:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  pointmarket_backend_internal_dtos.APIResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  pointmarket_backend_internal_dtos.AssignmentDTO:
+    properties:
+      course_id:
+        type: integer
+      course_title:
+        type: string
+      created_at:
+        type: string
+      description:
+        description: Use pointer for nullable
+        type: string
+      due_date:
+        description: Use pointer for nullable
+        type: string
+      id:
+        type: integer
+      reward_points:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.CreateAssignmentRequestDTO:
+    properties:
+      course_id:
+        type: integer
+      description:
+        type: string
+      due_date:
+        type: string
+      reward_points:
+        type: integer
+      status:
+        description: e.g., "draft", "published"
+        type: string
+      title:
+        type: string
+    required:
+    - course_id
+    - reward_points
+    - title
+    type: object
+  pointmarket_backend_internal_dtos.CreateQuizQuestionRequestDTO:
+    properties:
+      answer_options:
+        items:
+          type: integer
+        type: array
+      correct_answer:
+        type: string
+      ordinal:
+        description: optional; if omitted, appended via trigger
+        type: integer
+      question_text:
+        type: string
+      question_type:
+        type: string
+      quiz_id:
+        type: integer
+    required:
+    - question_text
+    - question_type
+    - quiz_id
+    type: object
+  pointmarket_backend_internal_dtos.CreateQuizRequestDTO:
+    properties:
+      course_id:
+        type: integer
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      reward_points:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - course_id
+    - reward_points
+    - title
+    type: object
+  pointmarket_backend_internal_dtos.CreateStudentAssignmentRequestDTO:
+    properties:
+      assignment_id:
+        type: integer
+      status:
+        description: e.g., "not_started", "in_progress"
+        type: string
+      student_id:
+        type: integer
+      submission:
+        type: string
+    required:
+    - assignment_id
+    - student_id
+    type: object
+  pointmarket_backend_internal_dtos.CreateStudentQuizRequestDTO:
+    properties:
+      quiz_id:
+        type: integer
+      status:
+        description: e.g., "not_started", "in_progress"
+        type: string
+      student_id:
+        type: integer
+    required:
+    - quiz_id
+    - student_id
+    type: object
+  pointmarket_backend_internal_dtos.ErrorResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  pointmarket_backend_internal_dtos.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.ListAssignmentsResponseDTO:
+    properties:
+      assignments:
+        items:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO'
+        type: array
+      total:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.ListQuizQuestionsResponseDTO:
+    properties:
+      quiz_questions:
+        items:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO'
+        type: array
+      total:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.ListQuizzesResponseDTO:
+    properties:
+      quizzes:
+        items:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizDTO'
+        type: array
+      total:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.ListStudentAssignmentsResponseDTO:
+    properties:
+      student_assignments:
+        items:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO'
+        type: array
+      total:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.ListStudentQuizzesResponseDTO:
+    properties:
+      student_quizzes:
+        items:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO'
+        type: array
+      total:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  pointmarket_backend_internal_dtos.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/pointmarket_backend_internal_dtos.UserDTO'
+    type: object
+  pointmarket_backend_internal_dtos.QuizDTO:
+    properties:
+      course_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      id:
+        type: integer
+      reward_points:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.QuizQuestionDTO:
+    properties:
+      answer_options:
+        items:
+          type: integer
+        type: array
+      correct_answer:
+        type: string
+      id:
+        type: integer
+      ordinal:
+        type: integer
+      question_text:
+        type: string
+      question_type:
+        type: string
+      quiz_id:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - role
+    - username
+    type: object
+  pointmarket_backend_internal_dtos.StudentAssignmentDTO:
+    properties:
+      assignment_course_id:
+        type: integer
+      assignment_description:
+        type: string
+      assignment_due_date:
+        type: string
+      assignment_id:
+        type: integer
+      assignment_reward_points:
+        type: integer
+      assignment_title:
+        description: Joined assignment details
+        type: string
+      attachments:
+        items:
+          type: integer
+        type: array
+      attempt:
+        type: integer
+      created_at:
+        type: string
+      feedback:
+        type: string
+      graded_at:
+        description: Use pointer for nullable
+        type: string
+      grader_user_id:
+        type: integer
+      id:
+        type: integer
+      score:
+        description: Use pointer for nullable
+        type: number
+      status:
+        type: string
+      student_email:
+        type: string
+      student_id:
+        type: string
+      student_name:
+        description: Joined student details (for GetStudentAssignmentsByAssignmentID)
+        type: string
+      submission:
+        description: Use pointer for nullable
+        type: string
+      submitted_at:
+        description: Use pointer for nullable
+        type: string
+      updated_at:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.StudentQuizDTO:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      quiz_course_id:
+        type: integer
+      quiz_description:
+        type: string
+      quiz_duration_minutes:
+        type: integer
+      quiz_id:
+        type: integer
+      quiz_reward_points:
+        type: integer
+      quiz_title:
+        description: Joined quiz details
+        type: string
+      score:
+        type: integer
+      started_at:
+        type: string
+      status:
+        type: string
+      student_email:
+        type: string
+      student_id:
+        type: string
+      student_name:
+        description: Joined student details (for GetStudentQuizzesByQuizID)
+        type: string
+      updated_at:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UpdateAssignmentRequestDTO:
+    properties:
+      course_id:
+        type: integer
+      description:
+        type: string
+      due_date:
+        type: string
+      reward_points:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UpdateQuizQuestionRequestDTO:
+    properties:
+      answer_options:
+        items:
+          type: integer
+        type: array
+      correct_answer:
+        type: string
+      ordinal:
+        type: integer
+      question_text:
+        type: string
+      question_type:
+        type: string
+      quiz_id:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.UpdateQuizRequestDTO:
+    properties:
+      course_id:
+        type: integer
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      reward_points:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UpdateStudentAssignmentRequestDTO:
+    properties:
+      attachments:
+        items:
+          type: integer
+        type: array
+      feedback:
+        type: string
+      graded_at:
+        type: string
+      grader_user_id:
+        type: integer
+      score:
+        type: number
+      status:
+        description: e.g., "in_progress", "completed"
+        type: string
+      submission:
+        type: string
+      submitted_at:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UpdateStudentQuizRequestDTO:
+    properties:
+      completed_at:
+        type: string
+      score:
+        type: integer
+      started_at:
+        type: string
+      status:
+        description: e.g., "in_progress", "completed"
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UserDTO:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: PointMarket backend API documentation.
+  title: PointMarket API
+  version: "1.0"
+paths:
+  /assignments:
+    get:
+      description: Retrieves a list of all assignments, with optional filtering by
+        course ID.
+      parameters:
+      - description: Filter by Course ID
+        in: query
+        name: course_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListAssignmentsResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get all assignments
+      tags:
+      - Assignments
+    post:
+      consumes:
+      - application/json
+      description: Creates a new assignment with the provided details.
+      parameters:
+      - description: Assignment details
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.CreateAssignmentRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Create a new assignment
+      tags:
+      - Assignments
+  /assignments/{assignment_id}/submissions:
+    get:
+      description: Retrieves all student assignment records for a specific assignment.
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: assignment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListStudentAssignmentsResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get student assignments by assignment ID
+      tags:
+      - Student Assignments
+  /assignments/{id}:
+    delete:
+      description: Deletes an assignment by its ID.
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Delete an assignment
+      tags:
+      - Assignments
+    get:
+      description: Retrieves a single assignment by its unique identifier.
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get assignment by ID
+      tags:
+      - Assignments
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing assignment identified by its ID.
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated assignment details
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateAssignmentRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Update an assignment
+      tags:
+      - Assignments
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.LoginResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Register payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.UserDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      tags:
+      - auth
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.HealthResponse'
+      tags:
+      - health
+  /quizzes:
+    get:
+      description: Retrieves a list of all quizzes, with optional filtering by course
+        ID.
+      parameters:
+      - description: Filter by Course ID
+        in: query
+        name: course_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListQuizzesResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get all quizzes
+      tags:
+      - Quizzes
+    post:
+      consumes:
+      - application/json
+      description: Creates a new quiz with the provided details.
+      parameters:
+      - description: Quiz details
+        in: body
+        name: quiz
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.CreateQuizRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Create a new quiz
+      tags:
+      - Quizzes
+  /quizzes/{id}:
+    delete:
+      description: Deletes a quiz by its ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Delete a quiz
+      tags:
+      - Quizzes
+    get:
+      description: Retrieves a single quiz by its unique identifier.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get quiz by ID
+      tags:
+      - Quizzes
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing quiz identified by its ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated quiz details
+        in: body
+        name: quiz
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateQuizRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Update a quiz
+      tags:
+      - Quizzes
+  /quizzes/{quiz_id}/questions:
+    get:
+      description: Retrieves all questions for a specific quiz.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListQuizQuestionsResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get quiz questions by quiz ID
+      tags:
+      - Quiz Questions
+    post:
+      consumes:
+      - application/json
+      description: Creates a new quiz question for a specific quiz.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      - description: Quiz question details
+        in: body
+        name: question
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.CreateQuizQuestionRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Create a new quiz question
+      tags:
+      - Quiz Questions
+  /quizzes/{quiz_id}/questions/{question_id}:
+    delete:
+      description: Deletes a quiz question by its ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      - description: Question ID
+        in: path
+        name: question_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Delete a quiz question
+      tags:
+      - Quiz Questions
+    get:
+      description: Retrieves a single quiz question by its unique identifier.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      - description: Question ID
+        in: path
+        name: question_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get quiz question by ID
+      tags:
+      - Quiz Questions
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing quiz question identified by its ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      - description: Question ID
+        in: path
+        name: question_id
+        required: true
+        type: integer
+      - description: Updated quiz question details
+        in: body
+        name: question
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateQuizQuestionRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Update a quiz question
+      tags:
+      - Quiz Questions
+  /quizzes/{quiz_id}/start:
+    post:
+      consumes:
+      - application/json
+      description: Records that a student has started a specific quiz.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      - description: Student Quiz details
+        in: body
+        name: studentQuiz
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.CreateStudentQuizRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Record student starting a quiz
+      tags:
+      - Student Quizzes
+  /quizzes/{quiz_id}/submissions:
+    get:
+      description: Retrieves all student quiz records for a specific quiz.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListStudentQuizzesResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get student quizzes by quiz ID
+      tags:
+      - Student Quizzes
+  /student-assignments:
+    post:
+      consumes:
+      - application/json
+      description: Records that a student has started a specific assignment.
+      parameters:
+      - description: Student Assignment details
+        in: body
+        name: studentAssignment
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.CreateStudentAssignmentRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Record student starting an assignment
+      tags:
+      - Student Assignments
+  /student-assignments/{id}:
+    delete:
+      description: Deletes a student's assignment record by its ID.
+      parameters:
+      - description: Student Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Delete a student's assignment record
+      tags:
+      - Student Assignments
+    get:
+      description: Retrieves a specific student's assignment record by its unique
+        identifier.
+      parameters:
+      - description: Student Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get student assignment by ID
+      tags:
+      - Student Assignments
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing student's assignment record identified by its
+        ID.
+      parameters:
+      - description: Student Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated student assignment details
+        in: body
+        name: studentAssignment
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateStudentAssignmentRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Update a student's assignment record
+      tags:
+      - Student Assignments
+  /student-quizzes/{id}:
+    delete:
+      description: Deletes a student's quiz record by its ID.
+      parameters:
+      - description: Student Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Delete a student's quiz record
+      tags:
+      - Student Quizzes
+    get:
+      description: Retrieves a specific student's quiz record by its unique identifier.
+      parameters:
+      - description: Student Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get student quiz by ID
+      tags:
+      - Student Quizzes
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing student's quiz record identified by its ID.
+      parameters:
+      - description: Student Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated student quiz details
+        in: body
+        name: studentQuiz
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateStudentQuizRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Update a student's quiz record
+      tags:
+      - Student Quizzes
+  /students/{student_id}/quizzes:
+    get:
+      description: Retrieves a list of all quizzes for a specific student, including
+        their progress.
+      parameters:
+      - description: Student ID
+        in: path
+        name: student_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListStudentQuizzesResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get student quizzes list
+      tags:
+      - Student Quizzes
+  /students/{user_id}/assignments:
+    get:
+      description: Retrieves a list of all assignments for a specific student, including
+        their progress.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ListStudentAssignmentsResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.ErrorResponse'
+      summary: Get student assignments list
+      tags:
+      - Student Assignments
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -1,0 +1,2000 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "PointMarket backend API documentation.",
+        "title": "PointMarket API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/assignments": {
+            "get": {
+                "description": "Retrieves a list of all assignments, with optional filtering by course ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Assignments"
+                ],
+                "summary": "Get all assignments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by Course ID",
+                        "name": "course_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListAssignmentsResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new assignment with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Assignments"
+                ],
+                "summary": "Create a new assignment",
+                "parameters": [
+                    {
+                        "description": "Assignment details",
+                        "name": "assignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.CreateAssignmentRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assignments/{assignment_id}/submissions": {
+            "get": {
+                "description": "Retrieves all student assignment records for a specific assignment.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Assignments"
+                ],
+                "summary": "Get student assignments by assignment ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "assignment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListStudentAssignmentsResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assignments/{id}": {
+            "get": {
+                "description": "Retrieves a single assignment by its unique identifier.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Assignments"
+                ],
+                "summary": "Get assignment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing assignment identified by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Assignments"
+                ],
+                "summary": "Update an assignment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated assignment details",
+                        "name": "assignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.UpdateAssignmentRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an assignment by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Assignments"
+                ],
+                "summary": "Delete an assignment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/pointmarket_backend_internal_dtos.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.LoginResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "Register payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/pointmarket_backend_internal_dtos.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.UserDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes": {
+            "get": {
+                "description": "Retrieves a list of all quizzes, with optional filtering by course ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quizzes"
+                ],
+                "summary": "Get all quizzes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by Course ID",
+                        "name": "course_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListQuizzesResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new quiz with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quizzes"
+                ],
+                "summary": "Create a new quiz",
+                "parameters": [
+                    {
+                        "description": "Quiz details",
+                        "name": "quiz",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.CreateQuizRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}": {
+            "get": {
+                "description": "Retrieves a single quiz by its unique identifier.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quizzes"
+                ],
+                "summary": "Get quiz by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing quiz identified by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quizzes"
+                ],
+                "summary": "Update a quiz",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated quiz details",
+                        "name": "quiz",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.UpdateQuizRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a quiz by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quizzes"
+                ],
+                "summary": "Delete a quiz",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{quiz_id}/questions": {
+            "get": {
+                "description": "Retrieves all questions for a specific quiz.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Questions"
+                ],
+                "summary": "Get quiz questions by quiz ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListQuizQuestionsResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new quiz question for a specific quiz.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Questions"
+                ],
+                "summary": "Create a new quiz question",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Quiz question details",
+                        "name": "question",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.CreateQuizQuestionRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{quiz_id}/questions/{question_id}": {
+            "get": {
+                "description": "Retrieves a single quiz question by its unique identifier.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Questions"
+                ],
+                "summary": "Get quiz question by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Question ID",
+                        "name": "question_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing quiz question identified by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Questions"
+                ],
+                "summary": "Update a quiz question",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Question ID",
+                        "name": "question_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated quiz question details",
+                        "name": "question",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.UpdateQuizQuestionRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a quiz question by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Questions"
+                ],
+                "summary": "Delete a quiz question",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Question ID",
+                        "name": "question_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{quiz_id}/start": {
+            "post": {
+                "description": "Records that a student has started a specific quiz.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Quizzes"
+                ],
+                "summary": "Record student starting a quiz",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Student Quiz details",
+                        "name": "studentQuiz",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.CreateStudentQuizRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{quiz_id}/submissions": {
+            "get": {
+                "description": "Retrieves all student quiz records for a specific quiz.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Quizzes"
+                ],
+                "summary": "Get student quizzes by quiz ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListStudentQuizzesResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/student-assignments": {
+            "post": {
+                "description": "Records that a student has started a specific assignment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Assignments"
+                ],
+                "summary": "Record student starting an assignment",
+                "parameters": [
+                    {
+                        "description": "Student Assignment details",
+                        "name": "studentAssignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.CreateStudentAssignmentRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/student-assignments/{id}": {
+            "get": {
+                "description": "Retrieves a specific student's assignment record by its unique identifier.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Assignments"
+                ],
+                "summary": "Get student assignment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing student's assignment record identified by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Assignments"
+                ],
+                "summary": "Update a student's assignment record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated student assignment details",
+                        "name": "studentAssignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.UpdateStudentAssignmentRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a student's assignment record by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Assignments"
+                ],
+                "summary": "Delete a student's assignment record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/student-quizzes/{id}": {
+            "get": {
+                "description": "Retrieves a specific student's quiz record by its unique identifier.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Quizzes"
+                ],
+                "summary": "Get student quiz by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing student's quiz record identified by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Quizzes"
+                ],
+                "summary": "Update a student's quiz record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated student quiz details",
+                        "name": "studentQuiz",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.UpdateStudentQuizRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a student's quiz record by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Quizzes"
+                ],
+                "summary": "Delete a student's quiz record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/students/{student_id}/quizzes": {
+            "get": {
+                "description": "Retrieves a list of all quizzes for a specific student, including their progress.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Quizzes"
+                ],
+                "summary": "Get student quizzes list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Student ID",
+                        "name": "student_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListStudentQuizzesResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/students/{user_id}/assignments": {
+            "get": {
+                "description": "Retrieves a list of all assignments for a specific student, including their progress.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Student Assignments"
+                ],
+                "summary": "Get student assignments list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ListStudentAssignmentsResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/pointmarket_backend_internal_dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "pointmarket_backend_internal_dtos.APIError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.APIResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.AssignmentDTO": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "integer"
+                },
+                "course_title": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Use pointer for nullable",
+                    "type": "string"
+                },
+                "due_date": {
+                    "description": "Use pointer for nullable",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reward_points": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.CreateAssignmentRequestDTO": {
+            "type": "object",
+            "required": [
+                "course_id",
+                "reward_points",
+                "title"
+            ],
+            "properties": {
+                "course_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "reward_points": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "e.g., \"draft\", \"published\"",
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.CreateQuizQuestionRequestDTO": {
+            "type": "object",
+            "required": [
+                "question_text",
+                "question_type",
+                "quiz_id"
+            ],
+            "properties": {
+                "answer_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "correct_answer": {
+                    "type": "string"
+                },
+                "ordinal": {
+                    "description": "optional; if omitted, appended via trigger",
+                    "type": "integer"
+                },
+                "question_text": {
+                    "type": "string"
+                },
+                "question_type": {
+                    "type": "string"
+                },
+                "quiz_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.CreateQuizRequestDTO": {
+            "type": "object",
+            "required": [
+                "course_id",
+                "reward_points",
+                "title"
+            ],
+            "properties": {
+                "course_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "reward_points": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.CreateStudentAssignmentRequestDTO": {
+            "type": "object",
+            "required": [
+                "assignment_id",
+                "student_id"
+            ],
+            "properties": {
+                "assignment_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "e.g., \"not_started\", \"in_progress\"",
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "integer"
+                },
+                "submission": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.CreateStudentQuizRequestDTO": {
+            "type": "object",
+            "required": [
+                "quiz_id",
+                "student_id"
+            ],
+            "properties": {
+                "quiz_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "e.g., \"not_started\", \"in_progress\"",
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.ListAssignmentsResponseDTO": {
+            "type": "object",
+            "properties": {
+                "assignments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pointmarket_backend_internal_dtos.AssignmentDTO"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.ListQuizQuestionsResponseDTO": {
+            "type": "object",
+            "properties": {
+                "quiz_questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizQuestionDTO"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.ListQuizzesResponseDTO": {
+            "type": "object",
+            "properties": {
+                "quizzes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pointmarket_backend_internal_dtos.QuizDTO"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.ListStudentAssignmentsResponseDTO": {
+            "type": "object",
+            "properties": {
+                "student_assignments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentAssignmentDTO"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.ListStudentQuizzesResponseDTO": {
+            "type": "object",
+            "properties": {
+                "student_quizzes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pointmarket_backend_internal_dtos.StudentQuizDTO"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/pointmarket_backend_internal_dtos.UserDTO"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.QuizDTO": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reward_points": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.QuizQuestionDTO": {
+            "type": "object",
+            "properties": {
+                "answer_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "correct_answer": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ordinal": {
+                    "type": "integer"
+                },
+                "question_text": {
+                    "type": "string"
+                },
+                "question_type": {
+                    "type": "string"
+                },
+                "quiz_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password",
+                "role",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.StudentAssignmentDTO": {
+            "type": "object",
+            "properties": {
+                "assignment_course_id": {
+                    "type": "integer"
+                },
+                "assignment_description": {
+                    "type": "string"
+                },
+                "assignment_due_date": {
+                    "type": "string"
+                },
+                "assignment_id": {
+                    "type": "integer"
+                },
+                "assignment_reward_points": {
+                    "type": "integer"
+                },
+                "assignment_title": {
+                    "description": "Joined assignment details",
+                    "type": "string"
+                },
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "attempt": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "feedback": {
+                    "type": "string"
+                },
+                "graded_at": {
+                    "description": "Use pointer for nullable",
+                    "type": "string"
+                },
+                "grader_user_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "score": {
+                    "description": "Use pointer for nullable",
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "student_email": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                },
+                "student_name": {
+                    "description": "Joined student details (for GetStudentAssignmentsByAssignmentID)",
+                    "type": "string"
+                },
+                "submission": {
+                    "description": "Use pointer for nullable",
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "description": "Use pointer for nullable",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.StudentQuizDTO": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "quiz_course_id": {
+                    "type": "integer"
+                },
+                "quiz_description": {
+                    "type": "string"
+                },
+                "quiz_duration_minutes": {
+                    "type": "integer"
+                },
+                "quiz_id": {
+                    "type": "integer"
+                },
+                "quiz_reward_points": {
+                    "type": "integer"
+                },
+                "quiz_title": {
+                    "description": "Joined quiz details",
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "student_email": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                },
+                "student_name": {
+                    "description": "Joined student details (for GetStudentQuizzesByQuizID)",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.UpdateAssignmentRequestDTO": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "reward_points": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.UpdateQuizQuestionRequestDTO": {
+            "type": "object",
+            "properties": {
+                "answer_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "correct_answer": {
+                    "type": "string"
+                },
+                "ordinal": {
+                    "type": "integer"
+                },
+                "question_text": {
+                    "type": "string"
+                },
+                "question_type": {
+                    "type": "string"
+                },
+                "quiz_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.UpdateQuizRequestDTO": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "reward_points": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.UpdateStudentAssignmentRequestDTO": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "feedback": {
+                    "type": "string"
+                },
+                "graded_at": {
+                    "type": "string"
+                },
+                "grader_user_id": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "number"
+                },
+                "status": {
+                    "description": "e.g., \"in_progress\", \"completed\"",
+                    "type": "string"
+                },
+                "submission": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.UpdateStudentQuizRequestDTO": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "e.g., \"in_progress\", \"completed\"",
+                    "type": "string"
+                }
+            }
+        },
+        "pointmarket_backend_internal_dtos.UserDTO": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

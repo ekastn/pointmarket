@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"pointmarket/backend/internal/config"
 	"pointmarket/backend/internal/database"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/gateway"
 	"pointmarket/backend/internal/handler"
 	"pointmarket/backend/internal/middleware"
@@ -18,8 +19,20 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "pointmarket/backend/internal/docs"
 )
 
+// @title PointMarket API
+// @version 1.0
+// @description PointMarket backend API documentation.
+// @BasePath /api/v1
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.Init()
 	db := database.Connect(cfg)
@@ -99,15 +112,14 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Health check endpoint
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-		})
-	})
-
 	// API v1 group
 	v1 := r.Group("/api/v1")
+
+	// Health check endpoint
+	v1.GET("/health", healthHandler)
+
+	// Swagger docs (public)
+	v1.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Authentication routes
 	authRoutes := v1.Group("/auth")
@@ -359,4 +371,14 @@ func main() {
 	if err := r.Run(serverAddr); err != nil {
 		panic(fmt.Sprintf("failed to start server: %v", err))
 	}
+}
+
+// healthHandler returns API liveness status.
+//
+// @Tags health
+// @Produce json
+// @Success 200 {object} dtos.HealthResponse
+// @Router /health [get]
+func healthHandler(c *gin.Context) {
+	c.JSON(200, dtos.HealthResponse{Status: "ok"})
 }

@@ -17,6 +17,16 @@ func NewAuthHandler(authService services.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
+// Register registers a new user.
+//
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param payload body dtos.RegisterRequest true "Register payload"
+// @Success 201 {object} dtos.APIResponse{data=dtos.UserDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var registerDTO dtos.RegisterRequest
 	if err := c.ShouldBindJSON(&registerDTO); err != nil {
@@ -30,9 +40,29 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "User registered successfully", user)
+	userDTO := dtos.UserDTO{
+		ID:        int(user.ID),
+		Email:     user.Email,
+		Username:  user.Username,
+		Role:      string(user.Role),
+		Name:      user.DisplayName,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	response.Success(c, http.StatusCreated, "User registered successfully", userDTO)
 }
 
+// Login authenticates a user and returns a JWT token.
+//
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param payload body dtos.LoginRequest true "Login payload"
+// @Success 200 {object} dtos.APIResponse{data=dtos.LoginResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginDTO dtos.LoginRequest
 	if err := c.ShouldBindJSON(&loginDTO); err != nil {
@@ -47,11 +77,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	userDTO := dtos.UserDTO{
-		ID:       int(user.ID),
-		Email:    user.Email,
-		Username: user.Username,
-		Role:     string(user.Role),
-		Name:     user.DisplayName,
+		ID:        int(user.ID),
+		Email:     user.Email,
+		Username:  user.Username,
+		Role:      string(user.Role),
+		Name:      user.DisplayName,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 
 	loginResponse := dtos.LoginResponse{

@@ -27,7 +27,20 @@ func NewUserHandler(userService services.UserService, studentService *services.S
 	return &UserHandler{userService: userService, studentService: studentService, maxBodyBytes: maxBytes}
 }
 
-// CreateUser handles creating a new user
+// CreateUser handles creating a new user.
+//
+// @Tags users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param payload body dtos.CreateUserRequest true "Create user payload"
+// @Success 201 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dtos.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -48,7 +61,19 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "User created successfully", nil)
 }
 
-// UpdateUserProfile handles updating a user's profile information
+// UpdateUserProfile handles updating a user's profile information.
+//
+// @Tags profile
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param payload body dtos.UpdateProfileRequest true "Update profile payload"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /profile/ [put]
 func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -70,7 +95,16 @@ func (h *UserHandler) UpdateUserProfile(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User profile updated successfully", nil)
 }
 
-// GetUserProfile handles fetching the current user's profile (users + user_profiles)
+// GetUserProfile handles fetching the current user's profile (users + user_profiles).
+//
+// @Tags profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dtos.APIResponse{data=dtos.ProfileResponse}
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /profile/ [get]
 func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	prof, err := h.userService.GetUserProfile(c.Request.Context(), int64(userID))
@@ -93,7 +127,18 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Profile retrieved successfully", prof)
 }
 
-// ChangePassword allows the current authenticated user to change their password
+// ChangePassword allows the current authenticated user to change their password.
+//
+// @Tags profile
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param payload body dtos.ChangePasswordRequest true "Change password payload"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /profile/password [put]
 func (h *UserHandler) ChangePassword(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -121,7 +166,21 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Password changed successfully", nil)
 }
 
-// GetAllUsers handles fetching all users with pagination, search, and role filters
+// GetAllUsers handles fetching all users with pagination, search, and role filters.
+//
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Param search query string false "Search term"
+// @Param role query string false "Role filter"
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.UserDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users [get]
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	search := c.Query("search")
 	role := c.Query("role")
@@ -151,7 +210,19 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	response.Paginated(c, http.StatusOK, "Users retrieved successfully", userDTOs, totalRecords, page, limit)
 }
 
-// GetUserByID handles fetching a user by ID
+// GetUserByID handles fetching a user by ID.
+//
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.UserDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -179,13 +250,35 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User retrieved successfully", userDTO)
 }
 
-// GetRoles handles fetching all available user roles
+// GetRoles handles fetching all available user roles.
+//
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dtos.APIResponse{data=[]string}
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /roles [get]
 func (h *UserHandler) GetRoles(c *gin.Context) {
 	roles := h.userService.GetRoles()
 	response.Success(c, http.StatusOK, "Roles retrieved successfully", roles)
 }
 
-// UpdateUserRole handles updating a user's role (admin only)
+// UpdateUserRole handles updating a user's role (admin only).
+//
+// @Tags users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param payload body dtos.UpdateUserRoleRequest true "Update user role payload"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id}/role [put]
 func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -193,10 +286,7 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Role string `json:"role" binding:"required"`
-	}
-
+	var req dtos.UpdateUserRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
@@ -214,7 +304,18 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User role updated successfully", nil)
 }
 
-// DeleteUser handles deleting a user (sets role to 'inactive')
+// DeleteUser handles deleting a user (sets role to 'inactive').
+//
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -229,7 +330,21 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	response.Success(c, http.StatusOK, "User deleted successfully", nil)
 }
 
-// UpdateUser handles updating a user's information (admin only)
+// UpdateUser handles updating a user's information (admin only).
+//
+// @Tags users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param payload body dtos.UpdateUserRequest true "Update user payload"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -256,7 +371,17 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 }
 
 // PatchUserAvatar handles updating the current user's avatar image via multipart upload.
-// Method: PATCH /profile/avatar
+//
+// @Tags profile
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "Avatar file"
+// @Success 200 {object} dtos.APIResponse{data=dtos.AvatarUploadResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /profile/avatar [patch]
 func (h *UserHandler) PatchUserAvatar(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	// Enforce a hard cap on the request body to fail fast on huge uploads
@@ -280,10 +405,22 @@ func (h *UserHandler) PatchUserAvatar(c *gin.Context) {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response.Success(c, http.StatusOK, "Avatar updated", gin.H{"avatar_url": publicURL})
+	response.Success(c, http.StatusOK, "Avatar updated", dtos.AvatarUploadResponse{AvatarURL: publicURL})
 }
 
 // GetUserDetails handles fetching detailed user information for the admin panel.
+//
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.UserDetailsDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id}/details [get]
 func (h *UserHandler) GetUserDetails(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

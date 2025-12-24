@@ -40,6 +40,24 @@ definitions:
       updated_at:
         type: string
     type: object
+  pointmarket_backend_internal_dtos.AvatarUploadResponse:
+    properties:
+      avatar_url:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.ChangePasswordRequest:
+    properties:
+      confirm_password:
+        type: string
+      current_password:
+        type: string
+      new_password:
+        type: string
+    required:
+    - confirm_password
+    - current_password
+    - new_password
+    type: object
   pointmarket_backend_internal_dtos.CreateAssignmentRequestDTO:
     properties:
       course_id:
@@ -129,6 +147,25 @@ definitions:
     - quiz_id
     - student_id
     type: object
+  pointmarket_backend_internal_dtos.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - role
+    - username
+    type: object
   pointmarket_backend_internal_dtos.ErrorResponse:
     properties:
       message:
@@ -202,6 +239,71 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/pointmarket_backend_internal_dtos.UserDTO'
+    type: object
+  pointmarket_backend_internal_dtos.NullData:
+    type: object
+  pointmarket_backend_internal_dtos.PaginatedResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/pointmarket_backend_internal_dtos.PaginationMeta'
+      success:
+        type: boolean
+    type: object
+  pointmarket_backend_internal_dtos.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_pages:
+        type: integer
+      total_records:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.PointsStats:
+    properties:
+      total_points:
+        type: integer
+    type: object
+  pointmarket_backend_internal_dtos.ProfileResponse:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        description: from users.display_name
+        type: string
+      role:
+        type: string
+      student:
+        $ref: '#/definitions/pointmarket_backend_internal_dtos.StudentDTO'
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.ProgramDTO:
+    properties:
+      created_at:
+        type: string
+      faculty_id:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
     type: object
   pointmarket_backend_internal_dtos.QuizDTO:
     properties:
@@ -315,6 +417,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  pointmarket_backend_internal_dtos.StudentDTO:
+    properties:
+      birth_date:
+        type: string
+      cohort_year:
+        type: integer
+      created_at:
+        type: string
+      gender:
+        type: string
+      phone:
+        type: string
+      program:
+        $ref: '#/definitions/pointmarket_backend_internal_dtos.ProgramDTO'
+      status:
+        type: string
+      student_id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
   pointmarket_backend_internal_dtos.StudentQuizDTO:
     properties:
       completed_at:
@@ -365,6 +490,17 @@ definitions:
       status:
         type: string
       title:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UpdateProfileRequest:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      email:
+        type: string
+      name:
         type: string
     type: object
   pointmarket_backend_internal_dtos.UpdateQuizQuestionRequestDTO:
@@ -433,6 +569,33 @@ definitions:
         description: e.g., "in_progress", "completed"
         type: string
     type: object
+  pointmarket_backend_internal_dtos.UpdateUserRequest:
+    properties:
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - role
+    - username
+    type: object
+  pointmarket_backend_internal_dtos.UpdateUserRoleRequest:
+    properties:
+      role:
+        type: string
+    required:
+    - role
+    type: object
   pointmarket_backend_internal_dtos.UserDTO:
     properties:
       avatar:
@@ -445,6 +608,29 @@ definitions:
         type: integer
       name:
         type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  pointmarket_backend_internal_dtos.UserDetailsDTO:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      points:
+        $ref: '#/definitions/pointmarket_backend_internal_dtos.PointsStats'
       role:
         type: string
       updated_at:
@@ -699,6 +885,155 @@ paths:
             $ref: '#/definitions/pointmarket_backend_internal_dtos.HealthResponse'
       tags:
       - health
+  /profile/:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.ProfileResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - profile
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update profile payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.NullData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - profile
+  /profile/avatar:
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Avatar file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.AvatarUploadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - profile
+  /profile/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Change password payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.NullData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - profile
   /quizzes:
     get:
       description: Retrieves a list of all quizzes, with optional filtering by course
@@ -1059,6 +1394,34 @@ paths:
       summary: Get student quizzes by quiz ID
       tags:
       - Student Quizzes
+  /roles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
   /student-assignments:
     post:
       consumes:
@@ -1317,6 +1680,337 @@ paths:
       summary: Get student assignments list
       tags:
       - Student Assignments
+  /users:
+    get:
+      parameters:
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      - description: Role filter
+        in: query
+        name: role
+        type: string
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/pointmarket_backend_internal_dtos.UserDTO'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create user payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.NullData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.NullData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.UserDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update user payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.NullData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
+  /users/{id}/details:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.UserDetailsDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
+  /users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update user role payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pointmarket_backend_internal_dtos.UpdateUserRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/pointmarket_backend_internal_dtos.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/pointmarket_backend_internal_dtos.NullData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pointmarket_backend_internal_dtos.APIError'
+      security:
+      - BearerAuth: []
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     in: header

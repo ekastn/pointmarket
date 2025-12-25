@@ -27,13 +27,16 @@ func NewAssignmentHandler(assignmentService *services.AssignmentService, authz *
 // CreateAssignment handles the creation of a new assignment
 // @Summary Create a new assignment
 // @Description Creates a new assignment with the provided details.
-// @Tags Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param assignment body dtos.CreateAssignmentRequestDTO true "Assignment details"
-// @Success 201 {object} dtos.AssignmentDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 201 {object} dtos.APIResponse{data=dtos.AssignmentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /assignments [post]
 func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	var req dtos.CreateAssignmentRequestDTO
@@ -68,12 +71,15 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 // GetAssignmentByID retrieves an assignment by its ID
 // @Summary Get assignment by ID
 // @Description Retrieves a single assignment by its unique identifier.
-// @Tags Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "Assignment ID"
-// @Success 200 {object} dtos.AssignmentDTO
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.AssignmentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /assignments/{id} [get]
 func (h *AssignmentHandler) GetAssignmentByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -98,11 +104,14 @@ func (h *AssignmentHandler) GetAssignmentByID(c *gin.Context) {
 // GetAssignments retrieves a list of assignments
 // @Summary Get all assignments
 // @Description Retrieves a list of all assignments, with optional filtering by course ID.
-// @Tags Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Produce json
 // @Param course_id query int false "Filter by Course ID"
-// @Success 200 {object} dtos.ListAssignmentsResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListAssignmentsResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /assignments [get]
 func (h *AssignmentHandler) GetAssignments(c *gin.Context) {
 	var courseIDFilter *int64
@@ -135,15 +144,18 @@ func (h *AssignmentHandler) GetAssignments(c *gin.Context) {
 // UpdateAssignment handles the update of an existing assignment
 // @Summary Update an assignment
 // @Description Updates an existing assignment identified by its ID.
-// @Tags Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param id path int true "Assignment ID"
 // @Param assignment body dtos.UpdateAssignmentRequestDTO true "Updated assignment details"
-// @Success 200 {object} dtos.AssignmentDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.AssignmentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /assignments/{id} [put]
 func (h *AssignmentHandler) UpdateAssignment(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -188,12 +200,15 @@ func (h *AssignmentHandler) UpdateAssignment(c *gin.Context) {
 // DeleteAssignment handles the deletion of an assignment
 // @Summary Delete an assignment
 // @Description Deletes an assignment by its ID.
-// @Tags Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "Assignment ID"
-// @Success 204 "No Content"
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 204 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /assignments/{id} [delete]
 func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -228,14 +243,18 @@ func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
 // CreateStudentAssignment handles recording a student starting an assignment
 // @Summary Record student starting an assignment
 // @Description Records that a student has started a specific assignment.
-// @Tags Student Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param studentAssignment body dtos.CreateStudentAssignmentRequestDTO true "Student Assignment details"
-// @Success 201 {object} dtos.StudentAssignmentDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-assignments [post]
+// @Param id path int true "Assignment ID"
+// @Param studentAssignment body dtos.CreateStudentAssignmentRequestDTO false "Optional payload; assignment_id and student_id are derived"
+// @Success 201 {object} dtos.APIResponse{data=dtos.StudentAssignmentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /assignments/{id}/start [post]
 func (h *AssignmentHandler) CreateStudentAssignment(c *gin.Context) {
 	// Path: /assignments/:id/start → :id is assignment_id
 	assignmentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -271,16 +290,10 @@ func (h *AssignmentHandler) CreateStudentAssignment(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "Student assignment created successfully", studentAssignment)
 }
 
-// GetStudentAssignmentByID retrieves a specific student's assignment record by ID
-// @Summary Get student assignment by ID
-// @Description Retrieves a specific student's assignment record by its unique identifier.
-// @Tags Student Assignments
-// @Produce json
-// @Param id path int true "Student Assignment ID"
-// @Success 200 {object} dtos.StudentAssignmentDTO
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-assignments/{id} [get]
+// GetStudentAssignmentByID retrieves a specific student's assignment record by ID.
+//
+// Deprecated: this handler remains for backward compatibility but is not routed
+// in `cmd/api/main.go`.
 func (h *AssignmentHandler) GetStudentAssignmentByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -304,11 +317,15 @@ func (h *AssignmentHandler) GetStudentAssignmentByID(c *gin.Context) {
 // GetStudentAssignmentsList retrieves a list of student assignments for a specific student
 // @Summary Get student assignments list
 // @Description Retrieves a list of all assignments for a specific student, including their progress.
-// @Tags Student Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Produce json
 // @Param user_id path int true "User ID"
-// @Success 200 {object} dtos.ListStudentAssignmentsResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListStudentAssignmentsResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /students/{user_id}/assignments [get]
 func (h *AssignmentHandler) GetStudentAssignmentsList(c *gin.Context) {
 	studentID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
@@ -330,14 +347,18 @@ func (h *AssignmentHandler) GetStudentAssignmentsList(c *gin.Context) {
 }
 
 // GetStudentAssignmentsByAssignmentID retrieves all student records for a specific assignment
-// @Summary Get student assignments by assignment ID
+// @Summary Get assignment submissions
 // @Description Retrieves all student assignment records for a specific assignment.
-// @Tags Student Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Produce json
-// @Param assignment_id path int true "Assignment ID"
-// @Success 200 {object} dtos.ListStudentAssignmentsResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /assignments/{assignment_id}/submissions [get]
+// @Param id path int true "Assignment ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListStudentAssignmentsResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /assignments/{id}/submissions [get]
 func (h *AssignmentHandler) GetStudentAssignmentsByAssignmentID(c *gin.Context) {
 	// Route uses /assignments/:id/submissions
 	assignmentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -373,18 +394,23 @@ func (h *AssignmentHandler) GetStudentAssignmentsByAssignmentID(c *gin.Context) 
 }
 
 // UpdateStudentAssignment handles the update of a student's assignment record
-// @Summary Update a student's assignment record
-// @Description Updates an existing student's assignment record identified by its ID.
-// @Tags Student Assignments
+// @Summary Submit an assignment or grade a submission
+// @Description Students submit via `/assignments/{id}/submit`; teachers/admin grade via `/assignments/{id}/submissions/{student_assignment_id}`.
+// @Tags assignments
+// @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param id path int true "Student Assignment ID"
-// @Param studentAssignment body dtos.UpdateStudentAssignmentRequestDTO true "Updated student assignment details"
-// @Success 200 {object} dtos.StudentAssignmentDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-assignments/{id} [put]
+// @Param id path int true "Assignment ID"
+// @Param student_assignment_id path int false "Student Assignment ID (grading route only)"
+// @Param studentAssignment body dtos.UpdateStudentAssignmentRequestDTO true "Student assignment update"
+// @Success 200 {object} dtos.APIResponse{data=dtos.StudentAssignmentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /assignments/{id}/submit [post]
+// @Router /assignments/{id}/submissions/{student_assignment_id} [put]
 func (h *AssignmentHandler) UpdateStudentAssignment(c *gin.Context) {
 	// Two route patterns call this handler:
 	// 1) POST /assignments/:id/submit            → :id is assignment_id (student self-submit)
@@ -475,15 +501,19 @@ func (h *AssignmentHandler) UpdateStudentAssignment(c *gin.Context) {
 }
 
 // DeleteStudentAssignment handles the deletion of a student's assignment record
-// @Summary Delete a student's assignment record
+// @Summary Delete an assignment submission
 // @Description Deletes a student's assignment record by its ID.
-// @Tags Student Assignments
+// @Tags assignments
+// @Security BearerAuth
 // @Produce json
-// @Param id path int true "Student Assignment ID"
-// @Success 204 "No Content"
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-assignments/{id} [delete]
+// @Param id path int true "Assignment ID"
+// @Param student_assignment_id path int true "Student Assignment ID"
+// @Success 204 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /assignments/{id}/submissions/{student_assignment_id} [delete]
 func (h *AssignmentHandler) DeleteStudentAssignment(c *gin.Context) {
 	// Support both top-level delete (/student-assignments/:id) and submissions route delete (/assignments/:id/submissions/:student_assignment_id)
 	idStr := c.Param("student_assignment_id")

@@ -21,6 +21,18 @@ func NewBadgeHandler(badgeService services.BadgeService) *BadgeHandler {
 }
 
 // CreateBadge handles creating a new badge (Admin-only)
+// @Summary Create badge
+// @Tags badges
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dtos.CreateBadgeRequestDTO true "Badge"
+// @Success 201 {object} dtos.APIResponse{data=dtos.BadgeDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges [post]
 func (h *BadgeHandler) CreateBadge(c *gin.Context) {
 	var req dtos.CreateBadgeRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -38,6 +50,17 @@ func (h *BadgeHandler) CreateBadge(c *gin.Context) {
 }
 
 // GetBadgeByID handles fetching a single badge by ID
+// @Summary Get badge by ID
+// @Tags badges
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Badge ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.BadgeDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges/{id} [get]
 func (h *BadgeHandler) GetBadgeByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -61,6 +84,22 @@ func (h *BadgeHandler) GetBadgeByID(c *gin.Context) {
 }
 
 // GetBadges handles fetching a list of all badges (Auth required)
+// @Summary List badges
+// @Description Default response is paginated list of badges. If `user_id` is provided, returns all badge awards for that user (admin-only).
+// @Tags badges
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Param search query string false "Search term"
+// @Param user_id query int false "User ID (admin-only; returns awards for that user)"
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.BadgeDTO}
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListUserBadgesResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges [get]
 func (h *BadgeHandler) GetBadges(c *gin.Context) {
 	// Check for user_id query parameter for admin-specific filtering
 	userIDStr := c.Query("user_id")
@@ -105,6 +144,20 @@ func (h *BadgeHandler) GetBadges(c *gin.Context) {
 }
 
 // UpdateBadge handles updating an existing badge (Admin-only)
+// @Summary Update badge
+// @Tags badges
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Badge ID"
+// @Param request body dtos.UpdateBadgeRequestDTO true "Badge"
+// @Success 200 {object} dtos.APIResponse{data=dtos.BadgeDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges/{id} [put]
 func (h *BadgeHandler) UpdateBadge(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -134,6 +187,18 @@ func (h *BadgeHandler) UpdateBadge(c *gin.Context) {
 }
 
 // DeleteBadge handles deleting a badge by its ID (Admin-only)
+// @Summary Delete badge
+// @Tags badges
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Badge ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges/{id} [delete]
 func (h *BadgeHandler) DeleteBadge(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -152,6 +217,20 @@ func (h *BadgeHandler) DeleteBadge(c *gin.Context) {
 }
 
 // AwardBadge handles awarding a specific badge to a user (Admin-only)
+// @Summary Award badge
+// @Tags badges
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Badge ID"
+// @Param request body dtos.AwardBadgeRequestDTO true "Award"
+// @Success 201 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges/{id}/award [post]
 func (h *BadgeHandler) AwardBadge(c *gin.Context) {
 	badgeIDParam := c.Param("id")
 	badgeID, err := strconv.ParseInt(badgeIDParam, 10, 64)
@@ -183,6 +262,20 @@ func (h *BadgeHandler) AwardBadge(c *gin.Context) {
 }
 
 // RevokeBadge handles revoking a specific badge from a user (Admin-only)
+// @Summary Revoke badge
+// @Tags badges
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Badge ID"
+// @Param request body dtos.AwardBadgeRequestDTO true "Revoke"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges/{id}/revoke [delete]
 func (h *BadgeHandler) RevokeBadge(c *gin.Context) {
 	badgeIDParam := c.Param("id")
 	badgeID, err := strconv.ParseInt(badgeIDParam, 10, 64)
@@ -214,6 +307,14 @@ func (h *BadgeHandler) RevokeBadge(c *gin.Context) {
 }
 
 // GetUserOwnBadges handles fetching the authenticated user's own badges
+// @Summary Get my badges
+// @Tags badges
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListUserBadgesResponseDTO}
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /my-badges [get]
 func (h *BadgeHandler) GetUserOwnBadges(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -234,6 +335,19 @@ func (h *BadgeHandler) GetUserOwnBadges(c *gin.Context) {
 }
 
 // GetAllUserBadges handles fetching all badge awards for admin view
+// @Summary List badge awards
+// @Tags badges
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Param search query string false "Search term"
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.UserBadgeDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /badges/awards [get]
 func (h *BadgeHandler) GetAllUserBadges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))

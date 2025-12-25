@@ -76,7 +76,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, userID int64, u
 		if err != nil {
 			return dashboardData, err
 		}
-		dashboardData.Teacherstats = &dtos.TeacherDashboardStatsDTO{
+		dashboardData.TeacherStats = &dtos.TeacherDashboardStatsDTO{
 			TotalStudents:    stats.TotalStudents,
 			TotalCourses:     stats.TotalCourses,
 			TotalAssignments: stats.TotalAssignments,

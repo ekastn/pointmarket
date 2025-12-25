@@ -5,17 +5,17 @@ type DashboardDTO struct {
 	User         UserDTO                   `json:"user"`
 	AdminStats   *AdminDashboardStatsDTO   `json:"admin_stats"`
 	StudentStats *StudentDashboardStatsDTO `json:"student_stats"`
-	Teacherstats *TeacherDashboardStatsDTO `json:"teacher_stats"`
+	TeacherStats *TeacherDashboardStatsDTO `json:"teacher_stats"`
 }
 
 // AdminDashboardStatsDTO holds counts for the admin dashboard.
 type AdminDashboardStatsDTO struct {
-	TotalUsers              int64 `json:"total_users"`
-	TotalTeachers           int64 `json:"total_teachers"`
-	TotalStudents           int64 `json:"total_students"`
-	TotalCourses            int64 `json:"total_courses"`
-	TotalPointsTransactions int64 `json:"total_points_transaction"`
-	TotalProducts           int64 `json:"total_products"`
+	TotalUsers                int64 `json:"total_users"`
+	TotalTeachers             int64 `json:"total_teachers"`
+	TotalStudents             int64 `json:"total_students"`
+	TotalCourses              int64 `json:"total_courses"`
+	TotalPointsTransactions   int64 `json:"total_points_transaction"`
+	TotalProducts             int64 `json:"total_products"`
 	TotalMissions             int64 `json:"total_missions"`
 	TotalBadges               int64 `json:"total_badges"`
 	TotalRecommendationStates int64 `json:"total_recommendation_states"`

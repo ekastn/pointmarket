@@ -26,13 +26,16 @@ func NewQuizHandler(quizService *services.QuizService, authz *services.AuthzServ
 // CreateQuiz handles the creation of a new quiz
 // @Summary Create a new quiz
 // @Description Creates a new quiz with the provided details.
-// @Tags Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param quiz body dtos.CreateQuizRequestDTO true "Quiz details"
-// @Success 201 {object} dtos.QuizDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 201 {object} dtos.APIResponse{data=dtos.QuizDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /quizzes [post]
 func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	var req dtos.CreateQuizRequestDTO
@@ -67,12 +70,15 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 // GetQuizByID retrieves a quiz by its ID
 // @Summary Get quiz by ID
 // @Description Retrieves a single quiz by its unique identifier.
-// @Tags Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "Quiz ID"
-// @Success 200 {object} dtos.QuizDTO
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.QuizDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /quizzes/{id} [get]
 func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -97,11 +103,14 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 // GetQuizzes retrieves a list of quizzes
 // @Summary Get all quizzes
 // @Description Retrieves a list of all quizzes, with optional filtering by course ID.
-// @Tags Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
 // @Param course_id query int false "Filter by Course ID"
-// @Success 200 {object} dtos.ListQuizzesResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListQuizzesResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /quizzes [get]
 func (h *QuizHandler) GetQuizzes(c *gin.Context) {
 	var courseIDFilter *int64
@@ -133,15 +142,18 @@ func (h *QuizHandler) GetQuizzes(c *gin.Context) {
 // UpdateQuiz handles the update of an existing quiz
 // @Summary Update a quiz
 // @Description Updates an existing quiz identified by its ID.
-// @Tags Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param id path int true "Quiz ID"
 // @Param quiz body dtos.UpdateQuizRequestDTO true "Updated quiz details"
-// @Success 200 {object} dtos.QuizDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 200 {object} dtos.APIResponse{data=dtos.QuizDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /quizzes/{id} [put]
 func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -186,12 +198,15 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 // DeleteQuiz handles the deletion of a quiz
 // @Summary Delete a quiz
 // @Description Deletes a quiz by its ID.
-// @Tags Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "Quiz ID"
-// @Success 204 "No Content"
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
+// @Success 204 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
 // @Router /quizzes/{id} [delete]
 func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -226,15 +241,19 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 // CreateQuizQuestion handles the creation of a new quiz question
 // @Summary Create a new quiz question
 // @Description Creates a new quiz question for a specific quiz.
-// @Tags Quiz Questions
+// @Tags quizzes
+// @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
+// @Param id path int true "Quiz ID"
 // @Param question body dtos.CreateQuizQuestionRequestDTO true "Quiz question details"
-// @Success 201 {object} dtos.QuizQuestionDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/questions [post]
+// @Success 201 {object} dtos.APIResponse{data=dtos.QuizQuestionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/questions [post]
 func (h *QuizHandler) CreateQuizQuestion(c *gin.Context) {
 	// Route: /quizzes/:id/questions → use :id as quiz_id
 	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -280,14 +299,17 @@ func (h *QuizHandler) CreateQuizQuestion(c *gin.Context) {
 // GetQuizQuestionByID retrieves a quiz question by its ID
 // @Summary Get quiz question by ID
 // @Description Retrieves a single quiz question by its unique identifier.
-// @Tags Quiz Questions
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
+// @Param id path int true "Quiz ID"
 // @Param question_id path int true "Question ID"
-// @Success 200 {object} dtos.QuizQuestionDTO
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/questions/{question_id} [get]
+// @Success 200 {object} dtos.APIResponse{data=dtos.QuizQuestionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/questions/{question_id} [get]
 func (h *QuizHandler) GetQuizQuestionByID(c *gin.Context) {
 	// quizID, err := strconv.ParseInt(c.Param("id"), 10, 64) // Not strictly needed for GetByID
 	// if err != nil {
@@ -317,12 +339,15 @@ func (h *QuizHandler) GetQuizQuestionByID(c *gin.Context) {
 // GetQuizQuestionsByQuizID retrieves all questions for a specific quiz
 // @Summary Get quiz questions by quiz ID
 // @Description Retrieves all questions for a specific quiz.
-// @Tags Quiz Questions
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
-// @Success 200 {object} dtos.ListQuizQuestionsResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/questions [get]
+// @Param id path int true "Quiz ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListQuizQuestionsResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/questions [get]
 func (h *QuizHandler) GetQuizQuestionsByQuizID(c *gin.Context) {
 	// Route: /quizzes/:id/questions → use :id as quiz_id
 	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -343,17 +368,21 @@ func (h *QuizHandler) GetQuizQuestionsByQuizID(c *gin.Context) {
 // UpdateQuizQuestion handles the update of an existing quiz question
 // @Summary Update a quiz question
 // @Description Updates an existing quiz question identified by its ID.
-// @Tags Quiz Questions
+// @Tags quizzes
+// @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
+// @Param id path int true "Quiz ID"
 // @Param question_id path int true "Question ID"
 // @Param question body dtos.UpdateQuizQuestionRequestDTO true "Updated quiz question details"
-// @Success 200 {object} dtos.QuizQuestionDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/questions/{question_id} [put]
+// @Success 200 {object} dtos.APIResponse{data=dtos.QuizQuestionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/questions/{question_id} [put]
 func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
 	// quizID, err := strconv.ParseInt(c.Param("id"), 10, 64) // Not strictly needed for UpdateByID
 	// if err != nil {
@@ -410,14 +439,17 @@ func (h *QuizHandler) UpdateQuizQuestion(c *gin.Context) {
 // DeleteQuizQuestion handles the deletion of a quiz question
 // @Summary Delete a quiz question
 // @Description Deletes a quiz question by its ID.
-// @Tags Quiz Questions
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
+// @Param id path int true "Quiz ID"
 // @Param question_id path int true "Question ID"
-// @Success 204 "No Content"
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/questions/{question_id} [delete]
+// @Success 204 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/questions/{question_id} [delete]
 func (h *QuizHandler) DeleteQuizQuestion(c *gin.Context) {
 	// quizID, err := strconv.ParseInt(c.Param("id"), 10, 64) // Not strictly needed for DeleteByID
 	// if err != nil {
@@ -460,15 +492,18 @@ func (h *QuizHandler) DeleteQuizQuestion(c *gin.Context) {
 // CreateStudentQuiz handles recording a student starting a quiz
 // @Summary Record student starting a quiz
 // @Description Records that a student has started a specific quiz.
-// @Tags Student Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
-// @Param studentQuiz body dtos.CreateStudentQuizRequestDTO true "Student Quiz details"
-// @Success 201 {object} dtos.StudentQuizDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/start [post]
+// @Param id path int true "Quiz ID"
+// @Param studentQuiz body dtos.CreateStudentQuizRequestDTO false "Optional payload; quiz_id and student_id are derived"
+// @Success 201 {object} dtos.APIResponse{data=dtos.StudentQuizDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/start [post]
 func (h *QuizHandler) CreateStudentQuiz(c *gin.Context) {
 	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -498,16 +533,10 @@ func (h *QuizHandler) CreateStudentQuiz(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "Student quiz created successfully", studentQuiz)
 }
 
-// GetStudentQuizByID retrieves a specific student's quiz record by ID
-// @Summary Get student quiz by ID
-// @Description Retrieves a specific student's quiz record by its unique identifier.
-// @Tags Student Quizzes
-// @Produce json
-// @Param id path int true "Student Quiz ID"
-// @Success 200 {object} dtos.StudentQuizDTO
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-quizzes/{id} [get]
+// GetStudentQuizByID retrieves a specific student's quiz record by ID.
+//
+// Deprecated: this handler remains for backward compatibility but is not routed
+// in `cmd/api/main.go`.
 func (h *QuizHandler) GetStudentQuizByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -531,12 +560,16 @@ func (h *QuizHandler) GetStudentQuizByID(c *gin.Context) {
 // GetStudentQuizzesList retrieves a list of student quizzes for a specific student
 // @Summary Get student quizzes list
 // @Description Retrieves a list of all quizzes for a specific student, including their progress.
-// @Tags Student Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
-// @Param student_id path int true "Student ID"
-// @Success 200 {object} dtos.ListStudentQuizzesResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /students/{student_id}/quizzes [get]
+// @Param user_id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListStudentQuizzesResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /students/{user_id}/quizzes [get]
 func (h *QuizHandler) GetStudentQuizzesList(c *gin.Context) {
 	studentID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
@@ -557,16 +590,20 @@ func (h *QuizHandler) GetStudentQuizzesList(c *gin.Context) {
 }
 
 // GetStudentQuizzesByQuizID retrieves all student records for a specific quiz
-// @Summary Get student quizzes by quiz ID
+// @Summary Get quiz submissions
 // @Description Retrieves all student quiz records for a specific quiz.
-// @Tags Student Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
-// @Param quiz_id path int true "Quiz ID"
-// @Success 200 {object} dtos.ListStudentQuizzesResponseDTO
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /quizzes/{quiz_id}/submissions [get]
+// @Param id path int true "Quiz ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListStudentQuizzesResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/submissions [get]
 func (h *QuizHandler) GetStudentQuizzesByQuizID(c *gin.Context) {
-	quizID, err := strconv.ParseInt(c.Param("quiz_id"), 10, 64)
+	quizID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid quiz ID")
 		return
@@ -599,18 +636,23 @@ func (h *QuizHandler) GetStudentQuizzesByQuizID(c *gin.Context) {
 }
 
 // UpdateStudentQuiz handles the update of a student's quiz record
-// @Summary Update a student's quiz record
-// @Description Updates an existing student's quiz record identified by its ID.
-// @Tags Student Quizzes
+// @Summary Submit a quiz or grade a submission
+// @Description Students submit via `/quizzes/{id}/submit`; teachers/admin grade via `/quizzes/{id}/submissions/{student_quiz_id}`.
+// @Tags quizzes
+// @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param id path int true "Student Quiz ID"
-// @Param studentQuiz body dtos.UpdateStudentQuizRequestDTO true "Updated student quiz details"
-// @Success 200 {object} dtos.StudentQuizDTO
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 404 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-quizzes/{id} [put]
+// @Param id path int true "Quiz ID"
+// @Param student_quiz_id path int false "Student Quiz ID (grading route only)"
+// @Param studentQuiz body dtos.UpdateStudentQuizRequestDTO true "Student quiz update"
+// @Success 200 {object} dtos.APIResponse{data=dtos.StudentQuizDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/submit [post]
+// @Router /quizzes/{id}/submissions/{student_quiz_id} [put]
 func (h *QuizHandler) UpdateStudentQuiz(c *gin.Context) {
 	// Two route patterns call this handler:
 	// 1) POST /quizzes/:id/submit            → :id is quiz_id (student self-submit)
@@ -672,15 +714,19 @@ func (h *QuizHandler) UpdateStudentQuiz(c *gin.Context) {
 }
 
 // DeleteStudentQuiz handles the deletion of a student's quiz record
-// @Summary Delete a student's quiz record
+// @Summary Delete a quiz submission
 // @Description Deletes a student's quiz record by its ID.
-// @Tags Student Quizzes
+// @Tags quizzes
+// @Security BearerAuth
 // @Produce json
-// @Param id path int true "Student Quiz ID"
-// @Success 204 "No Content"
-// @Failure 400 {object} dtos.ErrorResponse
-// @Failure 500 {object} dtos.ErrorResponse
-// @Router /student-quizzes/{id} [delete]
+// @Param id path int true "Quiz ID"
+// @Param student_quiz_id path int true "Student Quiz ID"
+// @Success 204 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /quizzes/{id}/submissions/{student_quiz_id} [delete]
 func (h *QuizHandler) DeleteStudentQuiz(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

@@ -1,6 +1,7 @@
 package dtos
 
 import (
+	"encoding/json"
 	"pointmarket/backend/internal/store/gen"
 	"time"
 )
@@ -47,7 +48,7 @@ type LikertSubmissionRequestDTO struct {
 }
 
 type LikertSubmissionResponseDTO struct {
-	TotalScore float64 `json:"total_score"`
+	TotalScore *float64 `json:"total_score"`
 }
 
 type VarkSubmissionRequestDTO struct {
@@ -67,6 +68,31 @@ type LearningStyleDTO struct {
 	Label     string     `json:"label"`
 	Scores    VARKScores `json:"scores"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`
+}
+
+// LatestVarkResponseDTO is returned by GET /questionnaires/vark.
+// It preserves the legacy response shape:
+// - style is always present ({} when empty)
+// - completed_at is always present (null when empty)
+type LatestVarkResponseDTO struct {
+	Style       LatestVarkStyleDTO `json:"style"`
+	CompletedAt *string            `json:"completed_at" swaggertype:"string"`
+}
+
+// LatestVarkStyleDTO is the style block returned by GET /questionnaires/vark.
+// When empty (no record), it serializes as an empty object: {}.
+type LatestVarkStyleDTO struct {
+	Type   string      `json:"type"`
+	Label  string      `json:"label"`
+	Scores *VARKScores `json:"scores,omitempty"`
+}
+
+func (s LatestVarkStyleDTO) MarshalJSON() ([]byte, error) {
+	if s.Type == "" && s.Label == "" && s.Scores == nil {
+		return []byte(`{}`), nil
+	}
+	type alias LatestVarkStyleDTO
+	return json.Marshal(alias(s))
 }
 
 type VarkSubmissionResponseDTO struct {

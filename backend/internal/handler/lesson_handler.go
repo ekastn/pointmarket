@@ -24,6 +24,19 @@ func NewLessonHandler(lessonService *services.LessonService, q gen.Querier) *Les
 }
 
 // CreateLesson handles creating a new lesson (admin-only per routes)
+// @Summary Create lesson
+// @Tags lessons
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dtos.CreateLessonRequestDTO true "Lesson"
+// @Success 201 {object} dtos.APIResponse{data=dtos.LessonDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /lessons [post]
 func (h *LessonHandler) CreateLesson(c *gin.Context) {
 	var req dtos.CreateLessonRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -59,6 +72,17 @@ func (h *LessonHandler) CreateLesson(c *gin.Context) {
 }
 
 // GetLessonByID returns a lesson by id
+// @Summary Get lesson by ID
+// @Tags lessons
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Lesson ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.LessonDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /lessons/{id} [get]
 func (h *LessonHandler) GetLessonByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -78,6 +102,18 @@ func (h *LessonHandler) GetLessonByID(c *gin.Context) {
 }
 
 // GetLessons lists lessons filtered by course_id
+// @Summary List lessons
+// @Tags lessons
+// @Security BearerAuth
+// @Produce json
+// @Param course_id query int true "Course ID"
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(20)
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.LessonDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /lessons [get]
 func (h *LessonHandler) GetLessons(c *gin.Context) {
 	courseIDStr := c.Query("course_id")
 	if courseIDStr == "" {
@@ -100,6 +136,21 @@ func (h *LessonHandler) GetLessons(c *gin.Context) {
 }
 
 // UpdateLesson updates a lesson
+// @Summary Update lesson
+// @Tags lessons
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Lesson ID"
+// @Param request body dtos.UpdateLessonRequestDTO true "Lesson"
+// @Success 200 {object} dtos.APIResponse{data=dtos.LessonDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /lessons/{id} [put]
 func (h *LessonHandler) UpdateLesson(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -152,6 +203,18 @@ func (h *LessonHandler) UpdateLesson(c *gin.Context) {
 }
 
 // DeleteLesson deletes a lesson
+// @Summary Delete lesson
+// @Tags lessons
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Lesson ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /lessons/{id} [delete]
 func (h *LessonHandler) DeleteLesson(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
@@ -12,6 +14,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var _ = dtos.APIResponse{}
 
 type PointsHandler struct {
 	points *services.PointsService
@@ -22,7 +26,17 @@ func NewPointsHandler(points *services.PointsService, q gen.Querier) *PointsHand
 	return &PointsHandler{points: points, q: q}
 }
 
-// GetUserStats handles GET /users/:id/stats
+// GetUserStats godoc
+// @Summary Get user points stats
+// @Description Reads current total points and updated_at (admin-only)
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.UserStatsResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id}/stats [get]
 func (h *PointsHandler) GetUserStats(c *gin.Context) {
 	idStr := c.Param("id")
 	userID, err := strconv.ParseInt(idStr, 10, 64)
@@ -37,9 +51,14 @@ func (h *PointsHandler) GetUserStats(c *gin.Context) {
 		// Initialize and retry
 		if _, ierr := h.points.GetOrInitTotal(c.Request.Context(), userID); ierr == nil {
 			if stats, err = h.q.GetUserStats(c.Request.Context(), userID); err == nil {
-				response.Success(c, http.StatusOK, "OK", gin.H{
-					"total_points": stats.TotalPoints,
-					"updated_at":   stats.UpdatedAt,
+				var updatedAt *time.Time
+				if stats.UpdatedAt.Valid {
+					t := stats.UpdatedAt.Time
+					updatedAt = &t
+				}
+				response.Success(c, http.StatusOK, "OK", dtos.UserStatsResponse{
+					TotalPoints: stats.TotalPoints,
+					UpdatedAt:   updatedAt,
 				})
 				return
 			}
@@ -48,13 +67,31 @@ func (h *PointsHandler) GetUserStats(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusOK, "OK", gin.H{
-		"total_points": stats.TotalPoints,
-		"updated_at":   stats.UpdatedAt,
+	var updatedAt *time.Time
+	if stats.UpdatedAt.Valid {
+		t := stats.UpdatedAt.Time
+		updatedAt = &t
+	}
+	response.Success(c, http.StatusOK, "OK", dtos.UserStatsResponse{
+		TotalPoints: stats.TotalPoints,
+		UpdatedAt:   updatedAt,
 	})
 }
 
-// AdjustUserStats handles POST /users/:id/stats with body { delta, reason?, reference_type?, reference_id? }
+// AdjustUserStats godoc
+// @Summary Adjust user points
+// @Description Adds or deducts points from a user (admin-only)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Param request body dtos.AdjustUserStatsRequest true "Adjustment payload"
+// @Success 201 {object} dtos.APIResponse{data=dtos.UserStatsResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /users/{id}/stats [post]
 func (h *PointsHandler) AdjustUserStats(c *gin.Context) {
 	idStr := c.Param("id")
 	userID, err := strconv.ParseInt(idStr, 10, 64)
@@ -63,12 +100,7 @@ func (h *PointsHandler) AdjustUserStats(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Delta         int64   `json:"delta"`
-		Reason        *string `json:"reason"`
-		ReferenceType *string `json:"reference_type"`
-		ReferenceID   *int64  `json:"reference_id"`
-	}
+	var req dtos.AdjustUserStatsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
@@ -110,14 +142,19 @@ func (h *PointsHandler) AdjustUserStats(c *gin.Context) {
 	stats, err := h.q.GetUserStats(c.Request.Context(), userID)
 	if err != nil {
 		// Still return total if updated_at cannot be read
-		response.Success(c, http.StatusCreated, "Updated", gin.H{
-			"total_points": total,
+		response.Success(c, http.StatusCreated, "Updated", dtos.UserStatsResponse{
+			TotalPoints: total,
 		})
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Updated", gin.H{
-		"total_points": stats.TotalPoints,
-		"updated_at":   stats.UpdatedAt,
+	var updatedAt *time.Time
+	if stats.UpdatedAt.Valid {
+		t := stats.UpdatedAt.Time
+		updatedAt = &t
+	}
+	response.Success(c, http.StatusCreated, "Updated", dtos.UserStatsResponse{
+		TotalPoints: stats.TotalPoints,
+		UpdatedAt:   updatedAt,
 	})
 }

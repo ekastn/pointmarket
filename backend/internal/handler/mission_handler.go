@@ -21,6 +21,18 @@ func NewMissionHandler(missionService services.MissionService) *MissionHandler {
 }
 
 // CreateMission handles creating a new mission (Admin-only)
+// @Summary Create mission
+// @Tags missions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dtos.CreateMissionRequestDTO true "Mission"
+// @Success 201 {object} dtos.APIResponse{data=dtos.MissionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions [post]
 func (h *MissionHandler) CreateMission(c *gin.Context) {
 	var req dtos.CreateMissionRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -38,6 +50,17 @@ func (h *MissionHandler) CreateMission(c *gin.Context) {
 }
 
 // GetMissionByID handles fetching a single mission by ID
+// @Summary Get mission by ID
+// @Tags missions
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Mission ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.MissionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/{id} [get]
 func (h *MissionHandler) GetMissionByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -61,6 +84,19 @@ func (h *MissionHandler) GetMissionByID(c *gin.Context) {
 }
 
 // GetMissions handles fetching a list of all missions (Auth required)
+// @Summary List missions
+// @Description Default response returns all missions. If `user_id` is provided, returns all missions for that user (admin or owner).
+// @Tags missions
+// @Security BearerAuth
+// @Produce json
+// @Param user_id query int false "User ID (admin or owner)"
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListMissionsResponseDTO}
+// @Success 200 {object} dtos.APIResponse{data=dtos.ListUserMissionsResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions [get]
 func (h *MissionHandler) GetMissions(c *gin.Context) {
 	// Check for user_id query parameter for user-specific listing
 	userIDStr := c.Query("user_id")
@@ -117,6 +153,20 @@ func (h *MissionHandler) GetMissions(c *gin.Context) {
 }
 
 // UpdateMission handles updating an existing mission (Admin-only)
+// @Summary Update mission
+// @Tags missions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Mission ID"
+// @Param request body dtos.UpdateMissionRequestDTO true "Mission"
+// @Success 200 {object} dtos.APIResponse{data=dtos.MissionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/{id} [put]
 func (h *MissionHandler) UpdateMission(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -146,6 +196,18 @@ func (h *MissionHandler) UpdateMission(c *gin.Context) {
 }
 
 // DeleteMission handles deleting a mission by its ID (Admin-only)
+// @Summary Delete mission
+// @Tags missions
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Mission ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/{id} [delete]
 func (h *MissionHandler) DeleteMission(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -164,6 +226,20 @@ func (h *MissionHandler) DeleteMission(c *gin.Context) {
 }
 
 // StartMission handles starting a specific mission for a user (Auth required)
+// @Summary Start mission
+// @Tags missions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Mission ID"
+// @Param request body dtos.CreateUserMissionRequestDTO true "User mission"
+// @Success 201 {object} dtos.APIResponse{data=dtos.UserMissionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/{id}/start [post]
 func (h *MissionHandler) StartMission(c *gin.Context) {
 	missionIDParam := c.Param("id")
 	missionID, err := strconv.ParseInt(missionIDParam, 10, 64)
@@ -212,6 +288,19 @@ func (h *MissionHandler) StartMission(c *gin.Context) {
 }
 
 // UpdateUserMissionStatus handles updating the status of a user's mission (Auth required)
+// @Summary Update user mission status
+// @Tags missions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "User mission ID"
+// @Param request body dtos.UpdateUserMissionStatusRequestDTO true "Status"
+// @Success 200 {object} dtos.APIResponse{data=dtos.UserMissionDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/{id}/status [put]
 func (h *MissionHandler) UpdateUserMissionStatus(c *gin.Context) {
 	userMissionIDParam := c.Param("id")
 	userMissionID, err := strconv.ParseInt(userMissionIDParam, 10, 64)
@@ -240,6 +329,19 @@ func (h *MissionHandler) UpdateUserMissionStatus(c *gin.Context) {
 }
 
 // EndMission handles ending/deleting a user's mission instance (Admin-only)
+// @Summary End mission (not implemented)
+// @Tags missions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Mission ID"
+// @Param request body dtos.CreateUserMissionRequestDTO true "User mission"
+// @Success 501 {object} dtos.APIError
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/{id}/end [delete]
 func (h *MissionHandler) EndMission(c *gin.Context) {
 	// missionIDParam := c.Param("id") // This is the mission ID, not user_mission ID
 	// missionID, err := strconv.ParseInt(missionIDParam, 10, 64)
@@ -273,6 +375,19 @@ func (h *MissionHandler) EndMission(c *gin.Context) {
 }
 
 // GetAllUserMissions handles fetching all user mission progress for admin view
+// @Summary List missions progress
+// @Tags missions
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Param search query string false "Search term"
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.UserMissionProgressDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /missions/progress [get]
 func (h *MissionHandler) GetAllUserMissions(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))

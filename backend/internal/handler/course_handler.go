@@ -22,6 +22,18 @@ func NewCourseHandler(courseService services.CourseService) *CourseHandler {
 }
 
 // CreateCourse handles creating a new course (Admin/Teacher-only)
+// @Summary Create course
+// @Tags courses
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dtos.CreateCourseRequestDTO true "Course"
+// @Success 201 {object} dtos.APIResponse{data=dtos.CourseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses [post]
 func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	var req dtos.CreateCourseRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -54,6 +66,17 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 }
 
 // GetCourseByID handles fetching a single course by ID
+// @Summary Get course by ID
+// @Tags courses
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Course ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.CourseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses/{id} [get]
 func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -77,6 +100,22 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 }
 
 // GetCourses handles fetching a list of courses based on user role and filters
+// @Summary List courses
+// @Description Returns courses visible to the authenticated user, with optional filters.
+// @Tags courses
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Param search query string false "Search term"
+// @Param slug query string false "Exact match by slug"
+// @Param user_id query int false "Filter by owner/user (admin only)"
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.CourseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses [get]
 func (h *CourseHandler) GetCourses(c *gin.Context) {
 	authUserID := middleware.GetUserID(c)
 	userRole := middleware.GetRole(c)
@@ -155,6 +194,20 @@ func (h *CourseHandler) GetCourses(c *gin.Context) {
 }
 
 // UpdateCourse handles updating an existing course (Admin/Teacher-only, owner only)
+// @Summary Update course
+// @Tags courses
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Course ID"
+// @Param request body dtos.UpdateCourseRequestDTO true "Course"
+// @Success 200 {object} dtos.APIResponse{data=dtos.CourseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses/{id} [put]
 func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -199,6 +252,18 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 }
 
 // DeleteCourse handles deleting a course by its ID (Admin/Teacher-only, owner only)
+// @Summary Delete course
+// @Tags courses
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Course ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses/{id} [delete]
 func (h *CourseHandler) DeleteCourse(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -237,6 +302,20 @@ func (h *CourseHandler) DeleteCourse(c *gin.Context) {
 }
 
 // EnrollStudent handles enrolling a student in a course
+// @Summary Enroll student
+// @Tags courses
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Course ID"
+// @Param request body dtos.EnrollStudentRequestDTO true "Enrollment"
+// @Success 201 {object} dtos.APIResponse{data=dtos.CourseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 409 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses/{id}/enroll [post]
 func (h *CourseHandler) EnrollStudent(c *gin.Context) {
 	courseIDParam := c.Param("id")
 	courseID, err := strconv.ParseInt(courseIDParam, 10, 64)
@@ -287,6 +366,19 @@ func (h *CourseHandler) EnrollStudent(c *gin.Context) {
 }
 
 // UnenrollStudent handles unenrolls a student from a course
+// @Summary Unenroll student
+// @Tags courses
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Course ID"
+// @Param request body dtos.EnrollStudentRequestDTO true "Unenrollment"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /courses/{id}/unenroll [delete]
 func (h *CourseHandler) UnenrollStudent(c *gin.Context) {
 	courseIDParam := c.Param("id")
 	courseID, err := strconv.ParseInt(courseIDParam, 10, 64)
@@ -331,6 +423,19 @@ func (h *CourseHandler) UnenrollStudent(c *gin.Context) {
 }
 
 // GetAllEnrollments handles fetching a list of all course enrollments for admin
+// @Summary List enrollments
+// @Tags enrollments
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Param search query string false "Search term"
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.EnrollmentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /enrollments [get]
 func (h *CourseHandler) GetAllEnrollments(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))

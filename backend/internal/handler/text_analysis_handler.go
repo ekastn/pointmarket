@@ -20,10 +20,21 @@ func NewTextAnalysisHandler(textAnalyzerService *services.TextAnalyzerService) *
 	}
 }
 
+// PredictText analyzes free-form student text.
+// @Summary Analyze text
+// @Description Runs text analysis and returns keywords, key sentences, learning style, and text stats.
+// @Tags text-analyzer
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dtos.TextAnalyzerRequest true "Text to analyze"
+// @Success 201 {object} dtos.APIResponse{data=dtos.TextAnalyzerResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /text-analyzer [post]
 func (h *TextAnalysisHandler) PredictText(c *gin.Context) {
-	var req struct {
-		Text string `json:"text"`
-	}
+	var req dtos.TextAnalyzerRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
@@ -42,26 +53,22 @@ func (h *TextAnalysisHandler) PredictText(c *gin.Context) {
 		return
 	}
 
-	resp := gin.H{
-		"keywords":      keywords,
-		"key_sentences": sentences,
-		"learning_style": dtos.StudentLearningStyle{
-			Type:   row.LearningPreferenceType,
-			Label:  row.LearningPreferenceLabel,
-			Scores: *fusedScores,
-		},
-		"text_stats": gin.H{
-			"word_count":          row.CountWords,
-			"sentence_count":      row.CountSentences,
-			"average_word_length": row.AverageWordLength,
-			"reading_time":        row.ReadingTime,
-			"grammar_score":       row.ScoreGrammar,
-			"readability_score":   row.ScoreReadability,
-			"sentiment_score":     row.ScoreSentiment,
-			"structure_score":     row.ScoreSentiment,
-			"complexity_score":    row.ScoreComplexity,
+	resp := dtos.TextAnalyzerResponse{
+		Keywords:      keywords,
+		KeySentences:  sentences,
+		LearningStyle: dtos.StudentLearningStyle{Type: row.LearningPreferenceType, Label: row.LearningPreferenceLabel, Scores: *fusedScores},
+		TextStats: dtos.TextAnalyzerTextStats{
+			WordCount:         row.CountWords,
+			SentenceCount:     row.CountSentences,
+			AverageWordLength: row.AverageWordLength,
+			ReadingTime:       row.ReadingTime,
+			GrammarScore:      row.ScoreGrammar,
+			ReadabilityScore:  row.ScoreReadability,
+			SentimentScore:    row.ScoreSentiment,
+			StructureScore:    row.ScoreStructure,
+			ComplexityScore:   row.ScoreComplexity,
 		},
 	}
 
-	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", resp)
+	response.Success(c, http.StatusCreated, "Text analyzed successfully", resp)
 }

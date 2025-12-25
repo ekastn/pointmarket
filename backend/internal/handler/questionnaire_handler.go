@@ -16,6 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var _ = dtos.APIResponse{}
+
 type QuestionnaireHandler struct {
 	questionnaireService *services.QuestionnaireService
 	textAnalyzerService  *services.TextAnalyzerService
@@ -37,6 +39,16 @@ func NewQuestionnaireHandler(
 	}
 }
 
+// GetQuestionnaires godoc
+// @Summary List questionnaires
+// @Description Lists questionnaires; `active=true` returns only active ones
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Param active query bool false "Only active questionnaires"
+// @Success 200 {object} dtos.APIResponse{data=[]dtos.QuestionnaireDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires [get]
 func (h *QuestionnaireHandler) GetQuestionnaires(c *gin.Context) {
 	active := c.Query("active")
 
@@ -67,6 +79,18 @@ func (h *QuestionnaireHandler) GetQuestionnaires(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Questionnaires retrieved successfully", questionnaireDTOs)
 }
 
+// GetQuestionnaireByID godoc
+// @Summary Get questionnaire detail
+// @Description Gets questionnaire and question list by ID
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Questionnaire ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.QuestionnaireLikertDetailResponse}
+// @Success 200 {object} dtos.APIResponse{data=dtos.QuestionnaireVarkDetailResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/{id} [get]
 func (h *QuestionnaireHandler) GetQuestionnaireByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -131,6 +155,18 @@ func (h *QuestionnaireHandler) GetQuestionnaireByID(c *gin.Context) {
 	}
 }
 
+// SubmitLikert godoc
+// @Summary Submit Likert questionnaire
+// @Description Submits a Likert questionnaire (MSLQ/AMS)
+// @Tags questionnaires
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dtos.LikertSubmissionRequestDTO true "Submission payload"
+// @Success 201 {object} dtos.APIResponse{data=dtos.LikertSubmissionResponseDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires [post]
 func (h *QuestionnaireHandler) SubmitLikert(c *gin.Context) {
 	var req dtos.LikertSubmissionRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -151,9 +187,21 @@ func (h *QuestionnaireHandler) SubmitLikert(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", gin.H{"total_score": score})
+	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", dtos.LikertSubmissionResponseDTO{TotalScore: score})
 }
 
+// SubmitVark godoc
+// @Summary Submit VARK questionnaire
+// @Description Submits VARK answers and uses text-analysis to fuse the final learning style
+// @Tags questionnaires
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dtos.VarkSubmissionRequestDTO true "Submission payload"
+// @Success 201 {object} dtos.APIResponse{data=dtos.TextAnalyzerResponse}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/vark [post]
 func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 	var req dtos.VarkSubmissionRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -203,30 +251,35 @@ func (h *QuestionnaireHandler) SubmitVark(c *gin.Context) {
 		return
 	}
 
-	resp := gin.H{
-		"keywords":      keywords,
-		"key_sentences": sentences,
-		"learning_style": dtos.StudentLearningStyle{
-			Type:   row.LearningPreferenceType,
-			Label:  row.LearningPreferenceLabel,
-			Scores: *fusedScores,
-		},
-		"text_stats": gin.H{
-			"word_count":          row.CountWords,
-			"sentence_count":      row.CountSentences,
-			"average_word_length": row.AverageWordLength,
-			"reading_time":        row.ReadingTime,
-			"grammar_score":       row.ScoreGrammar,
-			"readability_score":   row.ScoreReadability,
-			"sentiment_score":     row.ScoreSentiment,
-			"structure_score":     row.ScoreStructure,
-			"complexity_score":    row.ScoreComplexity,
+	resp := dtos.TextAnalyzerResponse{
+		Keywords:      keywords,
+		KeySentences:  sentences,
+		LearningStyle: dtos.StudentLearningStyle{Type: row.LearningPreferenceType, Label: row.LearningPreferenceLabel, Scores: *fusedScores},
+		TextStats: dtos.TextAnalyzerTextStats{
+			WordCount:         row.CountWords,
+			SentenceCount:     row.CountSentences,
+			AverageWordLength: row.AverageWordLength,
+			ReadingTime:       row.ReadingTime,
+			GrammarScore:      row.ScoreGrammar,
+			ReadabilityScore:  row.ScoreReadability,
+			SentimentScore:    row.ScoreSentiment,
+			StructureScore:    row.ScoreStructure,
+			ComplexityScore:   row.ScoreComplexity,
 		},
 	}
 
 	response.Success(c, http.StatusCreated, "Questionnaire submitted successfully", resp)
 }
 
+// GetCorrelation godoc
+// @Summary Get correlation analysis
+// @Description Returns correlation analysis and personalized recommendations
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=dtos.CorrelationAnalysisResponse}
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/correlations [get]
 func (h *QuestionnaireHandler) GetCorrelation(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -239,6 +292,16 @@ func (h *QuestionnaireHandler) GetCorrelation(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Correlation analysis successful", analysisResult)
 }
 
+// GetQuestionnaireStats godoc
+// @Summary Get questionnaire stats
+// @Description Returns aggregated stats for the current student
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=dtos.StudentQuestionnaireStatsDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/stats [get]
+//
 // GetQuestionnaireStats returns aggregated stats for the current student.
 func (h *QuestionnaireHandler) GetQuestionnaireStats(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -250,6 +313,19 @@ func (h *QuestionnaireHandler) GetQuestionnaireStats(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Questionnaire stats retrieved", stats)
 }
 
+// GetQuestionnaireHistory godoc
+// @Summary Get questionnaire history
+// @Description Returns questionnaire history, paginated
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Param type query string false "Likert type filter" Enums(MSLQ,AMS)
+// @Param limit query int false "Limit" default(10)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.QuestionnaireHistoryItemDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/history [get]
+//
 // GetQuestionnaireHistory returns the student's questionnaire history (Likert), paginated.
 func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -274,6 +350,16 @@ func (h *QuestionnaireHandler) GetQuestionnaireHistory(c *gin.Context) {
 	response.Paginated(c, http.StatusOK, "Questionnaire history retrieved", items, total, (offset/limit)+1, limit)
 }
 
+// GetLatestVark godoc
+// @Summary Get latest VARK result
+// @Description Returns the latest fused learning style for the current user
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=dtos.LatestVarkResponseDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/vark [get]
+//
 // GetLatestVark returns the latest fused learning style for the current user (if available).
 func (h *QuestionnaireHandler) GetLatestVark(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -285,24 +371,36 @@ func (h *QuestionnaireHandler) GetLatestVark(c *gin.Context) {
 	}
 	// When no record, return empty style
 	if ls.ID == 0 {
-		response.Success(c, http.StatusOK, "No VARK result", gin.H{"style": gin.H{}, "completed_at": nil})
+		response.Success(c, http.StatusOK, "No VARK result", dtos.LatestVarkResponseDTO{
+			Style:       dtos.LatestVarkStyleDTO{},
+			CompletedAt: nil,
+		})
 		return
 	}
-	var completedAt interface{} = nil
+
+	var completedAt *string
 	if !ls.CreatedAt.IsZero() {
-		completedAt = ls.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
+		ts := ls.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
+		completedAt = &ts
 	}
-	style := gin.H{
-		"type":  string(ls.Type),
-		"label": ls.Label,
-		"scores": gin.H{
-			"visual":      nsToFloat(ls.ScoreVisual),
-			"auditory":    nsToFloat(ls.ScoreAuditory),
-			"reading":     nsToFloat(ls.ScoreReading),
-			"kinesthetic": nsToFloat(ls.ScoreKinesthetic),
+
+	scores := dtos.VARKScores{
+		Visual:      nsToFloat(ls.ScoreVisual),
+		Auditory:    nsToFloat(ls.ScoreAuditory),
+		Reading:     nsToFloat(ls.ScoreReading),
+		Kinesthetic: nsToFloat(ls.ScoreKinesthetic),
+	}
+
+	resp := dtos.LatestVarkResponseDTO{
+		Style: dtos.LatestVarkStyleDTO{
+			Type:   string(ls.Type),
+			Label:  ls.Label,
+			Scores: &scores,
 		},
+		CompletedAt: completedAt,
 	}
-	response.Success(c, http.StatusOK, "Latest VARK retrieved", gin.H{"style": style, "completed_at": completedAt})
+
+	response.Success(c, http.StatusOK, "Latest VARK retrieved", resp)
 }
 
 // helper to safely unwrap *float64 (nullable scores)
@@ -313,6 +411,18 @@ func nsToFloat(p *float64) float64 {
 	return *p
 }
 
+// CreateQuestionnaire godoc
+// @Summary Create questionnaire
+// @Description Creates a questionnaire (admin-only)
+// @Tags questionnaires
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dtos.AdminQuestionnaireDTO true "Questionnaire"
+// @Success 201 {object} dtos.APIResponse{data=gen.Questionnaire}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/ [post]
 func (h *QuestionnaireHandler) CreateQuestionnaire(c *gin.Context) {
 	var req dtos.AdminQuestionnaireDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -329,6 +439,19 @@ func (h *QuestionnaireHandler) CreateQuestionnaire(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "Questionnaire created successfully", questionnaire)
 }
 
+// UpdateQuestionnaire godoc
+// @Summary Update questionnaire
+// @Description Updates a questionnaire (admin-only)
+// @Tags questionnaires
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Questionnaire ID"
+// @Param request body dtos.AdminQuestionnaireDTO true "Questionnaire"
+// @Success 200 {object} dtos.APIResponse{data=gen.Questionnaire}
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/{id} [put]
 func (h *QuestionnaireHandler) UpdateQuestionnaire(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -351,6 +474,17 @@ func (h *QuestionnaireHandler) UpdateQuestionnaire(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Questionnaire updated successfully", questionnaire)
 }
 
+// DeleteQuestionnaire godoc
+// @Summary Delete questionnaire
+// @Description Deletes a questionnaire (admin-only)
+// @Tags questionnaires
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Questionnaire ID"
+// @Success 200 {object} dtos.APIResponse
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /questionnaires/{id} [delete]
 func (h *QuestionnaireHandler) DeleteQuestionnaire(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

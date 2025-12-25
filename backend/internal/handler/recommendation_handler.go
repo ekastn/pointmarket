@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
 	"strconv"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var _ = dtos.APIResponse{}
 
 type RecommendationHandler struct {
 	recService *services.RecommendationService
@@ -23,6 +26,17 @@ func NewRecommendationHandler(recService *services.RecommendationService, stdSer
 }
 
 // GetStudentRecommendations godoc
+// @Summary Get student recommendations
+// @Description Gets recommendation actions/items for the student (auth required)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.StudentRecommendationsDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /students/{user_id}/recommendations [get]
 func (h *RecommendationHandler) GetStudentRecommendations(c *gin.Context) {
 	userID := c.Param("user_id")
 	if userID == "" {
@@ -51,7 +65,17 @@ func (h *RecommendationHandler) GetStudentRecommendations(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Recommendations retrieved successfully", recs)
 }
 
-// GetRecommendationsTrace godoc (admin-only)
+// GetRecommendationsTrace godoc
+// @Summary Get recommendation trace payload
+// @Description Returns upstream trace payload for evaluator/debugging (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Param student_id query string true "Student ID"
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 400 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/trace [get]
 func (h *RecommendationHandler) GetRecommendationsTrace(c *gin.Context) {
 	studentID := c.Query("student_id")
 	if studentID == "" {
@@ -69,7 +93,15 @@ func (h *RecommendationHandler) GetRecommendationsTrace(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Trace retrieved successfully", payload)
 }
 
-// Admin: Items management
+// AdminListItems godoc
+// @Summary List recommendation items
+// @Description Lists recommendation items and includes stats (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/items [get]
 func (h *RecommendationHandler) AdminListItems(c *gin.Context) {
 	q := url.Values{}
 	for k, v := range c.Request.URL.Query() {
@@ -110,6 +142,17 @@ func (h *RecommendationHandler) AdminListItems(c *gin.Context) {
 	response.Success(c, http.StatusOK, "ok", enriched)
 }
 
+// AdminCreateItems godoc
+// @Summary Create recommendation items
+// @Description Proxies raw JSON payload to recommendation-service (admin-only)
+// @Tags recommendations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body object true "Raw JSON payload"
+// @Success 201 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/items [post]
 func (h *RecommendationHandler) AdminCreateItems(c *gin.Context) {
 	body, _ := io.ReadAll(c.Request.Body)
 	out, err := h.recService.AdminCreateItems(c.Request.Context(), body)
@@ -120,6 +163,19 @@ func (h *RecommendationHandler) AdminCreateItems(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "created", out)
 }
 
+// AdminUpdateItem godoc
+// @Summary Update recommendation item
+// @Description Proxies raw JSON payload to recommendation-service (admin-only)
+// @Tags recommendations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Item ID"
+// @Param request body object true "Raw JSON payload"
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 400 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/items/{id} [put]
 func (h *RecommendationHandler) AdminUpdateItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -136,6 +192,19 @@ func (h *RecommendationHandler) AdminUpdateItem(c *gin.Context) {
 	response.Success(c, http.StatusOK, "updated", out)
 }
 
+// AdminToggleItem godoc
+// @Summary Toggle recommendation item
+// @Description Toggles item active state via recommendation-service (admin-only)
+// @Tags recommendations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Item ID"
+// @Param request body object true "Raw JSON payload"
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 400 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/items/{id}/toggle [patch]
 func (h *RecommendationHandler) AdminToggleItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -152,6 +221,18 @@ func (h *RecommendationHandler) AdminToggleItem(c *gin.Context) {
 	response.Success(c, http.StatusOK, "toggled", out)
 }
 
+// AdminDeleteItem godoc
+// @Summary Delete recommendation item
+// @Description Deletes an item (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Item ID"
+// @Param force query int false "Force delete" Enums(0,1)
+// @Success 200 {object} dtos.APIResponse
+// @Failure 400 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/items/{id} [delete]
 func (h *RecommendationHandler) AdminDeleteItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -167,7 +248,15 @@ func (h *RecommendationHandler) AdminDeleteItem(c *gin.Context) {
 	response.Success(c, http.StatusOK, "deleted", nil)
 }
 
-// Admin: States typeahead
+// AdminListStates godoc
+// @Summary List recommendation states
+// @Description Typeahead helper for recommendation states (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/states [get]
 func (h *RecommendationHandler) AdminListStates(c *gin.Context) {
 	q := url.Values{}
 	for k, v := range c.Request.URL.Query() {
@@ -183,7 +272,15 @@ func (h *RecommendationHandler) AdminListStates(c *gin.Context) {
 	response.Success(c, http.StatusOK, "ok", out)
 }
 
-// Admin: Refs search typeahead
+// AdminSearchRefs godoc
+// @Summary Search recommendation refs
+// @Description Typeahead helper for ref targets (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/refs [get]
 func (h *RecommendationHandler) AdminSearchRefs(c *gin.Context) {
 	q := url.Values{}
 	for k, v := range c.Request.URL.Query() {
@@ -199,7 +296,15 @@ func (h *RecommendationHandler) AdminSearchRefs(c *gin.Context) {
 	response.Success(c, http.StatusOK, "ok", out)
 }
 
-// Admin: Unique States CRUD
+// AdminStatesList godoc
+// @Summary List unique states
+// @Description Lists unique states used by the recommendation engine (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/unique-states [get]
 func (h *RecommendationHandler) AdminStatesList(c *gin.Context) {
 	q := url.Values{}
 	for k, v := range c.Request.URL.Query() {
@@ -215,6 +320,17 @@ func (h *RecommendationHandler) AdminStatesList(c *gin.Context) {
 	response.Success(c, http.StatusOK, "ok", out)
 }
 
+// AdminStatesCreate godoc
+// @Summary Create unique state
+// @Description Creates a unique state entry (admin-only)
+// @Tags recommendations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body object true "Raw JSON payload"
+// @Success 201 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/unique-states [post]
 func (h *RecommendationHandler) AdminStatesCreate(c *gin.Context) {
 	body, _ := io.ReadAll(c.Request.Body)
 	out, err := h.recService.AdminStatesCreate(c.Request.Context(), body)
@@ -226,6 +342,19 @@ func (h *RecommendationHandler) AdminStatesCreate(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "created", out)
 }
 
+// AdminStatesUpdate godoc
+// @Summary Update unique state
+// @Description Updates a unique state entry (admin-only)
+// @Tags recommendations
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "State ID"
+// @Param request body object true "Raw JSON payload"
+// @Success 200 {object} dtos.APIResponse{data=map[string]interface{}}
+// @Failure 400 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/unique-states/{id} [put]
 func (h *RecommendationHandler) AdminStatesUpdate(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -242,6 +371,18 @@ func (h *RecommendationHandler) AdminStatesUpdate(c *gin.Context) {
 	response.Success(c, http.StatusOK, "updated", out)
 }
 
+// AdminStatesDelete godoc
+// @Summary Delete unique state
+// @Description Deletes a unique state entry (admin-only)
+// @Tags recommendations
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "State ID"
+// @Param force query int false "Force delete" Enums(0,1)
+// @Success 200 {object} dtos.APIResponse
+// @Failure 400 {object} dtos.APIError
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/unique-states/{id} [delete]
 func (h *RecommendationHandler) AdminStatesDelete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)

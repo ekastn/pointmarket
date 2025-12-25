@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+
 	"pointmarket/backend/internal/config"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 
@@ -17,20 +19,38 @@ func NewScoringHandler() *ScoringHandler {
 	return &ScoringHandler{}
 }
 
-// multimodalThresholdResponse represents the request body for updating the multimodal threshold
-type multimodalThresholdResponse struct {
-	Threshold float64 `json:"threshold" binding:"required"`
-}
-
 // GetMultimodalThreshold handles getting the multimodal threshold
+// @Summary Get multimodal threshold
+// @Description Returns current multimodal threshold.
+// @Tags scorings
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dtos.APIResponse{data=dtos.MultimodalThresholdResponse}
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /scorings/multimodal [get]
 func (h *ScoringHandler) GetMultimodalThreshold(c *gin.Context) {
 	threshold := config.GetMultimodalThreshold()
-	response.Success(c, http.StatusOK, "Multimodal threshold", multimodalThresholdResponse{Threshold: threshold})
+	response.Success(c, http.StatusOK, "Multimodal threshold", dtos.MultimodalThresholdResponse{Threshold: threshold})
 }
 
 // UpdateMultimodalThreshold handles updating the multimodal threshold
+// @Summary Update multimodal threshold
+// @Description Updates current multimodal threshold.
+// @Tags scorings
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dtos.MultimodalThresholdRequest true "Threshold"
+// @Success 200 {object} dtos.APIResponse{data=dtos.NullData}
+// @Failure 400 {object} dtos.APIError
+// @Failure 401 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /scorings/multimodal [put]
 func (h *ScoringHandler) UpdateMultimodalThreshold(c *gin.Context) {
-	var req multimodalThresholdResponse
+	var req dtos.MultimodalThresholdRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
@@ -39,11 +59,11 @@ func (h *ScoringHandler) UpdateMultimodalThreshold(c *gin.Context) {
 	role := middleware.GetRole(c)
 
 	if role != "admin" {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusForbidden, "forbidden")
 		return
 	}
 
-	config.SetLikeThreshold(int(req.Threshold))
+	config.SetMultimodalThreshold(req.Threshold)
 
 	response.Success(c, http.StatusOK, "Multimodal threshold updated successfully", nil)
 }

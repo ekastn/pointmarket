@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"pointmarket/backend/internal/dtos"
 	"pointmarket/backend/internal/middleware"
 	"pointmarket/backend/internal/response"
 	"pointmarket/backend/internal/services"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var _ = dtos.APIResponse{}
 
 // WeeklyEvaluationHandler handles requests related to weekly evaluations
 type WeeklyEvaluationHandler struct {
@@ -21,6 +24,21 @@ func NewWeeklyEvaluationHandler(weeklyEvaluationService *services.WeeklyEvaluati
 	return &WeeklyEvaluationHandler{weeklyEvaluationService: weeklyEvaluationService, scheduler: scheduler}
 }
 
+// GetWeeklyEvaluations godoc
+// @Summary List weekly evaluations
+// @Description Returns weekly evaluations for the current user; teachers can query monitoring view
+// @Tags weekly-evaluations
+// @Produce json
+// @Security BearerAuth
+// @Param weeks query int false "Number of weeks" default(8)
+// @Param view query string false "Teacher view" Enums(monitoring)
+// @Param student_id query int false "Target student user ID (teacher only)"
+// @Success 200 {object} dtos.APIResponse{data=[]dtos.WeeklyEvaluationDetailDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 403 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /weekly-evaluations [get]
+//
 // GetWeeklyEvaluations handles fetching weekly evaluations for students or teachers
 func (h *WeeklyEvaluationHandler) GetWeeklyEvaluations(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -86,6 +104,16 @@ func (h *WeeklyEvaluationHandler) GetWeeklyEvaluations(c *gin.Context) {
 	}
 }
 
+// InitializeWeeklyEvaluations godoc
+// @Summary Initialize weekly evaluations
+// @Description Initializes weekly evaluation rows (admin-only)
+// @Tags weekly-evaluations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse
+// @Failure 500 {object} dtos.APIError
+// @Router /weekly-evaluations/initialize [post]
+//
 // InitializeWeeklyEvaluations handles the one-time initialization of weekly evaluations
 func (h *WeeklyEvaluationHandler) InitializeWeeklyEvaluations(c *gin.Context) {
 	err := h.weeklyEvaluationService.InitializeWeeklyEvaluations(c.Request.Context())
@@ -96,16 +124,32 @@ func (h *WeeklyEvaluationHandler) InitializeWeeklyEvaluations(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Weekly evaluations initialized successfully", nil)
 }
 
+// SchedulerStatus godoc
+// @Summary Scheduler status
+// @Description Returns current scheduler status (admin-only)
+// @Tags weekly-evaluations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=services.SchedulerStatusDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /weekly-evaluations/status [get]
+//
 // SchedulerStatus returns current scheduler status (admin only)
 func (h *WeeklyEvaluationHandler) SchedulerStatus(c *gin.Context) {
 	st := h.scheduler.Status()
-	response.Success(c, http.StatusOK, "Scheduler status", gin.H{
-		"running":     st.Running,
-		"job_running": st.JobRunning,
-		"next_run":    st.NextRun,
-	})
+	response.Success(c, http.StatusOK, "Scheduler status", st)
 }
 
+// SchedulerStart godoc
+// @Summary Scheduler start
+// @Description Starts the in-process scheduler loop (admin-only)
+// @Tags weekly-evaluations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=dtos.SchedulerNextRunDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /weekly-evaluations/start [post]
+//
 // SchedulerStart starts the in-process scheduler loop (admin only)
 func (h *WeeklyEvaluationHandler) SchedulerStart(c *gin.Context) {
 	if err := h.scheduler.Start(); err != nil {
@@ -113,9 +157,19 @@ func (h *WeeklyEvaluationHandler) SchedulerStart(c *gin.Context) {
 		return
 	}
 	st := h.scheduler.Status()
-	response.Success(c, http.StatusOK, "Scheduler started", gin.H{"next_run": st.NextRun})
+	response.Success(c, http.StatusOK, "Scheduler started", dtos.SchedulerNextRunDTO{NextRun: st.NextRun})
 }
 
+// SchedulerStop godoc
+// @Summary Scheduler stop
+// @Description Stops the in-process scheduler loop (admin-only)
+// @Tags weekly-evaluations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse
+// @Failure 500 {object} dtos.APIError
+// @Router /weekly-evaluations/stop [post]
+//
 // SchedulerStop stops the in-process scheduler loop (admin only)
 func (h *WeeklyEvaluationHandler) SchedulerStop(c *gin.Context) {
 	if err := h.scheduler.Stop(); err != nil {

@@ -19,6 +19,16 @@ func NewStudentHandler(studentService *services.StudentService) *StudentHandler 
 	return &StudentHandler{studentService: studentService}
 }
 
+// GetPrograms godoc
+// @Summary List academic programs
+// @Description Lists all academic programs (auth required)
+// @Tags programs
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dtos.APIResponse{data=[]dtos.ProgramDTO}
+// @Failure 500 {object} dtos.APIError
+// @Router /programs [get]
+//
 // GetPrograms lists all academic programs
 func (h *StudentHandler) GetPrograms(c *gin.Context) {
 	programs, err := h.studentService.ListPrograms(c.Request.Context())
@@ -29,7 +39,18 @@ func (h *StudentHandler) GetPrograms(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Programs retrieved successfully", programs)
 }
 
-// GetStudentByUserID fetches student info by user id
+// GetStudentByUserID godoc
+// @Summary Get student by user ID
+// @Description Fetches a student record by user ID (admin-only)
+// @Tags students
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.StudentDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /students/{user_id} [get]
 func (h *StudentHandler) GetStudentByUserID(c *gin.Context) {
 	uidStr := c.Param("user_id")
 	uid, err := strconv.ParseInt(uidStr, 10, 64)
@@ -49,7 +70,19 @@ func (h *StudentHandler) GetStudentByUserID(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Student retrieved successfully", st)
 }
 
-// UpsertStudentByUserID creates or updates a student record for the given user
+// UpsertStudentByUserID godoc
+// @Summary Create or update student
+// @Description Creates or updates a student record for the given user ID (admin-only)
+// @Tags students
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path int true "User ID"
+// @Param request body dtos.UpsertStudentRequest true "Student payload"
+// @Success 200 {object} dtos.APIResponse
+// @Failure 400 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /students/{user_id} [put]
 func (h *StudentHandler) UpsertStudentByUserID(c *gin.Context) {
 	uidStr := c.Param("user_id")
 	uid, err := strconv.ParseInt(uidStr, 10, 64)
@@ -69,7 +102,21 @@ func (h *StudentHandler) UpsertStudentByUserID(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Student saved successfully", nil)
 }
 
-// SearchStudents lists students with filters and pagination
+// SearchStudents godoc
+// @Summary Search students
+// @Description Lists students with filters and pagination (admin-only)
+// @Tags students
+// @Produce json
+// @Security BearerAuth
+// @Param search query string false "Search query"
+// @Param status query string false "Student status"
+// @Param program_id query int false "Program ID"
+// @Param cohort_year query int false "Cohort year"
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Success 200 {object} dtos.PaginatedResponse{data=[]dtos.StudentListItem}
+// @Failure 500 {object} dtos.APIError
+// @Router /students [get]
 func (h *StudentHandler) SearchStudents(c *gin.Context) {
 	var req dtos.StudentSearchRequest
 	// Defaults
@@ -105,7 +152,18 @@ func (h *StudentHandler) SearchStudents(c *gin.Context) {
 	response.Paginated(c, http.StatusOK, "Students retrieved successfully", list, total, req.Page, req.Limit)
 }
 
-// GetStudentDetailsByUserID fetches detailed student info by user ID, including questionnaire results.
+// GetStudentDetailsByUserID godoc
+// @Summary Get student details
+// @Description Fetches detailed student info, including latest questionnaire results (admin-only)
+// @Tags students
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path int true "User ID"
+// @Success 200 {object} dtos.APIResponse{data=dtos.StudentDetailsDTO}
+// @Failure 400 {object} dtos.APIError
+// @Failure 404 {object} dtos.APIError
+// @Failure 500 {object} dtos.APIError
+// @Router /students/{user_id}/details [get]
 func (h *StudentHandler) GetStudentDetailsByUserID(c *gin.Context) {
 	uidStr := c.Param("user_id")
 	uid, err := strconv.ParseInt(uidStr, 10, 64)

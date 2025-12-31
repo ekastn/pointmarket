@@ -6,7 +6,7 @@ import { renderLogin, setupLoginEvents } from "./views/login.js";
 import { renderHome } from "./views/home.js";
 import { renderMarket } from "./views/market.js";
 import { renderLeaderboard } from "./views/leaderboard.js";
-import { renderProfile } from "./views/profile.js";
+import { renderProfile, initProfileView } from "./views/profile.js";
 import { isAuthenticated, logout, getCurrentUser } from "./lib/auth.js";
 
 let state = {
@@ -89,9 +89,9 @@ function render() {
   if (header) header.classList.remove("hidden");
   if (nav) nav.classList.remove("hidden");
 
-  // Initialize charts if on profile page
+  // Initialize profile data if on profile page
   if (state.activeTab === "profile") {
-    setTimeout(initChart, 100);
+    setTimeout(initProfileView, 100);
   }
 }
 

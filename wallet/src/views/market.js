@@ -227,12 +227,12 @@ async function handlePurchase(product) {
         const success = await purchaseProduct(product.id);
         if (success) {
             showSuccessModal(product.name);
-            // Deduct points visually
+            // Deduct points using global helper (if available, else DOM)
             const pointsEl = document.getElementById("user-points");
             if (pointsEl) {
                 const current = parseInt(pointsEl.innerText.replace(/,/g, ''));
-                if (!isNaN(current)) {
-                    pointsEl.innerText = (current - product.points_price).toLocaleString();
+                if (!isNaN(current) && window.updateHeaderPoints) {
+                    window.updateHeaderPoints(current - product.points_price);
                 }
             }
         } else {

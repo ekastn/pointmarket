@@ -46,6 +46,11 @@ export async function initHomeView() {
         const data = await fetchHomeData();
         const { dashboard, recommendations, fallbackProducts } = data;
 
+        // Sync points
+        if (dashboard?.student_stats?.total_points !== undefined) {
+            window.updateHeaderPoints(dashboard.student_stats.total_points);
+        }
+
         // 1. Hydrate Level Card
         hydrateLevelCard(dashboard?.student_stats?.total_points || 0);
 

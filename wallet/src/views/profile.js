@@ -112,6 +112,11 @@ export async function initProfileView() {
         const data = await fetchProfileData();
         const { user, student_stats, recommendations } = data;
 
+        // Sync points
+        if (student_stats?.total_points !== undefined) {
+            window.updateHeaderPoints(student_stats.total_points);
+        }
+
         // 1. Hydrate Profile Header
         document.getElementById("profile-name").innerText = user.name || user.username;
         document.getElementById("profile-info").innerText = `Mahasiswa • ${user.role.toUpperCase()}`;

@@ -19,6 +19,15 @@ let state = {
 // DOM Root
 const app = document.querySelector("#app");
 
+// Global Helper to update points
+window.updateHeaderPoints = (points) => {
+    state.points = points;
+    const pointsEl = document.getElementById("user-points");
+    if (pointsEl) {
+        pointsEl.innerText = points.toLocaleString();
+    }
+};
+
 // Render Function
 function render() {
   // If not logged in, show login screen only
@@ -33,12 +42,6 @@ function render() {
       render();
     });
     return;
-  }
-
-  // Update points from current user if available
-  const user = getCurrentUser();
-  if (user && user.points !== undefined) {
-    state.points = user.points;
   }
 
   // If logged in, show Layout (Header + Content + Nav + Modal)

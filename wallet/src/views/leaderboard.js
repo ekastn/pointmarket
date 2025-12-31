@@ -78,17 +78,17 @@ function hydratePodium(data) {
             : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
 
         return `
-            <div class="flex flex-col items-center">
-                <div class="relative mb-2">
+            <div class="flex flex-col items-center flex-1 min-w-0">
+                <div class="relative mb-2 shrink-0">
                     <img src="${avatar}" class="w-12 h-12 rounded-full border-2 border-white shadow-md z-10 relative ${isFirst ? 'scale-125' : ''}">
                     ${isFirst ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl text-amber-400 drop-shadow-sm"><i class="fas fa-crown"></i></div>' : ''}
                     <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full ${colorClass} flex items-center justify-center text-[10px] font-bold border-2 border-white z-20">
                         ${rank}
                     </div>
                 </div>
-                <div class="w-full ${heightClass} ${colorClass.split(' ')[0]} rounded-t-2xl flex flex-col items-center justify-end pb-3 px-2 text-center min-w-[80px]">
-                    <span class="text-xs font-bold truncate w-full mb-1 text-gray-800">${user.display_name}</span>
-                    <span class="text-[10px] font-bold opacity-80">${user.total_points} pts</span>
+                <div class="w-full ${heightClass} ${colorClass.split(' ')[0]} rounded-t-2xl flex flex-col items-center justify-end pb-3 px-1 text-center">
+                    <span class="text-[10px] font-bold truncate w-full mb-1 text-gray-800 px-1">${user.display_name}</span>
+                    <span class="text-[9px] font-bold opacity-80 whitespace-nowrap">${user.total_points} pts</span>
                 </div>
             </div>
         `;
@@ -125,15 +125,15 @@ function hydrateRankList(data, currentUserId) {
 
         return `
             <div class="flex items-center gap-4 p-3 rounded-2xl ${isMe ? 'bg-indigo-50 border border-indigo-100' : 'hover:bg-gray-50'} transition-colors">
-                <span class="font-bold text-gray-400 w-6 text-center">${rank}</span>
-                <img src="${avatar}" class="w-10 h-10 rounded-full bg-white border border-gray-100">
-                <div class="flex-1">
+                <span class="font-bold text-gray-400 w-6 text-center shrink-0">${rank}</span>
+                <img src="${avatar}" class="w-10 h-10 rounded-full bg-white border border-gray-100 shrink-0">
+                <div class="flex-1 min-w-0">
                     <h4 class="text-sm font-bold text-gray-800 truncate ${isMe ? 'text-indigo-900' : ''}">
                         ${user.display_name} ${isMe ? '(Anda)' : ''}
                     </h4>
-                    <p class="text-[10px] text-gray-400">${user.username}</p>
+                    <p class="text-[10px] text-gray-400 truncate">${user.username}</p>
                 </div>
-                <span class="font-bold text-indigo-600 text-xs">${user.total_points} pts</span>
+                <span class="font-bold text-indigo-600 text-xs shrink-0 whitespace-nowrap">${user.total_points} pts</span>
             </div>
         `;
     }).join("");

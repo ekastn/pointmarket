@@ -32,7 +32,7 @@ export function renderBottomNav(activeTab = 'home') {
             id="nav-leaderboard"
             class="${getNavClass('leaderboard')}"
         >
-            <i class="fas fa-ranking-star text-lg"></i>
+            <i class="fas fa-trophy text-lg"></i>
             <span class="text-[9px] font-extrabold uppercase tracking-tighter"
                 >Peringkat</span
             >

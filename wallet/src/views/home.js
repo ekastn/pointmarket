@@ -52,7 +52,7 @@ export async function initHomeView() {
         }
 
         // 1. Hydrate Level Card
-        hydrateLevelCard(dashboard?.student_stats?.total_points || 0);
+        hydrateLevelCard(dashboard);
 
         // 2. Hydrate Missions (Action 105)
         hydrateMissions(recommendations);
@@ -61,34 +61,48 @@ export async function initHomeView() {
         hydrateProducts(recommendations, fallbackProducts);
 
     } catch (err) {
-        console.error("Home Hydration Error:", err);
+        // fail silently
     }
 }
 
-function hydrateLevelCard(points) {
+function hydrateLevelCard(dashboard) {
     const container = document.getElementById("level-card");
     if (!container) return;
 
-    let level = "Bronze Learner";
+    const points = dashboard?.student_stats?.total_points || 0;
+    const badges = dashboard?.student_stats?.badges_progress || [];
+
+    // Sort badges by requirement just in case
+    badges.sort((a, b) => a.points_required - b.points_required);
+
+    // Determine Current and Next Level
+    let currentLevel = "Bronze Learner"; // Default start
     let nextLevel = "Silver";
-    let threshold = 500;
+    let threshold = 1000; // Default first threshold
     let icon = "fa-medal";
 
-    if (points >= 2000) {
-        level = "Diamond Pro";
+    // Find the highest achieved badge
+    const achievedBadges = badges.filter(b => b.achieved);
+    if (achievedBadges.length > 0) {
+        const lastAchieved = achievedBadges[achievedBadges.length - 1];
+        currentLevel = lastAchieved.title;
+        // Map common titles to icons
+        const t = currentLevel.toLowerCase();
+        if (t.includes("gold")) icon = "fa-crown";
+        else if (t.includes("diamond")) icon = "fa-gem";
+        else if (t.includes("silver")) icon = "fa-award";
+        else if (t.includes("master")) icon = "fa-trophy";
+        else if (t.includes("king")) icon = "fa-chess-king";
+    }
+
+    // Find the next unachieved badge
+    const nextBadge = badges.find(b => !b.achieved);
+    if (nextBadge) {
+        nextLevel = nextBadge.title;
+        threshold = nextBadge.points_required;
+    } else {
         nextLevel = "Max Level";
-        threshold = points;
-        icon = "fa-gem";
-    } else if (points >= 1000) {
-        level = "Gold Learner";
-        nextLevel = "Diamond";
-        threshold = 2000;
-        icon = "fa-crown";
-    } else if (points >= 500) {
-        level = "Silver Learner";
-        nextLevel = "Gold";
-        threshold = 1000;
-        icon = "fa-award";
+        threshold = points; // Full bar
     }
 
     const progress = Math.min((points / threshold) * 100, 100);
@@ -97,7 +111,7 @@ function hydrateLevelCard(points) {
         <div class="flex justify-between items-start mb-4">
             <div>
                 <p class="opacity-80 text-xs font-bold uppercase tracking-widest mb-1">Level Saat Ini</p>
-                <h2 class="text-2xl font-bold">${level}</h2>
+                <h2 class="text-2xl font-bold">${currentLevel}</h2>
             </div>
             <div class="bg-white/20 p-2 rounded-xl backdrop-blur-md">
                 <i class="fas ${icon} text-xl"></i>

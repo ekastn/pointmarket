@@ -92,15 +92,18 @@ export function renderProfile() {
         </div>
 
         <!-- Account Actions -->
-        <div class="space-y-2">
+        <div class="mt-8 px-2">
             <button
                 id="logout-btn"
-                class="w-full flex items-center justify-between p-4 bg-red-50 text-red-600 rounded-2xl font-bold text-sm btn-bounce"
+                class="w-full group flex items-center gap-4 p-4 bg-white border border-red-100 rounded-[2rem] shadow-sm active:scale-[0.98] transition-all"
             >
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Keluar dari Akun</span>
+                <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors shrink-0">
+                    <i class="fas fa-sign-out-alt text-lg"></i>
                 </div>
+                <div class="text-left">
+                    <h4 class="text-sm font-bold text-gray-800">Keluar dari Akun</h4>
+                </div>
+                <i class="fas fa-chevron-right ml-auto text-gray-300 text-xs"></i>
             </button>
         </div>
     </section>

@@ -2,16 +2,17 @@ import "./style.css";
 import { renderHeader } from "./components/header.js";
 import { renderBottomNav } from "./components/bottomNav.js";
 import { renderModal } from "./components/modal.js";
-import { renderLogin } from "./views/login.js";
+import { renderLogin, setupLoginEvents } from "./views/login.js";
 import { renderHome } from "./views/home.js";
 import { renderMarket } from "./views/market.js";
 import { renderLeaderboard } from "./views/leaderboard.js";
 import { renderProfile } from "./views/profile.js";
+import { isAuthenticated, logout, getCurrentUser } from "./lib/auth.js";
 
 let state = {
-  isLoggedIn: false,
+  isLoggedIn: isAuthenticated(),
   activeTab: "home",
-  points: 1250,
+  points: 0,
   chartInstance: null,
 };
 
@@ -27,8 +28,17 @@ function render() {
         ${renderLogin()}
       </div>
     `;
-    setupLoginListeners();
+    setupLoginEvents(() => {
+      state.isLoggedIn = true;
+      render();
+    });
     return;
+  }
+
+  // Update points from current user if available
+  const user = getCurrentUser();
+  if (user && user.points !== undefined) {
+    state.points = user.points;
   }
 
   // If logged in, show Layout (Header + Content + Nav + Modal)
@@ -74,8 +84,10 @@ function render() {
   setupAppListeners();
   
   // Show header (it has 'hidden' class by default in template, remove it)
-  document.getElementById("main-header").classList.remove("hidden");
-  document.getElementById("bottom-nav").classList.remove("hidden");
+  const header = document.getElementById("main-header");
+  const nav = document.getElementById("bottom-nav");
+  if (header) header.classList.remove("hidden");
+  if (nav) nav.classList.remove("hidden");
 
   // Initialize charts if on profile page
   if (state.activeTab === "profile") {
@@ -84,16 +96,6 @@ function render() {
 }
 
 // Event Listeners Setup
-function setupLoginListeners() {
-  const loginBtn = document.getElementById("login-btn");
-  if (loginBtn) {
-    loginBtn.addEventListener("click", () => {
-      state.isLoggedIn = true;
-      render();
-    });
-  }
-}
-
 function setupAppListeners() {
   // Navigation
   document.querySelectorAll(".nav-btn").forEach((btn) => {
@@ -110,6 +112,7 @@ function setupAppListeners() {
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
+      logout();
       state.isLoggedIn = false;
       state.activeTab = "home";
       render();

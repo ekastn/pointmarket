@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.pointmarket.irc-enter.tech/api/v1";
 
 /**
  * Generic API fetch function.
@@ -13,6 +13,12 @@ export async function apiFetch(endpoint, options = {}) {
         "Content-Type": "application/json",
         Accept: "application/json",
     };
+
+    // Inject Token if available
+    const token = localStorage.getItem("token");
+    if (token) {
+        defaultHeaders["Authorization"] = `Bearer ${token}`;
+    }
 
     const config = {
         ...options,

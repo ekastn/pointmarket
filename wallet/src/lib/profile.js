@@ -11,31 +11,26 @@ export async function fetchProfileData() {
         const user = getCurrentUser();
         if (!user) throw new Error("User not authenticated");
 
-        // 1. Fetch Dashboard Stats
-        const dashboardResp = await get("/dashboard");
+        // 1. Fetch Dashboard Stats, Recommendations & VARK History
+        const [dashboardResp, recResp, varkResp] = await Promise.all([
+            get("/dashboard"),
+            get(`/students/${user.id}/recommendations`),
+            get("/questionnaires/history?type=VARK&limit=20")
+        ]);
+
         if (!dashboardResp || !dashboardResp.success) {
             throw new Error(dashboardResp?.message || "Failed to fetch dashboard data");
         }
 
         const stats = dashboardResp.data;
-
-        // 2. Fetch Recommendations (using the authenticated user's ID)
-        // Note: The recommendation endpoint uses the internal student_id or user_id. 
-        // Based on our analysis, the backend handler expects user_id in the path.
-        let recommendations = null;
-        try {
-            const recResp = await get(`/students/${user.id}/recommendations`);
-            if (recResp && recResp.success) {
-                recommendations = recResp.data;
-            }
-        } catch (recErr) {
-            console.error("Non-critical: Failed to fetch recommendations:", recErr);
-        }
+        const recommendations = (recResp && recResp.success) ? recResp.data : null;
+        const varkHistory = (varkResp && varkResp.success) ? varkResp.data : [];
 
         return {
             user: stats.user,
             student_stats: stats.student_stats,
-            recommendations: recommendations
+            recommendations: recommendations,
+            vark_history: varkHistory
         };
     } catch (error) {
         console.error("Profile Data Fetch Error:", error);

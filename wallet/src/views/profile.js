@@ -89,6 +89,16 @@ export function renderProfile() {
                     <canvas id="weeklyChart" class="w-full"></canvas>
                 </div>
             </div>
+
+            <!-- Grafik VARK -->
+            <div class="mt-8">
+                <p class="text-xs font-bold text-gray-700 mb-3">
+                    Perkembangan Gaya Belajar
+                </p>
+                <div class="relative h-[200px]">
+                    <canvas id="varkChart" class="w-full"></canvas>
+                </div>
+            </div>
         </div>
 
         <!-- Account Actions -->
@@ -102,6 +112,7 @@ export function renderProfile() {
                 </div>
                 <div class="text-left">
                     <h4 class="text-sm font-bold text-gray-800">Keluar dari Akun</h4>
+                    <p class="text-[10px] text-gray-400 font-medium">Hapus sesi dan kembali ke login</p>
                 </div>
                 <i class="fas fa-chevron-right ml-auto text-gray-300 text-xs"></i>
             </button>
@@ -113,7 +124,7 @@ export function renderProfile() {
 export async function initProfileView() {
     try {
         const data = await fetchProfileData();
-        const { user, student_stats, recommendations } = data;
+        const { user, student_stats, recommendations, vark_history } = data;
 
         // Sync points
         if (student_stats?.total_points !== undefined) {
@@ -221,8 +232,9 @@ export async function initProfileView() {
         document.getElementById("ams-score").innerText = student_stats?.ams_score ? student_stats.ams_score.toFixed(1) : "--";
         document.getElementById("mslq-score").innerText = student_stats?.mslq_score ? student_stats.mslq_score.toFixed(1) : "--";
 
-        // 5. Initialize Chart
+        // 5. Initialize Charts
         initProfileChart(student_stats?.weekly_evaluations || []);
+        initVarkChart(vark_history || []);
 
     } catch (err) {
         const nameEl = document.getElementById("profile-name");
@@ -241,6 +253,7 @@ function getBadgeIcon(title) {
 }
 
 let profileChartInstance = null;
+let varkChartInstance = null;
 
 function initProfileChart(weeklyEvaluations) {
     const canvas = document.getElementById("weeklyChart");
@@ -249,47 +262,99 @@ function initProfileChart(weeklyEvaluations) {
     const ctx = canvas.getContext("2d");
     if (profileChartInstance) profileChartInstance.destroy();
 
-    // Prepare data
     // Sort and map evaluations to weekly labels
     const sortedEvals = [...weeklyEvaluations].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-    
-    // Aggregate by week label if necessary, or just take the last 4-6
     const displayEvals = sortedEvals.slice(-6);
     const labels = displayEvals.map(e => `W${e.week_number || '?'}`);
 
-    // If we have mixed types in one week, this logic needs to be smarter.
-    // For simplicity in this mobile view, we'll show a single trend of the scores.
-    
     profileChartInstance = new Chart(ctx, {
         type: "line",
         data: {
             labels: labels.length > 0 ? labels : ["W1", "W2", "W3", "W4"],
-            datasets: [
-                {
-                    label: "Skor",
-                    data: displayEvals.map(e => e.score),
-                    borderColor: "#4f46e5",
-                    backgroundColor: "rgba(79, 70, 229, 0.1)",
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: "#fff",
-                    borderWidth: 3,
-                }
-            ],
+            datasets: [{
+                label: "Skor",
+                data: displayEvals.map(e => e.score),
+                borderColor: "#4f46e5",
+                backgroundColor: "rgba(79, 70, 229, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: "#fff",
+                borderWidth: 3,
+            }],
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-            },
+            plugins: { legend: { display: false } },
             scales: {
                 y: {
                     beginAtZero: true,
                     max: 7,
                     grid: { color: "#f1f5f9" },
                     ticks: { font: { size: 9 }, stepSize: 1 },
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 9 } },
+                },
+            },
+        },
+    });
+}
+
+function initVarkChart(history) {
+    const canvas = document.getElementById("varkChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const ctx = canvas.getContext("2d");
+    if (varkChartInstance) varkChartInstance.destroy();
+
+    // Process history: Sort by date, normalize scores, calculate composite
+    const sorted = [...history].sort((a, b) => new Date(a.completed_at) - new Date(b.completed_at));
+    const data = sorted.slice(-10); // Show last 10 entries
+
+    const labels = data.map(d => {
+        const date = new Date(d.completed_at);
+        return `${date.getDate()}/${date.getMonth()+1}`;
+    });
+
+    const composites = data.map(d => {
+        const s = d.vark_scores || {};
+        const vals = [s.visual || 0, s.auditory || 0, s.reading || 0, s.kinesthetic || 0];
+        const max = Math.max(...vals);
+        if (max <= 0) return 0;
+        // Normalize each to 0-10 based on max, then average them to get a "strength" composite
+        const normalized = vals.map(v => (v / max) * 10);
+        return normalized.reduce((a,b) => a+b, 0) / 4;
+    });
+
+    varkChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels.length > 0 ? labels : ["None"],
+            datasets: [{
+                label: "Adaptability",
+                data: composites.length > 0 ? composites : [0],
+                borderColor: "#ec4899", // Pink-500
+                backgroundColor: "rgba(236, 72, 153, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: "#fff",
+                borderWidth: 3,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10,
+                    grid: { color: "#f1f5f9" },
+                    ticks: { font: { size: 9 }, stepSize: 2 },
                 },
                 x: {
                     grid: { display: false },

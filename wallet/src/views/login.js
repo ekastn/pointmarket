@@ -23,7 +23,7 @@ export function renderLogin() {
                 <input
                     id="login-username"
                     type="text"
-                    value="andi.wijaya@school.id"
+                    placeholder="Username / NIM"
                     class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
             </div>
@@ -32,7 +32,7 @@ export function renderLogin() {
                 <input
                     id="login-password"
                     type="password"
-                    value="password123"
+                    placeholder="Password"
                     class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
             </div>
@@ -43,9 +43,6 @@ export function renderLogin() {
                 <span>Masuk Sekarang</span>
             </button>
         </div>
-        <p class="text-center text-sm text-gray-400 mt-8">
-            Belum punya akun? <span class="text-indigo-600 font-bold">Daftar</span>
-        </p>
     </div>
   `;
 }

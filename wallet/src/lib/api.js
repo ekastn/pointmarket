@@ -33,8 +33,10 @@ export async function apiFetch(endpoint, options = {}) {
 
         // Handle 401 Unauthorized (e.g., redirect to login or clear token)
         if (response.status === 401) {
-            // You might want to dispatch a custom event or callback here
-            // window.location.href = '/login';
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.reload();
+            return null;
         }
 
         // Check for HTTP errors

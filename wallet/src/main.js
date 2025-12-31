@@ -5,7 +5,7 @@ import { renderModal } from "./components/modal.js";
 import { renderLogin, setupLoginEvents } from "./views/login.js";
 import { renderHome, initHomeView } from "./views/home.js";
 import { renderMarket, initMarketView } from "./views/market.js";
-import { renderLeaderboard } from "./views/leaderboard.js";
+import { renderLeaderboard, initLeaderboardView } from "./views/leaderboard.js";
 import { renderProfile, initProfileView } from "./views/profile.js";
 import { isAuthenticated, logout, getCurrentUser } from "./lib/auth.js";
 
@@ -96,6 +96,8 @@ function render() {
     setTimeout(initProfileView, 100);
   } else if (state.activeTab === "market") {
     setTimeout(initMarketView, 100);
+  } else if (state.activeTab === "leaderboard") {
+    setTimeout(initLeaderboardView, 100);
   }
 }
 

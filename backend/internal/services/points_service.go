@@ -209,3 +209,11 @@ func (s *PointsService) ListTransactions(ctx context.Context, userID int64, page
 	}
 	return txs, nil
 }
+
+// GetLeaderboard returns the top users by total points.
+func (s *PointsService) GetLeaderboard(ctx context.Context, limit int) ([]gen.GetLeaderboardRow, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	return s.q.GetLeaderboard(ctx, int32(limit))
+}

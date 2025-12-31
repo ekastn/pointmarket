@@ -107,6 +107,7 @@ type Querier interface {
 	GetLatestLikertResultByType(ctx context.Context, arg GetLatestLikertResultByTypeParams) (StudentQuestionnaireLikertResult, error)
 	GetLatestUserLearningStyle(ctx context.Context, userID int64) (StudentLearningStyle, error)
 	GetLatestVarkResult(ctx context.Context, userID int64) (GetLatestVarkResultRow, error)
+	GetLeaderboard(ctx context.Context, limit int32) ([]GetLeaderboardRow, error)
 	GetLessonByID(ctx context.Context, id int64) (Lesson, error)
 	GetLessonsByCourseID(ctx context.Context, arg GetLessonsByCourseIDParams) ([]Lesson, error)
 	GetLikertHistoryByStudent(ctx context.Context, arg GetLikertHistoryByStudentParams) ([]GetLikertHistoryByStudentRow, error)

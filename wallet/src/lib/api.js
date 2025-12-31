@@ -33,7 +33,6 @@ export async function apiFetch(endpoint, options = {}) {
 
         // Handle 401 Unauthorized (e.g., redirect to login or clear token)
         if (response.status === 401) {
-            console.warn("Unauthorized access. Redirecting to login...");
             // You might want to dispatch a custom event or callback here
             // window.location.href = '/login';
         }
@@ -56,7 +55,6 @@ export async function apiFetch(endpoint, options = {}) {
         // Return text if not JSON (e.g. 204 No Content)
         return null;
     } catch (error) {
-        console.error("API Fetch Error:", error);
         throw error;
     }
 }

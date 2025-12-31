@@ -36,7 +36,6 @@ export async function fetchHomeData() {
             fallbackProducts
         };
     } catch (error) {
-        console.error("Home Data Fetch Error:", error);
         throw error;
     }
 }

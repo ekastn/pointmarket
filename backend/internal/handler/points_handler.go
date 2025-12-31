@@ -158,3 +158,29 @@ func (h *PointsHandler) AdjustUserStats(c *gin.Context) {
 		UpdatedAt:   updatedAt,
 	})
 }
+
+// GetLeaderboard godoc
+// @Summary Get leaderboard
+// @Description Returns top students by total points (auth required)
+// @Tags gamification
+// @Produce json
+// @Security BearerAuth
+// @Param limit query int false "Limit" default(10)
+// @Success 200 {object} dtos.APIResponse{data=[]gen.GetLeaderboardRow}
+// @Failure 500 {object} dtos.APIError
+// @Router /leaderboard [get]
+func (h *PointsHandler) GetLeaderboard(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+
+	leaderboard, err := h.points.GetLeaderboard(c.Request.Context(), limit)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to retrieve leaderboard: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Leaderboard retrieved successfully", leaderboard)
+}

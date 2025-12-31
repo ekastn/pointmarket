@@ -210,8 +210,22 @@ SELECT count(*)
 FROM user_missions um
 JOIN missions m ON um.mission_id = m.id
 JOIN users u ON um.user_id = u.id
-WHERE (
+    WHERE (
     sqlc.arg('search') = '' OR
     m.title LIKE CONCAT('%', sqlc.arg('search'), '%') OR
     u.display_name LIKE CONCAT('%', sqlc.arg('search'), '%')
 );
+
+-- name: GetLeaderboard :many
+SELECT 
+    u.id, 
+    u.display_name, 
+    u.username, 
+    up.avatar_url, 
+    s.total_points
+FROM user_stats s
+JOIN users u ON s.user_id = u.id
+LEFT JOIN user_profiles up ON u.id = up.user_id
+ORDER BY s.total_points DESC
+LIMIT ?;
+

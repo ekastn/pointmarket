@@ -145,6 +145,7 @@ func main() {
 		}
 
 		authRequired.GET("/dashboard", dashboardHandler.GetDashboardData)
+		authRequired.GET("/leaderboard", pointsHandler.GetLeaderboard)
 		authRequired.GET("/roles", userHandler.GetRoles)
 		authRequired.POST("/text-analyzer", textAnalyzerHandler.PredictText)
 

@@ -217,7 +217,6 @@ export async function initProfileView() {
         initProfileChart(student_stats?.weekly_evaluations || []);
 
     } catch (err) {
-        console.error("Hydration Error:", err);
         const nameEl = document.getElementById("profile-name");
         if (nameEl) nameEl.innerText = "Gagal Memuat";
     }

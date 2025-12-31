@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #f1f5f9;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: white;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,0,0,0.1);
+    padding-bottom: 80px;
+}
+
+.section {
+    display: none;
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.nav-active {
+    color: #4f46e5;
+    transform: translateY(-2px);
+}
+
+.btn-bounce:active { transform: scale(0.95); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.badge-glow {
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+}
+
+#login-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.strategy-card {
+    transition: all 0.3s ease;
+}
+
+.strategy-card:hover {
+    transform: translateX(5px);
+}
+

@@ -3,8 +3,8 @@ import { renderHeader } from "./components/header.js";
 import { renderBottomNav } from "./components/bottomNav.js";
 import { renderModal } from "./components/modal.js";
 import { renderLogin, setupLoginEvents } from "./views/login.js";
-import { renderHome } from "./views/home.js";
-import { renderMarket } from "./views/market.js";
+import { renderHome, initHomeView } from "./views/home.js";
+import { renderMarket, initMarketView } from "./views/market.js";
 import { renderLeaderboard } from "./views/leaderboard.js";
 import { renderProfile, initProfileView } from "./views/profile.js";
 import { isAuthenticated, logout, getCurrentUser } from "./lib/auth.js";
@@ -89,9 +89,13 @@ function render() {
   if (header) header.classList.remove("hidden");
   if (nav) nav.classList.remove("hidden");
 
-  // Initialize profile data if on profile page
-  if (state.activeTab === "profile") {
+  // View Initializations
+  if (state.activeTab === "home") {
+    setTimeout(initHomeView, 100);
+  } else if (state.activeTab === "profile") {
     setTimeout(initProfileView, 100);
+  } else if (state.activeTab === "market") {
+    setTimeout(initMarketView, 100);
   }
 }
 

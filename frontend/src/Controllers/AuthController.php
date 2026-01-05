@@ -13,6 +13,13 @@ class AuthController extends BaseController
 
     public function showLoginForm(): void
     {
+        // Check if user is already authenticated, redirect to dashboard
+        session_start();
+        if (isset($_SESSION['jwt_token'])) {
+            $this->redirect('/dashboard');
+            return;
+        }
+
         // Messages will be handled by the session and passed to the view
         $messages = $_SESSION['messages'] ?? [];
         unset($_SESSION['messages']); // Clear messages after displaying

@@ -16,7 +16,7 @@ class ApiClient
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->client = new Client([
             'base_uri' => $this->baseUrl,
-            'timeout'  => 0,
+            'timeout' => 0,
             'connect_timeout' => 30.0,
         ]);
     }
@@ -56,6 +56,21 @@ class ApiClient
             }
 
             return ['success' => false, 'message' => $message, 'status' => $statusCode];
+        }
+    }
+
+    public function requestRaw(string $method, string $uri, array $options = []): ?\Psr\Http\Message\ResponseInterface
+    {
+        if ($this->jwtToken) {
+            $options['headers']['Authorization'] = 'Bearer ' . $this->jwtToken;
+        }
+
+        try {
+            return $this->client->request($method, $uri, $options);
+        } catch (RequestException $e) {
+            // Log error? For now just return null or rethrow?
+            // Returning null allows caller to handle failure
+            return null;
         }
     }
 

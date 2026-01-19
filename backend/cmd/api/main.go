@@ -362,6 +362,7 @@ func main() {
 		adminGroup.GET("/recommendations/refs", recommendationHandler.AdminSearchRefs)
 
 		// Admin-only: Unique States CRUD
+		adminGroup.GET("/recommendations/unique-states/export", recommendationHandler.AdminStatesExport)
 		adminGroup.GET("/recommendations/unique-states", recommendationHandler.AdminStatesList)
 		adminGroup.POST("/recommendations/unique-states", recommendationHandler.AdminStatesCreate)
 		adminGroup.PUT("/recommendations/unique-states/:id", recommendationHandler.AdminStatesUpdate)

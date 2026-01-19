@@ -6,7 +6,9 @@ use App\Core\ApiClient;
 
 class AdminStatesService
 {
-    public function __construct(private ApiClient $apiClient) {}
+    public function __construct(private ApiClient $apiClient)
+    {
+    }
 
     public function list(array $filters = []): ?array
     {
@@ -24,13 +26,18 @@ class AdminStatesService
 
     public function update(int $id, array $payload): array
     {
-        return $this->apiClient->request('PUT', '/api/v1/admin/recommendations/unique-states/'.$id, ['json' => $payload]);
+        return $this->apiClient->request('PUT', '/api/v1/admin/recommendations/unique-states/' . $id, ['json' => $payload]);
     }
 
-    public function delete(int $id, bool $force=false): array
+    public function delete(int $id, bool $force = false): array
     {
-        $uri = '/api/v1/admin/recommendations/unique-states/'.$id.($force ? '?force=1' : '');
+        $uri = '/api/v1/admin/recommendations/unique-states/' . $id . ($force ? '?force=1' : '');
         return $this->apiClient->request('DELETE', $uri);
+    }
+
+    public function export(): ?\Psr\Http\Message\ResponseInterface
+    {
+        return $this->apiClient->requestRaw('GET', '/api/v1/admin/recommendations/unique-states/export');
     }
 }
 

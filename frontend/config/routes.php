@@ -29,13 +29,13 @@ use App\Middleware\AuthMiddleware;
 return function (Router $router) {
     // Public routes
     $router->get('/', [LandingPageController::class, 'showLandingPage']);
-    
+
     // Landing page sub-routes
     $router->get('/landing/sahabat-belajar', [LandingPageController::class, 'showSahabatBelajar']);
     $router->get('/landing/alur-kerja', [LandingPageController::class, 'showAlurKerja']);
     $router->get('/landing/studi-kasus', [LandingPageController::class, 'showStudiKasus']);
     $router->get('/landing/riset', [LandingPageController::class, 'showRiset']);
-    
+
     $router->get('/login', [AuthController::class, 'showLoginForm']);
     $router->get('/register', [AuthController::class, 'showRegisterForm']);
     $router->post('/login', [AuthController::class, 'processLogin']);
@@ -223,6 +223,7 @@ return function (Router $router) {
 
         // Admin: Unique States management
         $router->group('/admin/recommendations/states', function (Router $router) {
+            $router->get('/export', [AdminStatesController::class, 'export']);
             $router->get('/', [AdminStatesController::class, 'index']);
             $router->post('/', [AdminStatesController::class, 'store']);
             $router->post('/update', [AdminStatesController::class, 'update']);

@@ -1,8 +1,10 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/url"
@@ -271,6 +273,71 @@ func (s *RecommendationService) AdminStatesUpdate(ctx context.Context, id int64,
 
 func (s *RecommendationService) AdminStatesDelete(ctx context.Context, id int64, force bool) error {
 	return s.gateway.AdminStatesDelete(ctx, id, force)
+}
+
+// AdminExportStates fetches all unique states and returns them as CSV bytes.
+func (s *RecommendationService) AdminExportStates(ctx context.Context) ([]byte, error) {
+	// 1. Fetch all states (use a reasonably high limit, e.g. 10000)
+	q := url.Values{}
+	q.Set("limit", "10000")
+	q.Set("offset", "0")
+	q.Set("sort", "state asc")
+
+	// Reuse the gateway list method
+	res, err := s.gateway.AdminStatesList(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch states from upstream: %w", err)
+	}
+
+	// 2. Extract states list
+	rawStates, ok := res["states"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("upstream response missing 'states' list")
+	}
+
+	// 3. Generate CSV
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Header
+	if err := writer.Write([]string{"ID", "State", "Description"}); err != nil {
+		return nil, err
+	}
+
+	for _, item := range rawStates {
+		stateMap, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		id := ""
+		if v, ok := stateMap["id"].(float64); ok {
+			id = fmt.Sprintf("%.0f", v)
+		} else if v, ok := stateMap["id"].(string); ok {
+			id = v
+		}
+
+		st := ""
+		if v, ok := stateMap["state"].(string); ok {
+			st = v
+		}
+
+		desc := ""
+		if v, ok := stateMap["description"].(string); ok {
+			desc = v
+		}
+
+		if err := writer.Write([]string{id, st, desc}); err != nil {
+			return nil, err
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 // maybeTriggerTraining ensures we don't spam /train. Returns true if a trigger was started.

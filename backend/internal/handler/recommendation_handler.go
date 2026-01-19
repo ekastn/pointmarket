@@ -397,3 +397,26 @@ func (h *RecommendationHandler) AdminStatesDelete(c *gin.Context) {
 	}
 	response.Success(c, http.StatusOK, "deleted", nil)
 }
+
+// AdminStatesExport godoc
+// @Summary Export unique states
+// @Description Exports all unique states as a CSV file (admin-only)
+// @Tags recommendations
+// @Produce text/csv
+// @Security BearerAuth
+// @Success 200 {string} string "CSV data"
+// @Failure 502 {object} dtos.APIError
+// @Router /admin/recommendations/unique-states/export [get]
+func (h *RecommendationHandler) AdminStatesExport(c *gin.Context) {
+	csvBytes, err := h.recService.AdminExportStates(c.Request.Context())
+	if err != nil {
+		response.Error(c, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Disposition", "attachment; filename=unique_states.csv")
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Data(http.StatusOK, "text/csv", csvBytes)
+}

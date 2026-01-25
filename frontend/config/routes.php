@@ -211,6 +211,7 @@ return function (Router $router) {
 
         // Admin: Recommendation Items management
         $router->group('/admin/recommendations/items', function (Router $router) {
+            $router->get('/export', [AdminItemsController::class, 'export']);
             $router->get('/', [AdminItemsController::class, 'index']);
             $router->post('/', [AdminItemsController::class, 'store']);
             $router->post('/update', [AdminItemsController::class, 'update']);

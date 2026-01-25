@@ -15,7 +15,7 @@ class AdminItemsService
 
     public function list(array $filters = []): ?array
     {
-        $resp = $this->apiClient->request('GET', '/api/v1/admin/recommendations/items', [ 'query' => $filters ]);
+        $resp = $this->apiClient->request('GET', '/api/v1/admin/recommendations/items', ['query' => $filters]);
         if (!empty($resp['success'])) {
             return $resp['data'] ?? ['items' => [], 'meta' => ['total' => 0, 'limit' => 20, 'offset' => 0]];
         }
@@ -24,24 +24,29 @@ class AdminItemsService
 
     public function create(array $item): array
     {
-        return $this->apiClient->request('POST', '/api/v1/admin/recommendations/items', [ 'json' => $item ]);
+        return $this->apiClient->request('POST', '/api/v1/admin/recommendations/items', ['json' => $item]);
     }
 
     public function update(int $id, array $item): array
     {
         // Use PUT with JSON
-        return $this->apiClient->request('PUT', '/api/v1/admin/recommendations/items/'.$id, [ 'json' => $item ]);
+        return $this->apiClient->request('PUT', '/api/v1/admin/recommendations/items/' . $id, ['json' => $item]);
     }
 
     public function toggle(int $id, bool $isActive): array
     {
-        return $this->apiClient->request('PATCH', '/api/v1/admin/recommendations/items/'.$id.'/toggle', [ 'json' => ['is_active' => $isActive] ]);
+        return $this->apiClient->request('PATCH', '/api/v1/admin/recommendations/items/' . $id . '/toggle', ['json' => ['is_active' => $isActive]]);
     }
 
     public function delete(int $id, bool $force = false): array
     {
-        $uri = '/api/v1/admin/recommendations/items/'.$id . ($force ? '?force=1' : '');
+        $uri = '/api/v1/admin/recommendations/items/' . $id . ($force ? '?force=1' : '');
         return $this->apiClient->request('DELETE', $uri);
+    }
+
+    public function export(): ?\Psr\Http\Message\ResponseInterface
+    {
+        return $this->apiClient->requestRaw('GET', '/api/v1/admin/recommendations/items/export');
     }
 
     public function searchStates(string $q, int $limit = 10): array

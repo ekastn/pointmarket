@@ -340,6 +340,67 @@ func (s *RecommendationService) AdminExportStates(ctx context.Context) ([]byte, 
 	return buf.Bytes(), nil
 }
 
+// AdminExportItems returns all items as CSV
+func (s *RecommendationService) AdminExportItems(ctx context.Context) ([]byte, error) {
+	// Fetch all items (high limit)
+	q := url.Values{}
+	q.Set("limit", "10000")
+	resp, err := s.gateway.AdminListItems(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	// Enrich with titles
+	enriched := s.EnrichItemRefsWithTitles(ctx, resp)
+
+	rawItems, ok := enriched["items"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid items format")
+	}
+
+	// CSV Generation
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Header
+	writer.Write([]string{"ID", "State", "Action Code", "Ref Title", "Ref Type", "Ref ID", "Active"})
+
+	for _, it := range rawItems {
+		m, _ := it.(map[string]interface{})
+		if m == nil {
+			continue
+		}
+
+		// ID
+		var id string
+		switch v := m["id"].(type) {
+		case float64:
+			id = fmt.Sprintf("%.0f", v)
+		case int64:
+			id = fmt.Sprintf("%d", v)
+		case string:
+			id = v
+		}
+
+		state, _ := m["state"].(string)
+		actionCode := fmt.Sprintf("%v", m["action_code"])
+		refType, _ := m["ref_type"].(string)
+		refID := fmt.Sprintf("%v", m["ref_id"])
+		refTitle, _ := m["ref_title"].(string)
+		isActive := "0"
+		if v, ok := m["is_active"].(bool); ok && v {
+			isActive = "1"
+		} else if v, ok := m["is_active"].(float64); ok && v > 0 {
+			isActive = "1"
+		}
+
+		writer.Write([]string{id, state, actionCode, refTitle, refType, refID, isActive})
+	}
+
+	writer.Flush()
+	return buf.Bytes(), nil
+}
+
 // maybeTriggerTraining ensures we don't spam /train. Returns true if a trigger was started.
 func (s *RecommendationService) maybeTriggerTraining() bool {
 	s.trainMux.Lock()

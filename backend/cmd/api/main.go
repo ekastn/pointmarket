@@ -351,6 +351,7 @@ func main() {
 		adminGroup.GET("/recommendations/trace", recommendationHandler.GetRecommendationsTrace)
 
 		// Admin-only: Recommendation items management
+		adminGroup.GET("/recommendations/items/export", recommendationHandler.AdminItemsExport)
 		adminGroup.GET("/recommendations/items", recommendationHandler.AdminListItems)
 		adminGroup.POST("/recommendations/items", recommendationHandler.AdminCreateItems)
 		adminGroup.PUT("/recommendations/items/:id", recommendationHandler.AdminUpdateItem)

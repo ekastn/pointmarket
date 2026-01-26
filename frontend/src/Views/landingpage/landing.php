@@ -127,7 +127,7 @@
                         Lihat Cara Kerja AI
                     </a>
                     <!-- Demo Aplikasi Link -->
-                    <a href="/login" class="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-full font-bold text-lg hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                    <a href="/public/demo.html" class="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-full font-bold text-lg hover:bg-slate-50 transition flex items-center justify-center gap-2">
                         <i class="ph ph-play-circle text-xl"></i> Demo Aplikasi
                     </a>
                 </div>

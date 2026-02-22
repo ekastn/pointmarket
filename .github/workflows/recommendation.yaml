@@ -3,7 +3,7 @@ name: Backend pipeline
 on:
  push:
    branches:
-     - 'prod/reocmmendation-service'
+     - 'prod/recommendation-service'
 
 permissions:
   packages: write
